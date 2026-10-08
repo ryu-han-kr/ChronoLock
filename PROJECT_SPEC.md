@@ -744,3 +744,18 @@ Do not weaken permission/security handling.
 When OS behavior is uncertain, isolate that behavior behind an interface instead of coupling it to domain logic.
 
 This document is the source of truth for the FocusGuard project.
+
+---
+
+# 25. Implementation status (2026-10-08)
+
+The existing Android PoC uses the project name ChronoLock and package com.chronolock.
+App selection, permission disclosure, daily usage/open-count/cooldown settings,
+Room persistence, accessibility monitoring and the blocking overlay have been written.
+The initial Android milestone is NOT yet accepted: real-device scenarios A/B/C remain unverified.
+
+PR: https://github.com/ryu-han-kr/ChronoLock/pull/1
+
+See docs/STATUS.md for executed checks, existing specification differences and next steps.
+See docs/DEVICE_TEST_PLAN.md for acceptance procedures.
+Continue Android build and blocking reliability work before backend, AI or iOS.
