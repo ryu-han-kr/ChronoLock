@@ -31,8 +31,8 @@ APK 커밋, 배터리 설정, 실제 차단 지연과 관찰 내용을 기록합
 
 ## 자동 저장소 테스트
 
-연결한 기기에서 `android/gradlew.bat :app:connectedDebugAndroidTest`를 `android/` 작업
-디렉터리 기준으로 실행합니다 (`.\gradlew.bat` 사용). 새 저장소 인스턴스의 카운터·쿨다운 복구와
+기기를 연결하고 `android/`에서 `.\gradlew.bat :app:connectedDebugAndroidTest`를 실행합니다.
+새 저장소 인스턴스의 카운터·쿨다운 복구, 파일 DB를 닫고 다시 연 뒤의 규칙·카운터 복구,
 데이터 삭제를 검사합니다. 이 검사는 실제 접근성 차단 시나리오를 대신하지 않습니다.
 
 ## 결과 기록
