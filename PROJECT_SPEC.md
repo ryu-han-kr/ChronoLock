@@ -752,6 +752,8 @@ This document is the source of truth for the FocusGuard project.
 The existing Android PoC uses the project name ChronoLock and package com.chronolock.
 App selection, permission disclosure, daily usage/open-count/cooldown settings,
 Room persistence, accessibility monitoring and the blocking overlay have been written.
+Validation: 32 domain tests and 4 Android 35 persistence tests passed; debug APK build
+and Android Lint passed (19 warnings). Build evidence and commit are recorded in docs/STATUS.md.
 The initial Android milestone is NOT yet accepted: real-device scenarios A/B/C remain unverified.
 
 PR: https://github.com/ryu-han-kr/ChronoLock/pull/1

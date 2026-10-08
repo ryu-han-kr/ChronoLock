@@ -14,6 +14,7 @@ Room 계측 테스트까지 작성되었으나 첫 커밋과 APK 빌드 검증�
 - [PR #1](https://github.com/ryu-han-kr/ChronoLock/pull/1)에 기존 Android 구현을 초안으로 등록했습니다.
 - Android/Kotlin/Hilt 플러그인을 루트에서 함께 선언해 `BaseVariant` 로딩 오류를 수정했습니다.
 - Gradle 스크립트 줄바꿈·실행 권한과 GitHub Actions 빌드/검증을 구성했습니다.
+- Room 테스트를 파일 DB 기반으로 실행하고 DB 재개방 후 복구 검증을 추가했습니다.
 - README, 기기 검증 절차, 본 진행 기록을 추가했습니다.
 
 ## 검증
@@ -22,16 +23,21 @@ Room 계측 테스트까지 작성되었으나 첫 커밋과 APK 빌드 검증�
 |---|---|
 | 기존 도메인 테스트 재실행 | 32개 통과 (RuleEngine 18, UsageMonitor 14) |
 | 로컬 Android 빌드 | 플러그인 오류 해결; Android SDK 미설치로 실행 불가 |
-| GitHub Actions APK / Lint | 실행 결과 확인 중 |
-| Android 35 Room 계측 테스트 | 실행 결과 확인 중 |
+| GitHub Actions APK / Lint | 통과; Lint 오류 0개, 경고 19개 |
+| Android 35 Room 계측 테스트 | 4개 통과; 파일 DB 재개방 복구 포함 |
 | 실제 기기 A/B/C 차단, 오프라인, 재시작 | 미검증 |
+
+빌드 검증 커밋: `d5fa237`.
+[CI 실행 및 APK 아티팩트](https://github.com/ryu-han-kr/ChronoLock/actions/runs/37759871555).
+로컬 APK: `.tools/artifacts/37759871555/apk/app-debug.apk` (Git 제외).
+Lint 경고에는 오래된 의존성/API 대상, 백업 추출 설정, 문자열 리소스 처리가 포함됩니다.
+CI 액션의 Node 20 사용 중단 경고도 후속 유지보수 항목입니다.
 
 ## 다음 순서
 
-1. CI에서 빌드와 저장소 테스트를 통과시키고 결과를 기록합니다.
-2. 기기 검증 절차에 따라 60초 사용·4번째 실행 차단·30초 쿨다운을 확인합니다.
-3. 초기 마일스톤을 통과한 뒤 세션 한도·스케줄·집중 세션의 저장과 UI를 구현합니다.
-4. 백엔드·추천·AI·iOS는 초기 Android 차단 검증 이후 진행합니다.
+1. 기기 검증 절차에 따라 60초 사용·4번째 실행 차단·30초 쿨다운을 확인합니다.
+2. 초기 마일스톤을 통과한 뒤 세션 한도·스케줄·집중 세션의 저장과 UI를 구현합니다.
+3. 백엔드·추천·AI·iOS는 초기 Android 차단 검증 이후 진행합니다.
 
 ## 기존 구현의 명세 차이와 남은 제한
 
