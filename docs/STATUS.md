@@ -1,6 +1,6 @@
 # 작업 상태
 
-갱신: 2026-10-08
+갱신: 2026-10-09
 
 ## 이전 작업 확인
 
@@ -16,6 +16,7 @@ Room 계측 테스트까지 작성되었으나 첫 커밋과 APK 빌드 검증�
 - Gradle 스크립트 줄바꿈·실행 권한과 GitHub Actions 빌드/검증을 구성했습니다.
 - Room 테스트를 파일 DB 기반으로 실행하고 DB 재개방 후 복구 검증을 추가했습니다.
 - README, 기기 검증 절차, 본 진행 기록을 추가했습니다.
+- 사용자 준비 정보·권한·SDK 설정과 이후 API 준비 항목을 [USER_SETUP.md](USER_SETUP.md)에 정리했습니다.
 
 ## 검증
 
@@ -30,6 +31,8 @@ Room 계측 테스트까지 작성되었으나 첫 커밋과 APK 빌드 검증�
 빌드 검증 커밋: `d5fa237`.
 [CI 실행 및 APK 아티팩트](https://github.com/ryu-han-kr/ChronoLock/actions/runs/37759871555).
 로컬 APK: `.tools/artifacts/37759871555/apk/app-debug.apk` (Git 제외).
+문서 갱신 커밋 `9de9fe8`의 [후속 CI](https://github.com/ryu-han-kr/ChronoLock/actions/runs/37761659602)도
+빌드 및 저장소 테스트 모두 통과한 것을 2026-10-09에 확인했습니다.
 Lint 경고에는 오래된 의존성/API 대상, 백업 추출 설정, 문자열 리소스 처리가 포함됩니다.
 CI 액션의 Node 20 사용 중단 경고도 후속 유지보수 항목입니다.
 

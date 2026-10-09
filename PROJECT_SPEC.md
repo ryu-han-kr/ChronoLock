@@ -760,4 +760,6 @@ PR: https://github.com/ryu-han-kr/ChronoLock/pull/1
 
 See docs/STATUS.md for executed checks, existing specification differences and next steps.
 See docs/DEVICE_TEST_PLAN.md for acceptance procedures.
+See docs/USER_SETUP.md for user-provided device details, local setup and future service configuration.
+No external API credentials are required for the current Android PoC.
 Continue Android build and blocking reliability work before backend, AI or iOS.

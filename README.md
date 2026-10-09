@@ -13,6 +13,8 @@
 
 진행 상황과 검증 결과는 [docs/STATUS.md](docs/STATUS.md), 기기 검증 절차는
 [docs/DEVICE_TEST_PLAN.md](docs/DEVICE_TEST_PLAN.md)에 기록합니다.
+사용자가 제공할 정보와 설정은 [docs/USER_SETUP.md](docs/USER_SETUP.md)를 확인하세요.
+현재 단계에는 외부 API 키가 필요하지 않습니다.
 
 ## 개발 환경
 
