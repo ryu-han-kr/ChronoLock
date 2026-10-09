@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ChronoLock · 기능·출시·구독·운영비 제안서</title><style>
+:root{--ink:#18283b;--muted:#56677a;--accent:#166b66;--line:#d9e3e8;--soft:#f0f6f6}
+*{box-sizing:border-box}body{margin:0;background:#e6ecf0;color:var(--ink);font-family:'Malgun Gothic','맑은 고딕',sans-serif}
+.toolbar{position:sticky;top:0;z-index:5;background:#142a3b;color:white;padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px}
+.toolbar span{flex:1}.toolbar a,.toolbar button{border:0;border-radius:6px;background:#dbf2df;color:#142a3b;padding:10px 16px;text-decoration:none;font:inherit;cursor:pointer}
+.sheet{width:210mm;height:297mm;background:white;margin:20px auto;padding:14mm 16mm 18mm;position:relative;box-shadow:0 6px 24px #142a3b18;font-size:9.4pt;line-height:1.65;break-after:page;page-break-after:always}
+.sheet:last-child{break-after:auto;page-break-after:auto}
+.kicker{font-size:8pt;letter-spacing:2px;color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:18px}
+h1{font-size:42pt;letter-spacing:-2px;line-height:1.15;margin:15px 0 8px}h2{font-size:20pt;line-height:1.3;margin:8px 0 20px;letter-spacing:-.7px}h3{font-size:12pt;color:var(--accent);margin:19px 0 7px}
+p{margin:8px 0 12px}strong{font-weight:700}a{color:var(--accent);text-decoration:none;overflow-wrap:anywhere}
+table{width:100%;border-collapse:collapse;font-size:8.5pt;line-height:1.55;margin:12px 0 16px;table-layout:auto}
+th{background:#203d4e;color:white;text-align:left;font-weight:600;padding:8px}td{vertical-align:top;padding:7px 8px;border-bottom:1px solid var(--line)}tr:nth-child(even) td{background:#f5f8fa}
+thead{display:table-header-group}tr{break-inside:avoid}ul,ol{padding-left:20px;margin:7px 0 13px}li{margin:4px 0}
+pre{padding:14px;background:var(--soft);border-left:3px solid var(--accent);font-family:inherit;font-size:9pt;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+code{font-family:inherit;background:#eff3f6;padding:1px 3px;border-radius:3px}pre code{padding:0;background:none}
+footer{position:absolute;bottom:9mm;left:16mm;right:16mm;border-top:1px solid var(--line);padding-top:5px;display:flex;justify-content:space-between;font-size:7.5pt;color:var(--muted)}
+.cover{border-top:5mm solid var(--accent);padding-top:12mm}.cover h2{color:var(--accent);font-size:19pt}.cover .kicker{border:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}.form-grid label{display:flex;justify-content:space-between;align-items:center;font-size:9pt}.form-grid input{width:105px;padding:6px;border:1px solid #9ab3bf;border-radius:4px;color:var(--ink);font:inherit}
+.results{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:16px}.result{background:var(--soft);padding:11px;border-radius:6px;font-size:8pt}.result b{display:block;font-size:15pt;color:var(--accent);margin-top:4px}
+#calc-error{color:#a12323;min-height:15px}.note{color:var(--muted);font-size:8.5pt}
+@page{size:A4;margin:0} @media print{body{background:white}.toolbar{display:none}.sheet{margin:0;box-shadow:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}a{color:var(--accent)}input{border:0!important;background:#f0f6f6}}
+@media screen and (max-width:850px){.sheet{width:100%;height:auto;min-height:297mm;margin:0 auto 12px;padding:24px 20px 64px}.toolbar{position:static}h1{font-size:34pt}table{font-size:8pt}footer{left:20px;right:20px}.form-grid{grid-template-columns:1fr}.results{grid-template-columns:1fr 1fr}}
+</style></head>
+<body><nav class="toolbar"><span>ChronoLock · 2026.10.10 기획 보고서</span>
+<a href="CHRONOLOCK_BUSINESS_PLAN_2026-10-10.pdf" download>PDF 다운로드</a><button onclick="window.print()">현재 값으로 인쇄 / PDF 저장</button></nav>
+<main><section class="sheet cover"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h1>ChronoLock</h1>
+<h2>기능 · 출시 · 구독 · 운영비 제안서</h2>
+<p><strong>2026.10.10 · 의사결정용 초안 · 한국 Android 시장 우선</strong></p>
+<p>사용자가 자신의 앱 사용을 시간·횟수·재실행 간격으로 조절하는 서비스.
+핵심 차단은 기기에서 실행하고, 광고 없이 구독으로 지속 가능한 운영을 목표로 합니다.</p>
+<h3>이번 제안의 핵심</h3>
+<table>
+<thead>
+<tr>
+<th>결정</th>
+<th>제안</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>첫 출시</td>
+<td>Google Play의 Android 앱. Apple App Store는 iOS 개발 이후</td>
+</tr>
+<tr>
+<td>광고</td>
+<td>첫 정식 버전은 외부 광고 SDK 없이 운영</td>
+</tr>
+<tr>
+<td>요금</td>
+<td>Free / Pro 월 3,900원 또는 연 39,000원 / AI 선택 추가 월 2,900원</td>
+</tr>
+<tr>
+<td>기능 확장</td>
+<td>기존 명세 안에서 7개 일반 기능 + 선택형 AI 기능 3개</td>
+</tr>
+<tr>
+<td>초기 운영 예산</td>
+<td>유료 백엔드 도입 시 월 <strong>$45 ≈ 63,000원</strong>, 일평균 <strong>$1.50 ≈ 2,100원</strong></td>
+</tr>
+<tr>
+<td>비용 알림</td>
+<td>매일 오전 9시 KST에 Discord 요약 + 이메일 상세 보고서 제안</td>
+</tr>
+</tbody>
+</table>
+<p><strong>숫자 읽는 법:</strong> 구독 가격·전환율·운영 예산은 제안과 계산 가정입니다. 실제 매출이나
+현재 발생 중인 청구액이 아닙니다. 환산은 비교용 <strong>1 USD = 1,400원</strong>, 월 <strong>30일</strong>을 사용합니다.
+해외 서비스 세금·환전 수수료·인건비·마케팅비는 별도입니다. 공식 단가의 확인일은 2026-10-10입니다.</p>
+<h3>확인된 현재 상태</h3>
+<p>도메인 테스트 32개, Android 35 저장소 테스트 4개, APK 빌드와 Lint가 통과했습니다.
+갤럭시 탭 S9+ <strong>SM-X810 / Android 16(API 36)</strong>에 설치했고, 사용자가 “잘 된다”고 확인했습니다.
+다만 A/B/C의 개별 수치, 차단 지연, 오프라인·재부팅 결과는 아직 각각 기록되지 않았습니다.
+이 피드백만으로 모든 실기기 수용 조건을 통과한 것으로 처리하지 않습니다.</p>
+<p><strong>이번 산출물은 기획·비용·알림 설계입니다.</strong> 구독, AI, 서버, 자동 발송은 아직 활성화하지 않았습니다.
+원본 Markdown, 크롬용 HTML, PDF를 함께 제공합니다. HTML의 계산기에서 가정을 바꿔 볼 수 있습니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>01 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>01. 지금 사용할 수 있는 기능</h2>
+<table>
+<thead>
+<tr>
+<th>기능</th>
+<th>현재 동작</th>
+<th>상태</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>앱 선택</td>
+<td>실행 가능한 앱 목록에서 제한 대상 선택</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>일일 사용시간</td>
+<td>초 단위 한도, 예: YouTube 하루 60초</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>일일 실행 횟수</td>
+<td>허용 횟수 3회면 네 번째 진입 차단</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>쿨다운</td>
+<td>앱을 떠난 뒤 정한 시간 동안 재진입 제한</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>규칙 조합</td>
+<td>시간·횟수·쿨다운을 함께 설정</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>차단 화면</td>
+<td>앱 이름, 제한 사유, 쿨다운 잔여 시간, 홈·설정 이동</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>오늘 기록</td>
+<td>선택 앱 사용량·허용 실행·제한 도달 및 차단 횟수</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>권한 안내</td>
+<td>사용 정보 접근·접근성 안내 및 서비스 상태 표시</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>로컬 저장</td>
+<td>Room 규칙·일별 사용량·이벤트·체크포인트</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>데이터 관리</td>
+<td>규칙 삭제, 전체 로컬 기록 삭제</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>필수 앱 제외</td>
+<td>설정·홈·전화 등 안전 목록 적용</td>
+<td>구현, 제조사별 확인 필요</td>
+</tr>
+<tr>
+<td>오프라인 구조</td>
+<td>인터넷 권한 없이 기기 내 규칙 엔진으로 판정</td>
+<td>구현, 실기기 세부 검사 남음</td>
+</tr>
+</tbody>
+</table>
+<h3>아직 제품 기능으로 제공하지 않는 것</h3>
+<p>세션별 한도·시간대 스케줄·집중 세션은 <strong>도메인 판정만</strong> 존재하며 저장·설정 화면은 없습니다.
+주간 분석, 개인화 추천, 계정, 동기화, 결제, AI, 서버와 iOS는 미구현입니다.
+현재 화면은 오늘 / 앱 제한 / 설정의 3개 탭입니다. 무료·유료 등급 제한도 아직 없습니다.</p>
+<h3>정식 출시 전에 해결할 품질 항목</h3>
+<ul>
+<li>서비스 중단 중 실행 횟수 복구, 잠금·앱 전환·날짜 경계·재부팅의 정확성 확인.</li>
+<li>태블릿의 DeX·분할 화면·PiP 처리 정책 확정 및 실제 검증. 현재 지원을 약속하지 않습니다.</li>
+<li>접근성 서비스 중단 안내, 차단 화면에서 시스템 설정과 긴급 연락 접근 확인.</li>
+<li>백업 제외 설정·문자열 리소스·오래된 라이브러리 등 Lint 경고 19개 검토.</li>
+<li>태블릿과 휴대전화, 큰 글씨, 가로 화면, TalkBack, 배터리 절약 모드 점검.</li>
+</ul>
+<p><strong>측정 기준:</strong> 60초 도달 후 표시 지연, 중복 실행 횟수, 재부팅 전후 카운터를 각각 기록합니다.
+“절대 우회 불가”, “지연 0초” 같은 제품 약속은 하지 않습니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>02 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>02. 추천 기능 10개 — 일반 기능 1~5</h2>
+<p>다음은 구현 제안이며 아직 적용되지 않았습니다. P1은 초기 차단 신뢰성 검증 후 우선,
+P2는 사용자 반응을 확인한 뒤 진행합니다. 이미 명세에 있는 범위를 구체화했습니다.</p>
+<table>
+<thead>
+<tr>
+<th>번호 / 우선순위</th>
+<th>기능</th>
+<th>사용 예시</th>
+<th>구현 범위와 완료 기준</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 · P1</td>
+<td><strong>1회 사용시간 제한</strong></td>
+<td>YouTube를 열 때마다 최대 10분</td>
+<td>기존 도메인 판정에 저장·편집 UI 연결. 시간 도달·앱 전환·재진입과 쿨다운 조합 테스트</td>
+</tr>
+<tr>
+<td>2 · P1</td>
+<td><strong>요일·시간대 예약</strong></td>
+<td>평일 23시~다음 날 7시 제한</td>
+<td>밤샘 구간, 요일 귀속, 시간대 변경, 일광절약시간을 일관되게 처리</td>
+</tr>
+<tr>
+<td>3 · P1</td>
+<td><strong>집중 세션</strong></td>
+<td>25·50·90분 동안 선택 앱 제한</td>
+<td>시작·완료·취소와 남은 시간 표시. 프로세스 재시작 후 종료 시각 유지</td>
+</tr>
+<tr>
+<td>4 · P1</td>
+<td><strong>주간 행동 대시보드</strong></td>
+<td>사용량은 낮지만 재실행이 잦은 앱 발견</td>
+<td>사용시간·실행 횟수·차단·야간 비율 표시. 차트 합계와 원시 기록 집계 일치</td>
+</tr>
+<tr>
+<td>5 · P2</td>
+<td><strong>규칙 기반 추천</strong></td>
+<td>5분 이내 재실행 비율이 높으면 쿨다운 제안</td>
+<td>명세 15장의 결정적 추천 엔진. 근거·적용·거절·수정 제공. LLM 비용 없이 동작</td>
+</tr>
+</tbody>
+</table>
+<h3>유료화 연결</h3>
+<p>일일 시간·횟수·쿨다운의 기본 사용 경험은 무료로 유지합니다. 장기 분석과 다양한 일정,
+집중 세션 기록 등 반복해서 이용할 가치를 Pro에 묶습니다. 단순히 사용을 막는 기능만으로
+구독 가치를 설명하기보다 “계획 → 사용 → 회고 → 개선”을 완성합니다.</p>
+<h3>개발 순서</h3>
+<p><strong>1 → 2 → 3 → 4 → 5</strong>를 권장합니다. UI만 추가하지 않고 규칙 저장, 재시작 복원,
+오프라인 동작과 테스트를 묶어서 완성합니다. 실제 사용자 요청이 적은 기능은 순서를 조정합니다.
+일정은 SDK 업그레이드와 기기 문제 해결 후 산정하며, 아래 로드맵은 순서 제안입니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>03 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>03. 추천 기능 10개 — 일반 기능 6~7 / 선택형 AI 8~10</h2>
+<table>
+<thead>
+<tr>
+<th>번호 / 우선순위</th>
+<th>기능</th>
+<th>사용 예시</th>
+<th>구현 범위와 주의점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6 · P2</td>
+<td><strong>Normal / Strict / Hard 모드</strong></td>
+<td>집중 중 규칙 변경에 숙려 시간 적용</td>
+<td>앱 내부 정책만 강화. 긴급 해제 흐름과 기록 제공. OS 권한 철회·앱 삭제는 방해하지 않음</td>
+</tr>
+<tr>
+<td>7 · P2</td>
+<td><strong>규칙·요약 데이터 동기화</strong></td>
+<td>휴대전화와 태블릿에 같은 일정 적용</td>
+<td>명시적 동의, 충돌 처리, 계정 삭제. 로컬 차단 유지. 초기에는 기기별 사용량을 구분하고 합산 차단은 후속 설계</td>
+</tr>
+<tr>
+<td>8 · 선택</td>
+<td><strong>AI 주간 회고</strong></td>
+<td>“사용시간보다 취침 전 반복 실행이 늘었습니다”</td>
+<td>집계 수치를 읽기 쉬운 한국어로 설명. 근거 수치 표시. 응답 캐시와 월 횟수 제한</td>
+</tr>
+<tr>
+<td>9 · 선택</td>
+<td><strong>AI 규칙 조합 초안</strong></td>
+<td>“주중 밤에는 줄이고 주말엔 조금 더 쓰고 싶어”</td>
+<td>자연어를 기존 규칙의 구조화된 제안으로 변환. 검증 후 미리보기, 사용자가 적용해야 저장</td>
+</tr>
+<tr>
+<td>10 · 선택</td>
+<td><strong>AI 추천 피드백 반영</strong></td>
+<td>“30분 대기는 과했어” → 더 완만한 설정 제안</td>
+<td>수락·거절 및 이전 결과를 요약해 다음 제안에 반영. 자체 모델 학습 없이 시작</td>
+</tr>
+</tbody>
+</table>
+<h3>AI가 있어도 바뀌지 않는 원칙</h3>
+<p>차단 여부는 순수 Kotlin RuleEngine만 결정합니다. AI는 설정을 직접 바꾸거나 접근성 기능을
+실행하지 않습니다. Google Play는 사람이 정한 결정적 자동화와 자율적 계획·실행을 구분합니다.
+<a href="https://support.google.com/googleplay/android-developer/answer/10964491?hl=en">접근성 정책</a></p>
+<p>원시 앱 사용 이벤트는 기기에 두고 사용자가 동의한 집계만 전달합니다. AI를 끄거나 통신이
+실패해도 로컬 제한은 유지합니다. 텍스트 입력과 생성 결과는 앱에서 신뢰하지 않고 JSON 구조,
+앱 식별자, 설정 범위와 허용 값으로 검증합니다. 앱·태블릿에 서비스 API 키를 넣지 않습니다.</p>
+<p><strong>도입 조건:</strong> 추천 5번으로 효과를 먼저 확인 → 한국어 설명 품질·잘못된 수치·잘못된 규칙을
+시험 → AI 추가 요금에 대한 수요 확인. 무제한 상담, 음성·이미지 생성은 초기 범위에서 제외합니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>04 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>04. 광고 없는 정액제 제안</h2>
+<p>가격은 한국 사용자 대상 <strong>검증용 가설</strong>입니다. 아직 결제 상품을 생성하거나 청구하지 않습니다.</p>
+<table>
+<thead>
+<tr>
+<th>상품</th>
+<th>가격안</th>
+<th>제공 가치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Free</strong></td>
+<td>0원</td>
+<td>선택 앱 최대 3개에 기본 시간·횟수·쿨다운, 오늘 기록, 로컬 저장</td>
+</tr>
+<tr>
+<td><strong>Pro 월간</strong></td>
+<td>월 3,900원</td>
+<td>앱 수 제한 해제, 일정·집중 세션, 장기 분석, 추천, 동기화가 완성되면 포함</td>
+</tr>
+<tr>
+<td><strong>Pro 연간</strong></td>
+<td>연 39,000원</td>
+<td>월 환산 3,250원. 월 결제 12회 대비 약 16.7% 할인</td>
+</tr>
+<tr>
+<td><strong>AI 옵션</strong></td>
+<td>Pro에 월 2,900원 추가</td>
+<td>주간 회고 월 4회 + 대화형 제안 월 8회. 합계 월 12회, 총 월 6,800원</td>
+</tr>
+</tbody>
+</table>
+<p>초기에는 Free + Pro 두 등급만 출시하고 AI 옵션은 나중에 열어도 됩니다. 기존 테스트 사용자의
+저장된 규칙을 과금 도입과 동시에 삭제하지 않습니다. 유료 기간 종료 시 어떤 규칙과 기능이
+어떻게 전환되는지 미리 알리고, 권한·개인정보 설정·기록 삭제는 항상 접근 가능하게 유지합니다.</p>
+<h3>구독의 명분과 결제 경험</h3>
+<p>반복 사용 가능한 분석·추천·동기화 등 지속적인 가치를 실제 제공한 뒤 구독을 판매합니다.
+서비스가 지속적 가치를 제공해야 한다는 <a href="https://support.google.com/googleplay/android-developer/answer/9900533?hl=en">Google Play 구독 정책</a>을 기준으로
+가격, 결제 주기, 자동 갱신, 취소 경로, 체험 후 청구 시점을 명확히 표시합니다.</p>
+<p>초기 결제는 Google Play Billing을 기준으로 설계합니다. 서버에서 구매 검증, 구독 상태 변화,
+복원·취소·유예·보류·환불을 처리하고, 기기에는 검증된 권한을 제한된 기간 캐시합니다.
+결제 서버 오류가 이미 설정된 로컬 차단을 갑자기 해제하지 않도록 전환 정책을 테스트합니다.</p>
+<h3>광고 운영안</h3>
+<p>첫 출시 <strong>외부 광고 0개</strong>를 권장합니다. 무료 사용자는 설정·분석 화면의 절제된 Pro 안내로
+전환합니다. 차단 화면에 전면 광고, 광고를 보면 제한 해제, 앱 목록·행동 기록을 이용한
+광고 타기팅은 도입하지 않습니다. 광고 수익은 아래 매출 계산에 포함하지 않습니다.</p>
+<h3>가격 검증</h3>
+<p>실제 베타 사용자를 대상으로 유료 가치와 이탈 사유를 확인합니다. 3,900원과 4,900원을
+별도 모집 집단에서 비교하는 소규모 실험을 제안합니다. 전환율 3%는 계산 가정이며 시장 실적이 아닙니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>05 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>05. 정식 출시까지 남은 일</h2>
+<h3>Google Play부터</h3>
+<table>
+<thead>
+<tr>
+<th>단계</th>
+<th>실행 내용</th>
+<th>완료 증거</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. 기술 준비</td>
+<td>compile/target SDK 36 이상 및 호환 AGP·Gradle 검토, 기기 회귀 검사</td>
+<td>CI 통과, 실제 폰·탭 시험 기록</td>
+</tr>
+<tr>
+<td>2. 계정</td>
+<td>개인/조직 선택, 신원 확인, 개발자·정산 정보</td>
+<td>Console 계정 상태 정상</td>
+</tr>
+<tr>
+<td>3. 배포물</td>
+<td>Release AAB, 서명키 관리, 버전 정책, 업데이트·Room migration</td>
+<td>내부 테스트 설치·업데이트 성공</td>
+</tr>
+<tr>
+<td>4. 정책 자료</td>
+<td>접근성 사용 신고·설명·동의, 개인정보처리방침, Data safety, 문의처</td>
+<td>실제 동작과 일치하는 제출 자료</td>
+</tr>
+<tr>
+<td>5. 테스트 배포</td>
+<td>내부 테스트 → 실제 대상 사용자의 비공개 테스트</td>
+<td>피드백과 수정 내역, 시나리오별 결과</td>
+</tr>
+<tr>
+<td>6. 결제 검증</td>
+<td>구매·갱신·해지·환불·복원·네트워크 장애</td>
+<td>라이선스 테스터 결과</td>
+</tr>
+<tr>
+<td>7. 단계 출시</td>
+<td>소규모 배포부터 장애·배터리·지원 문의 확인</td>
+<td>관찰 후 확대 여부 판단</td>
+</tr>
+</tbody>
+</table>
+<p>현재 <code>targetSdk=35</code>입니다. 확인한 정책은 <strong>2026-08-31부터 신규 앱·업데이트에 API 36 이상</strong>을
+요구합니다. 실제 심사 제출 시 Console 적용 조건을 다시 확인해야 합니다.
+<a href="https://support.google.com/googleplay/android-developer/answer/11926878?hl=en">타깃 API 정책</a></p>
+<p>신규 개인 계정(2023-11-13 이후 생성)은 최소 <strong>12명이 연속 14일 참여한 비공개 테스트</strong> 후
+프로덕션 접근을 신청하는 요건이 있습니다. 계정 유형·생성 시점에 따라 적용 여부를 확인합니다.
+<a href="https://support.google.com/googleplay/android-developer/answer/14151465?hl=en">테스트 요건</a></p>
+<p>ChronoLock은 장애 지원 도구가 아닌 자기조절 앱이므로 그 목적에 맞는 접근성 신고와 동의가
+필요합니다. 심사 승인을 미리 보장하지 않습니다. 계정 기능을 도입하면 탈퇴·서버 데이터 삭제와
+AI 전송 동의도 실제로 구현합니다. <a href="https://support.google.com/googleplay/android-developer/answer/10964491?hl=en">접근성 신고</a></p>
+<h3>Apple App Store는 별도 단계</h3>
+<p>현재 APK는 Apple App Store에 제출할 수 없습니다. Swift/SwiftUI 및 Screen Time API 기반의
+iOS 앱을 별도로 개발해야 합니다. Family Controls 배포 권한 요청도 필요합니다.
+<a href="https://developer.apple.com/documentation/familycontrols/requesting-the-family-controls-entitlement">Apple 배포 권한</a></p>
+<p>Google Play 등록은 <strong>US$25 일회</strong>, Apple 개발자 프로그램은 <strong>US$99/년</strong> 기준입니다.
+지역별 실제 결제 금액은 등록 화면에서 확인합니다.
+<a href="https://support.google.com/googleplay/android-developer/answer/6112435?hl=en">Google 등록</a> ·
+<a href="https://developer.apple.com/programs/enroll/">Apple 등록</a></p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>06 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>06. 유지비 — 월간과 매일의 비용</h2>
+<p>현재 오프라인 APK에는 앱 운영용 서버·DB·AI 호출이 연결되어 있지 않습니다. 해당 서비스의
+앱 사용에 따른 비용은 현재 구조상 발생하지 않습니다. 개인 개발 도구 구독과 GitHub 청구액은
+조회하지 않았으므로 전체 지출을 0원이라고 확정할 수는 없습니다.</p>
+<h3>유료 백엔드를 도입한 초기 운영 모델</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th style="text-align: right;">월 USD</th>
+<th style="text-align: right;">일평균 USD</th>
+<th>산정 구분</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lightsail Linux 2GB, public IPv4</td>
+<td style="text-align: right;">12.00</td>
+<td style="text-align: right;">0.4000</td>
+<td>공식 번들 가격 [S1]</td>
+</tr>
+<tr>
+<td>Supabase Pro, 기본 Micro 1개</td>
+<td style="text-align: right;">25.00</td>
+<td style="text-align: right;">0.8333</td>
+<td>$10 compute credit 적용 가정 [S2]</td>
+</tr>
+<tr>
+<td>스냅샷·백업 추가 여유</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">0.0667</td>
+<td>예산 가정; 실제 보관 용량에 따라 변경</td>
+</tr>
+<tr>
+<td>도메인</td>
+<td style="text-align: right;">1.67</td>
+<td style="text-align: right;">0.0557</td>
+<td>연 $20을 월 환산한 가정; 실제 연 결제</td>
+</tr>
+<tr>
+<td>로그·모니터링·비밀 저장 등</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">0.0667</td>
+<td>예산 가정; 수집량·서비스 선정에 따라 변경</td>
+</tr>
+<tr>
+<td>AWS Cost Explorer 조회</td>
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">0.0200</td>
+<td>하루 2회 요청 × $0.01, primary billing view [S3]</td>
+</tr>
+<tr>
+<td>운영자 이메일 30통</td>
+<td style="text-align: right;">0.0048</td>
+<td style="text-align: right;">0.00016</td>
+<td>SES Essentials $0.16/1,000통 기준, 첨부 제외 [S4]</td>
+</tr>
+<tr>
+<td>위 항목 합계</td>
+<td style="text-align: right;"><strong>41.2748</strong></td>
+<td style="text-align: right;"><strong>1.3758</strong></td>
+<td>원화 약 <strong>57,785원/월</strong></td>
+</tr>
+<tr>
+<td>초기 운영 예산</td>
+<td style="text-align: right;"><strong>45.00</strong></td>
+<td style="text-align: right;"><strong>1.5000</strong></td>
+<td>원화 <strong>63,000원/월 · 2,100원/일</strong>, 약 $3.73 여유 포함</td>
+</tr>
+</tbody>
+</table>
+<p>일평균은 비교용 안분액입니다. 실제 청구 일자와 같지 않습니다. 31일인 달의 배분은 31로 나누고,
+클라우드의 시간별 사용·월 한도, 세금, 할인·크레딧은 실제 계정 청구 기준으로 반영합니다.</p>
+<p>이 구성은 <strong>초기 저부하의 예산안</strong>이며 사용자 수를 보장하는 용량 설계가 아닙니다.
+인스턴스 1개는 고가용성 구성이 아니므로 장애 복구와 백업 복원 연습이 필요합니다.
+Supabase 추가 프로젝트, 초과 트래픽·DB·저장 공간·PITR, 서버 증설은 별도 비용입니다.</p>
+<p><strong>그 밖의 지출:</strong> 스토어 수수료, AI, 카드 환전·세금, 고객 문의 대응, 테스트 기기,
+CI 초과 사용, 개발 도구 구독, 도메인 갱신, 디자인·법무·마케팅·인건비를 따로 관리합니다.
+일회성 Google 등록비 약 35,000원은 매월 운영비에 중복 반영하지 않습니다.</p>
+<p><a href="https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-bundles.html">S1: Lightsail</a> ·
+<a href="https://supabase.com/pricing">S2: Supabase</a> ·
+<a href="https://aws.amazon.com/aws-cost-management/aws-cost-explorer/pricing/">S3: Cost Explorer</a> ·
+<a href="https://aws.amazon.com/ses/pricing/">S4: SES</a></p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>07 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>07. 선택형 AI 비용과 예산 통제</h2>
+<p>비용 예시 모델은 <strong>GPT-5.4 Mini</strong>입니다. 최종 채택은 한국어 품질·잘못된 규칙 제안·지연 평가 후
+결정합니다. 공식 텍스트 표준 단가는 100만 토큰당 입력 <strong>$0.75</strong>, 출력 <strong>$4.50</strong>입니다.
+캐시 할인·Batch 할인·유료 도구 호출은 이 계산에 넣지 않았습니다.
+<a href="https://developers.openai.com/api/docs/models/gpt-5.4-mini">공식 모델 단가</a></p>
+<h3>호출량을 정한 비용 예시</h3>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>가정 및 계산</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1회 입력</td>
+<td>3,000토큰: 집계 지표·규칙·짧은 대화 이력</td>
+</tr>
+<tr>
+<td>1회 청구 출력</td>
+<td>800토큰 가정: 추론 토큰을 사용할 경우 그 비용까지 출력 예산에 포함</td>
+</tr>
+<tr>
+<td>1회 모델 비용</td>
+<td>3,000 × 0.75 / 1,000,000 + 800 × 4.50 / 1,000,000 = <strong>$0.00585</strong></td>
+</tr>
+<tr>
+<td>1인 월 사용</td>
+<td>12회 → <strong>$0.0702</strong></td>
+</tr>
+<tr>
+<td>20% 재시도·변동 여유</td>
+<td><strong>$0.08424 ≈ 118원 / AI 이용자·월</strong></td>
+</tr>
+<tr>
+<td>AI 이용자 100명</td>
+<td><strong>$8.424 ≈ 11,794원/월</strong>, 일평균 약 393원</td>
+</tr>
+<tr>
+<td>AI 이용자 1,000명</td>
+<td><strong>$84.24 ≈ 117,936원/월</strong>, 일평균 약 3,931원</td>
+</tr>
+</tbody>
+</table>
+<p>이 값은 정해 둔 토큰·호출량 안의 계산 예시입니다. 사용자가 늘어날 때 서버·DB도 추가될 수 있으며,
+긴 프롬프트·큰 출력·추론·재시도·지역 처리 할증 등으로 실제 금액이 달라집니다.
+실제 응답의 usage 값과 공급자 비용을 대조합니다. AI 옵션 가격은 API 비용뿐 아니라
+품질 검증·지원·개인정보 관리·운영비를 포함한 제품 가격입니다.</p>
+<h3>비용을 제어하는 제품 설계</h3>
+<ul>
+<li>집계 데이터가 바뀌지 않으면 이미 만든 회고를 재사용합니다.</li>
+<li>서버에서 사용자별 월 12회 한도, 요청당 입력·출력 한도, 제한된 재시도와 호출 예약을 적용합니다.</li>
+<li>제안이 검증되지 않으면 규칙을 저장하지 않고 기존 결정적 추천으로 안내합니다.</li>
+<li>월 AI 예산의 50/80/100% 도달을 알립니다. 동시 요청의 예상 비용도 예약해 초과 폭을 제한합니다.</li>
+<li>운영자가 지정한 한도 도달 시 새 AI 작업을 중지하되 기존 앱 차단은 계속 동작합니다.</li>
+<li>서비스 공급자의 알림만을 하드 한도로 간주하지 않고 앱 서버에서 통제합니다.</li>
+</ul><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>08 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>08. 매출·손익 시뮬레이션</h2>
+<p>한국의 자동 갱신 구독을 Google Play Billing으로 판매하는 경우를 기준으로 수수료 <strong>15%</strong>를
+계산 가정으로 사용합니다. 지역·프로그램·결제 방식에 따라 달라질 수 있습니다.
+<a href="https://support.google.com/googleplay/android-developer/answer/112622?hl=en">Google Play 수수료</a></p>
+<p>아래는 소비자가 3,900원에 부가세 10%가 포함됐다고 <strong>가정한 기획 계산</strong>입니다.
+<code>1인 월 정산 추정 = 3,900 ÷ 1.10 × (1 − 0.15) = 약 3,014원</code>.
+실제 세금 징수·수수료 과표·정산은 판매 국가와 Console 명세를 확인해야 합니다.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">월 활성 사용자(MAU)</th>
+<th style="text-align: right;">유료 전환 가정</th>
+<th style="text-align: right;">Pro 월간 이용자</th>
+<th style="text-align: right;">소비자 결제 총액</th>
+<th style="text-align: right;">정산 추정</th>
+<th style="text-align: right;">인프라 예산</th>
+<th style="text-align: right;">운영 잔액</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">3%</td>
+<td style="text-align: right;">3명</td>
+<td style="text-align: right;">11,700원</td>
+<td style="text-align: right;">9,041원</td>
+<td style="text-align: right;">63,000원</td>
+<td style="text-align: right;"><strong>−53,959원</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">1,000</td>
+<td style="text-align: right;">3%</td>
+<td style="text-align: right;">30명</td>
+<td style="text-align: right;">117,000원</td>
+<td style="text-align: right;">90,409원</td>
+<td style="text-align: right;">63,000원</td>
+<td style="text-align: right;"><strong>27,409원</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">10,000</td>
+<td style="text-align: right;">3%</td>
+<td style="text-align: right;">300명</td>
+<td style="text-align: right;">1,170,000원</td>
+<td style="text-align: right;">904,091원</td>
+<td style="text-align: right;">210,000원</td>
+<td style="text-align: right;"><strong>694,091원</strong></td>
+</tr>
+</tbody>
+</table>
+<p>10,000 MAU의 월 $150는 성장 예산 가정이며 성능 보장이 아닙니다. 실제 동시접속·API·집계 부하로
+서버 증설을 결정합니다. 운영 잔액은 <strong>인건비·마케팅·환불·AI·기타 세금을 제외한 값</strong>이므로 순이익이 아닙니다.
+이 표에는 연간 상품과 AI 추가 요금 매출을 넣지 않았습니다.</p>
+<h3>손익분기와 연간 상품</h3>
+<ul>
+<li>월 고정 예산 63,000원만 회수하려면 Pro 월간 이용자 <strong>21명</strong>이 필요합니다.</li>
+<li>월 1,000 MAU 기준으로는 약 <strong>2.1%</strong> 전환에 해당합니다. 인건비를 넣으면 더 높아집니다.</li>
+<li>연 39,000원은 월 인식 매출 3,250원입니다. 같은 세금·수수료 가정의 월 정산 환산은 약 2,511원,
+  같은 고정비 회수에는 <strong>26명</strong>이 필요합니다. 연 결제 현금 유입과 월 매출 인식을 분리합니다.</li>
+<li>AI 옵션 2,900원의 정산 가정 약 2,241원에서 모델 예산 118원을 빼면 약 2,123원입니다.
+  이는 AI 관련 추가 지원·인프라·환불·인건비를 차감하기 전 기여액입니다.</li>
+</ul>
+<h3>실제 사용자 확보안</h3>
+<p>집중·공부·업무 중 반복 실행을 줄이고 싶은 성인 사용자를 먼저 모집합니다. 20~30명 베타에서
+권한 설정 완료율, 7일·30일 유지율, 제한의 오작동, 사용자가 체감한 유용성, 유료 의향을 확인합니다.
+허위 리뷰나 긍정 평가 대가 지급 없이 자발적 피드백을 받고, 허락받은 사례만 소개합니다.</p>
+<p>가정을 바꾸는 계산기는 이 보고서 마지막 부록에서 이용할 수 있습니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>09 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>09. 매일 Discord + 이메일 비용 보고</h2>
+<p><strong>운영자용 보고 설계입니다. 현재 예약·발송은 미구현·미설정입니다.</strong>
+제안 시각은 매일 <strong>09:00 Asia/Seoul</strong>이며 변경할 수 있습니다.</p>
+<h3>보고서를 두 종류로 나눕니다</h3>
+<table>
+<thead>
+<tr>
+<th>종류</th>
+<th>주기</th>
+<th>전달 내용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>일일 운영비 보고서</td>
+<td>매일</td>
+<td>전일 비용, 월 누적, 월말 예상, 예산 잔액, AI 사용, 데이터 지연 및 알림</td>
+</tr>
+<tr>
+<td>공식 요금 명세서 모음</td>
+<td>공급자가 발행할 때</td>
+<td>공급자 인보이스 PDF 또는 인증이 필요한 링크, 통화·세금·결제 상태</td>
+</tr>
+</tbody>
+</table>
+<p>매일 새 공식 청구서가 발행되는 것은 아닙니다. Supabase는 청구 주기가 재설정될 때 월 인보이스를
+발행합니다. 공급자별 청구 주기도 같다고 가정하지 않습니다.
+<a href="https://supabase.com/docs/guides/platform/your-monthly-invoice">Supabase 인보이스</a></p>
+<h3>데이터 수집 설계</h3>
+<table>
+<thead>
+<tr>
+<th>비용 원천</th>
+<th>수집 방식 제안</th>
+<th>주의점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS 서버·SES 등</td>
+<td>Cost Explorer에서 서비스별 일별 비용·월 누적 수집</td>
+<td>일 2회 요청 예산, 페이지 추가 시 API 비용 추가</td>
+</tr>
+<tr>
+<td>Supabase</td>
+<td>요금제·추가 프로젝트·사용량으로 추정, 월 인보이스로 대조</td>
+<td>공개 API의 일일 확정 청구 조회를 확인하지 못했으므로 가능하다고 전제하지 않음</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>서버 토큰 계측 + OpenAI 조직 Costs API 대조</td>
+<td>모델 호출 키와 운영 비용 조회 권한 분리 [S5]</td>
+</tr>
+<tr>
+<td>도메인·개발 도구</td>
+<td>반복 지출 원장에 금액·주기·다음 결제일 등록</td>
+<td>연 결제의 실제 출금과 일할 비용 분리</td>
+</tr>
+<tr>
+<td>Google Play</td>
+<td>매출·환불·수수료 정산 자료 별도 수집</td>
+<td>클라우드 비용과 매출을 구분하고 이중 차감 방지</td>
+</tr>
+</tbody>
+</table>
+<p>KST 전일 운영 지표와 공급자 청구일(UTC 등)을 함께 표시합니다. 공급자 일별 버킷을 시각만 바꿔
+KST 일별 확정 금액이라고 표시하지 않습니다. 정확한 KST 배분은 시간대별 원천 자료가 있을 때만 합니다.
+AWS 비용은 하루 이상 늦게 바뀔 수 있으므로 “잠정·추정·확정·미수집” 상태와 수집 시각이 필요합니다.
+<a href="https://docs.aws.amazon.com/cost-management/latest/userguide/ce-what-is.html">AWS 갱신 주기</a></p>
+<p><code>수집 → 출처별 원장 → 추정/확정 구분 → 예산 비교 → 보고서 생성 → Discord / 이메일</code></p>
+<p><a href="https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/usage/methods/costs">S5: OpenAI Costs API</a></p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>10 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>10. 보고서 예시와 안정적인 발송</h2>
+<p>아래 숫자는 화면 구성용 <strong>가상 예시</strong>이며 실제 청구 데이터가 아닙니다.</p>
+<pre><code class="language-text">[ChronoLock 비용 보고 · 예시] 2026-10-09 / 09:00 KST 발송
+기준: 운영일 KST / AWS·AI 비용 버킷 UTC 별도 표시
+
+전일 운영비 추정: $1.64 (약 2,296원)
+  AWS 잠정 $0.42 / DB·고정비 안분 $1.08 / AI 추정 $0.14
+이번 달 누적 추정: $14.50
+월말 예상: $50.85 / 월 예산: $60 / 예상 잔액: $9.15
+예산 예상 사용률: 84.8% → 주의
+
+수집 상태: AWS 잠정 / Supabase 추정 / AI 추정
+공식 인보이스: 오늘 신규 발행 없음
+필요 조치: AI 요청 증가 원인 확인
+</code></pre>
+<h3>채널별 전달</h3>
+<p>Discord는 운영자 전용 채널의 Incoming Webhook으로 짧은 요약·경고·상세 보고서 링크를 보냅니다.
+개별 사용자 앱 목록·사용 기록은 포함하지 않습니다. 웹훅 주소는 비밀 값으로 보관하고,
+전송 시 불필요한 사용자 멘션을 막습니다. <a href="https://docs.discord.com/developers/resources/webhook">Discord Webhook</a></p>
+<p>이메일은 HTML 본문 + CSV 원장 또는 일일 PDF로 자세히 보냅니다. 공식 인보이스는 가능하면
+운영자의 비공개 이메일로 전달하고 Discord에는 발행 사실만 알립니다. SES는 발신 도메인 인증과
+수신 가능 여부를 확인합니다. 샌드박스에서는 검증된 수신자 제한을 고려합니다.
+<a href="https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html">SES 발송 준비</a></p>
+<h3>운영 방식 제안</h3>
+<p>이미 운영할 Lightsail 서버에서 일별 작업을 실행하고 DB에 <code>(날짜, 채널, 보고서 버전)</code> 발송 이력을
+저장합니다. 중복 발송 방지, 재시작 후 누락일 보충, 채널별 성공·실패와 제한된 재시도를 구현합니다.
+Discord의 429 응답과 Retry-After를 존중합니다. 이메일 한쪽 실패가 다른 채널 발송을 막지 않게 합니다.</p>
+<p>수집 실패는 <strong>0원으로 기록하지 않고 미수집</strong>으로 표시합니다. 최근 7일 잠정 비용을 재수집해
+보정하고, 월말에는 인보이스·크레딧·세금과 대조합니다. 비용 급증 알림은 일일 보고와 별도로 처리합니다.
+공식 청구서의 자동 취득이 지원되지 않는 공급자는 billing 이메일 수신·수동 첨부 방식부터 시작합니다.</p>
+<p><strong>알림 기준 제안:</strong> 월 예산 50/80/100%, 일비용 최근 7일 평균의 2배이면서 $5 이상,
+수집 48시간 이상 지연. 전체 예산은 알림 기준이고, 자동 중지는 우선 AI 같은 선택 기능에만 적용합니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>11 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>11. 실행 순서와 사용자 준비 정보</h2>
+<h3>추천 실행 순서</h3>
+<table>
+<thead>
+<tr>
+<th>단계</th>
+<th>할 일</th>
+<th>다음 단계 진입 조건</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A. 차단 검증</td>
+<td>탭 S9+ YouTube A/B/C, 폰 1대 추가, 잠금·오프라인·재부팅</td>
+<td>시나리오별 관측 기록과 치명 오류 해결</td>
+</tr>
+<tr>
+<td>B. 출시 기반</td>
+<td>API 36 대응, 권한·접근성 신고 자료, Release AAB, 개인정보 문서</td>
+<td>내부 테스트와 정책 자료 준비</td>
+</tr>
+<tr>
+<td>C. 유료 가치</td>
+<td>추천 1~4 우선 완성, 베타 피드백, 가격 검증</td>
+<td>반복 사용 가치와 결제 의향 확인</td>
+</tr>
+<tr>
+<td>D. 과금·운영</td>
+<td>서버 구매 검증, 계정/동기화 범위 확정, 비용 원장·알림</td>
+<td>결제 생애주기·비용 수집·시험 발송 통과</td>
+</tr>
+<tr>
+<td>E. 정식 출시</td>
+<td>대상 계정의 테스트 요건 충족, 소규모 프로덕션 배포</td>
+<td>오류·지원 부담 관찰 후 확대</td>
+</tr>
+<tr>
+<td>F. 선택형 AI</td>
+<td>추천 5번의 효과 확인 후 8~10의 제한된 도입</td>
+<td>정확성·동의·예산 한도·유료 수요 확인</td>
+</tr>
+</tbody>
+</table>
+<h3>자동 비용 보고를 실제 켤 때 필요한 정보</h3>
+<table>
+<thead>
+<tr>
+<th>일반 정보</th>
+<th>비공개 설정으로 등록할 값</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>받을 이메일 주소, 보고 시각·시간대</td>
+<td>Discord 운영 채널 Webhook URL</td>
+</tr>
+<tr>
+<td>월 전체 예산, 별도 AI 한도, 기본 통화</td>
+<td>AWS 최소 비용 조회 권한 및 SES 발송 권한</td>
+</tr>
+<tr>
+<td>발신 이메일·도메인, DNS 관리 가능 여부</td>
+<td>필요 시 OpenAI 비용 조회용 Admin 권한과 별도 모델 호출 키</td>
+</tr>
+<tr>
+<td>AWS 계정·리전, Supabase 요금제·프로젝트 수</td>
+<td>선택한 공급자의 지원되는 조회 인증 정보</td>
+</tr>
+<tr>
+<td>도메인·개발 도구의 월/연 지출 목록</td>
+<td>수집·발송 서버의 비밀 저장소 설정</td>
+</tr>
+</tbody>
+</table>
+<p>이메일 주소와 원하는 시각·예산부터 확정하면 됩니다. Webhook·API 키·비밀번호는 문서나 PR에
+기록하지 않고 연동 시 비공개 설정에 등록합니다. 별도 수신 주소·Webhook이 아직 없어
+<strong>현재 실제 자동 발송은 설정되지 않았습니다.</strong></p>
+<h3>이번에 추가된 산출물</h3>
+<p>이 제안서의 Markdown·HTML·PDF, 가정을 조절하는 브라우저 계산기, 수정 후 HTML/PDF를 다시
+만드는 스크립트를 저장소에 남깁니다. 구현 명세는 PROJECT_SPEC.md이며, 이 문서의 요금제와
+기능 우선순위는 채택 전 제안입니다. 사용자 앱 코드나 실제 결제·광고·AI 동작은 변경하지 않습니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>12 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div><h2>12. 공식 근거와 재확인 항목</h2>
+<p>요금·정책 확인일: <strong>2026-10-10</strong>. 아래는 이 문서에서 참조한 공식 자료입니다.
+출시·계약·설정 시 해당 계정의 적용 조건과 최신 가격을 다시 확인합니다.</p>
+<table>
+<thead>
+<tr>
+<th>주제</th>
+<th>공식 자료</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Android 출시 API</td>
+<td><a href="https://support.google.com/googleplay/android-developer/answer/11926878?hl=en">Google Play target API requirements</a></td>
+</tr>
+<tr>
+<td>접근성·자동화 정책</td>
+<td><a href="https://support.google.com/googleplay/android-developer/answer/10964491?hl=en">AccessibilityService API</a></td>
+</tr>
+<tr>
+<td>신규 개인 계정 테스트</td>
+<td><a href="https://support.google.com/googleplay/android-developer/answer/14151465?hl=en">Closed testing requirements</a></td>
+</tr>
+<tr>
+<td>Google 등록 비용</td>
+<td><a href="https://support.google.com/googleplay/android-developer/answer/6112435?hl=en">Get started with Play Console</a></td>
+</tr>
+<tr>
+<td>구독 요건</td>
+<td><a href="https://support.google.com/googleplay/android-developer/answer/9900533?hl=en">Google Play subscriptions</a></td>
+</tr>
+<tr>
+<td>거래 수수료</td>
+<td><a href="https://support.google.com/googleplay/android-developer/answer/112622?hl=en">Google Play service fees</a></td>
+</tr>
+<tr>
+<td>iOS 등록 비용</td>
+<td><a href="https://developer.apple.com/programs/enroll/">Apple Developer enrollment</a></td>
+</tr>
+<tr>
+<td>iOS 차단 권한</td>
+<td><a href="https://developer.apple.com/documentation/familycontrols/requesting-the-family-controls-entitlement">Family Controls distribution entitlement</a></td>
+</tr>
+<tr>
+<td>서버 가격</td>
+<td><a href="https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-bundles.html">AWS Lightsail bundles</a></td>
+</tr>
+<tr>
+<td>DB 가격</td>
+<td><a href="https://supabase.com/pricing">Supabase pricing</a></td>
+</tr>
+<tr>
+<td>DB 월 청구서</td>
+<td><a href="https://supabase.com/docs/guides/platform/your-monthly-invoice">Supabase monthly invoice</a></td>
+</tr>
+<tr>
+<td>AI 단가</td>
+<td><a href="https://developers.openai.com/api/docs/models/gpt-5.4-mini">GPT-5.4 Mini</a></td>
+</tr>
+<tr>
+<td>AI 비용 조회</td>
+<td><a href="https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/usage/methods/costs">OpenAI organization costs</a></td>
+</tr>
+<tr>
+<td>AWS 비용 조회 단가</td>
+<td><a href="https://aws.amazon.com/aws-cost-management/aws-cost-explorer/pricing/">Cost Explorer pricing</a></td>
+</tr>
+<tr>
+<td>AWS 비용 지연</td>
+<td><a href="https://docs.aws.amazon.com/cost-management/latest/userguide/ce-what-is.html">Cost Explorer overview</a></td>
+</tr>
+<tr>
+<td>이메일 가격</td>
+<td><a href="https://aws.amazon.com/ses/pricing/">Amazon SES pricing</a></td>
+</tr>
+<tr>
+<td>이메일 발송 준비</td>
+<td><a href="https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html">SES sandbox / production</a></td>
+</tr>
+<tr>
+<td>Discord 전달</td>
+<td><a href="https://docs.discord.com/developers/resources/webhook">Discord Webhook resource</a></td>
+</tr>
+</tbody>
+</table>
+<p>기존 구현 근거: <code>android/app</code>, <code>android/domain</code>, <code>docs/STATUS.md</code>.
+검증 CI: <a href="https://github.com/ryu-han-kr/ChronoLock/actions/runs/37761659602">빌드·저장소 검사</a>.
+실기기 피드백은 사용자 확인이며 개별 성능 수치의 자동 검증 결과가 아닙니다.</p>
+<p><strong>추천 의사결정:</strong> 광고 없이 Android 품질과 Pro 가치를 먼저 검증하고, AI는 별도 수요가 있을 때
+월 한도를 두어 추가합니다. 비용 보고는 추정과 실제 청구를 구분하는 운영 도구로 도입합니다.</p><footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>13 / 14</span></footer></section><section class="sheet"><div class="kicker">CHRONOLOCK / PRODUCT & BUSINESS PLAN</div>
+<h2>부록 · 운영비와 구독 계산기</h2>
+<p>크롬에서 값을 바꾸면 즉시 계산됩니다. PDF는 생성 당시 값의 고정본입니다.
+아래 기본값은 보고서의 월간 Pro 예시이며, 연간 결제는 월 인식 가격으로 바꿔 입력하세요.</p>
+<form id="cost-form" class="form-grid">
+<label>월 활성 사용자 수<input name="mau" type="number" min="0" value="1000"></label>
+<label>Pro 전환율 (%)<input name="conversion" type="number" min="0" max="100" step="0.1" value="3"></label>
+<label>Pro 월 소비자가 (원)<input name="price" type="number" min="0" value="3900"></label>
+<label>기본 운영 예산 (USD/월)<input name="fixedUsd" type="number" min="0" step="0.01" value="45"></label>
+<label>계산용 환율 (원/USD)<input name="fx" type="number" min="1" value="1400"></label>
+<label>스토어 수수료 (%)<input name="fee" type="number" min="0" max="99.9" step="0.1" value="15"></label>
+<label>가격에 포함된 세금 (%)<input name="tax" type="number" min="0" step="0.1" value="10"></label>
+<label>AI 옵션 이용자 수<input name="aiUsers" type="number" min="0" value="0"></label>
+<label>AI 추가 소비자가 (원/월)<input name="addonPrice" type="number" min="0" value="2900"></label>
+<label>1인 월 AI 호출 횟수<input name="calls" type="number" min="0" value="12"></label>
+</form><p id="calc-error" role="alert"></p>
+<div class="results">
+<div class="result">Pro 월간 이용자<b id="out-paid"></b></div>
+<div class="result">AI 옵션 이용자<b id="out-aiUsers"></b></div>
+<div class="result">소비자 결제 총액 / 월<b id="out-gross"></b></div>
+<div class="result">세금·수수료 반영 정산 가정<b id="out-net"></b></div>
+<div class="result">AI 월 모델 예산<b id="out-aiUsd"></b></div>
+<div class="result">운영 예산 + AI / 월<b id="out-operating"></b></div>
+<div class="result">운영비 일평균 (30일)<b id="out-daily"></b></div>
+<div class="result">추가 비용 차감 전 운영 잔액<b id="out-remaining"></b></div>
+<div class="result">고정비 회수 Pro 인원 (AI 제외)<b id="out-breakEven"></b></div>
+</div>
+<h3>계산 기준</h3>
+<p class="note">유료 인원 = MAU × 전환율의 소수점 버림. AI 인원은 유료 인원 이내로 제한합니다.
+정산 = 소비자 결제액 ÷ (1 + 세금률) × (1 − 수수료율).
+AI 비용은 회당 입력 3,000 / 청구 출력 800토큰, 입력 $0.75 / 출력 $4.50 per 1M tokens,
+20% 여유를 포함합니다. 운영 잔액은 순이익이 아닙니다. 인건비·마케팅·환불·추가 세금·초과 인프라는 별도입니다.</p>
+<p class="note">월 기본 운영 예산은 용량 보장이 아닙니다. 가격·전환율·세금·환율은 직접 정한 가정이고,
+실제 정산은 계정 명세로 확인해야 합니다. 가격을 0으로 설정하면 손익분기 인원은 계산하지 않습니다.</p>
+<footer><span>2026.10.10 · 제안 / 실제 청구·출시 확정 아님</span><span>14 / 14</span></footer></section></main><script>/* Planning estimates only. Supplier prices checked on 2026-10-10. */
+function calculatePlan(v) {
+  const keys = ['mau', 'conversion', 'price', 'fixedUsd', 'fx', 'fee', 'tax', 'aiUsers', 'addonPrice', 'calls'];
+  for (const key of keys) {
+    if (!Number.isFinite(v[key]) || v[key] < 0) throw new Error('모든 값은 0 이상의 숫자로 입력하세요.');
+  }
+  if (v.fx === 0 || v.fee >= 100 || v.conversion > 100) throw new Error('환율은 0보다 크게, 수수료는 100% 미만, 전환율은 100% 이하로 입력하세요.');
+  const paid = Math.floor(v.mau * v.conversion / 100);
+  const aiUsers = Math.min(Math.floor(v.aiUsers), paid);
+  const gross = paid * v.price + aiUsers * v.addonPrice;
+  const netFactor = (1 - v.fee / 100) / (1 + v.tax / 100);
+  const net = gross * netFactor;
+  const aiUsd = aiUsers * v.calls * ((3000 * .75 + 800 * 4.5) / 1000000) * 1.2;
+  const operating = (v.fixedUsd + aiUsd) * v.fx;
+  const baseNet = v.price * netFactor;
+  return {paid, aiUsers, gross, net, aiUsd, operating, daily: operating / 30,
+    remaining: net - operating, breakEven: baseNet > 0 ? Math.ceil(v.fixedUsd * v.fx / baseNet) : null};
+}
+
+if (typeof module !== 'undefined') module.exports = {calculatePlan};
+
+if (typeof document !== 'undefined') {
+  const money = new Intl.NumberFormat('ko-KR', {maximumFractionDigits: 0});
+  const form = document.getElementById('cost-form');
+  const update = () => {
+    try {
+      const values = Object.fromEntries(Array.from(form.querySelectorAll('input')).map(i => [i.name, Number(i.value)]));
+      const r = calculatePlan(values);
+      const fields = {paid: r.paid + '명', aiUsers: r.aiUsers + '명', gross: money.format(r.gross) + '원',
+        net: money.format(r.net) + '원', aiUsd: '$' + r.aiUsd.toFixed(4),
+        operating: money.format(r.operating) + '원', daily: money.format(r.daily) + '원',
+        remaining: money.format(r.remaining) + '원', breakEven: r.breakEven === null ? '계산 불가' : r.breakEven + '명'};
+      for (const [key, value] of Object.entries(fields)) document.getElementById('out-' + key).textContent = value;
+      document.getElementById('calc-error').textContent = '';
+    } catch (e) { document.getElementById('calc-error').textContent = e.message; }
+  };
+  form.addEventListener('input', update);
+  form.addEventListener('submit', e => e.preventDefault());
+  update();
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.sheet').forEach(s => {
+      s.dataset.overflow = String(s.scrollHeight > s.clientHeight + 2);
+    });
+  });
+}
+</script></body></html>

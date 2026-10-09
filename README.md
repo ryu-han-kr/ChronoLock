@@ -16,6 +16,15 @@
 사용자가 제공할 정보와 설정은 [docs/USER_SETUP.md](docs/USER_SETUP.md)를 확인하세요.
 현재 단계에는 외부 API 키가 필요하지 않습니다.
 
+## 기능·출시·수익화 보고서
+
+[크롬용 보고서와 계산기](docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.html) ·
+[PDF 다운로드](docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.pdf) ·
+[GitHub에서 읽는 원문](docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.md)
+
+현재 기능, 제안 기능 10개, 선택형 AI, 광고 없는 구독 가격안, 월·일 운영비,
+Discord·이메일 비용 보고 설계를 담았습니다. 가격·예산은 가정이며 실제 자동 발송은 아직 설정하지 않았습니다.
+
 ## 개발 환경
 
 `android/`를 Gradle 프로젝트로 엽니다. JDK 17, Android SDK Platform 35,

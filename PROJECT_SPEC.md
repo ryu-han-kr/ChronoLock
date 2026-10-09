@@ -763,3 +763,13 @@ See docs/DEVICE_TEST_PLAN.md for acceptance procedures.
 See docs/USER_SETUP.md for user-provided device details, local setup and future service configuration.
 No external API credentials are required for the current Android PoC.
 Continue Android build and blocking reliability work before backend, AI or iOS.
+
+## 2026-10-10 planning update
+
+The user reported that the Galaxy Tab S9+ / Android 16 / YouTube device trial works.
+Individual A/B/C timing, offline and restart acceptance records still need to be completed.
+See docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.md for 10 feature proposals,
+optional AI, subscription price hypotheses, daily/monthly operating costs and a Discord/email
+cost-reporting design. HTML and PDF versions are provided alongside the Markdown source.
+These are proposals, not implemented billing, AI or scheduled notifications.
+The current targetSdk is 35; Play release preparation must address the verified API 36 requirement.

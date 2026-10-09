@@ -1,6 +1,6 @@
 # 작업 상태
 
-갱신: 2026-10-09
+갱신: 2026-10-10
 
 ## 이전 작업 확인
 
@@ -27,6 +27,21 @@ Room 계측 테스트까지 작성되었으나 첫 커밋과 APK 빌드 검증�
 | GitHub Actions APK / Lint | 통과; Lint 오류 0개, 경고 19개 |
 | Android 35 Room 계측 테스트 | 4개 통과; 파일 DB 재개방 복구 포함 |
 | 실제 기기 A/B/C 차단, 오프라인, 재시작 | 미검증 |
+
+2026-10-10: 갤럭시 탭 S9+ (SM-X810, Android 16/API 36)에 무선 ADB로 APK를 설치한 뒤
+사용자가 정상 동작을 확인했습니다. 이 피드백은 초기 실기기 동작 확인이며,
+A/B/C별 수치·지연·오프라인·재시작의 개별 검증 기록을 대체하지 않습니다.
+
+## 기능·출시·운영 기획 (2026-10-10)
+
+[보고서 원문](reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.md),
+[크롬 HTML](reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.html),
+[14쪽 PDF](reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.pdf)를 추가했습니다.
+추가 기능 10개, 선택형 AI, 구독 가격 가설, 운영비 산식, 일일 Discord/이메일 보고 설계를 포함합니다.
+계산기 산식과 PDF 한글·페이지 구성을 검증했습니다. 서버·구독·AI·발송의 실제 활성화는 하지 않았습니다.
+신규 Google Play 제출에 필요한 API 36 대응은 현재 targetSdk 35에서 별도 구현해야 합니다.
+
+## 빌드 근거
 
 빌드 검증 커밋: `d5fa237`.
 [CI 실행 및 APK 아티팩트](https://github.com/ryu-han-kr/ChronoLock/actions/runs/37759871555).
