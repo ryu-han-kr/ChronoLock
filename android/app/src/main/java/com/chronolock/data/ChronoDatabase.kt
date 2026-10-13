@@ -1,6 +1,8 @@
 package com.chronolock.data
 
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "blocking_rules")
@@ -11,6 +13,11 @@ data class RuleEntity(
     val maxOpenCount: Int?,
     val cooldownSeconds: Long?,
     val enabled: Boolean = true,
+    val sessionLimitSeconds: Long? = null,
+    val scheduleStartMinute: Int? = null,
+    val scheduleEndMinute: Int? = null,
+    val scheduleDaysMask: Int? = null,
+    val focusUntilEpochMillis: Long? = null,
 )
 
 @Entity(tableName = "daily_usage_stats", primaryKeys = ["packageName", "date"])
@@ -28,6 +35,10 @@ data class CheckpointEntity(
     val elapsedMillis: Long,
     val bootId: Int,
     val zone: String,
+    val observedPackage: String? = null,
+    val blockedPackage: String? = null,
+    val blockedSessionMillis: Long? = null,
+    @ColumnInfo(defaultValue = "0") val wasBlocked: Boolean = false,
 )
 
 @Entity(tableName = "app_usage_events", indices = [Index("epochMillis")])
@@ -42,6 +53,8 @@ interface ChronoDao {
     @Query("SELECT * FROM last_closed") suspend fun closes(): List<CloseEntity>
     @Query("SELECT * FROM monitor_checkpoint WHERE id = 1") suspend fun checkpoint(): CheckpointEntity?
     @Upsert suspend fun saveRule(rule: RuleEntity)
+    @Query("UPDATE blocking_rules SET focusUntilEpochMillis = :until WHERE enabled = 1") suspend fun startFocus(until: Long)
+    @Query("UPDATE blocking_rules SET focusUntilEpochMillis = NULL") suspend fun stopFocus()
     @Query("DELETE FROM blocking_rules WHERE packageName = :packageName") suspend fun deleteRule(packageName: String)
     @Upsert suspend fun saveDaily(rows: List<DailyEntity>)
     @Upsert suspend fun saveCloses(rows: List<CloseEntity>)
@@ -56,5 +69,20 @@ interface ChronoDao {
     @Query("DELETE FROM app_usage_events") suspend fun clearEvents()
 }
 
-@Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class], version = 1, exportSchema = true)
-abstract class ChronoDatabase : RoomDatabase() { abstract fun dao(): ChronoDao }
+@Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class], version = 2, exportSchema = true)
+abstract class ChronoDatabase : RoomDatabase() {
+    abstract fun dao(): ChronoDao
+
+    companion object {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                listOf("sessionLimitSeconds", "scheduleStartMinute", "scheduleEndMinute", "scheduleDaysMask", "focusUntilEpochMillis")
+                    .forEach { db.execSQL("ALTER TABLE blocking_rules ADD COLUMN $it INTEGER") }
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN observedPackage TEXT")
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN blockedPackage TEXT")
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN blockedSessionMillis INTEGER")
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN wasBlocked INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+    }
+}

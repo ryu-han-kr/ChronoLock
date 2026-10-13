@@ -4,12 +4,25 @@ import androidx.room.withTransaction
 import com.chronolock.domain.*
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.DayOfWeek
+import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-fun RuleEntity.toDomain() = AppRule(packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, enabled = enabled)
+fun RuleEntity.toDomain() = AppRule(
+    packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, sessionLimitSeconds,
+    schedule = if (scheduleStartMinute != null && scheduleEndMinute != null && scheduleDaysMask != null) {
+        Schedule(LocalTime.ofSecondOfDay(scheduleStartMinute * 60L), LocalTime.ofSecondOfDay(scheduleEndMinute * 60L),
+            DayOfWeek.values().filter { scheduleDaysMask and (1 shl (it.value - 1)) != 0 }.toSet())
+    } else null,
+    focusUntilEpochMillis = focusUntilEpochMillis, enabled = enabled,
+)
+
+fun AppRule.toEntity() = RuleEntity(packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, enabled,
+    sessionLimitSeconds, schedule?.start?.toSecondOfDay()?.div(60), schedule?.end?.toSecondOfDay()?.div(60),
+    schedule?.days?.fold(0) { mask, day -> mask or (1 shl (day.value - 1)) }, focusUntilEpochMillis)
 
 @Singleton
 class LocalRepository @Inject constructor(private val database: ChronoDatabase) : RuleRepository {
@@ -24,8 +37,27 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     override suspend fun saveRule(rule: AppRule) = mutex.withLock {
         database.withTransaction {
-            dao.saveRule(RuleEntity(rule.packageName, rule.appName, rule.dailyLimitSeconds, rule.maxOpenCount, rule.cooldownSeconds, rule.enabled))
+            // Focus belongs to the active session, not to an editor snapshot opened earlier.
+            val currentFocus = dao.rules().firstOrNull { it.packageName == rule.packageName }?.focusUntilEpochMillis
+            dao.saveRule(rule.copy(focusUntilEpochMillis = currentFocus).toEntity())
             dao.insertEvents(listOf(EventEntity(type = "RULE_UPDATED", packageName = rule.packageName, epochMillis = System.currentTimeMillis())))
+        }
+    }
+
+    suspend fun startFocus(minutes: Int, nowEpochMillis: Long) = mutex.withLock {
+        require(minutes in 1..180) { "집중 시간은 1~180분으로 설정해 주세요." }
+        require(dao.rules().any { it.enabled }) { "먼저 집중할 때 제한할 앱을 설정해 주세요." }
+        val until = Math.addExact(nowEpochMillis, minutes * 60000L)
+        database.withTransaction {
+            dao.startFocus(until)
+            dao.insertEvents(listOf(EventEntity(type = "FOCUS_STARTED", packageName = null, epochMillis = nowEpochMillis)))
+        }
+    }
+
+    suspend fun stopFocus(nowEpochMillis: Long) = mutex.withLock {
+        database.withTransaction {
+            dao.stopFocus()
+            dao.insertEvents(listOf(EventEntity(type = "FOCUS_CANCELLED", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
 
@@ -67,7 +99,10 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     private suspend fun load(): MonitorState {
         val checkpoint = dao.checkpoint()
         return MonitorState(
+            observedPackage = checkpoint?.observedPackage,
             active = checkpoint?.activePackage?.let { ActiveSession(it, checkpoint.sessionMillis) },
+            blockedSession = checkpoint?.blockedPackage?.let { ActiveSession(it, checkpoint.blockedSessionMillis ?: 0) },
+            decision = if (checkpoint?.wasBlocked == true) RuleDecision(DecisionType.BLOCK) else RuleDecision.Allow,
             clock = checkpoint?.let { ClockReading(it.epochMillis, it.elapsedMillis, it.bootId, ZoneId.of(it.zone)) },
             daily = dao.daily().associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) },
             lastClosed = dao.closes().associate { it.packageName to CloseMark(it.epochMillis, it.elapsedMillis, it.bootId) },
@@ -86,7 +121,9 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
                 CloseEntity(app, mark.epochMillis, mark.elapsedMillis, mark.bootId)
             })
             dao.saveCheckpoint(CheckpointEntity(activePackage = retained.active?.packageName, sessionMillis = retained.active?.usageMillis ?: 0,
-                epochMillis = clock.epochMillis, elapsedMillis = clock.elapsedMillis, bootId = clock.bootId, zone = clock.zone.id))
+                epochMillis = clock.epochMillis, elapsedMillis = clock.elapsedMillis, bootId = clock.bootId, zone = clock.zone.id,
+                observedPackage = retained.observedPackage, blockedPackage = retained.blockedSession?.packageName,
+                blockedSessionMillis = retained.blockedSession?.usageMillis, wasBlocked = retained.decision.denied))
             dao.insertEvents(update.events.map { EventEntity(type = it.type, packageName = it.packageName, epochMillis = it.epochMillis) })
             if (previous?.clock?.date != clock.date) {
                 dao.pruneEvents(clock.epochMillis - 30L * 86400 * 1000)

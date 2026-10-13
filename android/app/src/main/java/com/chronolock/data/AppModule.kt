@@ -15,6 +15,7 @@ import javax.inject.Singleton
 object AppModule {
     @Provides @Singleton
     fun database(@ApplicationContext context: Context): ChronoDatabase =
-        Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db").build()
+        Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db")
+            .addMigrations(ChronoDatabase.MIGRATION_1_2).build()
     @Provides fun ruleRepository(repository: LocalRepository): RuleRepository = repository
 }

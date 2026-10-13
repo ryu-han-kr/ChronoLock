@@ -254,4 +254,56 @@ class UsageMonitorTest {
         assertEquals(1000L, usage(restored).usageMillis)
         assertEquals(1, restored.daily.size)
     }
+
+    @Test fun restoreBlockedSession_keepsBlockWithoutBillingOverlayOrDuplicatingAttempt() {
+        val rules = mapOf(app to AppRule(app, "Test", sessionLimitSeconds = 1))
+        val entered = monitor.foreground(MonitorState(), app, clock(), rules).state
+        val blocked = monitor.tick(entered, clock(1000), rules).state
+        val restored = monitor.restore(blocked, clock(10000), mapOf(app to 9000L), app, rules).state
+        assertEquals(listOf(Reason.SESSION_USAGE), restored.decision.reasons)
+        assertEquals(1000L, usage(restored).usageMillis)
+        assertEquals(1, usage(restored).blockedAttempts)
+        assertNull(restored.active)
+    }
+
+    @Test fun restoreActiveSession_countsRecoveredTimeTowardSessionLimit() {
+        val rules = mapOf(app to AppRule(app, "Test", sessionLimitSeconds = 2))
+        var before = monitor.foreground(MonitorState(), app, clock(), rules).state
+        before = monitor.tick(before, clock(1000), rules).state
+        val restored = monitor.restore(before, clock(2000), mapOf(app to 1000L), app, rules).state
+        assertEquals(listOf(Reason.SESSION_USAGE), restored.decision.reasons)
+        assertEquals(2000L, restored.blockedSession?.usageMillis)
+    }
+
+    @Test fun restoreBlockedSession_otherForegroundClearsOldSession() {
+        val rules = mapOf(app to AppRule(app, "Test", sessionLimitSeconds = 1))
+        val entered = monitor.foreground(MonitorState(), app, clock(), rules).state
+        val blocked = monitor.tick(entered, clock(1000), rules).state
+        val restored = monitor.restore(blocked, clock(2000), emptyMap(), "other.app", rules).state
+        assertNull(restored.blockedSession)
+        assertFalse(monitor.foreground(restored, app, clock(3000), rules).state.decision.denied)
+    }
+
+    @Test fun focusExpires_butDailyLimitStillApplies() {
+        val rules = rules(daily = 1)
+        var before = monitor.foreground(MonitorState(), app, clock(), rules).state
+        before = monitor.tick(before, clock(1000), rules).state
+        val focused = mapOf(app to rules.getValue(app).copy(focusUntilEpochMillis = origin + 5000))
+        val during = monitor.tick(before, clock(2000), focused).state
+        assertTrue(Reason.FOCUS in during.decision.reasons)
+        val after = monitor.tick(during, clock(5000), focused).state
+        assertEquals(listOf(Reason.DAILY_USAGE), after.decision.reasons)
+    }
+
+    @Test fun scheduleStartsAndEnds_whileAppRemainsForeground() {
+        val start = Instant.ofEpochMilli(origin + 2000).atZone(zone)
+        val rules = mapOf(app to AppRule(app, "Test", schedule = Schedule(start.toLocalTime(), start.toLocalTime().plusSeconds(2), setOf(start.dayOfWeek))))
+        var state = monitor.foreground(MonitorState(), app, clock(), rules).state
+        assertFalse(state.decision.denied)
+        state = monitor.tick(state, clock(2000), rules).state
+        assertEquals(listOf(Reason.SCHEDULE), state.decision.reasons)
+        state = monitor.tick(state, clock(4000), rules).state
+        assertFalse(state.decision.denied)
+        assertEquals(2000L, usage(state).usageMillis)
+    }
 }

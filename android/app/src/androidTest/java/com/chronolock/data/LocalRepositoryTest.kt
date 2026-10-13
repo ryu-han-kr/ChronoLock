@@ -1,11 +1,17 @@
 package com.chronolock.data
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.ClockReading
+import com.chronolock.domain.Reason
+import com.chronolock.domain.Schedule
+import java.time.DayOfWeek
+import java.time.LocalTime
 import java.time.Instant
 import java.time.ZoneId
 import java.util.UUID
@@ -15,6 +21,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.json.JSONObject
 
 @RunWith(AndroidJUnit4::class)
 class LocalRepositoryTest {
@@ -33,7 +40,8 @@ class LocalRepositoryTest {
         context.deleteDatabase(databaseName)
     }
 
-    private fun openDatabase() = Room.databaseBuilder(context, ChronoDatabase::class.java, databaseName).build()
+    private fun openDatabase() = Room.databaseBuilder(context, ChronoDatabase::class.java, databaseName)
+        .addMigrations(ChronoDatabase.MIGRATION_1_2).build()
 
     @Test fun databaseReopen_restoresRuleCountersAndCooldown() = runBlocking {
         val rule = AppRule("test.app", "Test", dailyLimitSeconds = 60, maxOpenCount = 3, cooldownSeconds = 30)
@@ -122,5 +130,94 @@ class LocalRepositoryTest {
         assertNull(database.dao().checkpoint()?.activePackage)
         assertEquals(2000L, database.dao().daily().single().usageMillis)
         assertEquals(1, database.dao().daily().single().blockedAttempts)
+    }
+
+    @Test fun advancedRule_roundTripsAcrossDatabaseReopen() = runBlocking {
+        val rule = AppRule("test.app", "Test", dailyLimitSeconds = 1200, maxOpenCount = 5, cooldownSeconds = 600,
+            sessionLimitSeconds = 300, schedule = Schedule(LocalTime.of(23, 0), LocalTime.of(7, 0), setOf(DayOfWeek.FRIDAY)), enabled = false)
+        LocalRepository(database).saveRule(rule)
+        database.close()
+        database = openDatabase()
+        assertEquals(rule, database.dao().rules().single().toDomain())
+    }
+
+    @Test fun sessionBlock_survivesDatabaseReopenWithoutChargingOverlayTime() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", sessionLimitSeconds = 1))
+        repository.foreground("test.app", clock(0))
+        repository.tick(clock(1000))
+        database.close()
+        database = openDatabase()
+        val restored = LocalRepository(database).reconnect(clock(10000), mapOf("test.app" to 9000L), "test.app")
+        assertEquals(listOf(Reason.SESSION_USAGE), restored.decision.reasons)
+        assertEquals(1000L, database.dao().daily().single().usageMillis)
+        assertEquals(1, database.dao().daily().single().blockedAttempts)
+        assertEquals(1000L, database.dao().checkpoint()?.blockedSessionMillis)
+    }
+
+    @Test fun focus_persistsDeadlineAndTargetsOnlyEnabledExistingRules() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", dailyLimitSeconds = 600))
+        repository.saveRule(AppRule("disabled.app", "Disabled", dailyLimitSeconds = 600, enabled = false))
+        repository.startFocus(25, origin)
+        repository.saveRule(AppRule("later.app", "Later", dailyLimitSeconds = 600))
+        database.close()
+        database = openDatabase()
+        val rules = database.dao().rules().associateBy { it.packageName }
+        assertEquals(origin + 25 * 60000, rules.getValue("test.app").focusUntilEpochMillis)
+        assertNull(rules.getValue("disabled.app").focusUntilEpochMillis)
+        assertNull(rules.getValue("later.app").focusUntilEpochMillis)
+        val restored = LocalRepository(database)
+        assertEquals(listOf(Reason.FOCUS), restored.reconnect(clock(1000), emptyMap(), "test.app").decision.reasons)
+        assertFalse(restored.tick(clock(25 * 60000L)).decision.denied)
+    }
+
+    @Test fun focus_cancelKeepsRulesAndEditingDoesNotEraseDeadline() = runBlocking {
+        val repository = LocalRepository(database)
+        val rule = AppRule("test.app", "Test", sessionLimitSeconds = 300)
+        repository.saveRule(rule)
+        repository.startFocus(25, origin)
+        repository.saveRule(rule.copy(sessionLimitSeconds = 120))
+        assertEquals(origin + 25 * 60000, database.dao().rules().single().focusUntilEpochMillis)
+        repository.stopFocus(origin + 1000)
+        assertEquals(rule.copy(sessionLimitSeconds = 120), database.dao().rules().single().toDomain())
+    }
+
+    @Test fun focus_requiresAnEnabledTargetAndValidDuration() = runBlocking {
+        val repository = LocalRepository(database)
+        try { repository.startFocus(25, origin); fail("No target must be rejected") } catch (_: IllegalArgumentException) { }
+        repository.saveRule(AppRule("test.app", "Test", maxOpenCount = 3))
+        try { repository.startFocus(0, origin); fail("Zero duration must be rejected") } catch (_: IllegalArgumentException) { }
+        assertNull(database.dao().rules().single().focusUntilEpochMillis)
+    }
+
+    @Test fun migrationFromVersionOne_preservesRulesUsageAndCheckpoint() = runBlocking {
+        database.close()
+        val schema = InstrumentationRegistry.getInstrumentation().context.assets
+            .open("com.chronolock.data.ChronoDatabase/1.json").bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
+        val file = context.getDatabasePath(databaseName)
+        file.parentFile?.mkdirs()
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { old ->
+            val entities = schema.getJSONArray("entities")
+            for (i in 0 until entities.length()) {
+                val entity = entities.getJSONObject(i)
+                old.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", entity.getString("tableName")))
+                val indices = entity.getJSONArray("indices")
+                for (j in 0 until indices.length()) old.execSQL(indices.getJSONObject(j).getString("createSql")
+                    .replace("\${TABLE_NAME}", entity.getString("tableName")))
+            }
+            old.execSQL("INSERT INTO blocking_rules VALUES ('test.app', 'Test', 60, 3, 30, 1)")
+            old.execSQL("INSERT INTO daily_usage_stats VALUES ('test.app', '2026-10-08', 1500, 1, 0)")
+            old.execSQL("INSERT INTO monitor_checkpoint VALUES (1, 'test.app', 1500, ?, 1500, 1, 'Asia/Seoul')", arrayOf(origin + 1500))
+            old.version = 1
+        }
+        database = openDatabase()
+        val restoredRule = database.dao().rules().single().toDomain()
+        assertEquals(AppRule("test.app", "Test", 60, 3, 30), restoredRule)
+        assertEquals(1500L, database.dao().daily().single().usageMillis)
+        assertEquals(1500L, database.dao().checkpoint()?.sessionMillis)
+        assertFalse(database.dao().checkpoint()!!.wasBlocked)
+        LocalRepository(database).saveRule(restoredRule.copy(sessionLimitSeconds = 5))
+        assertEquals(5L, database.dao().rules().single().sessionLimitSeconds)
     }
 }

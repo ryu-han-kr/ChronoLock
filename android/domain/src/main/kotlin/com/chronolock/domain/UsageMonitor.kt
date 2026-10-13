@@ -54,7 +54,7 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         val decision = evaluate(next, target, now, rules)
         if (decision.denied) {
             if (!next.decision.denied) {
-                next = next.copy(blockedSession = next.active)
+                next = next.copy(blockedSession = next.active ?: next.blockedSession)
                 next = close(next, now, events)
                 next = incrementBlocked(next, target, now)
                 events += UsageEvent("BLOCK_TRIGGERED", target, now.epochMillis)
@@ -84,16 +84,22 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         foregroundPackage: String?,
         rules: Map<String, AppRule>,
     ): MonitorUpdate {
+        val sameBoot = loaded.clock?.let { it.bootId == now.bootId && it.elapsedMillis <= now.elapsedMillis } == true
+        val sameForeground = sameBoot && foregroundPackage != null &&
+            (loaded.observedPackage == foregroundPackage || loaded.active?.packageName == foregroundPackage)
         val daily = loaded.daily.toMutableMap()
         recoveredUsage.filterKeys { rules[it]?.enabled == true }.forEach { (app, usage) ->
+            // UsageEvents may report the app behind our blocking overlay as still resumed.
+            if (sameForeground && loaded.decision.denied && app == foregroundPackage) return@forEach
             val key = DailyKey(app, now.date)
             val existing = daily[key] ?: DailyUsage()
             daily[key] = existing.copy(usageMillis = existing.usageMillis + usage.coerceAtLeast(0))
         }
-        val sameBoot = loaded.clock?.let { it.bootId == now.bootId && it.elapsedMillis <= now.elapsedMillis } == true
-        return if (sameBoot && foregroundPackage != null && rules[foregroundPackage]?.enabled == true &&
-            loaded.active?.packageName == foregroundPackage) {
-            val restored = tick(loaded.copy(daily = daily, clock = now, observedPackage = foregroundPackage), now, rules)
+        return if (sameForeground && rules[foregroundPackage]?.enabled == true) {
+            val active = loaded.active?.let {
+                it.copy(usageMillis = it.usageMillis + (recoveredUsage[it.packageName] ?: 0).coerceAtLeast(0))
+            }
+            val restored = tick(loaded.copy(active = active, daily = daily, clock = now, observedPackage = foregroundPackage), now, rules)
             restored.copy(events = listOf(UsageEvent("MONITORING_RESUMED", null, now.epochMillis)) + restored.events)
         } else {
             val resumed = reconnect(loaded.copy(daily = daily), now)

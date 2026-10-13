@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 
 data class PermissionState(val usage: Boolean = false, val accessibility: Boolean = false)
 data class MainState(
@@ -20,6 +21,7 @@ data class MainState(
     val health: Health = Health(),
     val loading: Boolean = true,
     val error: String? = null,
+    val focusBusy: Boolean = false,
 )
 
 @HiltViewModel
@@ -45,11 +47,38 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun save(rule: AppRule, onSaved: () -> Unit) = viewModelScope.launch {
-        runCatching {
+    fun save(rule: AppRule, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
+        try {
             require(rule.packageName !in environment.safetyPackages())
             ruleRepository.saveRule(rule)
-        }.onSuccess { onSaved() }.onFailure { showError("제한을 저장하지 못했습니다. 다시 시도해 주세요.") }
+            onSaved()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("제한을 저장하지 못했습니다. 다시 시도해 주세요.") }
+        finally { onFinished() }
+    }
+
+    fun startFocus(minutes: Int) {
+        if (local.value.focusBusy) return
+        local.update { it.copy(focusBusy = true) }
+        viewModelScope.launch {
+            try {
+                require(environment.hasUsageAccess() && environment.accessibilityEnabled()) { "사용 정보와 접근성 권한을 먼저 켜 주세요." }
+                repository.startFocus(minutes, environment.clock().epochMillis)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { showError(if (error is IllegalArgumentException) error.message.orEmpty() else "집중 모드를 시작하지 못했습니다.") }
+            finally { local.update { it.copy(focusBusy = false) } }
+        }
+    }
+
+    fun stopFocus() {
+        if (local.value.focusBusy) return
+        local.update { it.copy(focusBusy = true) }
+        viewModelScope.launch {
+            try { repository.stopFocus(environment.clock().epochMillis) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { showError("집중 모드를 종료하지 못했습니다.") }
+            finally { local.update { it.copy(focusBusy = false) } }
+        }
     }
     fun remove(packageName: String, onSaved: () -> Unit) = viewModelScope.launch {
         runCatching { ruleRepository.deleteRule(packageName) }.onSuccess { onSaved() }
