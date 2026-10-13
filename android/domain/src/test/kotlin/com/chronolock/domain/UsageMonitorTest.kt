@@ -159,4 +159,99 @@ class UsageMonitorTest {
         state = monitor.tick(state, ClockReading(end, end - start, 1, dst), rules).state
         assertEquals(25L * 3600000, usage(state, LocalDate.parse("2026-11-01")).usageMillis)
     }
+
+    @Test fun sessionLimit_remainsBlockedUntilAppIsLeft() {
+        val rules = mapOf(app to AppRule(app, "Test", sessionLimitSeconds = 1))
+        var state = monitor.foreground(MonitorState(), app, clock(), rules).state
+        state = monitor.tick(state, clock(1000), rules).state
+        assertEquals(listOf(Reason.SESSION_USAGE), state.decision.reasons)
+        state = monitor.tick(state, clock(2000), rules).state
+        assertTrue("Session block must not disappear on the next tick", state.decision.denied)
+        assertEquals(1000L, usage(state).usageMillis)
+        assertEquals(1, usage(state).opens)
+        state = monitor.foreground(state, null, clock(3000), rules).state
+        state = monitor.foreground(state, app, clock(4000), rules).state
+        assertFalse(state.decision.denied)
+        assertEquals(2, usage(state).opens)
+    }
+
+    @Test fun restoreAfterReboot_doesNotReuseOldAllowedOpen() {
+        val rules = rules(opens = 1)
+        val before = monitor.foreground(MonitorState(), app, clock(), rules).state
+        val restored = monitor.restore(before, clock(100, origin + 10000, 2), emptyMap(), app, rules).state
+        assertEquals(listOf(Reason.OPEN_COUNT), restored.decision.reasons)
+        assertNull(restored.active)
+        assertEquals(1, usage(restored).opens)
+    }
+
+    @Test fun restoreSameBoot_preservesOpenButImmediatelyEnforcesRecoveredLimit() {
+        val rules = rules(daily = 2, opens = 1)
+        var before = monitor.foreground(MonitorState(), app, clock(), rules).state
+        before = monitor.tick(before, clock(1000), rules).state
+        val restored = monitor.restore(before, clock(2000), mapOf(app to 1000L), app, rules).state
+        assertTrue("Recovered limit must be enforced before more usage is recorded", restored.decision.denied)
+        assertEquals(2000L, usage(restored).usageMillis)
+        assertEquals(1, usage(restored).opens)
+    }
+
+    @Test fun restore_doesNotRecoverDisabledApps() {
+        val rules = mapOf(app to AppRule(app, "Test", dailyLimitSeconds = 1, enabled = false))
+        val restored = monitor.restore(MonitorState(), clock(1000), mapOf(app to 1000L), app, rules).state
+        assertTrue("Disabled apps must not gain usage records during recovery", restored.daily.isEmpty())
+        assertNull(restored.active)
+    }
+
+    @Test fun sessionLimit_editingOrRemovingRuleReleasesBlock() {
+        val rules = mapOf(app to AppRule(app, "Test", sessionLimitSeconds = 1))
+        val entered = monitor.foreground(MonitorState(), app, clock(), rules).state
+        val blocked = monitor.tick(entered, clock(1000), rules).state
+        val relaxed = monitor.tick(blocked, clock(2000), mapOf(app to rules.getValue(app).copy(sessionLimitSeconds = 5))).state
+        assertFalse(relaxed.decision.denied)
+        assertNull(relaxed.blockedSession)
+        val removed = monitor.tick(blocked, clock(2000), emptyMap()).state
+        assertFalse(removed.decision.denied)
+        assertNull(removed.blockedSession)
+        assertNull(removed.active)
+    }
+
+    @Test fun sessionLimit_cooldownExpiryDoesNotRestartBlockedSession() {
+        val rules = mapOf(app to AppRule(app, "Test", sessionLimitSeconds = 1, cooldownSeconds = 2))
+        var state = monitor.foreground(MonitorState(), app, clock(), rules).state
+        state = monitor.tick(state, clock(1000), rules).state
+        state = monitor.tick(state, clock(4000), rules).state
+        assertEquals(listOf(Reason.SESSION_USAGE), state.decision.reasons)
+        assertEquals(1, usage(state).blockedAttempts)
+        state = monitor.foreground(state, null, clock(5000), rules).state
+        state = monitor.foreground(state, app, clock(6000), rules).state
+        assertFalse(state.decision.denied)
+    }
+
+    @Test fun restoreSameBoot_doesNotDoubleCountOpenOrDowntime() {
+        val rules = rules(daily = 60, opens = 1)
+        var before = monitor.foreground(MonitorState(), app, clock(), rules).state
+        before = monitor.tick(before, clock(1000), rules).state
+        val restored = monitor.restore(before, clock(10000), mapOf(app to 500L), app, rules).state
+        assertFalse(restored.decision.denied)
+        assertEquals(1500L, usage(restored).usageMillis)
+        assertEquals(1, usage(restored).opens)
+        assertEquals(2500L, usage(monitor.tick(restored, clock(11000), rules).state).usageMillis)
+    }
+
+    @Test fun restoreAfterReboot_enforcesPersistedCooldown() {
+        val rules = rules(cooldown = 30)
+        var before = monitor.foreground(MonitorState(), app, clock(), rules).state
+        before = monitor.tick(before, clock(1000), rules).state
+        val restored = monitor.restore(before, clock(100, origin + 10000, 2), emptyMap(), app, rules).state
+        assertEquals(listOf(Reason.COOLDOWN), restored.decision.reasons)
+        assertEquals(21L, restored.decision.retryAfterSeconds)
+    }
+
+    @Test fun restore_ignoresUnselectedAppsAndNegativeRecoveredUsage() {
+        val rules = rules(daily = 60)
+        var before = monitor.foreground(MonitorState(), app, clock(), rules).state
+        before = monitor.tick(before, clock(1000), rules).state
+        val restored = monitor.restore(before, clock(2000), mapOf(app to -500L, "other.app" to 2000L), app, rules).state
+        assertEquals(1000L, usage(restored).usageMillis)
+        assertEquals(1, restored.daily.size)
+    }
 }

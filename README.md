@@ -18,6 +18,8 @@
 
 ## 기능·출시·수익화 보고서
 
+**2026-10-11 결정: Pro 월 990원으로 시작합니다.** [오늘 할 일과 출시 실행표](docs/LAUNCH_PLAN_990.md)를 기준으로 진행합니다. 아래 이전 보고서의 월 3,900원은 변경 전 가설이며, 실제 결제는 아직 구현하지 않았습니다.
+
 [크롬용 보고서와 계산기](docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.html) ·
 [PDF 다운로드](docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.pdf) ·
 [GitHub에서 읽는 원문](docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.md)

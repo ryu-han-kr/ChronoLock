@@ -22,7 +22,8 @@ class LocalRepositoryTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val databaseName = "repository-test-${UUID.randomUUID()}.db"
     private val origin = Instant.parse("2026-10-08T09:00:00Z").toEpochMilli()
-    private fun clock(ms: Long) = ClockReading(origin + ms, ms, 1, ZoneId.of("Asia/Seoul"))
+    private fun clock(ms: Long, epoch: Long = origin + ms, boot: Int = 1) =
+        ClockReading(epoch, ms, boot, ZoneId.of("Asia/Seoul"))
 
     @Before fun setup() {
         database = openDatabase()
@@ -92,5 +93,34 @@ class LocalRepositoryTest {
         assertTrue(database.dao().daily().isEmpty())
         assertNull(database.dao().checkpoint())
         assertFalse(repository.tick(clock(2000)).decision.denied)
+    }
+
+    @Test fun databaseReopen_afterRebootDoesNotReuseActiveOpen() = runBlocking {
+        val first = LocalRepository(database)
+        first.saveRule(AppRule("test.app", "Test", maxOpenCount = 1))
+        first.foreground("test.app", clock(0))
+        first.tick(clock(1000))
+        database.close()
+        database = openDatabase()
+
+        val restored = LocalRepository(database).reconnect(clock(100, origin + 10000, 2), emptyMap(), "test.app")
+        assertTrue(restored.decision.denied)
+        assertNull(database.dao().checkpoint()?.activePackage)
+        assertEquals(1, database.dao().daily().single().opens)
+        assertEquals(1, database.dao().daily().single().blockedAttempts)
+        assertEquals(1000L, database.dao().daily().single().usageMillis)
+    }
+
+    @Test fun recoveredDailyLimit_isBlockedAndPersistedImmediately() = runBlocking {
+        val first = LocalRepository(database)
+        first.saveRule(AppRule("test.app", "Test", dailyLimitSeconds = 2))
+        first.foreground("test.app", clock(0))
+        first.tick(clock(1000))
+
+        val restored = LocalRepository(database).reconnect(clock(2000), mapOf("test.app" to 1000L), "test.app")
+        assertTrue(restored.decision.denied)
+        assertNull(database.dao().checkpoint()?.activePackage)
+        assertEquals(2000L, database.dao().daily().single().usageMillis)
+        assertEquals(1, database.dao().daily().single().blockedAttempts)
     }
 }

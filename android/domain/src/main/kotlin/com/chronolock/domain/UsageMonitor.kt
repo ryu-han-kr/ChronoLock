@@ -22,6 +22,8 @@ data class MonitorState(
     val daily: Map<DailyKey, DailyUsage> = emptyMap(),
     val lastClosed: Map<String, CloseMark> = emptyMap(),
     val decision: RuleDecision = RuleDecision.Allow,
+    // Preserve the completed session's usage while its blocking overlay is still visible.
+    val blockedSession: ActiveSession? = null,
 )
 data class UsageEvent(val type: String, val packageName: String?, val epochMillis: Long)
 data class MonitorUpdate(val state: MonitorState, val events: List<UsageEvent> = emptyList())
@@ -32,7 +34,7 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         if (state.observedPackage == target) return tick(state, now, rules)
         val measured = measure(state, now)
         val events = mutableListOf<UsageEvent>()
-        var next = close(measured, now, events).copy(observedPackage = target, decision = RuleDecision.Allow)
+        var next = close(measured, now, events).copy(observedPackage = target, decision = RuleDecision.Allow, blockedSession = null)
         if (target != null && rules[target]?.enabled == true) {
             val decision = evaluate(next, target, now, rules)
             if (decision.denied) {
@@ -52,6 +54,7 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         val decision = evaluate(next, target, now, rules)
         if (decision.denied) {
             if (!next.decision.denied) {
+                next = next.copy(blockedSession = next.active)
                 next = close(next, now, events)
                 next = incrementBlocked(next, target, now)
                 events += UsageEvent("BLOCK_TRIGGERED", target, now.epochMillis)
@@ -60,7 +63,7 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         } else {
             if (next.active == null && rules[target]?.enabled == true) next = open(next, target, now, events)
             if (rules[target]?.enabled != true) next = close(next, now, events)
-            next = next.copy(decision = RuleDecision.Allow)
+            next = next.copy(decision = RuleDecision.Allow, blockedSession = null)
         }
         return MonitorUpdate(next, events)
     }
@@ -70,13 +73,39 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         val events = mutableListOf<UsageEvent>()
         val closed = close(state, state.clock ?: now, events)
         events += UsageEvent("MONITORING_RESUMED", null, now.epochMillis)
-        return MonitorUpdate(closed.copy(observedPackage = null, clock = now, decision = RuleDecision.Allow), events)
+        return MonitorUpdate(closed.copy(observedPackage = null, clock = now, decision = RuleDecision.Allow, blockedSession = null), events)
+    }
+
+    /** recoveredUsage contains today's milliseconds after the durable checkpoint, not full-day totals. */
+    fun restore(
+        loaded: MonitorState,
+        now: ClockReading,
+        recoveredUsage: Map<String, Long>,
+        foregroundPackage: String?,
+        rules: Map<String, AppRule>,
+    ): MonitorUpdate {
+        val daily = loaded.daily.toMutableMap()
+        recoveredUsage.filterKeys { rules[it]?.enabled == true }.forEach { (app, usage) ->
+            val key = DailyKey(app, now.date)
+            val existing = daily[key] ?: DailyUsage()
+            daily[key] = existing.copy(usageMillis = existing.usageMillis + usage.coerceAtLeast(0))
+        }
+        val sameBoot = loaded.clock?.let { it.bootId == now.bootId && it.elapsedMillis <= now.elapsedMillis } == true
+        return if (sameBoot && foregroundPackage != null && rules[foregroundPackage]?.enabled == true &&
+            loaded.active?.packageName == foregroundPackage) {
+            val restored = tick(loaded.copy(daily = daily, clock = now, observedPackage = foregroundPackage), now, rules)
+            restored.copy(events = listOf(UsageEvent("MONITORING_RESUMED", null, now.epochMillis)) + restored.events)
+        } else {
+            val resumed = reconnect(loaded.copy(daily = daily), now)
+            val opened = foreground(resumed.state, foregroundPackage, now, rules)
+            opened.copy(events = resumed.events + opened.events)
+        }
     }
 
     private fun evaluate(state: MonitorState, target: String, now: ClockReading, rules: Map<String, AppRule>): RuleDecision {
         val daily = state.daily[DailyKey(target, now.date)] ?: DailyUsage()
         return engine.evaluate(RuleContext(
-            now.epochMillis, now.zone, daily.usageMillis, state.active?.usageMillis ?: 0,
+            now.epochMillis, now.zone, daily.usageMillis, state.active?.usageMillis ?: state.blockedSession?.usageMillis ?: 0,
             daily.opens, state.active == null, state.lastClosed[target]?.age(now),
         ), rules[target])
     }

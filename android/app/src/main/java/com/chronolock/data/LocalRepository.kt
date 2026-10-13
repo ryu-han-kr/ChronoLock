@@ -38,23 +38,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     suspend fun reconnect(now: ClockReading, recoveredUsage: Map<String, Long>, foregroundPackage: String? = null): MonitorState = mutex.withLock {
         val loaded = load()
-        val selected = dao.rules().map { it.packageName }.toSet()
-        val daily = loaded.daily.toMutableMap()
-        recoveredUsage.filterKeys { it in selected }.forEach { (app, usage) ->
-            val key = DailyKey(app, now.date)
-            val existing = daily[key] ?: DailyUsage()
-            // Recovery contains only the interval after our durable checkpoint.
-            // Full-day UsageStats can include time spent behind our overlay.
-            daily[key] = existing.copy(usageMillis = existing.usageMillis + usage)
-        }
-        val update = if (foregroundPackage != null && loaded.active?.packageName == foregroundPackage) {
-            MonitorUpdate(loaded.copy(daily = daily, clock = now, observedPackage = foregroundPackage),
-                listOf(UsageEvent("MONITORING_RESUMED", null, now.epochMillis)))
-        } else {
-            val resumed = monitor.reconnect(loaded.copy(daily = daily), now)
-            val opened = monitor.foreground(resumed.state, foregroundPackage, now, ruleMap())
-            opened.copy(events = resumed.events + opened.events)
-        }
+        val update = monitor.restore(loaded, now, recoveredUsage, foregroundPackage, ruleMap())
         persist(update)
         update.state
     }
