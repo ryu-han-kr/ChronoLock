@@ -77,7 +77,7 @@ jobs:
           disable-animations: true
           working-directory: android
           script: |
-            ./gradlew :app:connectedDebugAndroidTest --stacktrace
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --stacktrace
             adb pull /sdcard/Android/data/com.chronolock/files/screenshots app/build/reports/androidTests/screenshots
       - name: Upload device test results
         if: always()
