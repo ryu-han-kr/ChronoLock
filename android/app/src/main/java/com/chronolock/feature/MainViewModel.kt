@@ -22,6 +22,12 @@ data class MainState(
     val loading: Boolean = true,
     val error: String? = null,
     val focusBusy: Boolean = false,
+    val theme: AppTheme = AppTheme.DARK,
+    val language: AppLanguage = AppLanguage.KOREAN,
+    val history: List<HistoryDailyEntity> = emptyList(),
+    val historyUpdatedAt: Long = 0,
+    val historyBusy: Boolean = false,
+    val historyError: Boolean = false,
 )
 
 @HiltViewModel
@@ -30,21 +36,49 @@ class MainViewModel @Inject constructor(
     private val ruleRepository: RuleRepository,
     private val environment: AndroidEnvironment,
     private val preferences: Preferences,
+    private val historyRepository: HistoryRepository,
     health: MonitorHealth,
 ) : ViewModel() {
     private val local = MutableStateFlow(MainState())
-    val state = combine(local, repository.rules, repository.daily, health.state) { ui, rules, daily, monitor ->
-        ui.copy(rules = rules, daily = daily, health = monitor)
-    }.catch { local.update { it.copy(error = "저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요.", loading = false) } }
+    val state = combine(local, repository.rules, repository.daily, health.state, preferences.theme) { ui, rules, daily, monitor, theme ->
+        ui.copy(rules = rules, daily = daily, health = monitor, theme = theme)
+    }.combine(preferences.language) { ui, language -> ui.copy(language = language) }
+        .combine(historyRepository.daily) { ui, history -> ui.copy(history = history) }
+        .combine(historyRepository.meta) { ui, meta -> ui.copy(historyUpdatedAt = meta?.collectedAt ?: 0) }
+        .catch { local.update { it.copy(error = "저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요.", loading = false) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
         local.update { it.copy(permissions = PermissionState(environment.hasUsageAccess(), environment.accessibilityEnabled())) }
+        refreshHistory()
         viewModelScope.launch {
             runCatching { environment.installedApps() }
                 .onSuccess { apps -> local.update { it.copy(apps = apps, loading = false) } }
                 .onFailure { local.update { it.copy(error = "앱 목록을 읽지 못했습니다.", loading = false) } }
         }
+    }
+
+    fun refreshHistory() {
+        if (local.value.historyBusy || !environment.hasUsageAccess()) return
+        local.update { it.copy(historyBusy = true, historyError = false) }
+        viewModelScope.launch {
+            try { historyRepository.collect() }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { local.update { it.copy(historyError = true) } }
+            finally { local.update { it.copy(historyBusy = false) } }
+        }
+    }
+
+    fun selectLanguage(language: AppLanguage) = viewModelScope.launch {
+        try { preferences.setLanguage(language) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { showError("언어를 저장하지 못했습니다. 다시 선택해 주세요.") }
+    }
+
+    fun selectTheme(theme: AppTheme) = viewModelScope.launch {
+        try { preferences.setTheme(theme) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("테마를 저장하지 못했습니다. 다시 선택해 주세요.") }
     }
 
     fun save(rule: AppRule, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {

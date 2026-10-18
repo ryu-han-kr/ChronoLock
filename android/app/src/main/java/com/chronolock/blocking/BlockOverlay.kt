@@ -1,7 +1,7 @@
 package com.chronolock.blocking
 
 import android.accessibilityservice.AccessibilityService
-import android.graphics.Color
+import android.content.res.ColorStateList
 import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.view.Gravity
@@ -10,6 +10,10 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.chronolock.feature.UiText
+import com.chronolock.feature.forLanguage
+import com.chronolock.data.AppLanguage
+import com.chronolock.data.AppTheme
 import com.chronolock.domain.Reason
 import com.chronolock.domain.RuleDecision
 
@@ -19,15 +23,51 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     private var root: View? = null
     private var heading: TextView? = null
     private var detail: TextView? = null
+    private var theme = AppTheme.DARK
+    private var language = AppLanguage.KOREAN
+    private var text = UiText(service.forLanguage(language))
+    private var lastShown: Pair<String, RuleDecision>? = null
+
+    fun setLanguage(value: AppLanguage) {
+        language = value
+        text = UiText(service.forLanguage(value))
+        val previous = lastShown
+        if (visible && previous != null) { hide(); show(previous.first, previous.second) }
+    }
     val visible get() = root != null
 
+    fun setTheme(value: AppTheme) {
+        theme = value
+        (root as? LinearLayout)?.let(::applyTheme)
+    }
+
+    private fun applyTheme(content: LinearLayout) {
+        content.setBackgroundColor(theme.background.toInt())
+        for (index in 0 until content.childCount) {
+            when (val child = content.getChildAt(index)) {
+                is Button -> {
+                    child.backgroundTintList = ColorStateList.valueOf(theme.primary.toInt())
+                    child.setTextColor(theme.onPrimary.toInt())
+                }
+                is TextView -> child.setTextColor(when (index) {
+                    0 -> theme.primary.toInt()
+                    1 -> theme.text.toInt()
+                    else -> theme.muted.toInt()
+                })
+            }
+        }
+    }
+
+    // Each reason is a complete localized resource; only line separators are concatenated.
+    @android.annotation.SuppressLint("SetTextI18n")
     fun show(appName: String, decision: RuleDecision) {
+        lastShown = appName to decision
         if (root == null) {
             val content = LinearLayout(service).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(28), dp(48), dp(28), dp(48))
-                setBackgroundColor(Color.rgb(16, 20, 31))
+                setBackgroundColor(theme.background.toInt())
                 isFocusableInTouchMode = true
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             }
@@ -36,12 +76,13 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 setPadding(0, dp(12), 0, dp(12))
                 content.addView(this, LinearLayout.LayoutParams(-1, -2))
             }
-            label("CHRONOLOCK", 14f, Color.rgb(184, 242, 126))
-            heading = label("", 28f, Color.WHITE).apply { typeface = Typeface.DEFAULT_BOLD }
-            detail = label("", 17f, Color.rgb(190, 198, 216))
-            label("잠깐 멈추고, 지금 하고 싶은 일을 선택하세요.", 15f, Color.rgb(190, 198, 216))
-            content.addView(Button(service).apply { text = "홈 화면으로 돌아가기"; setOnClickListener { onHome() } }, LinearLayout.LayoutParams(-1, dp(56)))
-            content.addView(Button(service).apply { text = "내 제한 설정 보기"; setOnClickListener { onSettings() } }, LinearLayout.LayoutParams(-1, dp(56)))
+            label("CHRONOLOCK", 14f, theme.primary.toInt())
+            heading = label("", 28f, theme.text.toInt()).apply { typeface = Typeface.DEFAULT_BOLD }
+            detail = label("", 17f, theme.muted.toInt())
+            label(text("잠깐 멈추고, 지금 하고 싶은 일을 선택하세요."), 15f, theme.muted.toInt())
+            content.addView(Button(service).apply { text = text("홈 화면으로 돌아가기"); setOnClickListener { onHome() } }, LinearLayout.LayoutParams(-1, dp(56)))
+            content.addView(Button(service).apply { text = text("내 제한 설정 보기"); setOnClickListener { onSettings() } }, LinearLayout.LayoutParams(-1, dp(56)))
+            applyTheme(content)
             val parameters = WindowManager.LayoutParams(-1, -1, WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.OPAQUE)
             parameters.gravity = Gravity.TOP or Gravity.START
@@ -49,22 +90,22 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
             root = content
             content.requestFocus()
         }
-        heading?.text = "$appName\n지금은 쉬는 시간입니다"
+        heading?.text = text("%1\$s\n지금은 쉬는 시간입니다", appName)
         detail?.text = decision.reasons.joinToString("\n") { reason ->
             when (reason) {
-                Reason.DAILY_USAGE -> "오늘 설정한 사용시간을 모두 사용했습니다."
-                Reason.OPEN_COUNT -> "오늘 허용한 실행 횟수를 모두 사용했습니다."
-                Reason.COOLDOWN -> decision.retryAfterSeconds?.let { "재실행까지 ${it}초 남았습니다." } ?: "재실행 대기 시간이 적용 중입니다."
-                Reason.SESSION_USAGE -> "이번 사용시간 제한에 도달했습니다."
-                Reason.SCHEDULE -> "사용하지 않기로 정한 시간대입니다."
-                Reason.FOCUS -> "집중 시간이 진행 중입니다."
+                Reason.DAILY_USAGE -> text("오늘 설정한 사용시간을 모두 사용했습니다.")
+                Reason.OPEN_COUNT -> text("오늘 허용한 실행 횟수를 모두 사용했습니다.")
+                Reason.COOLDOWN -> decision.retryAfterSeconds?.let { text("재실행까지 %1\$d초 남았습니다.", it) } ?: text("재실행 대기 시간이 적용 중입니다.")
+                Reason.SESSION_USAGE -> text("이번 사용시간 제한에 도달했습니다.")
+                Reason.SCHEDULE -> text("사용하지 않기로 정한 시간대입니다.")
+                Reason.FOCUS -> text("집중 시간이 진행 중입니다.")
             }
-        } + if (decision.reasons.any { it == Reason.DAILY_USAGE || it == Reason.OPEN_COUNT }) "\n일일 한도는 현지 시각 자정에 초기화됩니다." else ""
+        } + if (decision.reasons.any { it == Reason.DAILY_USAGE || it == Reason.OPEN_COUNT }) "\n" + text("일일 한도는 현지 시각 자정에 초기화됩니다.") else ""
     }
 
     fun hide() {
         root?.let { manager.removeView(it) }
-        root = null; heading = null; detail = null
+        root = null; heading = null; detail = null; lastShown = null
     }
     private fun dp(value: Int) = (value * service.resources.displayMetrics.density).toInt()
 }

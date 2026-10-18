@@ -9,17 +9,20 @@ import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
 import com.chronolock.MainActivity
 import com.chronolock.data.LocalRepository
+import com.chronolock.data.Preferences
 import com.chronolock.domain.MonitorState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class ChronoAccessibilityService : AccessibilityService() {
     @Inject lateinit var repository: LocalRepository
     @Inject lateinit var environment: AndroidEnvironment
     @Inject lateinit var health: MonitorHealth
+    @Inject lateinit var preferences: Preferences
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val commands = Channel<Command>(Channel.UNLIMITED)
     private lateinit var overlay: BlockOverlay
@@ -46,6 +49,16 @@ class ChronoAccessibilityService : AccessibilityService() {
             startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             commands.trySend(Command.Foreground(null))
         })
+        scope.launch {
+            try { preferences.theme.collect { overlay.setTheme(it) } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay theme", error) }
+        }
+        scope.launch {
+            try { preferences.language.collect { overlay.setLanguage(it) } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay language", error) }
+        }
         ContextCompat.registerReceiver(this, screenReceiver, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT)
         }, ContextCompat.RECEIVER_NOT_EXPORTED)

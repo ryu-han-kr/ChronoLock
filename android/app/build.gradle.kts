@@ -18,6 +18,8 @@ android {
         kapt { arguments { arg("room.schemaLocation", "$projectDir/schemas") } }
     }
     buildFeatures { compose = true }
+    // Every supported language must be available offline after an in-app language change.
+    bundle { language { enableSplit = false } }
     sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
     composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
     compileOptions {
@@ -49,7 +51,9 @@ dependencies {
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    // Avoid reflection on InputManager.getInstance, removed on newer Android images.
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     androidTestImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.03"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")

@@ -69,11 +69,21 @@ interface ChronoDao {
     @Query("DELETE FROM app_usage_events") suspend fun clearEvents()
 }
 
-@Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class], version = 2, exportSchema = true)
+@Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
+    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class], version = 3, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
+    abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_events (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, at INTEGER NOT NULL, type TEXT NOT NULL, app TEXT NOT NULL, activity TEXT NOT NULL)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_history_events_at_type_app_activity ON history_events (at, type, app, activity)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_daily (packageName TEXT NOT NULL, date TEXT NOT NULL, appName TEXT NOT NULL, usageMillis INTEGER NOT NULL, opens INTEGER NOT NULL, PRIMARY KEY(packageName, date))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_meta (id INTEGER NOT NULL, clearedAt INTEGER NOT NULL, collectedAt INTEGER NOT NULL, PRIMARY KEY(id))")
+            }
+        }
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 listOf("sessionLimitSeconds", "scheduleStartMinute", "scheduleEndMinute", "scheduleDaysMask", "focusUntilEpochMillis")

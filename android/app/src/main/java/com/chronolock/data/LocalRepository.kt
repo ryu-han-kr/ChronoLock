@@ -90,6 +90,10 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     suspend fun clearAll() = mutex.withLock {
         database.withTransaction {
             dao.clearRules(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
+            database.historyDao().apply {
+                clearDaily(); clearEvents()
+                saveMeta(HistoryMetaEntity(clearedAt = System.currentTimeMillis()))
+            }
         }
         state = MonitorState()
     }
