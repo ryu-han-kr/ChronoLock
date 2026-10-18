@@ -18,6 +18,10 @@ android {
         kapt { arguments { arg("room.schemaLocation", "$projectDir/schemas") } }
     }
     buildFeatures { compose = true }
+    // Opt-in device scenarios change permissions and reboot. Keep their data separate.
+    if (providers.gradleProperty("deviceVerification").orNull == "true") {
+        buildTypes.getByName("debug") { applicationIdSuffix = ".verification" }
+    }
     // Every supported language must be available offline after an in-app language change.
     bundle { language { enableSplit = false } }
     sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
