@@ -51,4 +51,4 @@ ChronoLock은 내가 직접 정한 기준에 따라 앱 사용을 제한해, 필
 
 - 지원 언어 목록은 `android/app/src/main/res/values-*`(en, ja, zh-rCN, es) 기준입니다.
 - 기능 문구는 0.2.0 화면과 맞는지 UI 손질 후 다시 확인합니다.
-- 연락처 이메일(필수)과 개인정보처리방침 URL은 사용자가 정합니다.
+- 연락처 이메일: hks.han666@gmail.com, 개발자 표시명: beargris. 개인정보처리방침 URL은 호스팅 후 입력합니다.
