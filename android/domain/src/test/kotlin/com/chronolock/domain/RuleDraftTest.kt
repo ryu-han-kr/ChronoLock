@@ -41,7 +41,19 @@ class RuleDraftTest {
     }
 
     @Test fun scheduleOnly_isAValidRule() {
-        assertNotNull(RuleDraft(daily = "", scheduleEnabled = true).build("test.app", "Test").schedule)
+        assertNotNull(RuleDraft(daily = "", scheduleEnabled = true, daysMask = 1).build("test.app", "Test").schedule)
+    }
+
+    @Test fun newSchedule_hasNoDaysUntilUserSelectsThem() {
+        val draft = RuleDraft().copy(scheduleEnabled = true)
+        assertEquals(0, draft.daysMask)
+        assertThrows(IllegalArgumentException::class.java) { draft.build("test.app", "Test") }
+        assertEquals(setOf(DayOfWeek.WEDNESDAY), draft.copy(daysMask = 4).build("test.app", "Test").schedule!!.days)
+    }
+
+    @Test fun editingRuleWithoutSchedule_startsWithNoDaysSelected() {
+        val rule = RuleDraft().build("test.app", "Test")
+        assertEquals(0, RuleDraft.from(rule).daysMask)
     }
 
     @Test fun malformedTimes_areRejected() {
