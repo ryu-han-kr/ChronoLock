@@ -13,11 +13,11 @@ val localSettings = Properties().apply {
 
 android {
     namespace = "com.chronolock"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.chronolock"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 2
         versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -32,6 +32,20 @@ android {
         manifestPlaceholders["admobAppId"] = setting("chronolock.admobAppId").ifBlank { "ca-app-pub-3940256099942544~3347511713" }
     }
     buildFeatures { compose = true; buildConfig = true }
+    // Upload key for Play App Signing lives outside the repo; local.properties points to it.
+    fun localSetting(name: String) = providers.gradleProperty(name).orNull ?: localSettings.getProperty(name).orEmpty()
+    val releaseStore = localSetting("chronolock.releaseStoreFile")
+    if (releaseStore.isNotBlank()) {
+        signingConfigs.create("release") {
+            storeFile = file(releaseStore)
+            storePassword = localSetting("chronolock.releaseStorePassword")
+            keyAlias = localSetting("chronolock.releaseKeyAlias")
+            keyPassword = localSetting("chronolock.releaseKeyPassword")
+        }
+        buildTypes.getByName("release") { signingConfig = signingConfigs.getByName("release") }
+    }
+    // Without a real AdMob app the release build serves no ads, so it must not declare the advertising ID.
+    if (localSetting("chronolock.admobAppId").isBlank()) sourceSets.getByName("release").manifest.srcFile("src/releaseNoAds/AndroidManifest.xml")
     // Opt-in device scenarios change permissions and reboot. Keep their data separate.
     if (providers.gradleProperty("deviceVerification").orNull == "true") {
         buildTypes.getByName("debug") { applicationIdSuffix = ".verification" }
