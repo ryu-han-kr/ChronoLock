@@ -5,6 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.chronolock.account.AccountRepository
 import com.chronolock.account.AccountState
 import com.chronolock.account.GoogleToken
+import com.chronolock.ads.AdState
+import com.chronolock.ads.AdsController
+import com.chronolock.billing.BillingController
+import com.chronolock.billing.BillingState
 import com.chronolock.blocking.*
 import com.chronolock.data.*
 import com.chronolock.domain.AppRule
@@ -33,7 +37,11 @@ data class MainState(
     val historyError: Boolean = false,
     val account: AccountState = AccountState(),
     val accountBusy: Boolean = false,
-)
+    val ads: AdState = AdState(),
+    val billing: BillingState = BillingState(),
+) {
+    val adFree get() = billing.adFree
+}
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -43,15 +51,20 @@ class MainViewModel @Inject constructor(
     private val preferences: Preferences,
     private val historyRepository: HistoryRepository,
     private val accounts: AccountRepository,
+    private val ads: AdsController,
+    billing: BillingController,
     health: MonitorHealth,
 ) : ViewModel() {
     private val local = MutableStateFlow(MainState())
+    val bannerId get() = ads.bannerId
     val state = combine(local, repository.rules, repository.daily, health.state, preferences.theme) { ui, rules, daily, monitor, theme ->
         ui.copy(rules = rules, daily = daily, health = monitor, theme = theme)
     }.combine(preferences.language) { ui, language -> ui.copy(language = language) }
         .combine(historyRepository.daily) { ui, history -> ui.copy(history = history) }
         .combine(historyRepository.meta) { ui, meta -> ui.copy(historyUpdatedAt = meta?.collectedAt ?: 0) }
         .combine(accounts.state) { ui, account -> ui.copy(account = account) }
+        .combine(ads.state) { ui, ad -> ui.copy(ads = ad) }
+        .combine(billing.state) { ui, store -> ui.copy(billing = store) }
         .catch { local.update { it.copy(error = "저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요.", loading = false) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 

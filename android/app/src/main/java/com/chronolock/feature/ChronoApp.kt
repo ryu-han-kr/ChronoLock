@@ -27,6 +27,8 @@ import com.chronolock.data.RuleEntity
 import com.chronolock.data.toDomain
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.RuleDraft
+import com.chronolock.ads.BannerAd
+import com.chronolock.domain.AdPolicy
 import com.chronolock.domain.DailyTimeInput
 import com.chronolock.domain.RuleRecipe
 import com.chronolock.domain.DailyKey
@@ -38,7 +40,8 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
 
 @Composable
-fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}) {
+fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}, privacyOptions: () -> Unit = {},
+    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -65,7 +68,12 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 clear = { confirmClear = true },
                 selectTheme = model::selectTheme,
                 selectLanguage = model::selectLanguage, refreshHistory = model::refreshHistory,
+                banner = state.ads.takeIf {
+                    AdPolicy.showBanner(tab, it.configured, state.adFree, it.canRequestAds,
+                        focusActive = state.rules.any { rule -> rule.enabled && (rule.focusUntilEpochMillis ?: 0) > nowEpoch })
+                }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
+                privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription,
             )
             editPackage?.let { appId ->
                 val saved = state.rules.firstOrNull { it.packageName == appId }

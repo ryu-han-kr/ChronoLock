@@ -44,9 +44,13 @@ internal fun ChronoScreen(
     selectTheme: (AppTheme) -> Unit = {},
     selectLanguage: (com.chronolock.data.AppLanguage) -> Unit = {},
     refreshHistory: () -> Unit = {},
+    banner: (@Composable () -> Unit)? = null,
     signIn: () -> Unit = {},
     signOut: () -> Unit = {},
     deleteAccount: () -> Unit = {},
+    privacyOptions: () -> Unit = {},
+    buyAdFree: () -> Unit = {},
+    manageSubscription: () -> Unit = {},
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -63,6 +67,7 @@ internal fun ChronoScreen(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val expanded = maxWidth >= 840.dp
         Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar) }, bottomBar = { Column {
+            banner?.invoke()
             if (!expanded) NavigationBar(containerColor = MaterialTheme.colorScheme.background) {
                 destinations.forEachIndexed { index, title ->
                     NavigationBarItem(selected = tab == index, onClick = { selectTab(index) },
@@ -190,6 +195,7 @@ internal fun ChronoScreen(
                             }
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
+                                if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { ThemePicker(state.theme, selectTheme) }
                                 item { PermissionCard(state, usagePermission, accessibilityPermission) }
@@ -227,6 +233,28 @@ private fun AccountCard(state: MainState, signIn: () -> Unit, signOut: () -> Uni
             Text(tr("로그인은 선택 사항입니다. 로그인하지 않아도 모든 제한 기능을 사용할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Button(onClick = signIn, enabled = !state.accountBusy) { Text(tr("Google로 로그인")) }
         }
+    }
+}
+
+@Composable
+private fun AdsCard(state: MainState, privacyOptions: () -> Unit, buy: () -> Unit, manage: () -> Unit) {
+    CardBox {
+        Text(tr("광고"), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(if (state.adFree) tr("광고 없이 이용 중입니다.")
+            else tr("오늘·히스토리 화면 하단에 배너 광고가 표시됩니다. 차단 화면과 집중 중에는 표시하지 않습니다."),
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        when {
+            state.adFree -> OutlinedButton(onClick = manage) { Text(tr("구독 관리")) }
+            state.billing.pending -> Text(tr("결제 확인을 기다리고 있습니다. 완료되면 광고가 사라집니다."), color = MaterialTheme.colorScheme.primary)
+            state.billing.available -> {
+                Button(onClick = buy) { Text(tr("광고 제거 · 월 %1\$s", state.billing.price ?: "990원")) }
+                Text(tr("Google Play 정기 결제입니다. Play 스토어에서 언제든 해지할 수 있습니다."),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            }
+            else -> Text(tr("광고 제거 상품을 불러오지 못했습니다. Play 스토어에서 설치한 앱인지 확인해 주세요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+        }
+        if (state.ads.privacyOptionsRequired) OutlinedButton(onClick = privacyOptions) { Text(tr("광고 개인정보 설정")) }
     }
 }
 

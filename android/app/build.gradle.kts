@@ -28,6 +28,8 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"${setting("chronolock.supabaseUrl")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${setting("chronolock.supabaseAnonKey")}\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${setting("chronolock.googleWebClientId")}\"")
+        buildConfigField("String", "ADMOB_BANNER_ID", "\"${setting("chronolock.admobBannerId")}\"")
+        manifestPlaceholders["admobAppId"] = setting("chronolock.admobAppId").ifBlank { "ca-app-pub-3940256099942544~3347511713" }
     }
     buildFeatures { compose = true; buildConfig = true }
     // Opt-in device scenarios change permissions and reboot. Keep their data separate.
@@ -66,6 +68,10 @@ dependencies {
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("com.android.billingclient:billing:8.0.0")
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
+    implementation("androidx.work:work-runtime-ktx:2.7.0")
+    implementation("com.google.android.ump:user-messaging-platform:3.1.0")
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     testImplementation("junit:junit:4.13.2")
