@@ -2,6 +2,9 @@ package com.chronolock.feature
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chronolock.account.AccountRepository
+import com.chronolock.account.AccountState
+import com.chronolock.account.GoogleToken
 import com.chronolock.blocking.*
 import com.chronolock.data.*
 import com.chronolock.domain.AppRule
@@ -28,6 +31,8 @@ data class MainState(
     val historyUpdatedAt: Long = 0,
     val historyBusy: Boolean = false,
     val historyError: Boolean = false,
+    val account: AccountState = AccountState(),
+    val accountBusy: Boolean = false,
 )
 
 @HiltViewModel
@@ -37,6 +42,7 @@ class MainViewModel @Inject constructor(
     private val environment: AndroidEnvironment,
     private val preferences: Preferences,
     private val historyRepository: HistoryRepository,
+    private val accounts: AccountRepository,
     health: MonitorHealth,
 ) : ViewModel() {
     private val local = MutableStateFlow(MainState())
@@ -45,6 +51,7 @@ class MainViewModel @Inject constructor(
     }.combine(preferences.language) { ui, language -> ui.copy(language = language) }
         .combine(historyRepository.daily) { ui, history -> ui.copy(history = history) }
         .combine(historyRepository.meta) { ui, meta -> ui.copy(historyUpdatedAt = meta?.collectedAt ?: 0) }
+        .combine(accounts.state) { ui, account -> ui.copy(account = account) }
         .catch { local.update { it.copy(error = "저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요.", loading = false) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
@@ -124,6 +131,22 @@ class MainViewModel @Inject constructor(
     fun acknowledge(onComplete: () -> Unit) = viewModelScope.launch {
         runCatching { preferences.acknowledge() }.onSuccess { onComplete() }
             .onFailure { showError("설명 확인 상태를 저장하지 못했습니다.") }
+    }
+    fun signIn(token: GoogleToken) = account("로그인하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.") {
+        accounts.signInWithGoogle(token.idToken, token.rawNonce)
+    }
+    fun signOut() = account("로그아웃 중 서버에 연결하지 못했습니다. 이 기기에서는 로그아웃되었습니다.") { accounts.signOut() }
+    fun deleteAccount() = account("계정을 삭제하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.") { accounts.deleteAccount() }
+
+    private fun account(failure: String, action: suspend () -> Unit) {
+        if (local.value.accountBusy) return
+        local.update { it.copy(accountBusy = true) }
+        viewModelScope.launch {
+            try { action() }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Account request failed", error); showError(failure) }
+            finally { local.update { it.copy(accountBusy = false) } }
+        }
     }
     fun showError(message: String) { local.update { it.copy(error = message) } }
     fun dismissError() { local.update { it.copy(error = null) } }

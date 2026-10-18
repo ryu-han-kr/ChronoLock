@@ -44,6 +44,9 @@ internal fun ChronoScreen(
     selectTheme: (AppTheme) -> Unit = {},
     selectLanguage: (com.chronolock.data.AppLanguage) -> Unit = {},
     refreshHistory: () -> Unit = {},
+    signIn: () -> Unit = {},
+    signOut: () -> Unit = {},
+    deleteAccount: () -> Unit = {},
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -186,6 +189,7 @@ internal fun ChronoScreen(
                                 item(span = { GridItemSpan(maxLineSpan) }) { HistoryPanel(state, today, refreshHistory, usagePermission) }
                             }
                             3 -> {
+                                if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { ThemePicker(state.theme, selectTheme) }
                                 item { PermissionCard(state, usagePermission, accessibilityPermission) }
@@ -204,6 +208,24 @@ internal fun ChronoScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AccountCard(state: MainState, signIn: () -> Unit, signOut: () -> Unit, deleteAccount: () -> Unit) {
+    CardBox {
+        Text(tr("계정"), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        if (state.account.signedIn) {
+            Text(tr("로그인됨: %1\$s", state.account.email ?: tr("Google 계정")), color = MaterialTheme.colorScheme.primary)
+            Text(tr("계정에는 로그인 정보만 저장됩니다. 제한 규칙과 사용 기록은 계속 이 기기에만 보관합니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = signOut, enabled = !state.accountBusy) { Text(tr("로그아웃")) }
+                TextButton(onClick = deleteAccount, enabled = !state.accountBusy) { Text(tr("계정 삭제"), color = MaterialTheme.colorScheme.error) }
+            }
+        } else {
+            Text(tr("로그인은 선택 사항입니다. 로그인하지 않아도 모든 제한 기능을 사용할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Button(onClick = signIn, enabled = !state.accountBusy) { Text(tr("Google로 로그인")) }
         }
     }
 }

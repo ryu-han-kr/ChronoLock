@@ -1,8 +1,14 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
+}
+
+val localSettings = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
 }
 
 android {
@@ -16,8 +22,14 @@ android {
         versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         kapt { arguments { arg("room.schemaLocation", "$projectDir/schemas") } }
+        // Service keys come from local.properties or -P; blank values keep login hidden and ads on test units.
+        fun setting(name: String): String = providers.gradleProperty(name).orNull
+            ?: localSettings.getProperty(name).orEmpty()
+        buildConfigField("String", "SUPABASE_URL", "\"${setting("chronolock.supabaseUrl")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${setting("chronolock.supabaseAnonKey")}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${setting("chronolock.googleWebClientId")}\"")
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     // Opt-in device scenarios change permissions and reboot. Keep their data separate.
     if (providers.gradleProperty("deviceVerification").orNull == "true") {
         buildTypes.getByName("debug") { applicationIdSuffix = ".verification" }
@@ -51,6 +63,9 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     testImplementation("junit:junit:4.13.2")

@@ -38,13 +38,14 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
 
 @Composable
-fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit) {
+fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by remember { mutableStateOf<Boolean?>(null) }
     var confirmClear by remember { mutableStateOf(false) }
+    var confirmDeleteAccount by remember { mutableStateOf(false) }
     var confirmFocus by rememberSaveable { mutableStateOf<Int?>(null) }
     var today by remember { mutableStateOf(LocalDate.now()) }
     var nowEpoch by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -64,6 +65,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit) {
                 clear = { confirmClear = true },
                 selectTheme = model::selectTheme,
                 selectLanguage = model::selectLanguage, refreshHistory = model::refreshHistory,
+                signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
             )
             editPackage?.let { appId ->
                 val saved = state.rules.firstOrNull { it.packageName == appId }
@@ -95,6 +97,10 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit) {
                     confirmButton = { TextButton(onClick = { model.acknowledge { permissionDialog = null; openSettings(accessibility) } }) { Text(tr("동의하고 설정 열기")) } },
                     dismissButton = { TextButton(onClick = { permissionDialog = null }) { Text(tr("나중에")) } })
             }
+            if (confirmDeleteAccount) AlertDialog(onDismissRequest = { confirmDeleteAccount = false }, title = { Text(tr("계정을 삭제할까요?")) },
+                text = { Text(tr("서버의 계정 정보가 삭제되고 로그아웃됩니다. 이 기기의 제한 규칙과 사용 기록은 그대로 남습니다. 되돌릴 수 없습니다.")) },
+                confirmButton = { TextButton(onClick = { model.deleteAccount(); confirmDeleteAccount = false }) { Text(tr("계정 삭제")) } },
+                dismissButton = { TextButton(onClick = { confirmDeleteAccount = false }) { Text(tr("취소")) } })
             if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, title = { Text(tr("로컬 데이터를 삭제할까요?")) },
                 text = { Text(tr("모든 제한 규칙과 기록이 삭제되고 차단이 해제됩니다. 되돌릴 수 없습니다.")) },
                 confirmButton = { TextButton(onClick = { model.clear(); confirmClear = false }) { Text(tr("모두 삭제")) } },
