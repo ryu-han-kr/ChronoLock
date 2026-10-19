@@ -78,7 +78,7 @@ jobs:
           working-directory: android
           script: |
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --stacktrace
-            adb pull /sdcard/Android/data/com.chronolock/files/screenshots app/build/reports/androidTests/screenshots
+            adb pull /sdcard/Android/data/com.chronolock.app/files/screenshots app/build/reports/androidTests/screenshots
       - name: Upload device test results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

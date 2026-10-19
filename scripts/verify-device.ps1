@@ -49,7 +49,7 @@ $metadataFiles = @(
     (Join-Path (Split-Path $apks[0]) 'output-metadata.json'),
     (Join-Path (Split-Path $apks[1]) 'output-metadata.json')
 )
-$expectedIds = @('com.chronolock.verification', 'com.chronolock.verification.test')
+$expectedIds = @('com.chronolock.app.verification', 'com.chronolock.app.verification.test')
 for ($index = 0; $index -lt 2; $index++) {
     $metadata = Get-Content -Raw -LiteralPath $metadataFiles[$index] | ConvertFrom-Json
     if ($metadata.applicationId -ne $expectedIds[$index]) { throw 'Build the isolated APKs with -PdeviceVerification=true first.' }
@@ -61,7 +61,7 @@ foreach ($apk in $apks) {
 
 $originalServices = (Invoke-Adb @('shell', 'settings', 'get', 'secure', 'enabled_accessibility_services')).Trim()
 $originalAirplane = (Invoke-Adb @('shell', 'settings', 'get', 'global', 'airplane_mode_on')).Trim()
-$runner = 'com.chronolock.verification.test/androidx.test.runner.AndroidJUnitRunner'
+$runner = 'com.chronolock.app.verification.test/androidx.test.runner.AndroidJUnitRunner'
 $testClass = 'com.chronolock.blocking.DeviceBlockingTest'
 function Invoke-Scenario([string]$Name, [string]$Selection, [string]$Stage = '') {
     Write-Output "Running $Name"
@@ -100,11 +100,11 @@ try {
     Invoke-Adb @('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
     Invoke-Adb @('shell', 'wm', 'dismiss-keyguard')
     Invoke-Scenario 'reboot-verify' "$testClass#rebootCheckpoint" 'verify'
-    Invoke-Adb @('pull', '/sdcard/Android/data/com.chronolock.verification/files/device-verification', $reportDir)
+    Invoke-Adb @('pull', '/sdcard/Android/data/com.chronolock.app.verification/files/device-verification', $reportDir)
     Write-Output "All device scenarios passed. Reports: $reportDir"
 } finally {
     # Restore device settings even when an assertion fails or a test process crashes.
-    Invoke-Adb @('shell', 'am', 'force-stop', 'com.chronolock.verification')
+    Invoke-Adb @('shell', 'am', 'force-stop', 'com.chronolock.app.verification')
     if ($originalServices -eq 'null' -or -not $originalServices) {
         Invoke-Adb @('shell', 'settings', 'delete', 'secure', 'enabled_accessibility_services')
     } else {

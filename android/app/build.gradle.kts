@@ -15,7 +15,7 @@ android {
     namespace = "com.chronolock"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.chronolock"
+        applicationId = "com.chronolock.app"
         minSdk = 28
         targetSdk = 36
         versionCode = 2

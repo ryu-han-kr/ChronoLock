@@ -36,7 +36,7 @@ class DeviceBlockingTest {
 
     @Before fun prepare() {
         assumeTrue("Requires isolated verification APK and explicit opt-in",
-            app == "com.chronolock.verification" &&
+            app == "com.chronolock.app.verification" &&
                 InstrumentationRegistry.getArguments().getString("deviceVerification") == "true")
         if (testName.methodName == "rebootCheckpoint") assumeTrue("Run seed and verify around adb reboot", rebootStage in listOf("seed", "verify"))
         automation = instrumentation.getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
