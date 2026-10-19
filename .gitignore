@@ -11,3 +11,6 @@ captures/
 .env
 .env.*
 !.env.example
+
+# Upload key backup (never commit)
+key-backup/
