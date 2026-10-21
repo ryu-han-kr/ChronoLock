@@ -142,9 +142,14 @@ internal fun ChronoScreen(
                                         AppHeading(rule.appName, rule.packageName) { edit(rule.packageName, null) }
                                         Text(ruleSummary(rule), color = if (rule.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                                         rule.dailyLimitSeconds?.let { limit ->
+                                            val remaining = remainingDailySeconds(limit, usage?.usageMillis ?: 0)
+                                            val tint = if (remaining == 0L) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                                             LinearProgressIndicator(progress = {
                                                 ((usage?.usageMillis ?: 0).toFloat() / (limit.coerceAtLeast(1) * 1000f)).coerceIn(0f, 1f)
-                                            }, modifier = Modifier.fillMaxWidth().height(6.dp))
+                                            }, modifier = Modifier.fillMaxWidth().height(6.dp), color = tint,
+                                                trackColor = tint.copy(alpha = .16f))
+                                            if (rule.enabled) Text(if (remaining == 0L) tr("오늘 한도 도달") else tr("오늘 %1\$s 남음", duration(remaining)),
+                                                color = tint, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                                         }
                                         Text(tr("오늘 %1\$s · %2\$d회 실행", duration((usage?.usageMillis ?: 0) / 1000), usage?.opens ?: 0),
                                             color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
@@ -271,6 +276,10 @@ private fun UsageSummaryCard(stats: List<DailyEntity>, enabledRules: Int) {
         }
     }
 }
+
+/** Whole seconds left of a daily limit; partial seconds round up so 0 only appears once the limit is fully used. */
+internal fun remainingDailySeconds(limitSeconds: Long, usedMillis: Long): Long =
+    ((limitSeconds * 1000 - usedMillis).coerceAtLeast(0) + 999) / 1000
 
 @Composable
 private fun StatusPill(ready: Boolean) {

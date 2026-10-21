@@ -224,4 +224,6 @@
     <string name="billing_terms">"Google Play の定期購入です。Play ストアでいつでも解約できます。"</string>
     <string name="billing_unavailable">"広告なしプランを読み込めませんでした。Play ストアからインストールしたアプリか確認してください。"</string>
     <string name="error_billing">"決済画面を開けませんでした。しばらくしてから再度お試しください。"</string>
+    <string name="rule_remaining">"今日の残り %1$s"</string>
+    <string name="rule_limit_reached">"今日の上限に到達"</string>
 </resources>

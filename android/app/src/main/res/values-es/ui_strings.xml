@@ -224,4 +224,6 @@
     <string name="billing_terms">"Se cobra mensualmente por Google Play. Cancela cuando quieras en Play Store."</string>
     <string name="billing_unavailable">"No se pudo cargar el plan sin anuncios. Comprueba que la app se instaló desde Play Store."</string>
     <string name="error_billing">"No se pudo abrir la pantalla de pago. Inténtalo de nuevo en un momento."</string>
+    <string name="rule_remaining">"Quedan %1$s hoy"</string>
+    <string name="rule_limit_reached">"Límite diario alcanzado"</string>
 </resources>

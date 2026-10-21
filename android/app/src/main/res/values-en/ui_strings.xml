@@ -224,4 +224,6 @@
     <string name="billing_terms">"Billed monthly through Google Play. Cancel anytime in the Play Store."</string>
     <string name="billing_unavailable">"Could not load the ad-free plan. Make sure the app was installed from the Play Store."</string>
     <string name="error_billing">"Could not open the payment screen. Please try again shortly."</string>
+    <string name="rule_remaining">"%1$s left today"</string>
+    <string name="rule_limit_reached">"Daily limit reached"</string>
 </resources>

@@ -362,7 +362,10 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             val total = totals[date.toString()]
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(date.format(DateTimeFormatter.ofPattern("M/d")), modifier = Modifier.width(40.dp), fontSize = 12.sp)
-                LinearProgressIndicator(progress = { ((total ?: 0L).toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.weight(1f))
+                // Today's bar carries the accent; earlier days recede so the comparison reads at a glance.
+                val bar = if (offset == 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .55f)
+                LinearProgressIndicator(progress = { ((total ?: 0L).toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.weight(1f),
+                    color = bar, trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .12f))
                 Text(total?.let { duration(it / 1000) } ?: tr("기록 없음"), modifier = Modifier.width(100.dp), fontSize = 11.sp)
             }
         }

@@ -1,6 +1,11 @@
 package com.chronolock.feature
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.*
@@ -85,9 +90,19 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
             Text(tr("이 기간에 저장된 사용 기록이 없습니다."))
             Text(tr("권한을 켠 뒤 다른 앱을 사용하고 새로고침해 보세요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        apps.forEach { app -> key(app.packageName) { CardBox {
-            Text(app.appName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(app.packageName, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+        apps.forEachIndexed { rank, app -> key(app.packageName) { CardBox {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("${rank + 1}", modifier = Modifier.width(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
+                Box(Modifier.size(36.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = .12f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center) {
+                    Text(app.appName.take(1), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(app.appName, fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(app.packageName, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
             Text(tr("%1\$s · %2\$d회 실행", duration(app.usageMillis / 1000), app.opens), color = MaterialTheme.colorScheme.primary)
             LinearProgressIndicator(progress = { (app.usageMillis.toFloat() / records.sumOf { it.usageMillis }.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
         } } }
