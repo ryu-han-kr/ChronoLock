@@ -14,3 +14,6 @@ captures/
 
 # Upload key backup (never commit)
 key-backup/
+
+# Local release bundles for manual Play upload
+release/
