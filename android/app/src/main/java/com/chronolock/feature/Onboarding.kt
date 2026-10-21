@@ -19,7 +19,9 @@ import com.chronolock.data.AppLanguage
 /** First-run welcome: what the app does, where data lives, and that the user stays in control. Shown once. */
 @Composable
 internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguage) -> Unit, start: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()
+    // Surface supplies onBackground as the content color; without it untinted Text falls back to black.
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Column(Modifier.fillMaxSize().systemBarsPadding()
         .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -48,5 +50,6 @@ internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguag
         }
         Spacer(Modifier.height(8.dp))
         Button(onClick = start, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text(tr("시작하기"), fontSize = 16.sp) }
+    }
     }
 }

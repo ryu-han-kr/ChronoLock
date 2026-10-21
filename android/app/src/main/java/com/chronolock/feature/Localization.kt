@@ -3,6 +3,8 @@ package com.chronolock.feature
 import android.content.Context
 import android.content.res.Configuration
 import android.os.LocaleList
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -28,8 +30,13 @@ internal fun LocalizedApp(language: AppLanguage, content: @Composable () -> Unit
     val original = LocalContext.current
     val configuration = LocalConfiguration.current
     val localized = remember(original, configuration, language) { original.forLanguage(language) }
+    // The localized context is not an Activity, so carry over the owners that are otherwise found by walking LocalContext.
+    val activityOwners = listOfNotNull(
+        LocalActivityResultRegistryOwner.current?.let { LocalActivityResultRegistryOwner provides it },
+        LocalOnBackPressedDispatcherOwner.current?.let { LocalOnBackPressedDispatcherOwner provides it },
+    )
     CompositionLocalProvider(LocalContext provides localized, LocalConfiguration provides localized.resources.configuration,
-        LocalLanguage provides language, content = content)
+        LocalLanguage provides language, *activityOwners.toTypedArray(), content = content)
 }
 
 internal class UiText(private val context: Context) {
