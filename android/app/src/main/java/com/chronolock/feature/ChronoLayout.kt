@@ -1,5 +1,6 @@
 package com.chronolock.feature
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -147,9 +148,9 @@ internal fun ChronoScreen(
                                         rule.dailyLimitSeconds?.let { limit ->
                                             val remaining = remainingDailySeconds(limit, usage?.usageMillis ?: 0)
                                             val tint = if (remaining == 0L) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                                            LinearProgressIndicator(progress = {
-                                                ((usage?.usageMillis ?: 0).toFloat() / (limit.coerceAtLeast(1) * 1000f)).coerceIn(0f, 1f)
-                                            }, modifier = Modifier.fillMaxWidth().height(6.dp), color = tint,
+                                            val progress by animateFloatAsState(
+                                                ((usage?.usageMillis ?: 0).toFloat() / (limit.coerceAtLeast(1) * 1000f)).coerceIn(0f, 1f), label = "daily")
+                                            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(6.dp), color = tint,
                                                 trackColor = tint.copy(alpha = .16f))
                                             if (rule.enabled) Text(if (remaining == 0L) tr("오늘 한도 도달") else tr("오늘 %1\$s 남음", duration(remaining)),
                                                 color = tint, fontSize = 13.sp, fontWeight = FontWeight.Medium)

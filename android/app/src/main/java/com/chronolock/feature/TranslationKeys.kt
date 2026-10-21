@@ -232,4 +232,5 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "오늘 한도 도달" to R.string.rule_limit_reached,
     "알림 권한" to R.string.notify_permission,
     "하루 한도가 5분 남으면 알려 드립니다." to R.string.notify_permission_hint,
+    "최근 7일 중 %1\$d일 한도를 지켰어요" to R.string.week_kept,
 )

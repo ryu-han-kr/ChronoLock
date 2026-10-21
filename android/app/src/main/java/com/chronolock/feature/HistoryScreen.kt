@@ -1,8 +1,6 @@
 package com.chronolock.feature
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,10 +92,7 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("${rank + 1}", modifier = Modifier.width(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
-                Box(Modifier.size(36.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = .12f), RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center) {
-                    Text(app.appName.take(1), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                }
+                AppIcon(app.packageName, app.appName, 36.dp)
                 Column(Modifier.weight(1f)) {
                     Text(app.appName, fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(app.packageName, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)

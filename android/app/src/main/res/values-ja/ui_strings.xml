@@ -236,4 +236,5 @@
     <string name="widget_tightest">"%1$s 残り%2$s"</string>
     <string name="widget_reached">"%1$s 上限に到達"</string>
     <string name="widget_description">"今日の使用時間といちばん近い上限"</string>
+    <string name="week_kept">"直近7日のうち%1$d日は上限を守りました"</string>
 </resources>

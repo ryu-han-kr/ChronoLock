@@ -236,4 +236,5 @@
     <string name="widget_tightest">"%1$s %2$s 남음"</string>
     <string name="widget_reached">"%1$s 한도 도달"</string>
     <string name="widget_description">"오늘 사용 시간과 가장 가까운 한도"</string>
+    <string name="week_kept">"최근 7일 중 %1$d일 한도를 지켰어요"</string>
 </resources>

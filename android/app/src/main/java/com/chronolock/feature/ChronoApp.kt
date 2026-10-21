@@ -10,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,6 +27,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +43,8 @@ import com.chronolock.domain.DailyTimeInput
 import com.chronolock.domain.RuleRecipe
 import com.chronolock.domain.DailyKey
 import com.chronolock.domain.DailyUsage
+import com.chronolock.domain.DayResult
+import com.chronolock.domain.dayResults
 import com.chronolock.domain.suggestUsageRule
 import com.chronolock.domain.suggestedDraft
 import java.time.LocalDate
@@ -135,9 +140,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
 }
 @Composable internal fun AppHeading(name: String, packageName: String, edit: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(42.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = .12f), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-            Text(name.take(1), color = MaterialTheme.colorScheme.primary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        }
+        AppIcon(packageName, name, 42.dp)
         Column(Modifier.weight(1f)) {
             Text(name, fontWeight = FontWeight.Bold, fontSize = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(packageName, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -365,6 +368,31 @@ internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Un
     }
 }
 
+/** One dot per day: filled when limits held, error-tinted when one was reached, hollow when nothing was recorded. */
+@Composable
+private fun WeekDots(days: List<Pair<LocalDate, DayResult>>) {
+    val kept = days.count { it.second == DayResult.KEPT }
+    val summary = tr("최근 7일 중 %1\$d일 한도를 지켰어요", kept)
+    Column(Modifier.semantics(mergeDescendants = true) { contentDescription = summary }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(summary, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            days.forEach { (date, result) ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val color = when (result) {
+                        DayResult.KEPT -> MaterialTheme.colorScheme.primary
+                        DayResult.REACHED -> MaterialTheme.colorScheme.error
+                        DayResult.NO_RECORD -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .35f)
+                    }
+                    Box(Modifier.size(14.dp).then(if (result == DayResult.NO_RECORD) Modifier.border(1.5.dp, color, CircleShape)
+                        else Modifier.background(color, CircleShape)))
+                    Text(date.dayOfWeek.getDisplayName(java.time.format.TextStyle.NARROW, uiText().locale),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (String, RuleRecipe) -> Unit) {
     val firstDay = today.minusDays(6).toString()
@@ -377,6 +405,8 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
     }
     CardBox {
         Text(tr("최근 7일 돌아보기"), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        WeekDots(dayResults(records.associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) },
+            state.rules.map { it.toDomain() }, today))
         Text(tr("기록된 사용 %1\$s · %2\$d회 실행", duration(records.sumOf { it.usageMillis } / 1000), records.sumOf { it.opens }), color = MaterialTheme.colorScheme.primary)
         (6L downTo 0L).forEach { offset ->
             val date = today.minusDays(offset)

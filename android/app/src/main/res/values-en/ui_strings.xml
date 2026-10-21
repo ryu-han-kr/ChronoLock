@@ -236,4 +236,5 @@
     <string name="widget_tightest">"%1$s: %2$s left"</string>
     <string name="widget_reached">"%1$s limit reached"</string>
     <string name="widget_description">"Today's usage and the closest limit"</string>
+    <string name="week_kept">"Limits kept on %1$d of the last 7 days"</string>
 </resources>

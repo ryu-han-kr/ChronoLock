@@ -236,4 +236,5 @@
     <string name="widget_tightest">"%1$s 剩余 %2$s"</string>
     <string name="widget_reached">"%1$s 已达上限"</string>
     <string name="widget_description">"今日使用时长与最接近的上限"</string>
+    <string name="week_kept">"最近 7 天中有 %1$d 天守住了上限"</string>
 </resources>
