@@ -1,5 +1,10 @@
 package com.chronolock.feature
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
@@ -17,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,6 +74,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 accessibilityPermission = { permissionDialog = true },
                 clear = { confirmClear = true },
                 selectTheme = model::selectTheme,
+                toggleRule = { rule, on -> model.save(rule.toDomain().copy(enabled = on), {}) },
                 selectLanguage = model::selectLanguage, refreshHistory = model::refreshHistory,
                 banner = state.ads.takeIf {
                     AdPolicy.showBanner(tab, it.configured, state.adFree, it.canRequestAds,
@@ -147,8 +155,21 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             OutlinedButton(onClick = usage, modifier = Modifier.fillMaxWidth()) { Text(tr("사용 정보 권한")) }
             OutlinedButton(onClick = accessibility, modifier = Modifier.fillMaxWidth()) { Text(tr("접근성 권한")) }
+            NotificationPermissionButton()
         }
     }
+}
+
+/** Asks for the reminder permission on Android 13+; hidden once granted or on older versions where it is implicit. */
+@Composable private fun NotificationPermissionButton() {
+    if (Build.VERSION.SDK_INT < 33) return
+    val context = LocalContext.current
+    fun granted() = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    var allowed by remember { mutableStateOf(granted()) }
+    val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed = it }
+    if (allowed) return
+    OutlinedButton(onClick = { request.launch(Manifest.permission.POST_NOTIFICATIONS) }, modifier = Modifier.fillMaxWidth()) { Text(tr("알림 권한")) }
+    Text(tr("하루 한도가 5분 남으면 알려 드립니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
 }
 
 private val RuleDraftSaver = listSaver<RuleDraft, Any>(

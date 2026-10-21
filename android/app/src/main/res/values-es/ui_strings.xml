@@ -226,4 +226,14 @@
     <string name="error_billing">"No se pudo abrir la pantalla de pago. Inténtalo de nuevo en un momento."</string>
     <string name="rule_remaining">"Quedan %1$s hoy"</string>
     <string name="rule_limit_reached">"Límite diario alcanzado"</string>
+    <string name="limit_channel">"Avisos de límite"</string>
+    <string name="limit_warning_title">"%1$s está cerca de su límite diario"</string>
+    <string name="limit_warning_text">"Te quedan %1$s hoy. Buen momento para terminar."</string>
+    <string name="notify_permission">"Notificaciones"</string>
+    <string name="notify_permission_hint">"Te avisamos cuando queden 5 minutos de un límite diario."</string>
+    <string name="widget_label">"Hoy · apps limitadas"</string>
+    <string name="widget_empty">"Abre la app para configurar límites"</string>
+    <string name="widget_tightest">"%1$s: quedan %2$s"</string>
+    <string name="widget_reached">"%1$s alcanzó su límite"</string>
+    <string name="widget_description">"Uso de hoy y el límite más cercano"</string>
 </resources>

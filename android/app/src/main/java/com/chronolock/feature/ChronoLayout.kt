@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +46,7 @@ internal fun ChronoScreen(
     accessibilityPermission: () -> Unit,
     clear: () -> Unit,
     selectTheme: (AppTheme) -> Unit = {},
+    toggleRule: (RuleEntity, Boolean) -> Unit = { _, _ -> },
     selectLanguage: (com.chronolock.data.AppLanguage) -> Unit = {},
     refreshHistory: () -> Unit = {},
     banner: (@Composable () -> Unit)? = null,
@@ -151,8 +154,14 @@ internal fun ChronoScreen(
                                             if (rule.enabled) Text(if (remaining == 0L) tr("오늘 한도 도달") else tr("오늘 %1\$s 남음", duration(remaining)),
                                                 color = tint, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                                         }
-                                        Text(tr("오늘 %1\$s · %2\$d회 실행", duration((usage?.usageMillis ?: 0) / 1000), usage?.opens ?: 0),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                        Row(Modifier.fillMaxWidth().toggleable(value = rule.enabled, role = Role.Switch,
+                                            onValueChange = { toggleRule(rule, it) }), verticalAlignment = Alignment.CenterVertically) {
+                                            Text(tr("오늘 %1\$s · %2\$d회 실행", duration((usage?.usageMillis ?: 0) / 1000), usage?.opens ?: 0),
+                                                Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                            Text(tr("제한 사용"), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                            Spacer(Modifier.width(8.dp))
+                                            Switch(checked = rule.enabled, onCheckedChange = null)
+                                        }
                                     }
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today) { app, recipe -> edit(app, recipe) } }

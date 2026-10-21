@@ -226,4 +226,14 @@
     <string name="error_billing">"결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요."</string>
     <string name="rule_remaining">"오늘 %1$s 남음"</string>
     <string name="rule_limit_reached">"오늘 한도 도달"</string>
+    <string name="limit_channel">"한도 임박 알림"</string>
+    <string name="limit_warning_title">"%1$s 하루 한도 임박"</string>
+    <string name="limit_warning_text">"오늘 %1$s 남았어요. 지금 하던 일을 마무리해 보세요."</string>
+    <string name="notify_permission">"알림 권한"</string>
+    <string name="notify_permission_hint">"하루 한도가 5분 남으면 알려 드립니다."</string>
+    <string name="widget_label">"오늘 · 제한한 앱"</string>
+    <string name="widget_empty">"앱을 열어 제한을 설정하세요"</string>
+    <string name="widget_tightest">"%1$s %2$s 남음"</string>
+    <string name="widget_reached">"%1$s 한도 도달"</string>
+    <string name="widget_description">"오늘 사용 시간과 가장 가까운 한도"</string>
 </resources>

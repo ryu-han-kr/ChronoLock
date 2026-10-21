@@ -9,8 +9,11 @@ import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
 import com.chronolock.MainActivity
 import com.chronolock.data.LocalRepository
+import com.chronolock.data.toDomain
 import com.chronolock.data.Preferences
+import com.chronolock.domain.AppRule
 import com.chronolock.domain.MonitorState
+import com.chronolock.feature.forLanguage
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
@@ -26,6 +29,9 @@ class ChronoAccessibilityService : AccessibilityService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val commands = Channel<Command>(Channel.UNLIMITED)
     private lateinit var overlay: BlockOverlay
+    private val surfaces by lazy { LimitSurfaces(applicationContext) }
+    private var rules: Map<String, AppRule> = emptyMap()
+    private var localized: android.content.Context = this
     private var screenReceiverRegistered = false
     private var started = false
     private sealed interface Command {
@@ -55,9 +61,14 @@ class ChronoAccessibilityService : AccessibilityService() {
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay theme", error) }
         }
         scope.launch {
-            try { preferences.language.collect { overlay.setLanguage(it) } }
+            try { preferences.language.collect { overlay.setLanguage(it); localized = forLanguage(it) } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay language", error) }
+        }
+        scope.launch {
+            try { repository.rules.collect { list -> rules = list.associate { it.packageName to it.toDomain() } } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe rules", error) }
         }
         ContextCompat.registerReceiver(this, screenReceiver, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT)
@@ -98,6 +109,8 @@ class ChronoAccessibilityService : AccessibilityService() {
     }
 
     private fun render(state: MonitorState) {
+        runCatching { surfaces.update(state, rules, localized) }
+            .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
         val target = state.observedPackage
         if (target != null && state.decision.denied) {
             val label = runCatching { packageManager.getApplicationLabel(packageManager.getApplicationInfo(target, 0)).toString() }.getOrDefault(target)

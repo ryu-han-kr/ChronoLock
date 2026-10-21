@@ -226,4 +226,14 @@
     <string name="error_billing">"Could not open the payment screen. Please try again shortly."</string>
     <string name="rule_remaining">"%1$s left today"</string>
     <string name="rule_limit_reached">"Daily limit reached"</string>
+    <string name="limit_channel">"Limit reminders"</string>
+    <string name="limit_warning_title">"%1$s is near its daily limit"</string>
+    <string name="limit_warning_text">"%1$s left today. A good moment to wrap up."</string>
+    <string name="notify_permission">"Notifications"</string>
+    <string name="notify_permission_hint">"Get a reminder when 5 minutes of a daily limit remain."</string>
+    <string name="widget_label">"Today · limited apps"</string>
+    <string name="widget_empty">"Open the app to set limits"</string>
+    <string name="widget_tightest">"%1$s: %2$s left"</string>
+    <string name="widget_reached">"%1$s limit reached"</string>
+    <string name="widget_description">"Today's usage and the closest limit"</string>
 </resources>

@@ -230,4 +230,6 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요." to R.string.error_billing,
     "오늘 %1\$s 남음" to R.string.rule_remaining,
     "오늘 한도 도달" to R.string.rule_limit_reached,
+    "알림 권한" to R.string.notify_permission,
+    "하루 한도가 5분 남으면 알려 드립니다." to R.string.notify_permission_hint,
 )
