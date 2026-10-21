@@ -237,4 +237,18 @@
     <string name="widget_reached">"%1$s alcanzó su límite"</string>
     <string name="widget_description">"Uso de hoy y el límite más cercano"</string>
     <string name="week_kept">"Límites respetados %1$d de los últimos 7 días"</string>
+    <string name="focus_custom">"Otro"</string>
+    <string name="focus_custom_title">"¿Cuántos minutos quieres concentrarte?"</string>
+    <string name="focus_minutes">"Minutos de concentración (1–180)"</string>
+    <string name="next">"Siguiente"</string>
+    <string name="onboarding_title">"Te damos la bienvenida a ChronoLock"</string>
+    <string name="onboarding_subtitle">"Una herramienta para usar apps con las reglas que tú eliges."</string>
+    <string name="onboarding_rules_title">"Límites por app"</string>
+    <string name="onboarding_rules_body">"Combina tiempo diario, tiempo por sesión, aperturas y horarios a tu gusto."</string>
+    <string name="onboarding_local_title">"Los registros se quedan en el dispositivo"</string>
+    <string name="onboarding_local_body">"El uso y las reglas se guardan en el dispositivo y nunca se envían a un servidor."</string>
+    <string name="onboarding_control_title">"Cámbialo cuando quieras"</string>
+    <string name="onboarding_control_body">"Desactiva o elimina reglas cuando quieras y retira permisos en los ajustes de Android."</string>
+    <string name="onboarding_start">"Empezar"</string>
+    <string name="error_save_setting">"No se pudo guardar el ajuste. Inténtalo de nuevo."</string>
 </resources>

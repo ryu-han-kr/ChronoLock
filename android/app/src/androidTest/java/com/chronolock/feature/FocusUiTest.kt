@@ -171,6 +171,33 @@ class FocusUiTest {
         screenshot("quick-focus-ready", ui.onRoot())
     }
 
+    @Test fun customFocusAcceptsOnlyOneToOneEightyMinutes() {
+        var minutes: Int? = null
+        val state = MainState(rules = listOf(RuleEntity("test.app", "YouTube", 600, null, null)),
+            permissions = PermissionState(true, true), health = Health(connected = true))
+        ui.setContent { MaterialTheme(colorScheme = darkColorScheme()) { QuickFocusCard(state, 1000, { minutes = it }, {}) } }
+        ui.onNodeWithText("직접").performClick()
+        ui.onNodeWithText("집중 시간(분, 1~180)").performTextInput("200")
+        ui.onNodeWithText("다음").assertIsNotEnabled()
+        ui.onNodeWithText("집중 시간(분, 1~180)").performTextReplacement("45")
+        ui.onNodeWithText("다음").performClick()
+        ui.runOnIdle { assertEquals(45, minutes) }
+    }
+
+    @Test fun onboardingStartsAndSwitchesLanguage() {
+        var started = false
+        val language = mutableStateOf(com.chronolock.data.AppLanguage.KOREAN)
+        ui.setContent { LocalizedApp(language.value) { ChronoTheme(AppTheme.DARK) {
+            OnboardingScreen(language.value, { language.value = it }) { started = true }
+        } } }
+        ui.onNodeWithText("기록은 이 기기에만").assertExists()
+        screenshot("onboarding", ui.onRoot())
+        ui.onNodeWithText("English").performClick()
+        ui.onNodeWithText("Records stay on this device").assertExists()
+        ui.onNodeWithText("Get started").performScrollTo().performClick()
+        ui.runOnIdle { assertTrue(started) }
+    }
+
     @Test fun runningFocusShowsCountdownAndCanBeStopped() {
         var stopped = false
         val state = MainState(rules = listOf(RuleEntity("test.app", "YouTube", 600, null, null, focusUntilEpochMillis = 301000)),

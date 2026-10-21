@@ -237,4 +237,18 @@
     <string name="widget_reached">"%1$s 上限に到達"</string>
     <string name="widget_description">"今日の使用時間といちばん近い上限"</string>
     <string name="week_kept">"直近7日のうち%1$d日は上限を守りました"</string>
+    <string name="focus_custom">"指定"</string>
+    <string name="focus_custom_title">"何分集中しますか？"</string>
+    <string name="focus_minutes">"集中時間（分・1〜180）"</string>
+    <string name="next">"次へ"</string>
+    <string name="onboarding_title">"ChronoLockへようこそ"</string>
+    <string name="onboarding_subtitle">"自分で決めた基準でアプリの使い方を整えるツールです。"</string>
+    <string name="onboarding_rules_title">"アプリごとに基準を決める"</string>
+    <string name="onboarding_rules_body">"1日の時間、1回の時間、起動回数、時間帯を自由に組み合わせられます。"</string>
+    <string name="onboarding_local_title">"記録はこの端末だけに"</string>
+    <string name="onboarding_local_body">"使用記録とルールは端末に保存され、サーバーには送信しません。"</string>
+    <string name="onboarding_control_title">"いつでも変更できます"</string>
+    <string name="onboarding_control_body">"ルールはいつでもオフ・削除でき、権限もAndroidの設定で解除できます。"</string>
+    <string name="onboarding_start">"はじめる"</string>
+    <string name="error_save_setting">"設定を保存できませんでした。もう一度お試しください。"</string>
 </resources>

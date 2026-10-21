@@ -237,4 +237,18 @@
     <string name="widget_reached">"%1$s 已达上限"</string>
     <string name="widget_description">"今日使用时长与最接近的上限"</string>
     <string name="week_kept">"最近 7 天中有 %1$d 天守住了上限"</string>
+    <string name="focus_custom">"自定义"</string>
+    <string name="focus_custom_title">"要专注多少分钟？"</string>
+    <string name="focus_minutes">"专注时长（分钟，1–180）"</string>
+    <string name="next">"下一步"</string>
+    <string name="onboarding_title">"欢迎使用 ChronoLock"</string>
+    <string name="onboarding_subtitle">"按你自己设定的标准管理应用使用的工具。"</string>
+    <string name="onboarding_rules_title">"为每个应用设定标准"</string>
+    <string name="onboarding_rules_body">"自由组合每日时长、单次时长、打开次数和时间段。"</string>
+    <string name="onboarding_local_title">"记录只保存在本机"</string>
+    <string name="onboarding_local_body">"使用记录和规则保存在设备上，不会发送到服务器。"</string>
+    <string name="onboarding_control_title">"随时可以更改"</string>
+    <string name="onboarding_control_body">"规则可随时关闭或删除，也可在 Android 设置中撤销权限。"</string>
+    <string name="onboarding_start">"开始使用"</string>
+    <string name="error_save_setting">"无法保存设置，请重试。"</string>
 </resources>

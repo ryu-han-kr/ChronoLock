@@ -69,6 +69,13 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     LocalizedApp(state.language) {
         val text = uiText()
         LaunchedEffect(state.error, state.language) { state.error?.let { snackbar.showSnackbar(text(it)); model.dismissError() } }
+        if (state.onboarded != true) {
+            ChronoTheme(state.theme) {
+                if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding)
+                else Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+            }
+            return@LocalizedApp
+        }
         ChronoTheme(state.theme) {
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
@@ -186,6 +193,7 @@ private val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
     restore = { DailyTimeInput(it[0], it[1], it[2]) },
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> Unit,
     onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null) {
@@ -205,8 +213,31 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
     var saving by remember { mutableStateOf(false) }
     val editorScroll = rememberScrollState()
     LaunchedEffect(error) { if (error != null) editorScroll.animateScrollTo(editorScroll.maxValue) }
-    AlertDialog(onDismissRequest = { if (!saving) onDismiss() }, title = { Text(app.label) }, text = {
-        Column(Modifier.verticalScroll(editorScroll), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    fun submit() {
+        try {
+            val rule = draft.copy(daily = dailyTime.toSecondsText(), session = sessionTime.toSecondsText("1회 허용 시간"),
+                cooldown = cooldownTime.toSecondsText("재실행 대기 시간")).build(app.packageName, app.label)
+            error = null
+            saving = true
+            onSave(rule) { saving = false }
+        } catch (invalid: IllegalArgumentException) {
+            error = invalid.message
+            saving = false
+        }
+    }
+    // A full-height sheet leaves room for the long form; it cannot be swiped away while a save is in flight.
+    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { it != SheetValue.Hidden || !saving })
+    ModalBottomSheet(onDismissRequest = { if (!saving) onDismiss() }, sheetState = sheet) {
+        Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            AppIcon(app.packageName, app.label, 36.dp)
+            Text(app.label, Modifier.weight(1f), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            TextButton(enabled = !saving, onClick = onDismiss) { Text(tr("취소")) }
+            Button(enabled = !saving, onClick = ::submit) { Text(if (saving) tr("저장 중") else tr("저장")) }
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .15f))
+        Column(Modifier.verticalScroll(editorScroll).padding(horizontal = 24.dp, vertical = 16.dp).navigationBarsPadding().imePadding(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(tr("제한 사용"))
                 Switch(checked = draft.enabled, onCheckedChange = { draft = draft.copy(enabled = it) }, enabled = !saving)
@@ -262,20 +293,11 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                     label = { Text(tr("차단 종료 (HH:mm)")) }, singleLine = true, enabled = !saving, modifier = Modifier.fillMaxWidth())
             }
             error?.let { Text(tr(it), color = MaterialTheme.colorScheme.error) }
-            if (saved != null) TextButton(onClick = onDelete, enabled = !saving) { Text(tr("이 앱의 제한 삭제")) }
+            if (saved != null) TextButton(onClick = onDelete, enabled = !saving) {
+                Text(tr("이 앱의 제한 삭제"), color = MaterialTheme.colorScheme.error)
+            }
         }
-    }, confirmButton = { TextButton(enabled = !saving, onClick = {
-        try {
-            val rule = draft.copy(daily = dailyTime.toSecondsText(), session = sessionTime.toSecondsText("1회 허용 시간"),
-                cooldown = cooldownTime.toSecondsText("재실행 대기 시간")).build(app.packageName, app.label)
-            error = null
-            saving = true
-            onSave(rule) { saving = false }
-        } catch (invalid: IllegalArgumentException) {
-            error = invalid.message
-            saving = false
-        }
-    }) { Text(if (saving) tr("저장 중") else tr("저장")) } }, dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(tr("취소")) } })
+    }
 }
 /** Hours, minutes and seconds for one limit; [tag] prefixes each field's test tag, e.g. "daily-hours". */
 @Composable
@@ -338,6 +360,20 @@ internal fun formatDuration(seconds: Long, text: UiText): String = when {
     }.joinToString(" · ")
 }
 
+/** Free-form focus length; the confirmation dialog that follows still applies. */
+@Composable
+private fun CustomFocusDialog(onDismiss: () -> Unit, start: (Int) -> Unit) {
+    var minutes by rememberSaveable { mutableStateOf("") }
+    val value = minutes.toIntOrNull()?.takeIf { it in 1..180 }
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(tr("몇 분 동안 집중할까요?")) }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            NumberField(tr("집중 시간(분, 1~180)"), minutes) { input -> if (input.length <= 3 && input.all { it in '0'..'9' }) minutes = input }
+            if (minutes.isNotEmpty() && value == null) Text(tr("집중 시간은 1~180분으로 설정해 주세요."), color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+        }
+    }, confirmButton = { TextButton(enabled = value != null, onClick = { value?.let(start) }) { Text(tr("다음")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("취소")) } })
+}
+
 @Composable
 internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Unit, stop: () -> Unit) {
     val enabled = state.rules.filter { it.enabled }
@@ -354,13 +390,18 @@ internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Un
         } else {
             Text(if (enabled.isEmpty()) tr("앱 제한 탭에서 집중할 때 차단할 앱을 먼저 설정하세요.")
                 else tr("제한이 켜진 %1\$d개 앱을 잠시 쉬고, 지금 할 일에 집중하세요.", enabled.size), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            val canStart = enabled.isNotEmpty() && !state.focusBusy && state.permissions.usage &&
+                state.permissions.accessibility && state.health.connected
+            var askMinutes by rememberSaveable { mutableStateOf(false) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(25, 50, 90).forEach { minutes ->
                     FilledTonalButton(modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp, vertical = 12.dp),
-                        enabled = enabled.isNotEmpty() && !state.focusBusy && state.permissions.usage &&
-                        state.permissions.accessibility && state.health.connected, onClick = { start(minutes) }) { Text(tr("%1\$d분", minutes)) }
+                        enabled = canStart, onClick = { start(minutes) }) { Text(tr("%1\$d분", minutes)) }
                 }
+                OutlinedButton(modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp, vertical = 12.dp),
+                    enabled = canStart, onClick = { askMinutes = true }) { Text(tr("직접")) }
             }
+            if (askMinutes) CustomFocusDialog(onDismiss = { askMinutes = false }) { minutes -> askMinutes = false; start(minutes) }
             if (enabled.isNotEmpty() && (!state.permissions.usage || !state.permissions.accessibility || !state.health.connected)) {
                 Text(tr("권한을 켜고 감지 연결을 확인하면 시작할 수 있습니다."), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

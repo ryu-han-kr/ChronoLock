@@ -39,6 +39,8 @@ data class MainState(
     val accountBusy: Boolean = false,
     val ads: AdState = AdState(),
     val billing: BillingState = BillingState(),
+    /** Null until the stored flag is read, so the welcome screen never flashes for returning users. */
+    val onboarded: Boolean? = null,
 ) {
     val adFree get() = billing.adFree
 }
@@ -65,6 +67,7 @@ class MainViewModel @Inject constructor(
         .combine(accounts.state) { ui, account -> ui.copy(account = account) }
         .combine(ads.state) { ui, ad -> ui.copy(ads = ad) }
         .combine(billing.state) { ui, store -> ui.copy(billing = store) }
+        .combine(preferences.onboarded) { ui, done -> ui.copy(onboarded = done) }
         .catch { local.update { it.copy(error = "저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요.", loading = false) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
@@ -141,6 +144,12 @@ class MainViewModel @Inject constructor(
     fun clear() = viewModelScope.launch {
         runCatching { repository.clearAll() }.onFailure { showError("로컬 데이터를 삭제하지 못했습니다.") }
     }
+    fun finishOnboarding() = viewModelScope.launch {
+        try { preferences.finishOnboarding() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
     fun acknowledge(onComplete: () -> Unit) = viewModelScope.launch {
         runCatching { preferences.acknowledge() }.onSuccess { onComplete() }
             .onFailure { showError("설명 확인 상태를 저장하지 못했습니다.") }
