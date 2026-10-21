@@ -1,8 +1,10 @@
 package com.chronolock.feature
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -101,18 +103,15 @@ internal fun ChronoScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text("CHRONOLOCK", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
-                                Text(destinations[tab], fontSize = 34.sp, fontWeight = FontWeight.Bold)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(destinations[tab], fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold)
                                 Text(when (tab) {
                                     0 -> tr("%1\$s · 내 시간을, 내 뜻대로.", today.format(DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM).withLocale(uiText().locale)))
                                     1 -> tr("작은 제한으로 더 여유로운 하루를 만드세요.")
                                     2 -> tr("차단 없이도 내 앱 사용 습관을 확인하세요.")
                                     else -> tr("내 데이터와 권한을 관리하세요.")
                                 }, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                if (tab == 0) Text(if (ready) tr("● 앱 제한 감지 중") else tr("○ 감지 준비가 필요해요"),
-                                    color = if (ready) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                if (tab == 0) StatusPill(ready)
                                 Spacer(Modifier.height(4.dp))
                             }
                         }
@@ -270,6 +269,16 @@ private fun UsageSummaryCard(stats: List<DailyEntity>, enabledRules: Int) {
             Column(Modifier.weight(1f)) { Metric(tr("허용한 실행"), tr("%1\$d회", stats.sumOf { it.opens })) }
             Column(Modifier.weight(1f)) { Metric(tr("제한 도달·차단"), tr("%1\$d회", stats.sumOf { it.blockedAttempts })) }
         }
+    }
+}
+
+@Composable
+private fun StatusPill(ready: Boolean) {
+    val tint = if (ready) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    Row(Modifier.background(tint.copy(alpha = .12f), RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.size(6.dp).background(tint, CircleShape))
+        Text(if (ready) tr("앱 제한 감지 중") else tr("감지 준비가 필요해요"), color = tint, fontSize = 12.sp, fontWeight = FontWeight.Medium)
     }
 }
 

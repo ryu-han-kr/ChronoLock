@@ -1,5 +1,8 @@
 package com.chronolock.data
 
+// Palettes follow open-source schemes (Flexoki, Nord, Everforest, Rosé Pine); muted and accent
+// tones are nudged where needed so every text pairing stays at WCAG AA (see ThemePaletteTest).
+// Enum names are persisted, so keep them stable even when a palette changes.
 enum class AppTheme(
     val title: String,
     val description: String,
@@ -11,16 +14,16 @@ enum class AppTheme(
     val text: Long,
     val muted: Long,
 ) {
-    DARK("다크", "짙은 차콜 바탕과 라임 포인트", true,
-        0xFF10141F, 0xFF1B2231, 0xFFB8F27E, 0xFF10141F, 0xFFF4F6FB, 0xFFACB7CB),
-    LIGHT("화이트", "밝고 선명한 흰색 바탕", false,
-        0xFFF4F6F8, 0xFFFFFFFF, 0xFF365E37, 0xFFFFFFFF, 0xFF1B2520, 0xFF56645D),
-    OCEAN("오션", "깊은 네이비와 시원한 블루", true,
-        0xFF0B1C2B, 0xFF132D42, 0xFF71D7F5, 0xFF092333, 0xFFE5F3FC, 0xFFA8BED2),
-    FOREST("포레스트", "차분한 세이지 바탕과 짙은 그린", false,
-        0xFFC6D9C8, 0xFFD6E4D5, 0xFF245833, 0xFFFFFFFF, 0xFF183824, 0xFF3F5847),
-    LAVENDER("라벤더", "보랏빛을 채운 부드러운 라벤더", false,
-        0xFFD0BCE3, 0xFFDECCED, 0xFF593080, 0xFFFFFFFF, 0xFF302039, 0xFF584465);
+    DARK("먹", "따뜻한 먹색 바탕과 주황 포인트", true,
+        0xFF100F0F, 0xFF1C1B1A, 0xFFDA702C, 0xFF100F0F, 0xFFCECDC3, 0xFF878580),
+    LIGHT("종이", "미색 종이 바탕과 잉크 블루", false,
+        0xFFF2F0E5, 0xFFFFFCF0, 0xFF205EA6, 0xFFFFFCF0, 0xFF100F0F, 0xFF6A6964),
+    OCEAN("북극", "차가운 슬레이트와 서리 블루", true,
+        0xFF2E3440, 0xFF3B4252, 0xFF88C0D0, 0xFF2E3440, 0xFFECEFF4, 0xFFAEB6C4),
+    FOREST("숲", "어두운 이끼색과 세이지 그린", true,
+        0xFF2D353B, 0xFF343F44, 0xFFA7C080, 0xFF2D353B, 0xFFD3C6AA, 0xFFA3AEA5),
+    LAVENDER("새벽", "따뜻한 새벽빛 바탕과 보랏빛 포인트", false,
+        0xFFFAF4ED, 0xFFFFFAF3, 0xFF6E5A8C, 0xFFFFFAF3, 0xFF575279, 0xFF6E6A86);
 
     companion object {
         fun fromStored(value: String?): AppTheme = values().firstOrNull { it.name == value } ?: DARK

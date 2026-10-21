@@ -76,7 +76,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 setPadding(0, dp(12), 0, dp(12))
                 content.addView(this, LinearLayout.LayoutParams(-1, -2))
             }
-            label("CHRONOLOCK", 14f, theme.primary.toInt())
+            label("ChronoLock", 14f, theme.primary.toInt())
             heading = label("", 28f, theme.text.toInt()).apply { typeface = Typeface.DEFAULT_BOLD }
             detail = label("", 17f, theme.muted.toInt())
             label(text("잠깐 멈추고, 지금 하고 싶은 일을 선택하세요."), 15f, theme.muted.toInt())

@@ -118,8 +118,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
 }
 
 @Composable internal fun CardBox(content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
-        .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .1f), RoundedCornerShape(24.dp)).padding(20.dp),
+    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(20.dp))
+        .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .14f), RoundedCornerShape(20.dp)).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
 }
 @Composable internal fun Metric(label: String, value: String) {
@@ -140,7 +140,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
 @Composable internal fun PermissionCard(state: MainState, usage: () -> Unit, accessibility: () -> Unit) {
     CardBox {
         val ready = state.permissions.usage && state.permissions.accessibility && state.health.connected
-        Text(if (ready) tr("● 앱 제한 감지 중") else tr("앱 제한을 위한 준비"), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Text(if (ready) tr("앱 제한 감지 중") else tr("앱 제한을 위한 준비"), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
         Text(tr("사용 정보: %1\$s · 접근성: %2\$s", if (state.permissions.usage) tr("허용됨") else tr("필요"), if (state.permissions.accessibility) tr("허용됨") else tr("필요")), color = MaterialTheme.colorScheme.onSurfaceVariant)
         state.health.error?.let { Text(tr(it), color = MaterialTheme.colorScheme.error) }
         if (state.permissions.accessibility && !state.health.connected) Text(tr("서비스 연결을 확인해 주세요. 현재 차단 동작을 보장할 수 없습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
