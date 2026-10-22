@@ -34,6 +34,9 @@ class ChronoAccessibilityService : AccessibilityService() {
     private var localized: android.content.Context = this
     private var screenReceiverRegistered = false
     private var started = false
+    /** The app on screen before the screen turned off; re-observed after unlock when usage events cannot tell. */
+    private var observed: String? = null
+    private var beforeScreenOff: String? = null
     private sealed interface Command {
         data class Foreground(val packageName: String?) : Command
         data object Tick : Command
@@ -41,7 +44,10 @@ class ChronoAccessibilityService : AccessibilityService() {
     }
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            commands.trySend(if (intent?.action == Intent.ACTION_SCREEN_OFF) Command.Foreground(null) else Command.Recover)
+            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+                beforeScreenOff = observed
+                commands.trySend(Command.Foreground(null))
+            } else commands.trySend(Command.Recover)
         }
     }
 
@@ -80,13 +86,27 @@ class ChronoAccessibilityService : AccessibilityService() {
                 repository.reconnect(environment.clock(), recovery.dailyMillis, recovery.foregroundPackage)
                 health.connected()
                 render(repository.tick(environment.clock()))
+                var failures = 0
                 for (command in commands) {
-                    val state = when (command) {
-                        is Command.Foreground -> repository.foreground(command.packageName?.takeUnless { it in environment.safetyPackages() }, environment.clock())
-                        Command.Tick -> if (environment.interactive()) repository.tick(environment.clock()) else repository.foreground(null, environment.clock())
-                        Command.Recover -> repository.foreground(environment.recoverUsage().foregroundPackage?.takeUnless { it in environment.safetyPackages() }, environment.clock())
+                    try {
+                        val state = when (command) {
+                            is Command.Foreground -> repository.foreground(command.packageName?.takeUnless { it in environment.safetyPackages() }, environment.clock())
+                            Command.Tick -> if (environment.interactive()) repository.tick(environment.clock()) else repository.foreground(null, environment.clock())
+                            Command.Recover -> {
+                                delay(RECOVER_DELAY_MS) // The resumed activity's usage event lands shortly after USER_PRESENT.
+                                // Without usage access the recovery is always empty, so fall back to what was on screen before the lock.
+                                val recovered = environment.recoverUsage().foregroundPackage ?: beforeScreenOff
+                                repository.foreground(recovered?.takeUnless { it in environment.safetyPackages() }, environment.clock())
+                            }
+                        }
+                        failures = 0
+                        render(state)
+                    } catch (cancelled: CancellationException) { throw cancelled }
+                    catch (error: Exception) {
+                        // One failed overlay draw or database write must not end monitoring; a persistent fault does.
+                        if (++failures >= MAX_FAILURES) throw error
+                        android.util.Log.w("ChronoLock", "Monitoring step failed ($failures/$MAX_FAILURES)", error)
                     }
-                    render(state)
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) {
@@ -97,18 +117,31 @@ class ChronoAccessibilityService : AccessibilityService() {
                 scope.coroutineContext.cancelChildren()
             }
         }
-        scope.launch { while (isActive) { delay(1000); commands.send(Command.Tick) } }
+        scope.launch {
+            var wasInteractive = true
+            while (isActive) {
+                delay(1000)
+                val interactive = environment.interactive()
+                // One tick closes the session when the screen locks; none while it stays off, so no per-second writes.
+                if (interactive || wasInteractive) commands.send(Command.Tick)
+                wasInteractive = interactive
+            }
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val app = event.packageName?.toString() ?: return
         if (::overlay.isInitialized && overlay.visible && app == packageName) return
-        if (app == "com.android.systemui") return // transient notification/status windows are not app launches
-        if (environment.meaningfulPackage(app)) commands.trySend(Command.Foreground(app))
+        when (environment.windowKind(app)) {
+            WindowKind.TRANSIENT, WindowKind.NONE -> Unit // keyboard, permission prompt, status bar: the app underneath stays observed
+            WindowKind.LEAVE -> commands.trySend(Command.Foreground(null))
+            WindowKind.APP -> commands.trySend(Command.Foreground(app))
+        }
     }
 
     private fun render(state: MonitorState) {
+        observed = state.observedPackage
         runCatching { surfaces.update(state, rules, localized) }
             .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
         val target = state.observedPackage
@@ -119,6 +152,11 @@ class ChronoAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() { health.disconnected() }
+
+    private companion object {
+        const val MAX_FAILURES = 5
+        const val RECOVER_DELAY_MS = 400L
+    }
     override fun onDestroy() {
         if (::overlay.isInitialized) overlay.hide()
         if (screenReceiverRegistered) unregisterReceiver(screenReceiver)

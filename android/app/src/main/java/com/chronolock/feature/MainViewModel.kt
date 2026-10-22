@@ -59,17 +59,29 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
     private val local = MutableStateFlow(MainState())
     val bannerId get() = ads.bannerId
-    val state = combine(local, repository.rules, repository.daily, health.state, preferences.theme) { ui, rules, daily, monitor, theme ->
-        ui.copy(rules = rules, daily = daily, health = monitor, theme = theme)
-    }.combine(preferences.language) { ui, language -> ui.copy(language = language) }
-        .combine(historyRepository.daily) { ui, history -> ui.copy(history = history) }
-        .combine(historyRepository.meta) { ui, meta -> ui.copy(historyUpdatedAt = meta?.collectedAt ?: 0) }
-        .combine(accounts.state) { ui, account -> ui.copy(account = account) }
-        .combine(ads.state) { ui, ad -> ui.copy(ads = ad) }
-        .combine(billing.state) { ui, store -> ui.copy(billing = store) }
-        .combine(preferences.onboarded) { ui, done -> ui.copy(onboarded = done) }
-        .catch { local.update { it.copy(error = "저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요.", loading = false) } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
+    // Stored data is merged separately from [local] so a failed read reports an error without freezing the UI state
+    // (a catch inside one combined flow would end it, and no later error, busy flag or dismissal would reach the screen).
+    private var lastLoaded = MainState()
+    private val loaded = combine(repository.rules, repository.daily, health.state, preferences.theme) { rules, daily, monitor, theme ->
+        MainState(rules = rules, daily = daily, health = monitor, theme = theme)
+    }.combine(preferences.language) { data, language -> data.copy(language = language) }
+        .combine(historyRepository.daily) { data, history -> data.copy(history = history) }
+        .combine(historyRepository.meta) { data, meta -> data.copy(historyUpdatedAt = meta?.collectedAt ?: 0) }
+        .combine(accounts.state) { data, account -> data.copy(account = account) }
+        .combine(ads.state) { data, ad -> data.copy(ads = ad) }
+        .combine(billing.state) { data, store -> data.copy(billing = store) }
+        .combine(preferences.onboarded) { data, done -> data.copy(onboarded = done) }
+        .onEach { lastLoaded = it }
+        .catch { failure ->
+            android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
+            local.update { it.copy(error = "저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요.", loading = false) }
+            emit(lastLoaded)
+        }
+    val state = combine(local, loaded) { ui, data ->
+        ui.copy(rules = data.rules, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
+            history = data.history, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
+            billing = data.billing, onboarded = data.onboarded)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
         local.update { it.copy(permissions = PermissionState(environment.hasUsageAccess(), environment.accessibilityEnabled())) }
@@ -138,11 +150,14 @@ class MainViewModel @Inject constructor(
         }
     }
     fun remove(packageName: String, onSaved: () -> Unit) = viewModelScope.launch {
-        runCatching { ruleRepository.deleteRule(packageName) }.onSuccess { onSaved() }
-            .onFailure { showError("제한을 삭제하지 못했습니다.") }
+        try { ruleRepository.deleteRule(packageName); onSaved() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("제한을 삭제하지 못했습니다.") }
     }
     fun clear() = viewModelScope.launch {
-        runCatching { repository.clearAll() }.onFailure { showError("로컬 데이터를 삭제하지 못했습니다.") }
+        try { repository.clearAll() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("로컬 데이터를 삭제하지 못했습니다.") }
     }
     fun finishOnboarding() = viewModelScope.launch {
         try { preferences.finishOnboarding() }
@@ -151,8 +166,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun acknowledge(onComplete: () -> Unit) = viewModelScope.launch {
-        runCatching { preferences.acknowledge() }.onSuccess { onComplete() }
-            .onFailure { showError("설명 확인 상태를 저장하지 못했습니다.") }
+        try { preferences.acknowledge(); onComplete() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설명 확인 상태를 저장하지 못했습니다.") }
     }
     fun signIn(token: GoogleToken) = account("로그인하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.") {
         accounts.signInWithGoogle(token.idToken, token.rawNonce)

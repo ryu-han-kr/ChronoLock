@@ -68,7 +68,7 @@ internal fun ChronoScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var onlyConfigured by rememberSaveable { mutableStateOf(false) }
     var sortName by rememberSaveable { mutableStateOf(AppSort.NAME.name) }
-    val sort = AppSort.valueOf(sortName)
+    val sort = AppSort.entries.firstOrNull { it.name == sortName } ?: AppSort.NAME
     val usage = remember(state.history, today) { summarizeUsage(state.history, today.minusDays(6)) }
     val ready = state.permissions.usage && state.permissions.accessibility && state.health.connected
     val rulesByPackage = remember(state.rules) { state.rules.associateBy { it.packageName } }
@@ -217,7 +217,7 @@ internal fun ChronoScreen(
                                             color = if (rule?.enabled == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                                         if (sort != AppSort.NAME) Text(usage[app.packageName]?.let { summary ->
                                             tr("최근 7일 %1\$s · %2\$d회 실행", duration(summary.usageMillis / 1000), summary.opens) +
-                                                if (sort == AppSort.RECENT) " · " + tr("마지막 사용 %1\$s", LocalDate.parse(summary.lastDate).format(DateTimeFormatter.ofPattern("M/d"))) else ""
+                                                if (sort == AppSort.RECENT) " · " + tr("마지막 사용 %1\$s", dateText(LocalDate.parse(summary.lastDate))) else ""
                                         } ?: tr("최근 7일 기록 없음"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
@@ -279,7 +279,7 @@ private fun AdsCard(state: MainState, privacyOptions: () -> Unit, buy: () -> Uni
             state.adFree -> OutlinedButton(onClick = manage) { Text(tr("구독 관리")) }
             state.billing.pending -> Text(tr("결제 확인을 기다리고 있습니다. 완료되면 광고가 사라집니다."), color = MaterialTheme.colorScheme.primary)
             state.billing.available -> {
-                Button(onClick = buy) { Text(tr("광고 제거 · 월 %1\$s", state.billing.price ?: "990원")) }
+                Button(onClick = buy) { Text(state.billing.price?.let { tr("광고 제거 · 월 %1\$s", it) } ?: tr("광고 제거")) }
                 Text(tr("Google Play 정기 결제입니다. Play 스토어에서 언제든 해지할 수 있습니다."),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }

@@ -212,6 +212,10 @@
     <string name="mascot_happy">"Un ritmo perfecto."</string>
     <string name="mascot_surprised">"¡Vaya, más de lo esperado!"</string>
     <string name="mascot_dizzy">"Mareado… toca descansar."</string>
+    <string name="mascot_relaxed_2">"Tu día duró más que tu teléfono."</string>
+    <string name="mascot_happy_2">"¡Otro día equilibrado!"</string>
+    <string name="mascot_surprised_2">"¡Se me van a reventar los cachetes! ¡Espera!"</string>
+    <string name="mascot_dizzy_2">"Hoy toca soltar el teléfono."</string>
     <string name="accessibility_steps">"Cuando se abra Ajustes: ① toca ChronoLock en 'Aplicaciones instaladas' (o 'descargadas'), ② activa 'Usar ChronoLock', ③ toca 'Permitir'. Los nombres varían según el dispositivo."</string>
     <string name="accessibility_hint">"Accesibilidad → Apps instaladas → ChronoLock → Activar → Permitir"</string>
     <string name="recommend_title">"Límites sugeridos"</string>
@@ -288,6 +292,7 @@
     <string name="manage_subscription">"Gestionar suscripción"</string>
     <string name="billing_pending">"Esperando la confirmación del pago. Los anuncios desaparecerán al completarse."</string>
     <string name="buy_ad_free">"Quitar anuncios · %1$s/mes"</string>
+    <string name="buy_ad_free_no_price">"Quitar anuncios"</string>
     <string name="billing_terms">"Se cobra mensualmente por Google Play. Cancela cuando quieras en Play Store."</string>
     <string name="billing_unavailable">"No se pudo cargar el plan sin anuncios. Comprueba que la app se instaló desde Play Store."</string>
     <string name="billing_checking">"Comprobando el plan sin anuncios…"</string>

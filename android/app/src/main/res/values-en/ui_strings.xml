@@ -212,6 +212,10 @@
     <string name="mascot_happy">"Just the right pace."</string>
     <string name="mascot_surprised">"Oh, that is more than expected!"</string>
     <string name="mascot_dizzy">"Dizzy… time for a break."</string>
+    <string name="mascot_relaxed_2">"Your day was longer than your phone time."</string>
+    <string name="mascot_happy_2">"Another balanced day!"</string>
+    <string name="mascot_surprised_2">"My cheeks are about to burst. Hold on!"</string>
+    <string name="mascot_dizzy_2">"Time to put the phone down for today."</string>
     <string name="accessibility_steps">"When Settings opens: ① tap ChronoLock under 'Installed apps' (or 'Downloaded apps'), ② turn on 'Use ChronoLock', ③ tap 'Allow'. Names and positions vary by device."</string>
     <string name="accessibility_hint">"Accessibility → Installed apps → ChronoLock → Turn on → Allow"</string>
     <string name="recommend_title">"Suggested app limits"</string>
@@ -288,6 +292,7 @@
     <string name="manage_subscription">"Manage subscription"</string>
     <string name="billing_pending">"Waiting for payment confirmation. Ads disappear once it completes."</string>
     <string name="buy_ad_free">"Remove ads · %1$s/month"</string>
+    <string name="buy_ad_free_no_price">"Remove ads"</string>
     <string name="billing_terms">"Billed monthly through Google Play. Cancel anytime in the Play Store."</string>
     <string name="billing_unavailable">"Could not load the ad-free plan. Make sure the app was installed from the Play Store."</string>
     <string name="billing_checking">"Checking the ad-free plan…"</string>

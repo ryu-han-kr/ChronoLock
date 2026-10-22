@@ -25,6 +25,10 @@ class LocalizationTest {
             }
         }
     }
+    @Test fun everyMascotLine_hasATranslation() {
+        // Lines rotate by date, so a missing key shows Korean to other languages only on some days.
+        MascotLines.lines.values.flatten().forEach { assertTrue("Missing translation key: $it", it in translationKeys) }
+    }
     @Test fun domainValidation_andDuration_areLocalized() {
         val text = UiText(context.forLanguage(AppLanguage.ENGLISH))
         assertEquals("Opens: enter a whole number from 1 to 10000.", text("실행 횟수: 1~10000 범위의 정수를 입력해 주세요."))

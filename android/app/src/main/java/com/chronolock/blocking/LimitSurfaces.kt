@@ -32,13 +32,20 @@ import com.chronolock.feature.formatDuration
  * [localized] must already carry the app's chosen language.
  */
 internal class LimitSurfaces(private val context: Context) {
-    private val warned = mutableSetOf<DailyKey>()
+    private val prefs = context.getSharedPreferences("limit_surfaces", Context.MODE_PRIVATE)
+    // Persisted so a service restart does not repeat the once-a-day warning.
+    private val warned: MutableSet<DailyKey> = prefs.getString(KEY_WARNED_DATE, null)?.let { date ->
+        runCatching { java.time.LocalDate.parse(date) }.getOrNull()?.let { day ->
+            prefs.getStringSet(KEY_WARNED_APPS, emptySet()).orEmpty().mapTo(mutableSetOf()) { DailyKey(it, day) }
+        }
+    } ?: mutableSetOf()
     private var lastSummary: TodaySummary? = null
 
     fun update(state: MonitorState, rules: Map<String, AppRule>, localized: Context) {
         state.clock?.date?.let { today -> warned.removeAll { it.date != today } }
         state.limitWarning(rules, warned)?.let { key ->
             warned += key
+            prefs.edit().putString(KEY_WARNED_DATE, key.date.toString()).putStringSet(KEY_WARNED_APPS, warned.map { it.packageName }.toSet()).apply()
             val rule = rules.getValue(key.packageName)
             notify(localized, rule, state.remainingDailyMillis(rule) ?: 0)
         }
@@ -68,7 +75,11 @@ internal class LimitSurfaces(private val context: Context) {
         runCatching { manager.notify(rule.packageName.hashCode(), notification) }
     }
 
-    private companion object { const val CHANNEL = "limit_reminders" }
+    private companion object {
+        const val CHANNEL = "limit_reminders"
+        const val KEY_WARNED_DATE = "warned_date"
+        const val KEY_WARNED_APPS = "warned_apps"
+    }
 }
 
 private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(context, 0,

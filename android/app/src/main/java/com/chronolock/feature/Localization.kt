@@ -78,3 +78,15 @@ internal fun LanguagePicker(selected: AppLanguage, select: (AppLanguage) -> Unit
         }
     }
 }
+
+/** [date] in the app language's month-day order (10/22 in English and Korean, 22/10 in Spanish); [skeleton] "yMd" adds the year. */
+@Composable internal fun dateText(date: java.time.LocalDate, skeleton: String = "Md"): String {
+    val locale = uiText().locale
+    return date.format(java.time.format.DateTimeFormatter.ofPattern(android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton), locale))
+}
+
+/** Month, day and 24-hour time in the app language. */
+@Composable internal fun dateTimeText(dateTime: java.time.LocalDateTime): String {
+    val locale = uiText().locale
+    return dateTime.format(java.time.format.DateTimeFormatter.ofPattern(android.text.format.DateFormat.getBestDateTimePattern(locale, "MdHm"), locale))
+}

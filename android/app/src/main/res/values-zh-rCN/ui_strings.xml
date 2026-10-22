@@ -212,6 +212,10 @@
     <string name="mascot_happy">"节奏刚刚好。"</string>
     <string name="mascot_surprised">"哎呀，比想象中用得多！"</string>
     <string name="mascot_dizzy">"头晕了……休息一下吧。"</string>
+    <string name="mascot_relaxed_2">"今天的时光比手机时间更长。"</string>
+    <string name="mascot_happy_2">"今天也很平衡！"</string>
+    <string name="mascot_surprised_2">"腮帮子要撑爆了，等一下！"</string>
+    <string name="mascot_dizzy_2">"今天该放下手机了。"</string>
     <string name="accessibility_steps">"打开设置后：① 在“已安装的应用”（或“已下载的应用”）中点按 ChronoLock，② 开启“使用 ChronoLock”，③ 点按“允许”。不同设备的名称和位置可能不同。"</string>
     <string name="accessibility_hint">"无障碍 → 已安装的应用 → ChronoLock → 开启 → 允许"</string>
     <string name="recommend_title">"推荐的应用限制"</string>
@@ -288,6 +292,7 @@
     <string name="manage_subscription">"管理订阅"</string>
     <string name="billing_pending">"正在等待付款确认，完成后广告将消失。"</string>
     <string name="buy_ad_free">"去除广告 · 每月 %1$s"</string>
+    <string name="buy_ad_free_no_price">"移除广告"</string>
     <string name="billing_terms">"通过 Google Play 按月订阅，可随时在 Play 商店取消。"</string>
     <string name="billing_unavailable">"无法加载无广告方案。请确认应用是从 Play 商店安装的。"</string>
     <string name="billing_checking">"正在检查无广告方案…"</string>
