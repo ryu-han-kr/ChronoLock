@@ -55,6 +55,7 @@ class ChronoAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         if (started) return
         started = true
+        android.util.Log.i("ChronoLock", "Accessibility service connected; restoring usage")
         overlay = BlockOverlay(this, onHome = {
             if (performGlobalAction(GLOBAL_ACTION_HOME)) commands.trySend(Command.Foreground(null))
         }, onSettings = {
@@ -84,7 +85,8 @@ class ChronoAccessibilityService : AccessibilityService() {
             try {
                 val recovery = environment.recoverUsage(repository.recoveryStartEpochMillis())
                 repository.reconnect(environment.clock(), recovery.dailyMillis, recovery.foregroundPackage)
-                health.connected()
+                health.connected(this@ChronoAccessibilityService)
+                android.util.Log.i("ChronoLock", "Monitoring connected")
                 render(repository.tick(environment.clock()))
                 var failures = 0
                 for (command in commands) {
@@ -111,7 +113,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) {
                 android.util.Log.e("ChronoLock", "Monitoring adapter failed", error)
-                health.error()
+                health.error(this@ChronoAccessibilityService)
                 overlay.hide()
                 commands.close()
                 scope.coroutineContext.cancelChildren()
@@ -151,7 +153,8 @@ class ChronoAccessibilityService : AccessibilityService() {
         } else overlay.hide()
     }
 
-    override fun onInterrupt() { health.disconnected() }
+    // Called when feedback should stop (e.g. another service speaks); this service gives no feedback and keeps running.
+    override fun onInterrupt() = Unit
 
     private companion object {
         const val MAX_FAILURES = 5
@@ -162,7 +165,7 @@ class ChronoAccessibilityService : AccessibilityService() {
         if (screenReceiverRegistered) unregisterReceiver(screenReceiver)
         commands.close()
         scope.cancel()
-        health.disconnected()
+        health.disconnected(this)
         super.onDestroy()
     }
 }
