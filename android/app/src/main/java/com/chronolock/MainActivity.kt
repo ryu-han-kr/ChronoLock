@@ -1,6 +1,7 @@
 package com.chronolock
 
 import android.content.Intent
+import android.content.ComponentName
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -44,8 +45,12 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() { super.onResume(); model.refresh(); billing.connect() }
     private fun openPermissionSettings(accessibility: Boolean) {
-        val intent = if (accessibility) Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS) else
-            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))
+        val intent = if (accessibility) Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+            // Undocumented but widely honoured: Settings scrolls to and highlights this service instead of the full list.
+            val service = ComponentName(this@MainActivity, com.chronolock.blocking.ChronoAccessibilityService::class.java).flattenToString()
+            putExtra(":settings:fragment_args_key", service)
+            putExtra(":settings:show_fragment_args", Bundle().apply { putString(":settings:fragment_args_key", service) })
+        } else Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))
         runCatching { startActivity(intent) }.onFailure {
             runCatching { startActivity(Intent(if (accessibility) Settings.ACTION_ACCESSIBILITY_SETTINGS else Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
                 .onFailure { model.showError("설정 화면을 열 수 없습니다. Android 설정에서 권한을 직접 활성화해 주세요.") }

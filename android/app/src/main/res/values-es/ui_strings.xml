@@ -207,6 +207,13 @@
     <string name="theme_word_selected">"Seleccionado: %1$s"</string>
     <string name="theme_word_count">"%1$d temas"</string>
     <string name="history_partial_range">"Los registros comienzan el %1$s. El dispositivo no conserva eventos de uso anteriores, así que los totales del periodo pueden ser menores que los reales."</string>
+    <string name="mascot_sleepy">"Aún no hay registros. Zzz…"</string>
+    <string name="mascot_relaxed">"Un día tranquilo. ¡Sigue así!"</string>
+    <string name="mascot_happy">"Un ritmo perfecto."</string>
+    <string name="mascot_surprised">"¡Vaya, más de lo esperado!"</string>
+    <string name="mascot_dizzy">"Mareado… toca descansar."</string>
+    <string name="accessibility_steps">"Cuando se abra Ajustes: ① toca ChronoLock en 'Aplicaciones instaladas' (o 'descargadas'), ② activa 'Usar ChronoLock', ③ toca 'Permitir'. Los nombres varían según el dispositivo."</string>
+    <string name="accessibility_hint">"Accesibilidad → Apps instaladas → ChronoLock → Activar → Permitir"</string>
     <string name="accessibility_title">"Sobre la accesibilidad"</string>
     <string name="usage_title">"Sobre el acceso al uso"</string>
     <string name="accessibility_disclosure">"ChronoLock usa eventos de cambio de app para identificar la app activa y mostrar un bloqueo según tus límites. No lee texto de pantalla, contraseñas ni lo que escribes. Los nombres de paquete y registros de uso y bloqueo se guardan solo en este dispositivo y no se transmiten. Puedes revocar el acceso en Ajustes de Android. Si aceptas, activa ChronoLock en la siguiente pantalla."</string>

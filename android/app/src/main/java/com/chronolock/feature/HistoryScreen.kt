@@ -48,9 +48,18 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
             Text(tr("사용 정보 권한만 허용하면 차단 규칙이나 접근성 권한 없이 앱별 시간과 실행 횟수를 볼 수 있습니다."))
             Button(onClick = permission) { Text(tr("사용 정보 권한")) }
         }
+        val total = records.sumOf { it.usageMillis }
+        val recordedDays = records.map { it.date }.distinct().size
+        val mood = moodFor(if (recordedDays == 0) 0 else total / recordedDays, records.isNotEmpty())
         CardBox {
-            Text(tr("총 사용 시간"), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(duration(records.sumOf { it.usageMillis } / 1000), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(tr("총 사용 시간"), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(duration(total / 1000), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(tr(mood.message), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                }
+                Hamster(mood, size = 104.dp)
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Column(Modifier.weight(1f)) { Metric(tr("실행 횟수"), records.sumOf { it.opens }.toString()) }
                 Column(Modifier.weight(1f)) { Metric(tr("사용한 앱"), apps.size.toString()) }

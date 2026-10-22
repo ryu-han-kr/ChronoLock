@@ -207,6 +207,13 @@
     <string name="theme_word_selected">"選択中: %1$s"</string>
     <string name="theme_word_count">"テーマ %1$d 件"</string>
     <string name="history_partial_range">"%1$s からの記録です。端末はそれ以前の利用イベントを保持しないため、期間の合計は実際より少ない場合があります。"</string>
+    <string name="mascot_sleepy">"まだ記録がありません。すやすや…"</string>
+    <string name="mascot_relaxed">"ゆったりした一日ですね。この調子！"</string>
+    <string name="mascot_happy">"ちょうどいいペースです。"</string>
+    <string name="mascot_surprised">"あれ、思ったより使っています！"</string>
+    <string name="mascot_dizzy">"目が回る…少し休みましょう。"</string>
+    <string name="accessibility_steps">"設定が開いたら ①「インストール済みアプリ」（または「ダウンロードしたアプリ」）で ChronoLock をタップ ②「ChronoLock を使用」をオン ③「許可」をタップ。端末により名称や位置が異なります。"</string>
+    <string name="accessibility_hint">"ユーザー補助 → インストール済みアプリ → ChronoLock → オン → 許可"</string>
     <string name="accessibility_title">"ユーザー補助の権限について"</string>
     <string name="usage_title">"使用状況へのアクセスについて"</string>
     <string name="accessibility_disclosure">"ChronoLockはアプリ切替イベントで使用中のアプリを確認し、設定した制限に従ってブロック画面を表示します。画面の文字、パスワード、入力内容は読み取りません。選択したアプリのパッケージ名と利用・ブロック記録は端末内にのみ保存し、送信しません。Androidの設定でいつでも解除できます。同意する場合、次の設定画面でChronoLockを有効にしてください。"</string>
