@@ -60,6 +60,7 @@ class MainViewModel @Inject constructor(
     private val environment: AndroidEnvironment,
     private val preferences: Preferences,
     private val historyRepository: HistoryRepository,
+    private val backups: BackupRepository,
     private val accounts: AccountRepository,
     private val ads: AdsController,
     billing: BillingController,
@@ -237,6 +238,26 @@ class MainViewModel @Inject constructor(
         try { preferences.updateStrict { it.cancel(environment.clock().epochMillis) } }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    fun exportBackup(uri: android.net.Uri) = viewModelScope.launch {
+        try { backups.export(uri, environment.clock().epochMillis); showError("백업 파일을 저장했습니다.") }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { android.util.Log.w("ChronoLock", "Backup failed", error); showError("백업 파일을 저장하지 못했습니다.") }
+    }
+
+    /** Replaces rules and groups with a backup's. Strict mode must be off, as restoring can remove limits at once. */
+    fun restoreBackup(uri: android.net.Uri) = viewModelScope.launch {
+        try {
+            val now = environment.clock().epochMillis
+            if (preferences.strict.first().delayAt(now) > 0) { showError("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."); return@launch }
+            backups.restore(uri, environment.safetyPackages(), now)
+            showError("백업을 복원했습니다.")
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) {
+            android.util.Log.w("ChronoLock", "Restore failed", error)
+            showError(if (error.message == BackupCodec.INVALID) BackupCodec.INVALID else "백업을 복원하지 못했습니다.")
+        }
     }
 
     /** Read from storage rather than the screen state, which may not have loaded yet. */

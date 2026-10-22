@@ -47,6 +47,8 @@ import com.chronolock.domain.DailyKey
 import com.chronolock.domain.DailyUsage
 import com.chronolock.domain.DayResult
 import com.chronolock.domain.dayResults
+import com.chronolock.domain.compareWeeks
+import com.chronolock.domain.keptStreak
 import com.chronolock.domain.suggestUsageRule
 import com.chronolock.domain.suggestedDraft
 import java.time.LocalDate
@@ -65,6 +67,11 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     var permissionDialog by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var themeGallery by rememberSaveable { mutableStateOf(false) }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
+    var restoreFrom by rememberSaveable { mutableStateOf<android.net.Uri?>(null) }
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri?.let(model::exportBackup)
+    }
+    val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> restoreFrom = uri }
     var confirmDeleteAccount by rememberSaveable { mutableStateOf(false) }
     var confirmFocus by rememberSaveable { mutableStateOf<Int?>(null) }
     var today by remember { mutableStateOf(LocalDate.now()) }
@@ -106,6 +113,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
                 editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup,
+                exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
+                restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             )
             if (themeGallery) ThemeGallery(state.theme, model::selectTheme) { themeGallery = false }
             }
@@ -152,6 +161,12 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 text = { Text(tr("서버의 계정 정보가 삭제되고 로그아웃됩니다. 이 기기의 제한 규칙과 사용 기록은 그대로 남습니다. 되돌릴 수 없습니다.")) },
                 confirmButton = { TextButton(onClick = { model.deleteAccount(); confirmDeleteAccount = false }) { Text(tr("계정 삭제")) } },
                 dismissButton = { TextButton(onClick = { confirmDeleteAccount = false }) { Text(tr("취소")) } })
+            restoreFrom?.let { uri ->
+                AlertDialog(onDismissRequest = { restoreFrom = null }, title = { Text(tr("백업으로 바꿀까요?")) },
+                    text = { Text(tr("지금 있는 제한 규칙과 앱 묶음이 모두 백업 내용으로 바뀝니다. 사용 기록은 그대로 남습니다.")) },
+                    confirmButton = { TextButton(onClick = { model.restoreBackup(uri); restoreFrom = null }) { Text(tr("복원")) } },
+                    dismissButton = { TextButton(onClick = { restoreFrom = null }) { Text(tr("취소")) } })
+            }
             if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, title = { Text(tr("로컬 데이터를 삭제할까요?")) },
                 text = { Text(tr("모든 제한 규칙과 기록이 삭제되고 차단이 해제됩니다. 되돌릴 수 없습니다.")) },
                 confirmButton = { TextButton(onClick = { model.clear(); confirmClear = false }) { Text(tr("모두 삭제")) } },
@@ -509,6 +524,20 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
         Text(tr("최근 7일 돌아보기"), style = MaterialTheme.typography.titleLarge)
         WeekDots(dayResults(records.associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) },
             state.rules.map { it.toDomain() }, today))
+        // Streaks and the week-over-week change look further back than the seven bars, over everything still stored.
+        val (streak, weeks) = remember(state.daily, state.rules, today) {
+            val all = state.daily.associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) }
+            keptStreak(all, state.rules.map { it.toDomain() }, today) to compareWeeks(all, today)
+        }
+        if (streak > 0) Text(tr("%1\$d일 연속 한도를 지켰어요", streak), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        weeks.changePercent?.let { change ->
+            Text(when {
+                change < 0 -> tr("지난주보다 %1\$d%% 덜 썼어요", -change)
+                change > 0 -> tr("지난주보다 %1\$d%% 더 썼어요", change)
+                else -> tr("지난주와 비슷하게 썼어요")
+            } + " · " + tr("지난주 %1\$s", duration(weeks.previousMillis / 1000)), style = MaterialTheme.typography.bodyMedium,
+                color = if (change <= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         Text(tr("기록된 사용 %1\$s · %2\$d회 실행", duration(records.sumOf { it.usageMillis } / 1000), records.sumOf { it.opens }), color = MaterialTheme.colorScheme.primary)
         (6L downTo 0L).forEach { offset ->
             val date = today.minusDays(offset)

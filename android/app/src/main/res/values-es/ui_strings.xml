@@ -393,4 +393,22 @@
     <string name="tile_focus_until">"Hasta %1$s"</string>
     <string name="tile_focus_minutes">"Enfoque de %1$d min"</string>
     <string name="tile_focus_failed">"No se pudo cambiar el enfoque. Inténtalo de nuevo en la app."</string>
+    <string name="streak_days">"%1$d días seguidos dentro de tus límites"</string>
+    <string name="week_less">"%1$d%% menos que la semana pasada"</string>
+    <string name="week_more">"%1$d%% más que la semana pasada"</string>
+    <string name="week_same">"Más o menos igual que la semana pasada"</string>
+    <string name="week_previous">"Semana pasada %1$s"</string>
+    <string name="backup_title">"Copia de seguridad y restauración"</string>
+    <string name="backup_body">"Guarda tus límites, grupos de apps y ajustes de tema, idioma y modo estricto en un archivo y recupéralos en un dispositivo nuevo. No incluye el historial de uso."</string>
+    <string name="backup_export">"Crear copia"</string>
+    <string name="backup_restore">"Restaurar copia"</string>
+    <string name="backup_strict">"Desactiva el modo estricto para restaurar una copia."</string>
+    <string name="backup_confirm_title">"¿Reemplazar con la copia?"</string>
+    <string name="backup_confirm_body">"Todos los límites y grupos actuales se reemplazarán por la copia. El historial de uso se conserva."</string>
+    <string name="backup_confirm">"Restaurar"</string>
+    <string name="backup_saved">"Copia guardada."</string>
+    <string name="backup_save_failed">"No se pudo guardar la copia."</string>
+    <string name="backup_restored">"Copia restaurada."</string>
+    <string name="backup_restore_failed">"No se pudo restaurar la copia."</string>
+    <string name="backup_invalid">"No es una copia de ChronoLock o está dañada."</string>
 </resources>

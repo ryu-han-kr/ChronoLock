@@ -217,6 +217,16 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         update.state
     }
 
+    /** Replaces every rule and group, as a restore does; usage history and the monitor state stay. */
+    suspend fun replaceAll(rules: List<AppRule>, groups: List<AppGroup>, nowEpochMillis: Long) = mutex.withLock {
+        database.withTransaction {
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups()
+            rules.forEach { dao.saveRule(it.copy(focusUntilEpochMillis = null, pausedUntilEpochMillis = null).toEntity()) }
+            groups.forEach { dao.insertGroup(it.copy(id = 0).toEntity()) }
+            dao.insertEvents(listOf(EventEntity(type = "BACKUP_RESTORED", packageName = null, epochMillis = nowEpochMillis)))
+        }
+    }
+
     suspend fun clearAll() = mutex.withLock {
         database.withTransaction {
             dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()

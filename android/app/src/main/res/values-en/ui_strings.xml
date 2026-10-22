@@ -393,4 +393,22 @@
     <string name="tile_focus_until">"Until %1$s"</string>
     <string name="tile_focus_minutes">"%1$d-min focus"</string>
     <string name="tile_focus_failed">"Couldn't change focus. Please try again in the app."</string>
+    <string name="streak_days">"%1$d days in a row within your limits"</string>
+    <string name="week_less">"%1$d%% less than last week"</string>
+    <string name="week_more">"%1$d%% more than last week"</string>
+    <string name="week_same">"About the same as last week"</string>
+    <string name="week_previous">"Last week %1$s"</string>
+    <string name="backup_title">"Backup and restore"</string>
+    <string name="backup_body">"Save your limits, app groups and theme, language and strict mode settings to a file and bring them back on a new device. Usage history is not included."</string>
+    <string name="backup_export">"Create backup file"</string>
+    <string name="backup_restore">"Restore from backup"</string>
+    <string name="backup_strict">"Turn off strict mode to restore a backup."</string>
+    <string name="backup_confirm_title">"Replace with the backup?"</string>
+    <string name="backup_confirm_body">"All current limits and app groups will be replaced by the backup. Usage history stays as it is."</string>
+    <string name="backup_confirm">"Restore"</string>
+    <string name="backup_saved">"Backup file saved."</string>
+    <string name="backup_save_failed">"Couldn't save the backup file."</string>
+    <string name="backup_restored">"Backup restored."</string>
+    <string name="backup_restore_failed">"Couldn't restore the backup."</string>
+    <string name="backup_invalid">"This isn't a ChronoLock backup, or it is damaged."</string>
 </resources>

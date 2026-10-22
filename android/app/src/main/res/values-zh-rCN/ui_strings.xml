@@ -393,4 +393,22 @@
     <string name="tile_focus_until">"至 %1$s"</string>
     <string name="tile_focus_minutes">"专注 %1$d 分钟"</string>
     <string name="tile_focus_failed">"无法切换专注，请在应用中重试。"</string>
+    <string name="streak_days">"已连续 %1$d 天守住限制"</string>
+    <string name="week_less">"比上周少用了 %1$d%%"</string>
+    <string name="week_more">"比上周多用了 %1$d%%"</string>
+    <string name="week_same">"与上周差不多"</string>
+    <string name="week_previous">"上周 %1$s"</string>
+    <string name="backup_title">"备份与恢复"</string>
+    <string name="backup_body">"可将限制规则、应用组以及主题、语言、严格模式设置保存为文件，并在新设备上恢复。不包含使用记录。"</string>
+    <string name="backup_export">"创建备份文件"</string>
+    <string name="backup_restore">"从备份恢复"</string>
+    <string name="backup_strict">"关闭严格模式后才能恢复备份。"</string>
+    <string name="backup_confirm_title">"要替换为备份内容吗？"</string>
+    <string name="backup_confirm_body">"当前所有限制规则和应用组都将替换为备份内容。使用记录保持不变。"</string>
+    <string name="backup_confirm">"恢复"</string>
+    <string name="backup_saved">"备份文件已保存。"</string>
+    <string name="backup_save_failed">"无法保存备份文件。"</string>
+    <string name="backup_restored">"备份已恢复。"</string>
+    <string name="backup_restore_failed">"无法恢复备份。"</string>
+    <string name="backup_invalid">"这不是 ChronoLock 备份文件，或文件已损坏。"</string>
 </resources>

@@ -23,3 +23,29 @@ fun dayResults(daily: Map<DailyKey, DailyUsage>, rules: List<AppRule>, today: Lo
         date to result
     }
 }
+
+/**
+ * Consecutive days, ending today, on which the limited apps were used without reaching a limit.
+ * Today still counts as part of a streak while it has no record yet, since the day is not over; any other
+ * unrecorded or reached day ends the streak. At most [maxDays] days are examined.
+ */
+fun keptStreak(daily: Map<DailyKey, DailyUsage>, rules: List<AppRule>, today: LocalDate, maxDays: Int = 30): Int {
+    val results = dayResults(daily, rules, today, maxDays).reversed()
+    val past = if (results.firstOrNull()?.second == DayResult.NO_RECORD) results.drop(1) else results
+    return past.takeWhile { it.second == DayResult.KEPT }.size
+}
+
+/** Recorded usage in the 7 days ending [today] against the 7 days before; [previousDays] counts recorded days in that earlier week. */
+data class WeekComparison(val currentMillis: Long, val previousMillis: Long, val previousDays: Int) {
+    /** Change in percent, or null when the earlier week has nothing to compare against. */
+    val changePercent: Int? get() = if (previousDays == 0 || previousMillis == 0L) null
+        else Math.round((currentMillis - previousMillis) * 100.0 / previousMillis).toInt()
+}
+
+fun compareWeeks(daily: Map<DailyKey, DailyUsage>, today: LocalDate): WeekComparison {
+    val current = today.minusDays(6)..today
+    val previous = today.minusDays(13)..today.minusDays(7)
+    val earlier = daily.filterKeys { it.date in previous }
+    return WeekComparison(daily.filterKeys { it.date in current }.values.sumOf { it.usageMillis },
+        earlier.values.sumOf { it.usageMillis }, earlier.keys.map { it.date }.distinct().size)
+}

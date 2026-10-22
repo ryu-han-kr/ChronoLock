@@ -393,4 +393,22 @@
     <string name="tile_focus_until">"%1$sまで"</string>
     <string name="tile_focus_minutes">"%1$d分集中"</string>
     <string name="tile_focus_failed">"集中を切り替えられませんでした。アプリでもう一度お試しください。"</string>
+    <string name="streak_days">"%1$d日連続で制限を守りました"</string>
+    <string name="week_less">"先週より%1$d%%少なく使いました"</string>
+    <string name="week_more">"先週より%1$d%%多く使いました"</string>
+    <string name="week_same">"先週とほぼ同じです"</string>
+    <string name="week_previous">"先週 %1$s"</string>
+    <string name="backup_title">"バックアップと復元"</string>
+    <string name="backup_body">"制限ルール、アプリグループ、テーマ・言語・厳格モードの設定をファイルに保存し、新しい端末で復元できます。利用履歴は含まれません。"</string>
+    <string name="backup_export">"バックアップを作成"</string>
+    <string name="backup_restore">"バックアップから復元"</string>
+    <string name="backup_strict">"バックアップの復元は厳格モードをオフにしてから行えます。"</string>
+    <string name="backup_confirm_title">"バックアップの内容に置き換えますか？"</string>
+    <string name="backup_confirm_body">"現在の制限ルールとアプリグループはすべてバックアップの内容に置き換わります。利用履歴はそのまま残ります。"</string>
+    <string name="backup_confirm">"復元"</string>
+    <string name="backup_saved">"バックアップを保存しました。"</string>
+    <string name="backup_save_failed">"バックアップを保存できませんでした。"</string>
+    <string name="backup_restored">"バックアップを復元しました。"</string>
+    <string name="backup_restore_failed">"バックアップを復元できませんでした。"</string>
+    <string name="backup_invalid">"ChronoLockのバックアップではないか、破損しています。"</string>
 </resources>

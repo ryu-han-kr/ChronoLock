@@ -70,6 +70,8 @@ internal fun ChronoScreen(
     cancelStrict: () -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
+    exportBackup: () -> Unit = {},
+    restoreBackup: () -> Unit = {},
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -263,6 +265,17 @@ internal fun ChronoScreen(
                                     Text(if (state.strict.delayAt(nowEpoch) > 0) tr("엄격 모드가 켜져 있습니다. 느슨하게 바꾸는 변경은 대기 시간이 지난 뒤 적용됩니다.")
                                         else tr("현재는 일반 모드입니다. 언제든 규칙을 수정하거나 삭제할 수 있습니다. Android 설정에서 권한 해제와 앱 삭제도 가능합니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Text(tr("기기·배터리 설정에 따라 감지와 차단이 늦어질 수 있습니다. 분할 화면과 화면 속 화면은 아직 지원하지 않습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                } }
+                                item { CardBox {
+                                    Text(tr("백업과 복원"), style = MaterialTheme.typography.titleLarge)
+                                    Text(tr("제한 규칙, 앱 묶음, 테마·언어·엄격 모드 설정을 파일로 저장하고 새 기기에서 되살릴 수 있습니다. 사용 기록은 포함하지 않습니다."),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    val strict = state.strict.delayAt(nowEpoch) > 0
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        OutlinedButton(onClick = exportBackup, modifier = Modifier.testTag("backup-export")) { Text(tr("백업 파일 만들기")) }
+                                        OutlinedButton(onClick = restoreBackup, enabled = !strict, modifier = Modifier.testTag("backup-restore")) { Text(tr("백업에서 복원")) }
+                                    }
+                                    if (strict) Text(tr("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 } }
                                 item { CardBox {
                                     Text(tr("로컬 기록 관리"), style = MaterialTheme.typography.titleLarge)
