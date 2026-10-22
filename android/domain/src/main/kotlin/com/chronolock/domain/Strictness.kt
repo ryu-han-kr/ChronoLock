@@ -26,6 +26,16 @@ object Strictness {
             (next.pausedUntilEpochMillis ?: 0) > oldPause
     }
 
+    /** Whether replacing [current] with [next] (null deletes the group) relaxes its shared limits. */
+    fun loosens(current: AppGroup?, next: AppGroup?): Boolean {
+        if (current == null || !current.enabled) return false
+        if (next == null || !next.enabled) return true
+        fun raised(old: Long?, new: Long?) = old != null && (new == null || new > old)
+        return raised(current.dailyLimitSeconds, next.dailyLimitSeconds) ||
+            raised(current.maxOpenCount?.toLong(), next.maxOpenCount?.toLong()) ||
+            !next.members.keys.containsAll(current.members.keys)
+    }
+
     /** Whether lowering the delay from [current] to [next] minutes must itself wait. */
     fun loosensDelay(current: Int, next: Int) = next < current
 

@@ -17,6 +17,8 @@ data class AppRule(
     val enabled: Boolean = true,
     /** The rule is suspended until this instant and switches itself back on afterwards. */
     val pausedUntilEpochMillis: Long? = null,
+    /** The shared-limit group this app belongs to; attached for evaluation, never stored with the rule. */
+    val group: AppGroup? = null,
 ) {
     init {
         require(packageName.isNotBlank() && appName.isNotBlank())
@@ -47,7 +49,7 @@ data class Schedule(val start: LocalTime, val end: LocalTime, val days: Set<DayO
     }
 }
 
-enum class Reason { FOCUS, SCHEDULE, DAILY_USAGE, SESSION_USAGE, OPEN_COUNT, COOLDOWN }
+enum class Reason { FOCUS, SCHEDULE, DAILY_USAGE, SESSION_USAGE, OPEN_COUNT, COOLDOWN, GROUP_USAGE, GROUP_OPENS }
 enum class DecisionType { ALLOW, WARN, BLOCK, COOLDOWN }
 data class RuleDecision(val type: DecisionType, val reasons: List<Reason> = emptyList(), val retryAfterSeconds: Long? = null) {
     val denied: Boolean get() = type == DecisionType.BLOCK || type == DecisionType.COOLDOWN
@@ -64,6 +66,9 @@ data class RuleContext(
     val sinceLastCloseMillis: Long? = null,
     val safetyAllowlisted: Boolean = false,
     val emergencyOverride: Boolean = false,
+    /** Today's usage and allowed opens summed over the rule's group, including this app. */
+    val groupUsageMillis: Long = 0,
+    val groupOpens: Int = 0,
 )
 
 class RuleEngine {
@@ -78,6 +83,10 @@ class RuleEngine {
             if (context.entering && rule.maxOpenCount?.let { context.allowedOpens >= it } == true) add(Reason.OPEN_COUNT)
             if (context.entering && rule.cooldownSeconds != null && context.sinceLastCloseMillis != null &&
                 context.sinceLastCloseMillis < rule.cooldownSeconds * 1000) add(Reason.COOLDOWN)
+            rule.group?.let { group ->
+                if (group.dailyLimitSeconds?.let { context.groupUsageMillis >= it * 1000 } == true) add(Reason.GROUP_USAGE)
+                if (context.entering && group.maxOpenCount?.let { context.groupOpens >= it } == true) add(Reason.GROUP_OPENS)
+            }
         }
         if (reasons.isEmpty()) return RuleDecision.Allow
         val cooldownOnly = reasons == listOf(Reason.COOLDOWN)

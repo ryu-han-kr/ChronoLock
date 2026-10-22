@@ -24,6 +24,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val strictKey = intPreferencesKey("strict_delay_minutes")
     private val strictPendingKey = intPreferencesKey("strict_pending_minutes")
     private val strictPendingAtKey = longPreferencesKey("strict_pending_at")
+    private val focusMinutesKey = intPreferencesKey("last_focus_minutes")
     val language = context.preferences.data.map { AppLanguage.fromStored(it[languageKey]) }
     val theme = context.preferences.data.map { AppTheme.fromStored(it[themeKey]) }
     val acknowledged = context.preferences.data.map { it[disclosure] ?: false }
@@ -41,6 +42,9 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
             else { it.remove(strictPendingKey); it.remove(strictPendingAtKey) }
         }
     }
+    /** The last focus length started from the app, reused by the quick settings tile. */
+    val focusMinutes = context.preferences.data.map { it[focusMinutesKey] ?: 25 }
+    suspend fun setFocusMinutes(minutes: Int) { context.preferences.edit { it[focusMinutesKey] = minutes } }
     suspend fun finishOnboarding() { context.preferences.edit { it[onboardedKey] = true } }
     suspend fun acknowledge() { context.preferences.edit { it[disclosure] = true } }
     suspend fun setTheme(theme: AppTheme) { context.preferences.edit { it[themeKey] = theme.name } }

@@ -33,6 +33,13 @@ fun AppRule.toEntity() = RuleEntity(packageName, appName, dailyLimitSeconds, max
     schedules = schedules.takeIf { it.isNotEmpty() }?.joinToString(";") { "${it.start.toSecondOfDay() / 60}-${it.end.toSecondOfDay() / 60}-${it.days.mask()}" },
     pausedUntilEpochMillis = pausedUntilEpochMillis)
 
+fun GroupEntity.toDomain() = AppGroup(id, name, members.split('\n').mapNotNull { line ->
+    line.split('\t', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }
+}.toMap(), dailyLimitSeconds, maxOpenCount, enabled)
+
+fun AppGroup.toEntity() = GroupEntity(id, name, members.entries.joinToString("\n") { "${it.key}\t${it.value.replace('\n', ' ').replace('\t', ' ')}" },
+    dailyLimitSeconds, maxOpenCount, enabled)
+
 @Singleton
 class LocalRepository @Inject constructor(private val database: ChronoDatabase) : RuleRepository {
     private val dao = database.dao()
@@ -88,7 +95,62 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     /** Applies held changes whose time has come; the monitor calls this on every evaluation, the screen when it opens. */
     suspend fun applyDuePending(nowEpochMillis: Long) = mutex.withLock { applyDue(nowEpochMillis) }
 
+    val groups = dao.observeGroups()
+    val pendingGroups = dao.observePendingGroups()
+
+    /**
+     * Saves a new or edited group, or holds a relaxing edit like [requestRule]. A new group only adds limits, so it never waits.
+     * Returns the time a held change will apply, or null when it was saved at once.
+     */
+    suspend fun requestGroup(group: AppGroup, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+        database.withTransaction {
+            val all = dao.groups()
+            val taken = all.filter { it.id != group.id }.flatMap { it.toDomain().members.keys }.toSet()
+            require(group.members.keys.none { it in taken }) { GROUP_TAKEN }
+            if (group.id == 0L) {
+                dao.insertGroup(group.toEntity())
+                dao.insertEvents(listOf(EventEntity(type = "GROUP_UPDATED", packageName = null, epochMillis = nowEpochMillis)))
+                return@withTransaction null
+            }
+            changeGroup(group.id, all.firstOrNull { it.id == group.id }?.toDomain(), group, delayMillis, nowEpochMillis)
+        }
+    }
+
+    companion object { const val GROUP_TAKEN = "다른 묶음에 들어 있는 앱은 함께 넣을 수 없습니다." }
+
+    suspend fun requestDeleteGroup(id: Long, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+        database.withTransaction { changeGroup(id, dao.groups().firstOrNull { it.id == id }?.toDomain(), null, delayMillis, nowEpochMillis) }
+    }
+
+    suspend fun cancelPendingGroup(id: Long) = mutex.withLock { dao.deletePendingGroup(id) }
+
+    private suspend fun changeGroup(id: Long, current: AppGroup?, next: AppGroup?, delayMillis: Long, nowEpochMillis: Long): Long? {
+        if (delayMillis > 0 && Strictness.loosens(current, next)) {
+            val applyAt = Math.addExact(nowEpochMillis, delayMillis)
+            dao.savePendingGroup(PendingGroupEntity(id, applyAt, next == null, (next ?: current!!).toEntity()))
+            return applyAt
+        }
+        dao.deletePendingGroup(id)
+        if (next != null || current != null) writeGroup(id, next, nowEpochMillis)
+        return null
+    }
+
+    private suspend fun writeGroup(id: Long, group: AppGroup?, epochMillis: Long) {
+        if (group == null) dao.deleteGroup(id) else dao.saveGroup(group.toEntity())
+        dao.insertEvents(listOf(EventEntity(type = if (group == null) "GROUP_DELETED" else "GROUP_UPDATED", packageName = null, epochMillis = epochMillis)))
+    }
+
     private suspend fun applyDue(nowEpochMillis: Long) {
+        dao.duePendingGroups(nowEpochMillis).takeIf { it.isNotEmpty() }?.let { due ->
+            database.withTransaction {
+                due.forEach { held ->
+                    // A group deleted meanwhile stays deleted; the held edit has nothing left to relax.
+                    if (held.remove) writeGroup(held.groupId, null, held.applyAtEpochMillis)
+                    else if (dao.groups().any { it.id == held.groupId }) writeGroup(held.groupId, held.group.toDomain(), held.applyAtEpochMillis)
+                    dao.deletePendingGroup(held.groupId)
+                }
+            }
+        }
         val due = dao.duePending(nowEpochMillis).takeIf { it.isNotEmpty() } ?: return
         database.withTransaction {
             due.forEach { held ->
@@ -157,7 +219,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     suspend fun clearAll() = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
             database.historyDao().apply {
                 clearDaily(); clearEvents(); clearEstimates()
                 saveMeta(HistoryMetaEntity(clearedAt = System.currentTimeMillis()))
@@ -168,7 +230,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     private suspend fun ruleMap(now: ClockReading): Map<String, AppRule> {
         applyDue(now.epochMillis)
-        return dao.rules().associate { it.packageName to it.toDomain() }
+        return withGroups(dao.rules().associate { it.packageName to it.toDomain() }, dao.groups().map { it.toDomain() })
     }
 
     private suspend fun load(): MonitorState {
