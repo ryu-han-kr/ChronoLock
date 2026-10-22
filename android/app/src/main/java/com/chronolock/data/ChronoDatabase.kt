@@ -18,6 +18,18 @@ data class RuleEntity(
     val scheduleEndMinute: Int? = null,
     val scheduleDaysMask: Int? = null,
     val focusUntilEpochMillis: Long? = null,
+    /** All schedule windows as "startMinute-endMinute-daysMask" joined by ";"; the single-schedule columns above are legacy. */
+    val schedules: String? = null,
+    val pausedUntilEpochMillis: Long? = null,
+)
+
+/** A relaxing change held back by strict mode until [applyAtEpochMillis]; [remove] deletes the rule instead of saving [rule]. */
+@Entity(tableName = "pending_rules")
+data class PendingRuleEntity(
+    @PrimaryKey val packageName: String,
+    val applyAtEpochMillis: Long,
+    val remove: Boolean,
+    @Embedded(prefix = "rule_") val rule: RuleEntity,
 )
 
 @Entity(tableName = "daily_usage_stats", primaryKeys = ["packageName", "date"])
@@ -67,15 +79,37 @@ interface ChronoDao {
     @Query("DELETE FROM last_closed") suspend fun clearCloses()
     @Query("DELETE FROM monitor_checkpoint") suspend fun clearCheckpoint()
     @Query("DELETE FROM app_usage_events") suspend fun clearEvents()
+    @Query("SELECT * FROM pending_rules ORDER BY applyAtEpochMillis") fun observePending(): Flow<List<PendingRuleEntity>>
+    @Query("SELECT * FROM pending_rules WHERE applyAtEpochMillis <= :now") suspend fun duePending(now: Long): List<PendingRuleEntity>
+    @Query("SELECT COUNT(*) FROM pending_rules") suspend fun pendingCount(): Int
+    @Upsert suspend fun savePending(row: PendingRuleEntity)
+    @Query("DELETE FROM pending_rules WHERE packageName = :packageName") suspend fun deletePending(packageName: String)
+    @Query("DELETE FROM pending_rules") suspend fun clearPending()
 }
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
-    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class], version = 4, exportSchema = true)
+    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class],
+    version = 5, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE blocking_rules ADD COLUMN schedules TEXT")
+                db.execSQL("ALTER TABLE blocking_rules ADD COLUMN pausedUntilEpochMillis INTEGER")
+                // Carry the single legacy schedule into the list column.
+                db.execSQL("UPDATE blocking_rules SET schedules = scheduleStartMinute || '-' || scheduleEndMinute || '-' || scheduleDaysMask, " +
+                    "scheduleStartMinute = NULL, scheduleEndMinute = NULL, scheduleDaysMask = NULL " +
+                    "WHERE scheduleStartMinute IS NOT NULL AND scheduleEndMinute IS NOT NULL AND scheduleDaysMask IS NOT NULL")
+                db.execSQL("CREATE TABLE IF NOT EXISTS pending_rules (packageName TEXT NOT NULL, applyAtEpochMillis INTEGER NOT NULL, " +
+                    "remove INTEGER NOT NULL, rule_packageName TEXT NOT NULL, rule_appName TEXT NOT NULL, rule_dailyLimitSeconds INTEGER, " +
+                    "rule_maxOpenCount INTEGER, rule_cooldownSeconds INTEGER, rule_enabled INTEGER NOT NULL, rule_sessionLimitSeconds INTEGER, " +
+                    "rule_scheduleStartMinute INTEGER, rule_scheduleEndMinute INTEGER, rule_scheduleDaysMask INTEGER, " +
+                    "rule_focusUntilEpochMillis INTEGER, rule_schedules TEXT, rule_pausedUntilEpochMillis INTEGER, PRIMARY KEY(packageName))")
+            }
+        }
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS history_estimate (packageName TEXT NOT NULL, date TEXT NOT NULL, appName TEXT NOT NULL, usageMillis INTEGER NOT NULL, PRIMARY KEY(packageName, date))")

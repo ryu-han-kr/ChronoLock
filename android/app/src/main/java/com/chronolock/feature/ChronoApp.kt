@@ -36,6 +36,9 @@ import com.chronolock.data.RuleEntity
 import com.chronolock.data.toDomain
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.RuleDraft
+import com.chronolock.domain.ScheduleDraft
+import com.chronolock.domain.AppRule.Companion.MAX_SCHEDULES
+import com.chronolock.data.PendingRuleEntity
 import com.chronolock.ads.BannerAd
 import com.chronolock.domain.AdPolicy
 import com.chronolock.domain.DailyTimeInput
@@ -98,6 +101,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
                 privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription, retryBilling = retryBilling,
                 openThemeGallery = { themeGallery = true },
+                pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
+                setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
             )
             if (themeGallery) ThemeGallery(state.theme, model::selectTheme) { themeGallery = false }
             }
@@ -107,7 +112,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 key(appId) { RuleEditor(app, saved, onDismiss = { editPackage = null },
                     onSave = { rule, finished -> model.save(rule, { editPackage = null }, finished) },
                     onDelete = { model.remove(appId) { editPackage = null } },
-                    initialRecipe = suggestedRecipe?.let(RuleRecipe::valueOf)) }
+                    initialRecipe = suggestedRecipe?.let(RuleRecipe::valueOf), strictMinutes = state.strict.delayAt(nowEpoch)) }
             }
             confirmFocus?.let { minutes ->
                 val targets = state.rules.filter { it.enabled }
@@ -192,9 +197,10 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
 }
 
 private val RuleDraftSaver = listSaver<RuleDraft, Any>(
-    save = { listOf(it.daily, it.opens, it.cooldown, it.session, it.scheduleEnabled, it.start, it.end, it.daysMask, it.enabled) },
-    restore = { RuleDraft(it[0] as String, it[1] as String, it[2] as String, it[3] as String,
-        it[4] as Boolean, it[5] as String, it[6] as String, it[7] as Int, it[8] as Boolean) },
+    save = { listOf(it.daily, it.opens, it.cooldown, it.session, it.scheduleEnabled, it.enabled) +
+        it.schedules.flatMap { window -> listOf(window.start, window.end, window.daysMask) } },
+    restore = { RuleDraft(it[0] as String, it[1] as String, it[2] as String, it[3] as String, it[4] as Boolean,
+        it.drop(6).chunked(3).map { (start, end, mask) -> ScheduleDraft(start as String, end as String, mask as Int) }, it[5] as Boolean) },
 )
 
 private val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
@@ -205,7 +211,7 @@ private val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> Unit,
-    onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null) {
+    onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null, strictMinutes: Int = 0) {
     var draft by rememberSaveable(stateSaver = RuleDraftSaver) { mutableStateOf(when {
         saved != null && initialRecipe != null -> suggestedDraft(saved.toDomain(), initialRecipe)
         initialRecipe != null -> initialRecipe.draft // Suggested from history for an app that has no rule yet.
@@ -254,6 +260,8 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                 Text(tr("제한 사용"))
                 Switch(checked = draft.enabled, onCheckedChange = null, enabled = !saving)
             }
+            if (strictMinutes > 0) Text(tr("엄격 모드: 제한을 끄거나 느슨하게 바꾸면 %1\$d분 뒤에 적용됩니다.", strictMinutes),
+                color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             Text(tr("집중 레시피"), fontWeight = FontWeight.Bold)
             if (initialRecipe != null) Text(tr("기록 기반 제안이 준비됐습니다. 기존 제한은 유지하고 비어 있는 항목만 채웠습니다. 확인 후 저장하세요."), style = MaterialTheme.typography.bodySmall)
             Text(tr("레시피는 아래 입력값을 바꿉니다. 저장 전까지 적용되지 않습니다."), style = MaterialTheme.typography.bodySmall)
@@ -287,22 +295,14 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                 Switch(checked = draft.scheduleEnabled, onCheckedChange = null, enabled = !saving)
             }
             if (draft.scheduleEnabled) {
-                Text(if (draft.daysMask == 0) tr("예약할 요일을 선택해 주세요.") else tr("선택한 요일에만 예약이 적용됩니다."),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 Text(tr("선택한 요일에 시작하는 차단 시간입니다. 종료가 시작보다 이르면 다음 날까지 이어집니다."), style = MaterialTheme.typography.bodySmall)
-                listOf(tr("월"), tr("화"), tr("수"), tr("목"), tr("금"), tr("토"), tr("일")).chunked(4).forEachIndexed { row, days ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        days.forEachIndexed { column, label ->
-                            val bit = 1 shl (row * 4 + column)
-                            FilterChip(selected = draft.daysMask and bit != 0,
-                                onClick = { draft = draft.copy(daysMask = draft.daysMask xor bit) }, label = { Text(label) }, enabled = !saving)
-                        }
-                    }
+                draft.schedules.forEachIndexed { index, window ->
+                    ScheduleFields(index, window, removable = draft.schedules.size > 1, enabled = !saving,
+                        change = { next -> draft = draft.copy(schedules = draft.schedules.toMutableList().also { it[index] = next }); error = null },
+                        remove = { draft = draft.copy(schedules = draft.schedules.filterIndexed { at, _ -> at != index }) })
                 }
-                OutlinedTextField(value = draft.start, onValueChange = { if (it.length <= 5) draft = draft.copy(start = it) },
-                    label = { Text(tr("차단 시작 (HH:mm)")) }, singleLine = true, enabled = !saving, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = draft.end, onValueChange = { if (it.length <= 5) draft = draft.copy(end = it) },
-                    label = { Text(tr("차단 종료 (HH:mm)")) }, singleLine = true, enabled = !saving, modifier = Modifier.fillMaxWidth())
+                if (draft.schedules.size < MAX_SCHEDULES) OutlinedButton(onClick = { draft = draft.copy(schedules = draft.schedules + ScheduleDraft()) },
+                    enabled = !saving, modifier = Modifier.fillMaxWidth().testTag("schedule-add")) { Text(tr("예약 구간 추가")) }
             }
             error?.let { Text(tr(it), color = MaterialTheme.colorScheme.error) }
             if (saved != null) TextButton(onClick = onDelete, enabled = !saving) {
@@ -311,6 +311,38 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
         }
     }
 }
+/** One schedule window: quick day sets, single days and the block's start and end. */
+@Composable
+private fun ScheduleFields(index: Int, value: ScheduleDraft, removable: Boolean, enabled: Boolean,
+    change: (ScheduleDraft) -> Unit, remove: () -> Unit) {
+    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .15f))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(tr("예약 %1\$d", index + 1), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+        if (removable) TextButton(onClick = remove, enabled = enabled) { Text(tr("구간 삭제")) }
+    }
+    Text(if (value.daysMask == 0) tr("예약할 요일을 선택해 주세요.") else tr("선택한 요일에만 예약이 적용됩니다."),
+        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        listOf("매일" to ScheduleDraft.EVERY_DAY, "평일" to ScheduleDraft.WEEKDAYS, "주말" to ScheduleDraft.WEEKEND).forEach { (label, mask) ->
+            FilterChip(selected = value.daysMask == mask, onClick = { change(value.copy(daysMask = mask)) }, label = { Text(tr(label)) },
+                enabled = enabled, modifier = Modifier.testTag("schedule-$index-$mask"))
+        }
+    }
+    listOf(tr("월"), tr("화"), tr("수"), tr("목"), tr("금"), tr("토"), tr("일")).chunked(4).forEachIndexed { row, days ->
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            days.forEachIndexed { column, label ->
+                val bit = 1 shl (row * 4 + column)
+                FilterChip(selected = value.daysMask and bit != 0,
+                    onClick = { change(value.copy(daysMask = value.daysMask xor bit)) }, label = { Text(label) }, enabled = enabled)
+            }
+        }
+    }
+    OutlinedTextField(value = value.start, onValueChange = { if (it.length <= 5) change(value.copy(start = it)) },
+        label = { Text(tr("차단 시작 (HH:mm)")) }, singleLine = true, enabled = enabled, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(value = value.end, onValueChange = { if (it.length <= 5) change(value.copy(end = it)) },
+        label = { Text(tr("차단 종료 (HH:mm)")) }, singleLine = true, enabled = enabled, modifier = Modifier.fillMaxWidth())
+}
+
 /** Hours, minutes and seconds for one limit; [tag] prefixes each field's test tag, e.g. "daily-hours". */
 @Composable
 private fun TimeFields(title: String, tag: String, value: DailyTimeInput, enabled: Boolean,
@@ -358,15 +390,20 @@ internal fun formatDuration(seconds: Long, text: UiText): String = when {
 @Composable internal fun ruleSummary(rule: RuleEntity): String {
     val text = uiText()
     val labels = listOf("월", "화", "수", "목", "금", "토", "일").map { text(it) }
+    fun days(days: Set<java.time.DayOfWeek>) = when (days.fold(0) { mask, day -> mask or (1 shl (day.value - 1)) }) {
+        ScheduleDraft.EVERY_DAY -> text("매일")
+        ScheduleDraft.WEEKDAYS -> text("평일")
+        ScheduleDraft.WEEKEND -> text("주말")
+        else -> days.sortedBy { it.value }.joinToString(" ") { labels[it.value - 1] }
+    }
     return buildList {
         if (!rule.enabled) add(text("일시 중지"))
         rule.dailyLimitSeconds?.let { add(text("하루 %1\$s", formatDuration(it, text))) }
         rule.sessionLimitSeconds?.let { add(text("한 번에 %1\$s", formatDuration(it, text))) }
         rule.maxOpenCount?.let { add(text("%1\$d회 실행", it)) }
         rule.cooldownSeconds?.let { add(text("%1\$s 대기", formatDuration(it, text))) }
-        rule.toDomain().schedule?.let { schedule ->
-            val days = schedule.days.sortedBy { it.value }.joinToString(" ") { labels[it.value - 1] }
-            add(text("%1\$s %2\$s~%3\$s 차단", days, schedule.start.toString(),
+        rule.toDomain().schedules.forEach { schedule ->
+            add(text("%1\$s %2\$s~%3\$s 차단", days(schedule.days), schedule.start.toString(),
                 (if (schedule.start > schedule.end) text("다음 날 ") else "") + schedule.end.toString()))
         }
     }.joinToString(" · ")
@@ -397,7 +434,9 @@ internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Un
             Text(duration(remaining), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineLarge)
             val monitoring = state.permissions.usage && state.permissions.accessibility && state.health.connected
             Text(tr("%1\$d개 앱 · %2\$s · %3\$s", active.size, if (monitoring) tr("차단 중") else tr("제한 예정 · 감지 연결을 확인하세요"), active.joinToString(" · ") { it.appName }), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            OutlinedButton(onClick = stop, enabled = !state.focusBusy) { Text(tr("집중 종료")) }
+            val locked = state.strict.delayAt(nowEpoch) > 0
+            OutlinedButton(onClick = stop, enabled = !state.focusBusy && !locked) { Text(tr("집중 종료")) }
+            if (locked) Text(tr("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             Text(tr("집중이 끝나도 기존 시간·횟수·예약 제한은 유지됩니다."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             Text(if (enabled.isEmpty()) tr("앱 제한 탭에서 집중할 때 차단할 앱을 먼저 설정하세요.")
@@ -482,5 +521,73 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             Text(tr("3일 이상 기록을 모으면 사용 패턴에 맞는 제한을 제안합니다. 이미 설정한 제한도 고려합니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         Text(tr("선택한 앱의 기기 내 기록만 사용합니다. 감지 중단 중 기록은 빠질 수 있으며, 제안은 저장해야 적용됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable private fun timeText(epochMillis: Long) =
+    dateTimeText(java.time.Instant.ofEpochMilli(epochMillis).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime())
+
+/** Pause state and any change strict mode is holding back for one rule, with the actions that only tighten or pause. */
+@Composable
+internal fun RuleStatus(rule: RuleEntity, held: PendingRuleEntity?, nowEpoch: Long, strictMinutes: Int,
+    pause: (Int?) -> Unit, resume: () -> Unit, cancelHeld: () -> Unit) {
+    var choosing by rememberSaveable { mutableStateOf(false) }
+    val pausedUntil = rule.pausedUntilEpochMillis?.takeIf { rule.enabled && it > nowEpoch }
+    if (pausedUntil != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(tr("%1\$s까지 쉬는 중", timeText(pausedUntil)), Modifier.weight(1f), color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall)
+        TextButton(onClick = resume) { Text(tr("다시 켜기")) }
+    } else if (rule.enabled && held == null) {
+        TextButton(onClick = { choosing = true }, modifier = Modifier.testTag("pause-${rule.packageName}")) { Text(tr("잠시 쉬기")) }
+    }
+    held?.let { change ->
+        val what = when {
+            change.remove -> tr("제한 삭제")
+            !change.rule.enabled -> tr("제한 끄기")
+            (change.rule.pausedUntilEpochMillis ?: 0) > (rule.pausedUntilEpochMillis ?: 0) -> tr("잠시 쉬기")
+            else -> tr("설정 변경")
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(tr("엄격 모드: %1\$s에 %2\$s 적용 예정", timeText(change.applyAtEpochMillis), what), Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            TextButton(onClick = cancelHeld) { Text(tr("취소")) }
+        }
+    }
+    if (choosing) AlertDialog(onDismissRequest = { choosing = false }, title = { Text(tr("얼마 동안 쉴까요?")) }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(tr("선택한 시간이 지나면 제한이 자동으로 다시 켜집니다."), style = MaterialTheme.typography.bodySmall)
+            if (strictMinutes > 0) Text(tr("엄격 모드라 %1\$d분 뒤부터 쉬기가 시작됩니다.", strictMinutes),
+                color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            listOf<Pair<Int?, String>>(10 to tr("%1\$d분", 10), 30 to tr("%1\$d분", 30), 60 to tr("1시간"), null to tr("오늘만")).forEach { (minutes, label) ->
+                OutlinedButton(onClick = { choosing = false; pause(minutes) }, modifier = Modifier.fillMaxWidth()
+                    .testTag("pause-option-${minutes ?: "today"}")) { Text(label) }
+            }
+        }
+    }, confirmButton = {}, dismissButton = { TextButton(onClick = { choosing = false }) { Text(tr("취소")) } })
+}
+
+@Composable
+internal fun StrictModeCard(state: MainState, nowEpoch: Long, select: (Int) -> Unit, cancel: () -> Unit) {
+    val current = state.strict.delayAt(nowEpoch)
+    CardBox {
+        Text(tr("엄격 모드"), style = MaterialTheme.typography.titleLarge)
+        Text(tr("제한을 끄거나 느슨하게 바꾸면 정한 시간이 지난 뒤에 적용됩니다. 더 엄격하게 바꾸는 것은 바로 적용되고, 집중 중에는 집중을 끝낼 수 없습니다."),
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            com.chronolock.domain.Strictness.DELAYS.forEach { minutes ->
+                FilterChip(selected = current == minutes, onClick = { select(minutes) }, modifier = Modifier.testTag("strict-$minutes"),
+                    label = { Text(when (minutes) { 0 -> tr("끄기"); 60 -> tr("1시간"); else -> tr("%1\$d분", minutes) }) })
+            }
+        }
+        state.strict.waitingAt(nowEpoch)?.let { minutes ->
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(if (minutes == 0) tr("%1\$s에 엄격 모드가 꺼집니다.", timeText(state.strict.pendingAtEpochMillis!!))
+                    else tr("%1\$s에 대기 시간이 %2\$d분으로 바뀝니다.", timeText(state.strict.pendingAtEpochMillis!!), minutes),
+                    Modifier.weight(1f), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = cancel) { Text(tr("취소")) }
+            }
+        }
+        Text(tr("Android 설정에서 접근성 권한을 끄거나 앱을 삭제하는 것은 막을 수 없습니다."),
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
     }
 }

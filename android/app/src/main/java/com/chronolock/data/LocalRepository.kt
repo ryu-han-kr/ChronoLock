@@ -11,18 +11,27 @@ import javax.inject.Singleton
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+private fun Set<DayOfWeek>.mask() = fold(0) { mask, day -> mask or (1 shl (day.value - 1)) }
+private fun daysOf(mask: Int) = DayOfWeek.values().filter { mask and (1 shl (it.value - 1)) != 0 }.toSet()
+
+private fun decodeSchedules(text: String): List<Schedule> = text.split(';').mapNotNull { part ->
+    val (start, end, mask) = part.split('-').mapNotNull(String::toIntOrNull).takeIf { it.size == 3 } ?: return@mapNotNull null
+    runCatching { Schedule(LocalTime.ofSecondOfDay(start * 60L), LocalTime.ofSecondOfDay(end * 60L), daysOf(mask)) }.getOrNull()
+}
+
 fun RuleEntity.toDomain() = AppRule(
     packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, sessionLimitSeconds,
-    schedule = if (scheduleStartMinute != null && scheduleEndMinute != null && scheduleDaysMask != null) {
-        Schedule(LocalTime.ofSecondOfDay(scheduleStartMinute * 60L), LocalTime.ofSecondOfDay(scheduleEndMinute * 60L),
-            DayOfWeek.values().filter { scheduleDaysMask and (1 shl (it.value - 1)) != 0 }.toSet())
-    } else null,
-    focusUntilEpochMillis = focusUntilEpochMillis, enabled = enabled,
+    schedules = schedules?.let(::decodeSchedules)
+        ?: if (scheduleStartMinute != null && scheduleEndMinute != null && scheduleDaysMask != null) {
+            listOf(Schedule(LocalTime.ofSecondOfDay(scheduleStartMinute * 60L), LocalTime.ofSecondOfDay(scheduleEndMinute * 60L), daysOf(scheduleDaysMask)))
+        } else emptyList(),
+    focusUntilEpochMillis = focusUntilEpochMillis, enabled = enabled, pausedUntilEpochMillis = pausedUntilEpochMillis,
 )
 
 fun AppRule.toEntity() = RuleEntity(packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, enabled,
-    sessionLimitSeconds, schedule?.start?.toSecondOfDay()?.div(60), schedule?.end?.toSecondOfDay()?.div(60),
-    schedule?.days?.fold(0) { mask, day -> mask or (1 shl (day.value - 1)) }, focusUntilEpochMillis)
+    sessionLimitSeconds, focusUntilEpochMillis = focusUntilEpochMillis,
+    schedules = schedules.takeIf { it.isNotEmpty() }?.joinToString(";") { "${it.start.toSecondOfDay() / 60}-${it.end.toSecondOfDay() / 60}-${it.days.mask()}" },
+    pausedUntilEpochMillis = pausedUntilEpochMillis)
 
 @Singleton
 class LocalRepository @Inject constructor(private val database: ChronoDatabase) : RuleRepository {
@@ -35,13 +44,77 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     suspend fun recoveryStartEpochMillis(): Long? = mutex.withLock { dao.checkpoint()?.epochMillis }
 
-    override suspend fun saveRule(rule: AppRule) = mutex.withLock {
+    val pending = dao.observePending()
+
+    override suspend fun saveRule(rule: AppRule) { requestRule(rule, 0, System.currentTimeMillis()) }
+
+    /**
+     * Saves [rule] now, or, when it relaxes the current rule and strict mode asks for [delayMillis], holds it until then.
+     * Returns the time a held change will apply, or null when it was saved at once.
+     */
+    suspend fun requestRule(rule: AppRule, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
         database.withTransaction {
-            // Focus belongs to the active session, not to an editor snapshot opened earlier.
-            val currentFocus = dao.rules().firstOrNull { it.packageName == rule.packageName }?.focusUntilEpochMillis
-            dao.saveRule(rule.copy(focusUntilEpochMillis = currentFocus).toEntity())
-            dao.insertEvents(listOf(EventEntity(type = "RULE_UPDATED", packageName = rule.packageName, epochMillis = System.currentTimeMillis())))
+            val current = dao.rules().firstOrNull { it.packageName == rule.packageName }
+            // Focus and pauses belong to the running session, not to an editor snapshot opened earlier.
+            val next = rule.copy(focusUntilEpochMillis = current?.focusUntilEpochMillis, pausedUntilEpochMillis = current?.pausedUntilEpochMillis)
+            change(rule.packageName, current, next, delayMillis, nowEpochMillis)
         }
+    }
+
+    suspend fun requestDelete(packageName: String, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+        database.withTransaction { change(packageName, dao.rules().firstOrNull { it.packageName == packageName }, null, delayMillis, nowEpochMillis) }
+    }
+
+    /** Pauses a rule for [minutes], or until midnight when null. Under strict mode the pause starts once the delay has passed. */
+    suspend fun requestPause(packageName: String, minutes: Int?, delayMillis: Long, nowEpochMillis: Long, zone: ZoneId): Long? = mutex.withLock {
+        database.withTransaction {
+            val current = requireNotNull(dao.rules().firstOrNull { it.packageName == packageName })
+            val until = Strictness.pauseEnd(nowEpochMillis + delayMillis, minutes, zone)
+            change(packageName, current, current.toDomain().copy(pausedUntilEpochMillis = until), delayMillis, nowEpochMillis)
+        }
+    }
+
+    /** Ends a pause and drops any change still waiting for this app; both only tighten, so they never wait. */
+    suspend fun resume(packageName: String, nowEpochMillis: Long) = mutex.withLock {
+        database.withTransaction {
+            val current = dao.rules().firstOrNull { it.packageName == packageName }
+            if (current != null) change(packageName, current, current.toDomain().copy(pausedUntilEpochMillis = null), 0, nowEpochMillis)
+            else dao.deletePending(packageName)
+        }
+    }
+
+    suspend fun cancelPending(packageName: String) = mutex.withLock { dao.deletePending(packageName) }
+
+    /** Applies held changes whose time has come; the monitor calls this on every evaluation, the screen when it opens. */
+    suspend fun applyDuePending(nowEpochMillis: Long) = mutex.withLock { applyDue(nowEpochMillis) }
+
+    private suspend fun applyDue(nowEpochMillis: Long) {
+        val due = dao.duePending(nowEpochMillis).takeIf { it.isNotEmpty() } ?: return
+        database.withTransaction {
+            due.forEach { held ->
+                val current = dao.rules().firstOrNull { it.packageName == held.packageName }
+                if (held.remove) writeRule(held.packageName, null, held.applyAtEpochMillis)
+                else writeRule(held.packageName, held.rule.toDomain().copy(focusUntilEpochMillis = current?.focusUntilEpochMillis), held.applyAtEpochMillis)
+                dao.deletePending(held.packageName)
+            }
+        }
+    }
+
+    private suspend fun change(packageName: String, current: RuleEntity?, next: AppRule?, delayMillis: Long, nowEpochMillis: Long): Long? {
+        if (delayMillis > 0 && Strictness.loosens(current?.toDomain(), next, nowEpochMillis)) {
+            val applyAt = Math.addExact(nowEpochMillis, delayMillis)
+            dao.savePending(PendingRuleEntity(packageName, applyAt, next == null, (next ?: current!!.toDomain()).toEntity()))
+            return applyAt
+        }
+        // The latest decision replaces one still waiting; dropping a held relaxation only tightens.
+        dao.deletePending(packageName)
+        if (next != null || current != null) writeRule(packageName, next, nowEpochMillis)
+        return null
+    }
+
+    private suspend fun writeRule(packageName: String, rule: AppRule?, epochMillis: Long) {
+        if (rule == null) dao.deleteRule(packageName) else dao.saveRule(rule.toEntity())
+        dao.insertEvents(listOf(EventEntity(type = if (rule == null) "RULE_DISABLED" else "RULE_UPDATED", packageName = packageName, epochMillis = epochMillis)))
     }
 
     suspend fun startFocus(minutes: Int, nowEpochMillis: Long) = mutex.withLock {
@@ -61,35 +134,30 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         }
     }
 
-    override suspend fun deleteRule(packageName: String) = mutex.withLock {
-        database.withTransaction {
-            dao.deleteRule(packageName)
-            dao.insertEvents(listOf(EventEntity(type = "RULE_DISABLED", packageName = packageName, epochMillis = System.currentTimeMillis())))
-        }
-    }
+    override suspend fun deleteRule(packageName: String) { requestDelete(packageName, 0, System.currentTimeMillis()) }
 
     suspend fun reconnect(now: ClockReading, recoveredUsage: Map<String, Long>, foregroundPackage: String? = null): MonitorState = mutex.withLock {
         val loaded = load()
-        val update = monitor.restore(loaded, now, recoveredUsage, foregroundPackage, ruleMap())
+        val update = monitor.restore(loaded, now, recoveredUsage, foregroundPackage, ruleMap(now))
         persist(update)
         update.state
     }
 
     suspend fun foreground(packageName: String?, now: ClockReading): MonitorState = mutex.withLock {
-        val update = monitor.foreground(state ?: load(), packageName, now, ruleMap())
+        val update = monitor.foreground(state ?: load(), packageName, now, ruleMap(now))
         persist(update)
         update.state
     }
 
     suspend fun tick(now: ClockReading): MonitorState = mutex.withLock {
-        val update = monitor.tick(state ?: load(), now, ruleMap())
+        val update = monitor.tick(state ?: load(), now, ruleMap(now))
         persist(update)
         update.state
     }
 
     suspend fun clearAll() = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
+            dao.clearRules(); dao.clearPending(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
             database.historyDao().apply {
                 clearDaily(); clearEvents(); clearEstimates()
                 saveMeta(HistoryMetaEntity(clearedAt = System.currentTimeMillis()))
@@ -98,7 +166,10 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         state = MonitorState()
     }
 
-    private suspend fun ruleMap() = dao.rules().associate { it.packageName to it.toDomain() }
+    private suspend fun ruleMap(now: ClockReading): Map<String, AppRule> {
+        applyDue(now.epochMillis)
+        return dao.rules().associate { it.packageName to it.toDomain() }
+    }
 
     private suspend fun load(): MonitorState {
         val checkpoint = dao.checkpoint()
