@@ -744,3 +744,32 @@ Do not weaken permission/security handling.
 When OS behavior is uncertain, isolate that behavior behind an interface instead of coupling it to domain logic.
 
 This document is the source of truth for the FocusGuard project.
+
+---
+
+# 25. Implementation status (2026-10-08)
+
+The existing Android PoC uses the project name ChronoLock and package com.chronolock.
+App selection, permission disclosure, daily usage/open-count/cooldown settings,
+Room persistence, accessibility monitoring and the blocking overlay have been written.
+Validation: 32 domain tests and 4 Android 35 persistence tests passed; debug APK build
+and Android Lint passed (19 warnings). Build evidence and commit are recorded in docs/STATUS.md.
+The initial Android milestone is NOT yet accepted: real-device scenarios A/B/C remain unverified.
+
+PR: https://github.com/ryu-han-kr/ChronoLock/pull/1
+
+See docs/STATUS.md for executed checks, existing specification differences and next steps.
+See docs/DEVICE_TEST_PLAN.md for acceptance procedures.
+See docs/USER_SETUP.md for user-provided device details, local setup and future service configuration.
+No external API credentials are required for the current Android PoC.
+Continue Android build and blocking reliability work before backend, AI or iOS.
+
+## 2026-10-10 planning update
+
+The user reported that the Galaxy Tab S9+ / Android 16 / YouTube device trial works.
+Individual A/B/C timing, offline and restart acceptance records still need to be completed.
+See docs/reports/CHRONOLOCK_BUSINESS_PLAN_2026-10-10.md for 10 feature proposals,
+optional AI, subscription price hypotheses, daily/monthly operating costs and a Discord/email
+cost-reporting design. HTML and PDF versions are provided alongside the Markdown source.
+These are proposals, not implemented billing, AI or scheduled notifications.
+The current targetSdk is 35; Play release preparation must address the verified API 36 requirement.

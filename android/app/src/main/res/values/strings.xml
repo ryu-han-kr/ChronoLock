@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name" translatable="false">ChronoLock</string>
+    <style name="Theme.ChronoLock" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#10141F</item>
+        <item name="android:navigationBarColor">#10141F</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>

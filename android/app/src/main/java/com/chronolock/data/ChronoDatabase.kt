@@ -1,0 +1,98 @@
+package com.chronolock.data
+
+import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.flow.Flow
+
+@Entity(tableName = "blocking_rules")
+data class RuleEntity(
+    @PrimaryKey val packageName: String,
+    val appName: String,
+    val dailyLimitSeconds: Long?,
+    val maxOpenCount: Int?,
+    val cooldownSeconds: Long?,
+    val enabled: Boolean = true,
+    val sessionLimitSeconds: Long? = null,
+    val scheduleStartMinute: Int? = null,
+    val scheduleEndMinute: Int? = null,
+    val scheduleDaysMask: Int? = null,
+    val focusUntilEpochMillis: Long? = null,
+)
+
+@Entity(tableName = "daily_usage_stats", primaryKeys = ["packageName", "date"])
+data class DailyEntity(val packageName: String, val date: String, val usageMillis: Long, val opens: Int, val blockedAttempts: Int)
+
+@Entity(tableName = "last_closed")
+data class CloseEntity(@PrimaryKey val packageName: String, val epochMillis: Long, val elapsedMillis: Long, val bootId: Int)
+
+@Entity(tableName = "monitor_checkpoint")
+data class CheckpointEntity(
+    @PrimaryKey val id: Int = 1,
+    val activePackage: String?,
+    val sessionMillis: Long,
+    val epochMillis: Long,
+    val elapsedMillis: Long,
+    val bootId: Int,
+    val zone: String,
+    val observedPackage: String? = null,
+    val blockedPackage: String? = null,
+    val blockedSessionMillis: Long? = null,
+    @ColumnInfo(defaultValue = "0") val wasBlocked: Boolean = false,
+)
+
+@Entity(tableName = "app_usage_events", indices = [Index("epochMillis")])
+data class EventEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val type: String, val packageName: String?, val epochMillis: Long)
+
+@Dao
+interface ChronoDao {
+    @Query("SELECT * FROM blocking_rules ORDER BY appName") fun observeRules(): Flow<List<RuleEntity>>
+    @Query("SELECT * FROM daily_usage_stats ORDER BY date DESC") fun observeDaily(): Flow<List<DailyEntity>>
+    @Query("SELECT * FROM blocking_rules") suspend fun rules(): List<RuleEntity>
+    @Query("SELECT * FROM daily_usage_stats") suspend fun daily(): List<DailyEntity>
+    @Query("SELECT * FROM last_closed") suspend fun closes(): List<CloseEntity>
+    @Query("SELECT * FROM monitor_checkpoint WHERE id = 1") suspend fun checkpoint(): CheckpointEntity?
+    @Upsert suspend fun saveRule(rule: RuleEntity)
+    @Query("UPDATE blocking_rules SET focusUntilEpochMillis = :until WHERE enabled = 1") suspend fun startFocus(until: Long)
+    @Query("UPDATE blocking_rules SET focusUntilEpochMillis = NULL") suspend fun stopFocus()
+    @Query("DELETE FROM blocking_rules WHERE packageName = :packageName") suspend fun deleteRule(packageName: String)
+    @Upsert suspend fun saveDaily(rows: List<DailyEntity>)
+    @Upsert suspend fun saveCloses(rows: List<CloseEntity>)
+    @Upsert suspend fun saveCheckpoint(row: CheckpointEntity)
+    @Insert suspend fun insertEvents(rows: List<EventEntity>)
+    @Query("DELETE FROM app_usage_events WHERE epochMillis < :before") suspend fun pruneEvents(before: Long)
+    @Query("DELETE FROM daily_usage_stats WHERE date < :before") suspend fun pruneDaily(before: String)
+    @Query("DELETE FROM blocking_rules") suspend fun clearRules()
+    @Query("DELETE FROM daily_usage_stats") suspend fun clearDaily()
+    @Query("DELETE FROM last_closed") suspend fun clearCloses()
+    @Query("DELETE FROM monitor_checkpoint") suspend fun clearCheckpoint()
+    @Query("DELETE FROM app_usage_events") suspend fun clearEvents()
+}
+
+@Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
+    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class], version = 3, exportSchema = true)
+abstract class ChronoDatabase : RoomDatabase() {
+    abstract fun dao(): ChronoDao
+    abstract fun historyDao(): HistoryDao
+
+    companion object {
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_events (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, at INTEGER NOT NULL, type TEXT NOT NULL, app TEXT NOT NULL, activity TEXT NOT NULL)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_history_events_at_type_app_activity ON history_events (at, type, app, activity)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_daily (packageName TEXT NOT NULL, date TEXT NOT NULL, appName TEXT NOT NULL, usageMillis INTEGER NOT NULL, opens INTEGER NOT NULL, PRIMARY KEY(packageName, date))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_meta (id INTEGER NOT NULL, clearedAt INTEGER NOT NULL, collectedAt INTEGER NOT NULL, PRIMARY KEY(id))")
+            }
+        }
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                listOf("sessionLimitSeconds", "scheduleStartMinute", "scheduleEndMinute", "scheduleDaysMask", "focusUntilEpochMillis")
+                    .forEach { db.execSQL("ALTER TABLE blocking_rules ADD COLUMN $it INTEGER") }
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN observedPackage TEXT")
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN blockedPackage TEXT")
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN blockedSessionMillis INTEGER")
+                db.execSQL("ALTER TABLE monitor_checkpoint ADD COLUMN wasBlocked INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+    }
+}

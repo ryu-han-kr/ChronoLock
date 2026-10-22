@@ -8,3 +8,12 @@ local.properties
 *.jks
 *.keystore
 captures/
+.env
+.env.*
+!.env.example
+
+# Upload key backup (never commit)
+key-backup/
+
+# Local release bundles for manual Play upload
+release/
