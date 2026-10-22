@@ -2,6 +2,18 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.6.2 (versionCode 10) — 2026-10-22
+
+AAB: `release/chronolock-0.6.2-vc10.aab`
+
+### ko
+- 최신 Android 개발 도구와 라이브러리로 업데이트해 안정성과 호환성을 높였어요.
+- 앱 목록에서 정렬을 바꿀 때 다른 앱 아이콘이 잠깐 보이던 문제를 고쳤어요.
+
+### en
+- Updated to the latest Android build tools and libraries for better stability and compatibility.
+- Fixed app icons briefly showing the wrong app after changing the list order.
+
 ## 0.6.1 (versionCode 9) — 2026-10-22
 
 AAB: `release/chronolock-0.6.1-vc9.aab`
