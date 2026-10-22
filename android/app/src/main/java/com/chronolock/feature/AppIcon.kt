@@ -28,9 +28,14 @@ import kotlinx.coroutines.withContext
 
 private val icons = LruCache<String, ImageBitmap>(96)
 
-private fun loadIcon(context: Context, packageName: String, px: Int): ImageBitmap? = runCatching {
-    context.packageManager.getApplicationIcon(packageName).toBitmap(px, px).asImageBitmap()
-}.getOrNull()?.also { icons.put(packageName, it) }
+/** Application icon first; if the package hides it, the launcher activity's icon; a bitmap of either, or null. */
+private fun loadIcon(context: Context, packageName: String, px: Int): ImageBitmap? {
+    val pm = context.packageManager
+    val drawable = runCatching { pm.getApplicationIcon(packageName) }.getOrNull()
+        ?: runCatching { pm.getLaunchIntentForPackage(packageName)?.let { pm.resolveActivity(it, 0)?.loadIcon(pm) } }.getOrNull()
+        ?: runCatching { pm.getApplicationInfo(packageName, 0).loadIcon(pm) }.getOrNull()
+    return runCatching { drawable?.toBitmap(px, px)?.asImageBitmap() }.getOrNull()?.also { icons.put(packageName, it) }
+}
 
 /** The installed app's launcher icon, or its first letter on a tinted tile while loading or when the app is gone. */
 @Composable
