@@ -12,6 +12,10 @@ data class HistoryEventEntity(
 @Entity(tableName = "history_daily", primaryKeys = ["packageName", "date"])
 data class HistoryDailyEntity(val packageName: String, val date: String, val appName: String, val usageMillis: Long, val opens: Int)
 
+/** Usage estimated from OS usage-stats buckets for a day that has no event records (before the event window). */
+@Entity(tableName = "history_estimate", primaryKeys = ["packageName", "date"])
+data class HistoryEstimateEntity(val packageName: String, val date: String, val appName: String, val usageMillis: Long)
+
 @Entity(tableName = "history_meta")
 data class HistoryMetaEntity(@PrimaryKey val id: Int = 1, val clearedAt: Long = 0, val collectedAt: Long = 0)
 
@@ -28,4 +32,10 @@ interface HistoryDao {
     @Query("DELETE FROM history_events WHERE at < :before") suspend fun prune(before: Long)
     @Query("DELETE FROM history_daily") suspend fun clearDaily()
     @Query("DELETE FROM history_events") suspend fun clearEvents()
+    @Query("SELECT * FROM history_estimate ORDER BY date DESC") fun observeEstimates(): Flow<List<HistoryEstimateEntity>>
+    @Query("SELECT * FROM history_estimate") suspend fun estimates(): List<HistoryEstimateEntity>
+    @Upsert suspend fun saveEstimates(rows: List<HistoryEstimateEntity>)
+    /** Days that now have real records, or that fell out of the 30-day window, lose their estimate. */
+    @Query("DELETE FROM history_estimate WHERE date >= :from OR date < :before") suspend fun dropEstimates(from: String, before: String)
+    @Query("DELETE FROM history_estimate") suspend fun clearEstimates()
 }

@@ -326,4 +326,7 @@
     <string name="onboarding_control_body">"规则可随时关闭或删除，也可在 Android 设置中撤销权限。"</string>
     <string name="onboarding_start">"开始使用"</string>
     <string name="error_save_setting">"无法保存设置，请重试。"</string>
+    <string name="history_estimate_note">"%1$s 之前的时间根据设备使用统计估算，估算期间不含打开次数。"</string>
+    <string name="history_estimate_day">"估算 %1$s"</string>
+    <string name="history_estimate_included">"含估算 %1$s"</string>
 </resources>

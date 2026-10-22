@@ -91,7 +91,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         database.withTransaction {
             dao.clearRules(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
             database.historyDao().apply {
-                clearDaily(); clearEvents()
+                clearDaily(); clearEvents(); clearEstimates()
                 saveMeta(HistoryMetaEntity(clearedAt = System.currentTimeMillis()))
             }
         }
