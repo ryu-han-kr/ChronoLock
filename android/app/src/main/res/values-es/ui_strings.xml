@@ -326,4 +326,7 @@
     <string name="onboarding_control_body">"Desactiva o elimina reglas cuando quieras y retira permisos en los ajustes de Android."</string>
     <string name="onboarding_start">"Empezar"</string>
     <string name="error_save_setting">"No se pudo guardar el ajuste. Inténtalo de nuevo."</string>
+    <string name="history_estimate_note">"El tiempo anterior al %1$s se estima con las estadísticas de uso del dispositivo. No incluye aperturas en los días estimados."</string>
+    <string name="history_estimate_day">"Estimado %1$s"</string>
+    <string name="history_estimate_included">"Incluye %1$s estimado"</string>
 </resources>

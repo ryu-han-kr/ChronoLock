@@ -70,12 +70,17 @@ interface ChronoDao {
 }
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
-    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class], version = 3, exportSchema = true)
+    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class], version = 4, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_estimate (packageName TEXT NOT NULL, date TEXT NOT NULL, appName TEXT NOT NULL, usageMillis INTEGER NOT NULL, PRIMARY KEY(packageName, date))")
+            }
+        }
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS history_events (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, at INTEGER NOT NULL, type TEXT NOT NULL, app TEXT NOT NULL, activity TEXT NOT NULL)")

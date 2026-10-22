@@ -19,13 +19,51 @@ class HistoryRepositoryTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val name = "history-test-${UUID.randomUUID()}.db"
     private var db = Room.databaseBuilder(context, ChronoDatabase::class.java, name)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4).build()
     private val zone = ZoneId.of("Asia/Seoul")
     private val now = Instant.parse("2026-10-15T03:00:00Z").toEpochMilli()
     private val labels = mapOf("app.a" to "App A", "home" to "Home")
     private fun event(at: Long, type: String, app: String = "app.a") = HistoryEventEntity(at = at, type = type, app = app, activity = "Main")
     private fun repository() = HistoryRepository(context, db, AndroidEnvironment(context))
     @After fun close() { db.close(); context.deleteDatabase(name) }
+
+    private val day = 86_400_000L
+    private fun date(millis: Long) = Instant.ofEpochMilli(millis).atZone(zone).toLocalDate()
+    private fun bucket(app: String, from: Long, to: Long, millis: Long) = com.chronolock.domain.UsageBucket(app, from, to, millis)
+
+    @Test fun estimates_fillOnlyDaysBeforeFirstRecord_andLeaveHomeOut() = runBlocking {
+        repository().importEvents(listOf(event(now - 2000, "RESUME"), event(now - 1000, "PAUSE")), labels, setOf("home"), now, zone)
+        val weekly = listOf(bucket("app.a", now - 6 * day, now, 7_000L), bucket("home", now - 6 * day, now, 9_000L))
+        repository().importEstimates(listOf(emptyList(), weekly), labels, setOf("home"), now, zone)
+        val rows = db.historyDao().estimates()
+        assertEquals(6, rows.size) // six days before today; today has a real record
+        assertTrue(rows.all { it.packageName == "app.a" && it.date < date(now).toString() })
+        assertEquals(1000L, rows.first().usageMillis) // (7 s - 1 s recorded) / 6 unknown days
+    }
+
+    @Test fun estimates_keepDaysAndroidNoLongerReports_butDropRecordedAndExpiredDays() = runBlocking {
+        val first = listOf(listOf(bucket("app.a", now - 3 * day, now - 3 * day + 1000, 5_000L)))
+        repository().importEstimates(first, labels, emptySet(), now, zone)
+        assertEquals(listOf(date(now - 3 * day).toString()), db.historyDao().estimates().map { it.date })
+        // Next day: Android dropped that bucket; the estimate stays.
+        repository().importEstimates(listOf(emptyList()), labels, emptySet(), now + day, zone)
+        assertEquals(1, db.historyDao().estimates().size)
+        // A real record on that day replaces the estimate.
+        val recordAt = now - 3 * day
+        repository().importEvents(listOf(event(recordAt, "RESUME"), event(recordAt + 1000, "PAUSE")), labels, emptySet(), now + day, zone)
+        repository().importEstimates(listOf(emptyList()), labels, emptySet(), now + day, zone)
+        assertTrue(db.historyDao().estimates().isEmpty())
+    }
+
+    @Test fun clearAll_removesEstimates_andNoEstimateBeforeTheReset() = runBlocking {
+        repository().importEstimates(listOf(listOf(bucket("app.a", now - 3 * day, now - 3 * day + 1000, 5_000L))), labels, emptySet(), now, zone)
+        LocalRepository(db).clearAll()
+        assertTrue(db.historyDao().estimates().isEmpty())
+        val cleared = db.historyDao().meta()!!.clearedAt
+        val beforeReset = listOf(listOf(bucket("app.a", cleared - 2 * day, cleared - 2 * day + 1000, 5_000L)))
+        repository().importEstimates(beforeReset, labels, emptySet(), cleared + 3 * day, zone)
+        assertTrue(db.historyDao().estimates().isEmpty())
+    }
 
     @Test fun repeatImport_isIdempotent_withoutRules_andPersistsAfterReopen() = runBlocking {
         val events = listOf(event(now - 5000, "RESUME"), event(now - 1000, "PAUSE"))
@@ -87,7 +125,7 @@ class HistoryRepositoryTest {
             old.execSQL("INSERT INTO daily_usage_stats VALUES ('app.a', '2026-10-15', 12345, 3, 1)")
             old.version = 2
         }
-        db = Room.databaseBuilder(context, ChronoDatabase::class.java, name).addMigrations(ChronoDatabase.MIGRATION_2_3).build()
+        db = Room.databaseBuilder(context, ChronoDatabase::class.java, name).addMigrations(ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4).build()
         assertEquals(3600L, db.dao().rules().single().dailyLimitSeconds)
         assertEquals(12345L, db.dao().daily().single().usageMillis)
         assertTrue(db.historyDao().daily().isEmpty())

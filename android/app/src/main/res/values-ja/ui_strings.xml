@@ -326,4 +326,7 @@
     <string name="onboarding_control_body">"ルールはいつでもオフ・削除でき、権限もAndroidの設定で解除できます。"</string>
     <string name="onboarding_start">"はじめる"</string>
     <string name="error_save_setting">"設定を保存できませんでした。もう一度お試しください。"</string>
+    <string name="history_estimate_note">"%1$s より前は端末の使用統計から推定した時間です。推定期間の起動回数は含みません。"</string>
+    <string name="history_estimate_day">"推定 %1$s"</string>
+    <string name="history_estimate_included">"推定 %1$s を含む"</string>
 </resources>

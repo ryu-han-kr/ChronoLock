@@ -24,10 +24,10 @@ class MigrationTest {
             db.execSQL("INSERT INTO monitor_checkpoint (id, activePackage, sessionMillis, epochMillis, elapsedMillis, bootId, zone) VALUES (1, 'com.video', 1000, 2000, 3000, 4, 'Asia/Seoul')")
         }
         // Validates every table, column and index against schemas/3.json.
-        helper.runMigrationsAndValidate(name, 3, true, ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3).close()
+        helper.runMigrationsAndValidate(name, 4, true, ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4).close()
 
         val database = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, ChronoDatabase::class.java, name)
-            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3).build()
+            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4).build()
         try {
             runBlocking {
                 val rule = database.dao().rules().single()
@@ -39,12 +39,22 @@ class MigrationTest {
                 assertEquals("com.video", checkpoint.activePackage)
                 assertFalse(checkpoint.wasBlocked)
                 assertEquals(emptyList<HistoryDailyEntity>(), database.historyDao().daily())
+                assertEquals(emptyList<HistoryEstimateEntity>(), database.historyDao().estimates())
             }
         } finally { database.close() }
     }
 
     @Test fun version2_migratesToLatest() {
         helper.createDatabase(name, 2).close()
-        helper.runMigrationsAndValidate(name, 3, true, ChronoDatabase.MIGRATION_2_3).close()
+        helper.runMigrationsAndValidate(name, 4, true, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4).close()
+    }
+
+    @Test fun version3_migratesToLatest_keepingHistory() {
+        helper.createDatabase(name, 3).use { db ->
+            db.execSQL("INSERT INTO history_daily (packageName, date, appName, usageMillis, opens) VALUES ('com.video', '2026-10-20', 'Video', 1000, 2)")
+        }
+        helper.runMigrationsAndValidate(name, 4, true, ChronoDatabase.MIGRATION_3_4).use { db ->
+            db.query("SELECT usageMillis FROM history_daily").use { assertEquals(true, it.moveToFirst()); assertEquals(1000L, it.getLong(0)) }
+        }
     }
 }

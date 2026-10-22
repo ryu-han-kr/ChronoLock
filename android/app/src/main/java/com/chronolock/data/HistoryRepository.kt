@@ -28,6 +28,7 @@ class HistoryRepository @Inject constructor(
     private val mutex = Mutex()
     val daily = dao.observeDaily()
     val meta = dao.observeMeta()
+    val estimates = dao.observeEstimates()
 
     /** Import overlapping OS events idempotently, retaining a local rolling 30-day history. */
     @Suppress("DEPRECATION")
@@ -62,7 +63,40 @@ class HistoryRepository @Inject constructor(
         val homes = pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)
             .map { it.activityInfo.packageName }.toSet()
         importEvents(collected, names, homes, now, zone)
+        // Events only reach back about a week; usage-stats buckets (finest first) estimate the older days of the window.
+        val usage = context.getSystemService(UsageStatsManager::class.java)
+        val windowStart = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate().minusDays(29).atStartOfDay(zone).toInstant().toEpochMilli()
+        val buckets = listOf(UsageStatsManager.INTERVAL_DAILY, UsageStatsManager.INTERVAL_WEEKLY, UsageStatsManager.INTERVAL_MONTHLY).map { interval ->
+            usage.queryUsageStats(interval, windowStart, now).orEmpty().filter { it.totalTimeInForeground > 0 }
+                .map { UsageBucket(it.packageName, it.firstTimeStamp, it.lastTimeStamp, it.totalTimeInForeground) }
+        }
+        importEstimates(buckets, names, homes, now, zone)
     } }
+
+    /**
+     * Stores per-day estimates for the window days before the first event record and after the last reset.
+     * Days that can no longer be estimated (the OS dropped the bucket) keep their earlier estimate.
+     */
+    internal suspend fun importEstimates(bucketsByInterval: List<List<UsageBucket>>, names: Map<String, String>,
+        homes: Set<String>, now: Long, zone: ZoneId) {
+        val today = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+        database.withTransaction {
+            val meta = dao.meta() ?: HistoryMetaEntity()
+            val daily = dao.daily()
+            val windowStart = today.minusDays(29)
+            val afterReset = if (meta.clearedAt > 0) java.time.Instant.ofEpochMilli(meta.clearedAt).atZone(zone).toLocalDate().plusDays(1) else windowStart
+            val gapStart = maxOf(windowStart, afterReset)
+            val gapEnd = daily.minOfOrNull { LocalDate.parse(it.date) } ?: today
+            val labels = dao.estimates().associate { it.packageName to it.appName } + daily.associate { it.packageName to it.appName } + names
+            val recorded = daily.groupBy { it.packageName }.mapValues { (_, rows) -> rows.associate { LocalDate.parse(it.date) to it.usageMillis } }
+            val estimated = estimateGapUsage(bucketsByInterval.map { buckets -> buckets.filter { it.app in labels && it.app !in homes } },
+                recorded, gapStart, gapEnd, zone)
+            dao.dropEstimates(from = gapEnd.toString(), before = gapStart.toString())
+            dao.saveEstimates(estimated.map { (key, millis) ->
+                HistoryEstimateEntity(key.packageName, key.date.toString(), labels.getValue(key.packageName), millis)
+            })
+        }
+    }
 
     internal suspend fun importEvents(collected: List<HistoryEventEntity>, names: Map<String, String>,
         homes: Set<String>, now: Long, zone: ZoneId) {

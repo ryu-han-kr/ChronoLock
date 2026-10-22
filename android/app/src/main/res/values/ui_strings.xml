@@ -326,4 +326,7 @@
     <string name="onboarding_control_body">"규칙은 언제든 끄거나 지울 수 있고, 권한도 Android 설정에서 해제할 수 있어요."</string>
     <string name="onboarding_start">"시작하기"</string>
     <string name="error_save_setting">"설정을 저장하지 못했습니다. 다시 시도해 주세요."</string>
+    <string name="history_estimate_note">"%1$s 이전은 기기 사용 통계로 추정한 시간입니다. 추정 기간의 실행 횟수는 포함되지 않습니다."</string>
+    <string name="history_estimate_day">"추정 %1$s"</string>
+    <string name="history_estimate_included">"추정 %1$s 포함"</string>
 </resources>
