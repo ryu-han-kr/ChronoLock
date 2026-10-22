@@ -39,6 +39,10 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
             }
         }
         Text(if (days == 1) today.toString() else "$first ~ $today", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val earliest = remember(state.history) { state.history.minOfOrNull { it.date } }
+        if (days > 1 && earliest != null && earliest > first.toString()) Text(
+            tr("%1\$s부터 모은 기록입니다. 기기는 그 이전 사용 이벤트를 보관하지 않아 기간 합계가 실제보다 적을 수 있습니다.", earliest),
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         if (!state.permissions.usage) CardBox {
             Text(tr("사용 기록을 시작하세요"), style = MaterialTheme.typography.titleLarge)
             Text(tr("사용 정보 권한만 허용하면 차단 규칙이나 접근성 권한 없이 앱별 시간과 실행 횟수를 볼 수 있습니다."))

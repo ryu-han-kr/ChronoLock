@@ -59,6 +59,7 @@ internal fun ChronoScreen(
     buyAdFree: () -> Unit = {},
     manageSubscription: () -> Unit = {},
     retryBilling: () -> Unit = {},
+    openThemeGallery: () -> Unit = {},
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -213,7 +214,7 @@ internal fun ChronoScreen(
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
-                                item { ThemePicker(state.theme, selectTheme) }
+                                item { ThemePicker(state.theme, selectTheme, openThemeGallery) }
                                 item { PermissionCard(state, usagePermission, accessibilityPermission) }
                                 item { CardBox {
                                     Text(tr("나를 위한 제한"), style = MaterialTheme.typography.titleLarge)

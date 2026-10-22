@@ -58,6 +58,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by remember { mutableStateOf<Boolean?>(null) }
+    var themeGallery by rememberSaveable { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
     var confirmDeleteAccount by remember { mutableStateOf(false) }
     var confirmFocus by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -76,6 +77,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             return@LocalizedApp
         }
         ChronoTheme(state.theme) {
+            Box {
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
@@ -93,7 +95,10 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
                 privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription, retryBilling = retryBilling,
+                openThemeGallery = { themeGallery = true },
             )
+            if (themeGallery) ThemeGallery(state.theme, model::selectTheme) { themeGallery = false }
+            }
             editPackage?.let { appId ->
                 val saved = state.rules.firstOrNull { it.packageName == appId }
                 val app = state.apps.firstOrNull { it.packageName == appId } ?: InstalledApp(appId, saved?.appName ?: appId)

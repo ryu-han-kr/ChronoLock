@@ -105,18 +105,36 @@ class FocusUiTest {
 
     @Test fun themePicker_switchesEveryTheme() {
         val selected = mutableStateOf(AppTheme.DARK)
+        val gallery = mutableStateOf(false)
         ui.setContent { ChronoTheme(selected.value) {
-            Surface(Modifier.fillMaxSize()) { Column(Modifier.verticalScroll(rememberScrollState())) { ThemePicker(selected.value) { selected.value = it } } }
+            Surface(Modifier.fillMaxSize()) {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    ThemePicker(selected.value, { selected.value = it }, openGallery = { gallery.value = true })
+                }
+                if (gallery.value) ThemeGallery(selected.value, { selected.value = it }) { gallery.value = false }
+            }
         } }
-        val sections = listOf(ThemeCatalog.BASIC to AppTheme.builtIn) + ThemeCatalog.sections
-        sections.forEach { (family, themes) ->
+        AppTheme.builtIn.forEach { theme ->
+            ui.onNodeWithTag("themes-${ThemeCatalog.BASIC}").performScrollToNode(hasTestTag("theme-${theme.name}"))
+            ui.onNodeWithTag("theme-${theme.name}").performClick().assertIsSelected()
+            ui.runOnIdle { assertEquals(theme, selected.value) }
+            screenshot("theme-${theme.name.lowercase()}", ui.onRoot())
+        }
+        ui.onNodeWithTag("themes-${ThemeCatalog.BASIC}").performScrollToNode(hasTestTag("theme-more"))
+        ui.onNodeWithTag("theme-more").performClick()
+        ui.onNodeWithTag("theme-gallery").assertIsDisplayed()
+        ThemeCatalog.sections.forEach { (_, themes) ->
             themes.forEach { theme ->
-                ui.onNodeWithTag("themes-$family").performScrollTo().performScrollToNode(hasTestTag("theme-${theme.name}"))
+                ui.onNodeWithTag("theme-gallery-grid").performScrollToNode(hasTestTag("theme-${theme.name}"))
                 ui.onNodeWithTag("theme-${theme.name}").performClick().assertIsSelected()
                 ui.runOnIdle { assertEquals(theme, selected.value) }
-                if (theme in AppTheme.builtIn || theme == themes.first()) screenshot("theme-${theme.name.lowercase()}", ui.onRoot())
+                if (theme == themes.first()) screenshot("theme-${theme.name.lowercase()}", ui.onNodeWithTag("theme-gallery"))
             }
         }
+        ui.onNodeWithContentDescription("뒤로").performClick()
+        ui.onAllNodesWithTag("theme-gallery").assertCountEquals(0)
+        ui.onNodeWithTag("themes-${ThemeCatalog.BASIC}").performScrollToNode(hasTestTag("theme-current"))
+        ui.onNodeWithTag("theme-current").assertIsSelected()
     }
 
     @Test fun recipeIsPreviewed_thenSavedWithSessionAndCooldown() {
