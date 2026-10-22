@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.chronolock.data.ThemeCatalog
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -91,7 +92,7 @@ internal fun AppTheme.colorScheme(): ColorScheme {
         surfaceContainer = Color(surface), surfaceContainerHigh = raised(.04f), surfaceContainerHighest = raised(.08f),
         secondary = Color(primary), onSecondary = Color(onPrimary),
         secondaryContainer = Color(primary).copy(alpha = .14f), onSecondaryContainer = Color(primary),
-        surfaceVariant = Color(background), outline = Color(muted).copy(alpha = .6f),
+        surfaceVariant = Color(background), outline = outlineFor(Color(muted).copy(alpha = .6f).compositeOver(Color(surface)), Color(surface), Color(background), Color(text)),
         outlineVariant = Color(muted).copy(alpha = .2f), surfaceTint = Color(primary),
     )
 }
@@ -197,4 +198,24 @@ private fun MoreTile(count: Int, onClick: () -> Unit) {
         }
         Text(tr("더보기"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
     }
+}
+
+/** Contrast ratio per WCAG 2.x. */
+internal fun contrastRatio(a: Color, b: Color): Float {
+    val (light, dark) = listOf(a.luminance(), b.luminance()).sortedDescending()
+    return (light + 0.05f) / (dark + 0.05f)
+}
+
+/**
+ * Borders of outlined buttons and fields are the only cue that they are controls, so they need 3:1 against cards and
+ * page background (WCAG non-text contrast). Moves [base] toward [text] until both are met.
+ */
+internal fun outlineFor(base: Color, surface: Color, background: Color, text: Color): Color {
+    var step = 0
+    var color = base
+    while (step < 20 && minOf(contrastRatio(color, surface), contrastRatio(color, background)) < 3f) {
+        step++
+        color = lerp(base, text, step / 20f)
+    }
+    return color
 }

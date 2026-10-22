@@ -70,6 +70,8 @@ internal fun ChronoScreen(
     var sortName by rememberSaveable { mutableStateOf(AppSort.NAME.name) }
     val sort = AppSort.entries.firstOrNull { it.name == sortName } ?: AppSort.NAME
     val usage = remember(state.history, today) { summarizeUsage(state.history, today.minusDays(6)) }
+    val historyFilter = rememberHistoryFilter()
+    val historyView = rememberHistoryView(state, today, historyFilter)
     val ready = state.permissions.usage && state.permissions.accessibility && state.health.connected
     val rulesByPackage = remember(state.rules) { state.rules.associateBy { it.packageName } }
     val filteredApps = remember(state.apps, rulesByPackage, query, onlyConfigured, sort, usage) {
@@ -223,7 +225,7 @@ internal fun ChronoScreen(
                                 }
                             }
                             2 -> {
-                                item(span = { GridItemSpan(maxLineSpan) }) { HistoryPanel(state, today, refreshHistory, usagePermission, suggest = { app, recipe -> edit(app, recipe) }) }
+                                historyItems(state, today, historyFilter, historyView, refreshHistory, usagePermission, suggest = { app, recipe -> edit(app, recipe) })
                             }
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }

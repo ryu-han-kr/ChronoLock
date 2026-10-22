@@ -89,8 +89,9 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
             (loaded.observedPackage == foregroundPackage || loaded.active?.packageName == foregroundPackage)
         val daily = loaded.daily.toMutableMap()
         recoveredUsage.filterKeys { rules[it]?.enabled == true }.forEach { (app, usage) ->
-            // UsageEvents may report the app behind our blocking overlay as still resumed.
-            if (sameForeground && loaded.decision.denied && app == foregroundPackage) return@forEach
+            // Recovery runs only in a new service instance, and the blocking overlay dies with the old one. Usage after the
+            // checkpoint (written every second while the screen is on) was therefore real use without the overlay, so it counts
+            // even for an app that was blocked; at most the last tick's second overlaps the overlay.
             val key = DailyKey(app, now.date)
             val existing = daily[key] ?: DailyUsage()
             daily[key] = existing.copy(usageMillis = existing.usageMillis + usage.coerceAtLeast(0))
