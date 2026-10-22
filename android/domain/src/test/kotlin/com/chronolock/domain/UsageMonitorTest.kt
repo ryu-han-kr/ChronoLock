@@ -255,13 +255,14 @@ class UsageMonitorTest {
         assertEquals(1, restored.daily.size)
     }
 
-    @Test fun restoreBlockedSession_keepsBlockWithoutBillingOverlayOrDuplicatingAttempt() {
+    @Test fun restoreBlockedSession_keepsBlock_billsUseAfterOverlayDied_withoutDuplicatingAttempt() {
         val rules = mapOf(app to AppRule(app, "Test", sessionLimitSeconds = 1))
         val entered = monitor.foreground(MonitorState(), app, clock(), rules).state
         val blocked = monitor.tick(entered, clock(1000), rules).state
+        // The service died after the block; the user kept using the app for 9 s without the overlay.
         val restored = monitor.restore(blocked, clock(10000), mapOf(app to 9000L), app, rules).state
         assertEquals(listOf(Reason.SESSION_USAGE), restored.decision.reasons)
-        assertEquals(1000L, usage(restored).usageMillis)
+        assertEquals(10000L, usage(restored).usageMillis)
         assertEquals(1, usage(restored).blockedAttempts)
         assertNull(restored.active)
     }

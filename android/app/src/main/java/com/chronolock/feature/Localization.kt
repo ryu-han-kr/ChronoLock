@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.chronolock.data.AppLanguage
 
 internal val LocalLanguage = staticCompositionLocalOf { AppLanguage.KOREAN }
+/** Provided once by [LocalizedApp]; every tr() call reads it instead of building its own configuration context. */
+private val LocalUiText = staticCompositionLocalOf<UiText?> { null }
 
 internal fun Context.forLanguage(language: AppLanguage): Context = createConfigurationContext(
     Configuration(resources.configuration).apply { setLocales(LocaleList(language.locale())) })
@@ -33,8 +35,9 @@ internal fun LocalizedApp(language: AppLanguage, content: @Composable () -> Unit
         LocalActivityResultRegistryOwner.current?.let { LocalActivityResultRegistryOwner provides it },
         LocalOnBackPressedDispatcherOwner.current?.let { LocalOnBackPressedDispatcherOwner provides it },
     )
+    val text = remember(localized) { UiText(localized) }
     CompositionLocalProvider(LocalContext provides localized, LocalConfiguration provides localized.resources.configuration,
-        LocalLanguage provides language, *activityOwners.toTypedArray(), content = content)
+        LocalLanguage provides language, LocalUiText provides text, *activityOwners.toTypedArray(), content = content)
 }
 
 internal class UiText(private val context: Context) {
@@ -56,6 +59,8 @@ internal class UiText(private val context: Context) {
 }
 
 @Composable internal fun uiText(): UiText {
+    LocalUiText.current?.let { return it }
+    // Outside LocalizedApp (previews, isolated UI tests): build one from the current context.
     val context = LocalContext.current
     val language = LocalLanguage.current
     return remember(context, language) { UiText(context.forLanguage(language)) }
