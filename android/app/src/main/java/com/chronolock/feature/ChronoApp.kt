@@ -30,7 +30,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chronolock.blocking.InstalledApp
 import com.chronolock.data.RuleEntity
@@ -59,6 +58,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by remember { mutableStateOf<Boolean?>(null) }
+    var themeGallery by rememberSaveable { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
     var confirmDeleteAccount by remember { mutableStateOf(false) }
     var confirmFocus by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -77,6 +77,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             return@LocalizedApp
         }
         ChronoTheme(state.theme) {
+            Box {
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
@@ -94,7 +95,10 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
                 privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription, retryBilling = retryBilling,
+                openThemeGallery = { themeGallery = true },
             )
+            if (themeGallery) ThemeGallery(state.theme, model::selectTheme) { themeGallery = false }
+            }
             editPackage?.let { appId ->
                 val saved = state.rules.firstOrNull { it.packageName == appId }
                 val app = state.apps.firstOrNull { it.packageName == appId } ?: InstalledApp(appId, saved?.appName ?: appId)
@@ -119,9 +123,11 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             }
             permissionDialog?.let { accessibility ->
                 AlertDialog(onDismissRequest = { permissionDialog = null }, title = { Text(if (accessibility) tr("접근성 권한 안내") else tr("사용 정보 접근 안내")) },
-                    text = { Text(if (accessibility)
+                    text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { Text(if (accessibility)
                         tr("ChronoLock은 앱 전환 이벤트로 실행 중인 앱을 확인하고, 직접 설정한 제한에 따라 다른 앱 위에 차단 화면을 표시합니다. 화면 텍스트, 비밀번호, 입력 내용은 읽지 않습니다. 선택한 앱의 패키지 이름과 사용·차단 기록은 이 기기에만 저장되며 전송되지 않습니다. Android 설정에서 언제든 해제할 수 있습니다. 동의하면 다음 설정 화면에서 ChronoLock을 직접 활성화해 주세요.")
-                    else tr("사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 30일간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다.")) },
+                    else tr("사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 30일간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."))
+                        if (accessibility) Text(tr("설정 화면이 열리면 ① '설치된 앱'(또는 '다운로드한 앱')에서 ChronoLock을 누르고 ② 'ChronoLock 사용'을 켠 뒤 ③ '허용'을 누르세요. 기기에 따라 항목 이름과 위치가 다를 수 있습니다."), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                    } },
                     confirmButton = { TextButton(onClick = { model.acknowledge { permissionDialog = null; openSettings(accessibility) } }) { Text(tr("동의하고 설정 열기")) } },
                     dismissButton = { TextButton(onClick = { permissionDialog = null }) { Text(tr("나중에")) } })
             }
@@ -143,14 +149,14 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
 }
 @Composable internal fun Metric(label: String, value: String) {
-    Column { Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp); Text(value, fontWeight = FontWeight.Bold, fontSize = 24.sp) }
+    Column { Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall); Text(value, style = MaterialTheme.typography.headlineSmall) }
 }
 @Composable internal fun AppHeading(name: String, packageName: String, edit: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         AppIcon(packageName, name, 42.dp)
         Column(Modifier.weight(1f)) {
-            Text(name, fontWeight = FontWeight.Bold, fontSize = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(packageName, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(packageName, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         TextButton(onClick = edit) { Text(tr("설정")) }
     }
@@ -165,6 +171,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             OutlinedButton(onClick = usage, modifier = Modifier.fillMaxWidth()) { Text(tr("사용 정보 권한")) }
             OutlinedButton(onClick = accessibility, modifier = Modifier.fillMaxWidth()) { Text(tr("접근성 권한")) }
+            if (!state.permissions.accessibility) Text(tr("접근성 설정 → 설치된 앱 → ChronoLock → 사용 켜기 → 허용"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             NotificationPermissionButton()
         }
     }
@@ -179,7 +186,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed = it }
     if (allowed) return
     OutlinedButton(onClick = { request.launch(Manifest.permission.POST_NOTIFICATIONS) }, modifier = Modifier.fillMaxWidth()) { Text(tr("알림 권한")) }
-    Text(tr("하루 한도가 5분 남으면 알려 드립니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+    Text(tr("하루 한도가 5분 남으면 알려 드립니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
 }
 
 private val RuleDraftSaver = listSaver<RuleDraft, Any>(
@@ -231,7 +238,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
         Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AppIcon(app.packageName, app.label, 36.dp)
-            Text(app.label, Modifier.weight(1f), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(app.label, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             TextButton(enabled = !saving, onClick = onDismiss) { Text(tr("취소")) }
             Button(enabled = !saving, onClick = ::submit) { Text(if (saving) tr("저장 중") else tr("저장")) }
         }
@@ -243,8 +250,8 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                 Switch(checked = draft.enabled, onCheckedChange = { draft = draft.copy(enabled = it) }, enabled = !saving)
             }
             Text(tr("집중 레시피"), fontWeight = FontWeight.Bold)
-            if (initialRecipe != null) Text(tr("기록 기반 제안이 준비됐습니다. 기존 제한은 유지하고 비어 있는 항목만 채웠습니다. 확인 후 저장하세요."), fontSize = 12.sp)
-            Text(tr("레시피는 아래 입력값을 바꿉니다. 저장 전까지 적용되지 않습니다."), fontSize = 12.sp)
+            if (initialRecipe != null) Text(tr("기록 기반 제안이 준비됐습니다. 기존 제한은 유지하고 비어 있는 항목만 채웠습니다. 확인 후 저장하세요."), style = MaterialTheme.typography.bodySmall)
+            Text(tr("레시피는 아래 입력값을 바꿉니다. 저장 전까지 적용되지 않습니다."), style = MaterialTheme.typography.bodySmall)
             RuleRecipe.values().forEach { recipe ->
                 OutlinedButton(modifier = Modifier.fillMaxWidth(), enabled = !saving,
                     onClick = {
@@ -256,7 +263,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                     }) {
                     Column(Modifier.fillMaxWidth()) {
                         Text(tr(recipe.title), fontWeight = FontWeight.Bold)
-                        Text(tr(recipe.description), fontSize = 11.sp)
+                        Text(tr(recipe.description), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -267,7 +274,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
             TimeFields("1회 허용 시간", "session", sessionTime, !saving, presetMinutes = listOf(5, 10, 30)) { sessionTime = it; error = null }
             NumberField(tr("하루 허용 실행 횟수"), draft.opens, !saving) { draft = draft.copy(opens = it) }
             TimeFields("재실행 대기 시간", "cooldown", cooldownTime, !saving, presetMinutes = listOf(5, 10, 30)) { cooldownTime = it; error = null }
-            Text(tr("1회 한도 도달 시 앱을 떠나야 다음 사용을 시작합니다. 대기를 함께 설정하면 바로 재실행하는 것도 줄일 수 있습니다."), fontSize = 12.sp)
+            Text(tr("1회 한도 도달 시 앱을 떠나야 다음 사용을 시작합니다. 대기를 함께 설정하면 바로 재실행하는 것도 줄일 수 있습니다."), style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth().toggleable(value = draft.scheduleEnabled, enabled = !saving, role = Role.Switch,
                 onValueChange = { draft = draft.copy(scheduleEnabled = it) }),
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -276,8 +283,8 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
             }
             if (draft.scheduleEnabled) {
                 Text(if (draft.daysMask == 0) tr("예약할 요일을 선택해 주세요.") else tr("선택한 요일에만 예약이 적용됩니다."),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                Text(tr("선택한 요일에 시작하는 차단 시간입니다. 종료가 시작보다 이르면 다음 날까지 이어집니다."), fontSize = 12.sp)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Text(tr("선택한 요일에 시작하는 차단 시간입니다. 종료가 시작보다 이르면 다음 날까지 이어집니다."), style = MaterialTheme.typography.bodySmall)
                 listOf(tr("월"), tr("화"), tr("수"), tr("목"), tr("금"), tr("토"), tr("일")).chunked(4).forEachIndexed { row, days ->
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         days.forEachIndexed { column, label ->
@@ -326,7 +333,7 @@ private fun TimeFields(title: String, tag: String, value: DailyTimeInput, enable
                 enabled = enabled, singleLine = true)
         }
     }
-    Text(tr(hint), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+    Text(tr(hint), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
 }
 private fun DailyTimeInput.toSecondsTextOrNull() = runCatching { toSecondsText() }.getOrNull()
 @Composable private fun NumberField(label: String, value: String, enabled: Boolean = true, changed: (String) -> Unit) {
@@ -368,7 +375,7 @@ private fun CustomFocusDialog(onDismiss: () -> Unit, start: (Int) -> Unit) {
     AlertDialog(onDismissRequest = onDismiss, title = { Text(tr("몇 분 동안 집중할까요?")) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             NumberField(tr("집중 시간(분, 1~180)"), minutes) { input -> if (input.length <= 3 && input.all { it in '0'..'9' }) minutes = input }
-            if (minutes.isNotEmpty() && value == null) Text(tr("집중 시간은 1~180분으로 설정해 주세요."), color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+            if (minutes.isNotEmpty() && value == null) Text(tr("집중 시간은 1~180분으로 설정해 주세요."), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
     }, confirmButton = { TextButton(enabled = value != null, onClick = { value?.let(start) }) { Text(tr("다음")) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(tr("취소")) } })
@@ -379,14 +386,14 @@ internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Un
     val enabled = state.rules.filter { it.enabled }
     val active = enabled.filter { (it.focusUntilEpochMillis ?: 0) > nowEpoch }
     CardBox {
-        Text(tr("지금부터 집중"), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(tr("지금부터 집중"), style = MaterialTheme.typography.titleLarge)
         if (active.isNotEmpty()) {
             val remaining = ((active.maxOf { it.focusUntilEpochMillis!! } - nowEpoch + 999) / 1000).coerceAtLeast(0)
-            Text(duration(remaining), color = MaterialTheme.colorScheme.primary, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            Text(duration(remaining), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineLarge)
             val monitoring = state.permissions.usage && state.permissions.accessibility && state.health.connected
             Text(tr("%1\$d개 앱 · %2\$s · %3\$s", active.size, if (monitoring) tr("차단 중") else tr("제한 예정 · 감지 연결을 확인하세요"), active.joinToString(" · ") { it.appName }), color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedButton(onClick = stop, enabled = !state.focusBusy) { Text(tr("집중 종료")) }
-            Text(tr("집중이 끝나도 기존 시간·횟수·예약 제한은 유지됩니다."), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(tr("집중이 끝나도 기존 시간·횟수·예약 제한은 유지됩니다."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             Text(if (enabled.isEmpty()) tr("앱 제한 탭에서 집중할 때 차단할 앱을 먼저 설정하세요.")
                 else tr("제한이 켜진 %1\$d개 앱을 잠시 쉬고, 지금 할 일에 집중하세요.", enabled.size), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -403,7 +410,7 @@ internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Un
             }
             if (askMinutes) CustomFocusDialog(onDismiss = { askMinutes = false }) { minutes -> askMinutes = false; start(minutes) }
             if (enabled.isNotEmpty() && (!state.permissions.usage || !state.permissions.accessibility || !state.health.connected)) {
-                Text(tr("권한을 켜고 감지 연결을 확인하면 시작할 수 있습니다."), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(tr("권한을 켜고 감지 연결을 확인하면 시작할 수 있습니다."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -415,7 +422,7 @@ private fun WeekDots(days: List<Pair<LocalDate, DayResult>>) {
     val kept = days.count { it.second == DayResult.KEPT }
     val summary = tr("최근 7일 중 %1\$d일 한도를 지켰어요", kept)
     Column(Modifier.semantics(mergeDescendants = true) { contentDescription = summary }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(summary, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+        Text(summary, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             days.forEach { (date, result) ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -427,7 +434,7 @@ private fun WeekDots(days: List<Pair<LocalDate, DayResult>>) {
                     Box(Modifier.size(14.dp).then(if (result == DayResult.NO_RECORD) Modifier.border(1.5.dp, color, CircleShape)
                         else Modifier.background(color, CircleShape)))
                     Text(date.dayOfWeek.getDisplayName(java.time.format.TextStyle.NARROW, uiText().locale),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -445,7 +452,7 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             state.rules.map { it.toDomain() }, today)
     }
     CardBox {
-        Text(tr("최근 7일 돌아보기"), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(tr("최근 7일 돌아보기"), style = MaterialTheme.typography.titleLarge)
         WeekDots(dayResults(records.associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) },
             state.rules.map { it.toDomain() }, today))
         Text(tr("기록된 사용 %1\$s · %2\$d회 실행", duration(records.sumOf { it.usageMillis } / 1000), records.sumOf { it.opens }), color = MaterialTheme.colorScheme.primary)
@@ -453,22 +460,22 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             val date = today.minusDays(offset)
             val total = totals[date.toString()]
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(date.format(DateTimeFormatter.ofPattern("M/d")), modifier = Modifier.width(40.dp), fontSize = 12.sp)
+                Text(date.format(DateTimeFormatter.ofPattern("M/d")), modifier = Modifier.width(40.dp), style = MaterialTheme.typography.bodySmall)
                 // Today's bar carries the accent; earlier days recede so the comparison reads at a glance.
                 val bar = if (offset == 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .55f)
                 LinearProgressIndicator(progress = { ((total ?: 0L).toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.weight(1f),
                     color = bar, trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .12f))
-                Text(total?.let { duration(it / 1000) } ?: tr("기록 없음"), modifier = Modifier.width(100.dp), fontSize = 11.sp)
+                Text(total?.let { duration(it / 1000) } ?: tr("기록 없음"), modifier = Modifier.width(100.dp), style = MaterialTheme.typography.labelSmall)
             }
         }
         if (suggestion != null) {
             HorizontalDivider()
             Text("${suggestion.rule.appName} · ${tr(suggestion.recipe.title)}", fontWeight = FontWeight.Bold)
-            Text(tr("%1\$d일 기록에서 %2\$d회 실행, 실행당 기록 사용시간은 평균 %3\$s입니다.", suggestion.recordedDays, suggestion.opens, duration(suggestion.usageMillis / suggestion.opens / 1000)), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(tr("%1\$d일 기록에서 %2\$d회 실행, 실행당 기록 사용시간은 평균 %3\$s입니다.", suggestion.recordedDays, suggestion.opens, duration(suggestion.usageMillis / suggestion.opens / 1000)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedButton(onClick = { review(suggestion.rule.packageName, suggestion.recipe) }) { Text(tr("제안 살펴보기")) }
         } else {
-            Text(tr("3일 이상 기록을 모으면 사용 패턴에 맞는 제한을 제안합니다. 이미 설정한 제한도 고려합니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            Text(tr("3일 이상 기록을 모으면 사용 패턴에 맞는 제한을 제안합니다. 이미 설정한 제한도 고려합니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
-        Text(tr("선택한 앱의 기기 내 기록만 사용합니다. 감지 중단 중 기록은 빠질 수 있으며, 제안은 저장해야 적용됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+        Text(tr("선택한 앱의 기기 내 기록만 사용합니다. 감지 중단 중 기록은 빠질 수 있으며, 제안은 저장해야 적용됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
     }
 }

@@ -1,0 +1,33 @@
+# 히스토리 마스코트 교체·멘트 설정 가이드
+
+## 1. 캐릭터 이미지 끼우기 (코드 수정 불필요)
+`android/app/src/main/res/drawable-nodpi/` 에 아래 이름으로 PNG(투명 배경, 정사각형, 512×512 권장)를 넣으면
+앱이 시작할 때 자동으로 찾아 그려진 햄스터 대신 사용합니다. 파일이 없는 표정은 기본 햄스터로 그립니다.
+
+| 표정 | 파일 이름 | 언제 나오나 (선택 기간의 하루 평균 사용) |
+|---|---|---|
+| 졸림 | `mascot_sleepy.png` | 기록 없음 |
+| 여유 | `mascot_relaxed.png` | 1시간 미만 |
+| 보통 | `mascot_happy.png` | 1시간 ~ 2시간 30분 |
+| 놀람 | `mascot_surprised.png` | 2시간 30분 ~ 5시간 |
+| 어지러움 | `mascot_dizzy.png` | 5시간 이상 |
+
+- 파일 이름은 소문자·밑줄만 허용(Android 리소스 규칙). 확장자는 `.png` 또는 `.webp`.
+- 임계값은 `feature/Mascot.kt`의 `moodFor()`에서 바꿉니다. 단위 테스트 `MascotTest`가 함께 바뀌어야 합니다.
+- 이미지도 기본 햄스터처럼 숨쉬기·흔들림 애니메이션을 그대로 받습니다.
+
+## 2. 멘트 설정
+`feature/Mascot.kt`의 `MascotLines` 객체에 표정별 한국어 문장 목록이 있습니다.
+한 표정에 여러 문장을 넣으면 날짜 기준으로 돌아가며 보여 줍니다(같은 날에는 같은 문장).
+
+```kotlin
+Mood.HAPPY to listOf("딱 좋은 페이스예요.", "오늘도 균형 잡힌 하루!")
+```
+
+- 번역: `feature/TranslationKeys.kt`에 한국어 문장 → `R.string.…` 매핑을 추가하고 `res/values-*/ui_strings.xml` 5개 언어에 값을 넣습니다.
+  매핑이 없으면 한국어 문장이 그대로 표시됩니다(앱이 깨지지는 않음).
+- 문장은 한 줄(약 20자 이내)이 카드 폭에 맞습니다.
+
+## 3. 표정 미리보기
+에뮬레이터에서 `MascotUiTest`를 실행하면 표정 5종을 밝은/어두운 테마로 렌더링한 PNG가
+`/sdcard/Android/data/com.chronolock.app/files/screenshots/hamster-light.png`, `hamster-dark.png`에 저장됩니다.

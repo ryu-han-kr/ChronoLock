@@ -30,6 +30,16 @@ class HistoryUiTest {
             HistoryDailyEntity("app.b", today.minusDays(3).toString(), "Example B", 3_600_000, 3),
             HistoryDailyEntity("app.c", today.minusDays(20).toString(), "Example C", 3_600_000, 4),
             HistoryDailyEntity("app.d", today.minusDays(30).toString(), "Too old", 3_600_000, 8)))
+    @Test fun topApps_withoutRules_areSuggestedAsLimits() {
+        var picked: Pair<String, com.chronolock.domain.RuleRecipe>? = null
+        ui.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
+            HistoryPanel(state, today, {}, {}, suggest = { app, recipe -> picked = app to recipe })
+        } } }
+        ui.onNodeWithText("추천 앱 잠금").assertExists()
+        ui.onNodeWithText("제한 추가").performClick()
+        ui.runOnIdle { assertEquals("app.a", picked?.first); assertEquals(com.chronolock.domain.RuleRecipe.SHORT_BREAK, picked?.second) }
+    }
+
     @Test fun periodSwitch_changesTotals_andSurvivesRestoration() {
         val restoration = StateRestorationTester(ui)
         restoration.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) {

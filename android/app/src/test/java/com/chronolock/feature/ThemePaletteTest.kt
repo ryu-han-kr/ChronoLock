@@ -8,13 +8,19 @@ import org.junit.Test
 class ThemePaletteTest {
     @Test fun everyTheme_keepsTextReadableOnBothBackgrounds() {
         AppTheme.values().forEach { theme ->
-            listOf(theme.background, theme.surface).forEach { background ->
+            listOfNotNull(theme.background, theme.surface, theme.gradientEnd).forEach { background ->
                 listOf(theme.text, theme.muted, theme.primary).forEach { foreground ->
                     assertTrue("${theme.name}: insufficient text contrast", contrast(foreground, background) >= 4.5)
                 }
             }
             assertTrue("${theme.name}: insufficient button contrast", contrast(theme.primary, theme.onPrimary) >= 4.5)
         }
+    }
+    @Test fun catalogIds_areUniqueAndRoundTrip() {
+        val names = AppTheme.values().map { it.name }
+        assertEquals(names.size, names.toSet().size)
+        assertTrue(AppTheme.values().size > 50)
+        AppTheme.values().forEach { assertEquals(it, AppTheme.fromStored(it.name)) }
     }
     @Test fun missingOrUnknownPreference_fallsBackToDark() {
         assertEquals(AppTheme.DARK, AppTheme.fromStored(null))
