@@ -1,5 +1,6 @@
 package com.chronolock.feature
 
+import com.chronolock.billing.BillingStatus
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -57,6 +58,7 @@ internal fun ChronoScreen(
     privacyOptions: () -> Unit = {},
     buyAdFree: () -> Unit = {},
     manageSubscription: () -> Unit = {},
+    retryBilling: () -> Unit = {},
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -209,7 +211,7 @@ internal fun ChronoScreen(
                             }
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
-                                if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription) }
+                                if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { ThemePicker(state.theme, selectTheme) }
                                 item { PermissionCard(state, usagePermission, accessibilityPermission) }
@@ -251,7 +253,7 @@ private fun AccountCard(state: MainState, signIn: () -> Unit, signOut: () -> Uni
 }
 
 @Composable
-private fun AdsCard(state: MainState, privacyOptions: () -> Unit, buy: () -> Unit, manage: () -> Unit) {
+private fun AdsCard(state: MainState, privacyOptions: () -> Unit, buy: () -> Unit, manage: () -> Unit, retry: () -> Unit) {
     CardBox {
         Text(tr("광고"), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Text(if (state.adFree) tr("광고 없이 이용 중입니다.")
@@ -265,8 +267,14 @@ private fun AdsCard(state: MainState, privacyOptions: () -> Unit, buy: () -> Uni
                 Text(tr("Google Play 정기 결제입니다. Play 스토어에서 언제든 해지할 수 있습니다."),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             }
-            else -> Text(tr("광고 제거 상품을 불러오지 못했습니다. Play 스토어에서 설치한 앱인지 확인해 주세요."),
-                color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            state.billing.status == BillingStatus.CONNECTING ->
+                Text(tr("광고 제거 상품을 확인하는 중입니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            else -> {
+                Text(if (state.billing.status == BillingStatus.OFFLINE) tr("Google Play에 연결하지 못해 광고 제거 상품을 불러오지 못했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.")
+                    else tr("광고 제거 상품을 불러오지 못했습니다. Play 스토어에서 설치한 앱인지 확인해 주세요."),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                OutlinedButton(onClick = retry) { Text(tr("다시 시도")) }
+            }
         }
         if (state.ads.privacyOptionsRequired) OutlinedButton(onClick = privacyOptions) { Text(tr("광고 개인정보 설정")) }
     }

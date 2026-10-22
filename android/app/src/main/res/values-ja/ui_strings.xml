@@ -223,6 +223,9 @@
     <string name="buy_ad_free">"広告を削除 · 月 %1$s"</string>
     <string name="billing_terms">"Google Play の定期購入です。Play ストアでいつでも解約できます。"</string>
     <string name="billing_unavailable">"広告なしプランを読み込めませんでした。Play ストアからインストールしたアプリか確認してください。"</string>
+    <string name="billing_checking">"広告なしプランを確認しています…"</string>
+    <string name="billing_offline">"Google Play に接続できず、広告なしプランを読み込めませんでした。ネットワークを確認してもう一度お試しください。"</string>
+    <string name="billing_retry">"再試行"</string>
     <string name="error_billing">"決済画面を開けませんでした。しばらくしてから再度お試しください。"</string>
     <string name="rule_remaining">"今日の残り %1$s"</string>
     <string name="rule_limit_reached">"今日の上限に到達"</string>

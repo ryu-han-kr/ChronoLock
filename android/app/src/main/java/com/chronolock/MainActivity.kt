@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         billing.connect()
         setContent { ChronoApp(model, ::openPermissionSettings, ::signIn, { ads.showPrivacyOptions(this) },
             buyAdFree = { if (!billing.purchase(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") },
-            manageSubscription = { billing.manageSubscription(this) }) }
+            manageSubscription = { billing.manageSubscription(this) }, retryBilling = billing::connect) }
     }
     private fun signIn() = lifecycleScope.launch {
         try { GoogleSignIn.request(this@MainActivity, AuthConfig.fromBuild().googleWebClientId)?.let(model::signIn) }
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
             model.showError("Google 로그인을 시작하지 못했습니다. 기기에 Google 계정이 있는지 확인해 주세요.")
         }
     }
-    override fun onResume() { super.onResume(); model.refresh(); billing.refreshPurchases() }
+    override fun onResume() { super.onResume(); model.refresh(); billing.connect() }
     private fun openPermissionSettings(accessibility: Boolean) {
         val intent = if (accessibility) Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS) else
             Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))

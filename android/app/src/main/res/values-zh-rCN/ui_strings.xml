@@ -223,6 +223,9 @@
     <string name="buy_ad_free">"去除广告 · 每月 %1$s"</string>
     <string name="billing_terms">"通过 Google Play 按月订阅，可随时在 Play 商店取消。"</string>
     <string name="billing_unavailable">"无法加载无广告方案。请确认应用是从 Play 商店安装的。"</string>
+    <string name="billing_checking">"正在检查无广告方案…"</string>
+    <string name="billing_offline">"无法连接 Google Play，未能加载无广告方案。请检查网络后重试。"</string>
+    <string name="billing_retry">"重试"</string>
     <string name="error_billing">"无法打开付款页面，请稍后重试。"</string>
     <string name="rule_remaining">"今天剩余 %1$s"</string>
     <string name="rule_limit_reached">"已达今日上限"</string>

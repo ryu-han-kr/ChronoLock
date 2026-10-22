@@ -24,8 +24,31 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-/** [available] is false when Play is missing, the app is not installed from Play, or the product is not set up. */
-data class BillingState(val available: Boolean = false, val price: String? = null, val adFree: Boolean = false, val pending: Boolean = false)
+enum class BillingStatus {
+    /** Setup or product query still running; the UI should not show an error yet. */
+    CONNECTING,
+    /** Product loaded and purchasable. */
+    READY,
+    /** The Play Store service could not be reached (network down, service restarting); a retry may succeed. */
+    OFFLINE,
+    /** Play is missing, the app is not installed from Play, or the product is not set up. */
+    UNAVAILABLE;
+
+    companion object {
+        /** Maps a failed [BillingResult.getResponseCode] to the status shown to the user. */
+        fun fromFailure(responseCode: Int): BillingStatus = when (responseCode) {
+            BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE,
+            BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+            BillingClient.BillingResponseCode.NETWORK_ERROR -> OFFLINE
+            else -> UNAVAILABLE
+        }
+    }
+}
+
+data class BillingState(val status: BillingStatus = BillingStatus.CONNECTING, val price: String? = null,
+    val adFree: Boolean = false, val pending: Boolean = false) {
+    val available get() = status == BillingStatus.READY
+}
 
 /**
  * Google Play Billing for the ad-removal subscription. Entitlement is checked on the device from Play's purchase cache;
@@ -36,6 +59,7 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
     private val mutable = MutableStateFlow(BillingState())
     val state: StateFlow<BillingState> = mutable.asStateFlow()
     private var product: ProductDetails? = null
+    @Volatile private var connecting = false
 
     private val client = BillingClient.newBuilder(context)
         .setListener { result, _ -> if (result.ok) refreshPurchases() }
@@ -43,11 +67,24 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
         .enableAutoServiceReconnection()
         .build()
 
+    /** Connects on first call and retries after a failure; safe to call on every resume. */
     fun connect() {
-        if (client.isReady) { refreshPurchases(); return }
+        if (client.isReady) {
+            if (product == null) queryProduct()
+            refreshPurchases()
+            return
+        }
+        if (connecting) return
+        connecting = true
+        mutable.update { it.copy(status = BillingStatus.CONNECTING) }
         client.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
-                if (!result.ok) return
+                connecting = false
+                if (!result.ok) {
+                    android.util.Log.w("ChronoLock", "Billing setup failed: ${result.responseCode} ${result.debugMessage}")
+                    mutable.update { it.copy(status = BillingStatus.fromFailure(result.responseCode)) }
+                    return
+                }
                 queryProduct()
                 refreshPurchases()
             }
@@ -72,10 +109,17 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
     private fun queryProduct() {
         val params = QueryProductDetailsParams.newBuilder().setProductList(listOf(
             QueryProductDetailsParams.Product.newBuilder().setProductId(AdFreeProduct.ID).setProductType(BillingClient.ProductType.SUBS).build())).build()
+        mutable.update { it.copy(status = BillingStatus.CONNECTING) }
         client.queryProductDetailsAsync(params) { result, details ->
             product = details.productDetailsList.firstOrNull().takeIf { result.ok }
             val price = product?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
-            mutable.update { it.copy(available = product != null, price = price) }
+            if (product == null) android.util.Log.w("ChronoLock", "Billing product query: ${result.responseCode} ${result.debugMessage}")
+            val status = when {
+                product != null -> BillingStatus.READY
+                result.ok -> BillingStatus.UNAVAILABLE // Product not configured for this package.
+                else -> BillingStatus.fromFailure(result.responseCode)
+            }
+            mutable.update { it.copy(status = status, price = price) }
         }
     }
 

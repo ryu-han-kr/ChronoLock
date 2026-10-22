@@ -53,7 +53,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}, privacyOptions: () -> Unit = {},
-    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}) {
+    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}, retryBilling: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -93,7 +93,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                         focusActive = state.rules.any { rule -> rule.enabled && (rule.focusUntilEpochMillis ?: 0) > nowEpoch })
                 }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
-                privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription,
+                privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription, retryBilling = retryBilling,
             )
             editPackage?.let { appId ->
                 val saved = state.rules.firstOrNull { it.packageName == appId }

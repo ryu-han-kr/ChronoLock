@@ -223,6 +223,9 @@
     <string name="buy_ad_free">"Quitar anuncios · %1$s/mes"</string>
     <string name="billing_terms">"Se cobra mensualmente por Google Play. Cancela cuando quieras en Play Store."</string>
     <string name="billing_unavailable">"No se pudo cargar el plan sin anuncios. Comprueba que la app se instaló desde Play Store."</string>
+    <string name="billing_checking">"Comprobando el plan sin anuncios…"</string>
+    <string name="billing_offline">"No se pudo conectar con Google Play, así que no se cargó el plan sin anuncios. Comprueba la red e inténtalo de nuevo."</string>
+    <string name="billing_retry">"Reintentar"</string>
     <string name="error_billing">"No se pudo abrir la pantalla de pago. Inténtalo de nuevo en un momento."</string>
     <string name="rule_remaining">"Quedan %1$s hoy"</string>
     <string name="rule_limit_reached">"Límite diario alcanzado"</string>

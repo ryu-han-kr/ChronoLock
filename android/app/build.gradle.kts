@@ -18,8 +18,8 @@ android {
         applicationId = "com.chronolock.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.5.1"
+        versionCode = 7
+        versionName = "0.5.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         kapt { arguments { arg("room.schemaLocation", "$projectDir/schemas") } }
         // Service keys come from local.properties or -P; blank values keep login hidden and ads on test units.
