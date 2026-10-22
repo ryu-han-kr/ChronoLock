@@ -15,9 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.chronolock.data.AppLanguage
 
 internal val LocalLanguage = staticCompositionLocalOf { AppLanguage.KOREAN }
@@ -67,7 +65,7 @@ internal class UiText(private val context: Context) {
 @Composable
 internal fun LanguagePicker(selected: AppLanguage, select: (AppLanguage) -> Unit) {
     CardBox {
-        Text(tr("언어"), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(tr("언어"), style = MaterialTheme.typography.titleLarge)
         Text(tr("화면 언어를 선택하세요. 다음 실행에도 유지됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Column(Modifier.selectableGroup()) {
             AppLanguage.values().forEach { language ->

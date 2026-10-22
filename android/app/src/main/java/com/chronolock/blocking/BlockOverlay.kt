@@ -3,13 +3,13 @@ package com.chronolock.blocking
 import android.accessibilityservice.AccessibilityService
 import android.content.res.ColorStateList
 import android.graphics.PixelFormat
-import android.graphics.Typeface
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.chronolock.R
 import com.chronolock.feature.UiText
 import com.chronolock.feature.forLanguage
 import com.chronolock.data.AppLanguage
@@ -71,13 +71,14 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 isFocusableInTouchMode = true
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             }
-            fun label(text: String, size: Float, color: Int) = TextView(service).apply {
+            fun label(text: String, size: Float, color: Int, font: Int = R.font.pretendard_regular) = TextView(service).apply {
                 this.text = text; textSize = size; setTextColor(color); gravity = Gravity.CENTER
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(service, font)
                 setPadding(0, dp(12), 0, dp(12))
                 content.addView(this, LinearLayout.LayoutParams(-1, -2))
             }
-            label("ChronoLock", 14f, theme.primary.toInt())
-            heading = label("", 28f, theme.text.toInt()).apply { typeface = Typeface.DEFAULT_BOLD }
+            label("ChronoLock", 14f, theme.primary.toInt(), font = R.font.pretendard_medium)
+            heading = label("", 28f, theme.text.toInt(), font = R.font.pretendard_bold)
             detail = label("", 17f, theme.muted.toInt())
             label(text("잠깐 멈추고, 지금 하고 싶은 일을 선택하세요."), 15f, theme.muted.toInt())
             content.addView(Button(service).apply { text = text("홈 화면으로 돌아가기"); setOnClickListener { onHome() } }, LinearLayout.LayoutParams(-1, dp(56)))
