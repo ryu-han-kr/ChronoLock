@@ -18,13 +18,15 @@
 
 ## 스토어 스크린샷
 
-권장 순서:
-1. `screenshot-today-ko.png` — 오늘 사용량과 차단 횟수
-2. `screenshot-limits-ko.png` — Chrome 하루 1분 제한
-3. `screenshot-blocked-ko.png` — 실제 한도 도달 차단
-4. `screenshot-apps-ko.png` — 앱 제한 전체 앱 목록 (2026-10-21 시연 영상 100초 프레임 추출, 1080×1920)
+권장 순서(2026-10-22 0.5.1 UI로 전부 교체, 에뮬레이터 1080×1920 실제 화면, 24비트 PNG):
+1. `screenshot-today-ko.png` — 오늘 사용량 1시간 7분, 허용 15회·차단 2회, 집중 시작 버튼
+2. `screenshot-limits-ko.png` — 내 앱 제한 카드(Chrome·Photos 진행 바, 남은 시간, 제한 토글)
+3. `screenshot-blocked-ko.png` — YouTube 일일 한도 도달 차단 화면
+4. `screenshot-editor-ko.png` — 규칙 편집 시트(집중 레시피 3종, 하루 허용 시간 입력)
+5. `screenshot-weekly-ko.png` — 최근 7일 돌아보기(지킨 날 점, 일별 막대, 제안)
+6. `screenshot-apps-ko.png` — 앱 제한 탭 전체 앱 목록(실제 앱 아이콘)
 
-네 장 모두 1080×1920 실제 앱 화면이며 이미지 확인 완료.
-2026-10-21 Play Console 기본 스토어 등록정보에 4장 업로드·임시보관함 저장(새로고침 후 4/8 확인).
-2026-10-21 등록정보 리뷰 단계 저장 완료(AI 애셋 선언: 라벨 지정 안 함 — 아이콘·그래픽은 스크립트 렌더링, 스크린샷은 실제 화면).
+캡처 방법: `.tools/avd/ChronoLock_Test`(wm size 1080x1920 override), 상태 표시줄은 SystemUI demo 모드(9:30·배터리 100%),
+광고 배너는 비행기 모드에서 앱을 재시작해 미로드, 규칙·7일 사용 데이터는 `databases/chronolock.db`에 시드(스크린샷 전용 테스트 데이터).
+2026-10-21 Play Console 기본 스토어 등록정보에는 이전 0.2.0 UI 4장(today/blocked/limits/apps)이 저장돼 있음 → 위 6장으로 교체 필요(미수행).
 검토 전송은 미실행. 최종 심사 적합성 확인 미완료.
