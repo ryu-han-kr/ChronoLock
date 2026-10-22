@@ -14,6 +14,7 @@ import android.os.Process
 import android.os.SystemClock
 import android.provider.Settings
 import android.telecom.TelecomManager
+import android.view.inputmethod.InputMethodManager
 import com.chronolock.domain.ClockReading
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.ZoneId
@@ -47,8 +48,27 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext private val con
     fun interactive(): Boolean = context.getSystemService(PowerManager::class.java).isInteractive &&
         !context.getSystemService(KeyguardManager::class.java).isKeyguardLocked
 
+    // Package sets are rebuilt at most once a minute: every window event used to cost three PackageManager
+    // queries and a Telecom binder call on the main thread.
+    private var cachedAt = 0L
+    private var cachedSafety: Set<String> = emptySet()
+    private var cachedTransient: Set<String> = emptySet()
+
+    @Synchronized private fun refreshPackageSets() {
+        if (cachedAt != 0L && SystemClock.elapsedRealtime() - cachedAt < 60_000) return
+        cachedSafety = querySafetyPackages()
+        cachedTransient = queryTransientPackages()
+        cachedAt = SystemClock.elapsedRealtime()
+    }
+
+    /** Home, settings, dialer and this app: leaving to one of these ends the session. Never offered as limit targets. */
+    fun safetyPackages(): Set<String> { refreshPackageSets(); return cachedSafety }
+
+    /** Keyboards, permission prompts and system UI: drawn over the current app without ending its session. */
+    fun transientPackages(): Set<String> { refreshPackageSets(); return cachedTransient }
+
     @Suppress("DEPRECATION")
-    fun safetyPackages(): Set<String> = buildSet {
+    private fun querySafetyPackages(): Set<String> = buildSet {
         add(context.packageName)
         addAll(listOf("com.android.settings", "com.android.systemui", "com.android.permissioncontroller", "com.google.android.permissioncontroller"))
         val pm = context.packageManager
@@ -56,6 +76,11 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext private val con
         pm.queryIntentActivities(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:")), 0).forEach { add(it.activityInfo.packageName) }
         context.getSystemService(TelecomManager::class.java).defaultDialerPackage?.let(::add)
         pm.resolveActivity(Intent(Settings.ACTION_SETTINGS), 0)?.activityInfo?.packageName?.let(::add)
+    }
+
+    private fun queryTransientPackages(): Set<String> = buildSet {
+        addAll(listOf("com.android.systemui", "com.android.permissioncontroller", "com.google.android.permissioncontroller"))
+        runCatching { context.getSystemService(InputMethodManager::class.java).enabledInputMethodList.forEach { add(it.packageName) } }
     }
 
     @Suppress("DEPRECATION")
@@ -66,8 +91,8 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext private val con
             .distinctBy { it.packageName }.filterNot { it.packageName in safe }.sortedBy { it.label.lowercase() }
     }
 
-    fun meaningfulPackage(packageName: String): Boolean = packageName in safetyPackages() ||
-        context.packageManager.getLaunchIntentForPackage(packageName) != null
+    fun windowKind(packageName: String): WindowKind =
+        classifyWindow(packageName, transientPackages(), safetyPackages(), context.packageManager.getLaunchIntentForPackage(packageName) != null)
 
     /** Rebuild foreground duration from events, not day-sized queryUsageStats buckets. */
     suspend fun recoverUsage(sinceEpochMillis: Long? = null): UsageRecovery = withContext(Dispatchers.IO) {

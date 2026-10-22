@@ -48,10 +48,10 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
                 FilterChip(selected = days == count, onClick = { days = count }, label = { Text(label) })
             }
         }
-        Text(if (days == 1) today.toString() else "$first ~ $today", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(if (days == 1) dateText(today, "yMd") else "${dateText(first, "yMd")} ~ ${dateText(today, "yMd")}", color = MaterialTheme.colorScheme.onSurfaceVariant)
         val earliest = remember(state.history) { state.history.minOfOrNull { it.date } }
         if (days > 1 && earliest != null && earliest > first.toString()) Text(
-            tr("%1\$s부터 모은 기록입니다. 기기는 그 이전 사용 이벤트를 보관하지 않아 기간 합계가 실제보다 적을 수 있습니다.", earliest),
+            tr("%1\$s부터 모은 기록입니다. 기기는 그 이전 사용 이벤트를 보관하지 않아 기간 합계가 실제보다 적을 수 있습니다.", dateText(LocalDate.parse(earliest), "yMd")),
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         if (!state.permissions.usage) CardBox {
             Text(tr("사용 기록을 시작하세요"), style = MaterialTheme.typography.titleLarge)
@@ -77,7 +77,7 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
             Text(tr("실행 횟수는 앱 화면으로 들어온 횟수입니다. 같은 앱 안의 빠른 화면 전환은 한 번으로 계산합니다."),
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             if (state.historyUpdatedAt > 0) Text(tr("최근 갱신: %1\$s", Instant.ofEpochMilli(state.historyUpdatedAt)
-                .atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))), style = MaterialTheme.typography.bodySmall)
+                .atZone(ZoneId.systemDefault()).toLocalDateTime().let { dateTimeText(it) }), style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = refresh, enabled = state.permissions.usage && !state.historyBusy) {
                 Text(tr(if (state.historyBusy) "갱신 중…" else "새로고침"))
             }
@@ -92,9 +92,9 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
                 val totals = records.groupBy { it.date }
                 val maximum = (totals.values.maxOfOrNull { rows -> rows.sumOf { it.usageMillis } } ?: 1).coerceAtLeast(1)
                 (0 until days).forEach { offset ->
-                    val date = first.plusDays(offset.toLong()).toString()
-                    val rows = totals[date].orEmpty()
-                    Text(date, style = MaterialTheme.typography.bodySmall)
+                    val day = first.plusDays(offset.toLong())
+                    val rows = totals[day.toString()].orEmpty()
+                    Text(dateText(day), style = MaterialTheme.typography.bodySmall)
                     LinearProgressIndicator(progress = { (rows.sumOf { it.usageMillis }.toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                     Text(if (rows.isEmpty()) tr("기록 없음") else tr("%1\$s · %2\$d회 실행", duration(rows.sumOf { it.usageMillis } / 1000), rows.sumOf { it.opens }), style = MaterialTheme.typography.bodySmall)
                 }

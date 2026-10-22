@@ -20,7 +20,7 @@ class HistoryJobService : JobService() {
         work = scope.launch {
             val retry = try { history.collect(); false }
                 catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { true }
+                catch (error: Exception) { android.util.Log.w("ChronoLock", "History collection failed; the job will retry", error); true }
             jobFinished(params, retry)
         }
         return true

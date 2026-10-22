@@ -28,8 +28,15 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"${setting("chronolock.supabaseUrl")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${setting("chronolock.supabaseAnonKey")}\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${setting("chronolock.googleWebClientId")}\"")
-        buildConfigField("String", "ADMOB_BANNER_ID", "\"${setting("chronolock.admobBannerId")}\"")
-        manifestPlaceholders["admobAppId"] = setting("chronolock.admobAppId").ifBlank { "ca-app-pub-3940256099942544~3347511713" }
+        val admobAppId = setting("chronolock.admobAppId")
+        val admobBannerId = setting("chronolock.admobBannerId")
+        // Both or neither: a live banner under the sample app ID violates AdMob policy, and a real app ID without a
+        // banner declares the advertising ID for ads that never show (Data safety mismatch).
+        check(admobAppId.isBlank() == admobBannerId.isBlank()) {
+            "Set both chronolock.admobAppId and chronolock.admobBannerId in local.properties, or neither."
+        }
+        buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
+        manifestPlaceholders["admobAppId"] = admobAppId.ifBlank { "ca-app-pub-3940256099942544~3347511713" }
     }
     buildFeatures { compose = true; buildConfig = true }
     // Upload key for Play App Signing lives outside the repo; local.properties points to it.

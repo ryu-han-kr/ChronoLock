@@ -57,14 +57,16 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
-    var permissionDialog by remember { mutableStateOf<Boolean?>(null) }
+    var permissionDialog by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var themeGallery by rememberSaveable { mutableStateOf(false) }
-    var confirmClear by remember { mutableStateOf(false) }
-    var confirmDeleteAccount by remember { mutableStateOf(false) }
+    var confirmClear by rememberSaveable { mutableStateOf(false) }
+    var confirmDeleteAccount by rememberSaveable { mutableStateOf(false) }
     var confirmFocus by rememberSaveable { mutableStateOf<Int?>(null) }
     var today by remember { mutableStateOf(LocalDate.now()) }
     var nowEpoch by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) { while (true) { today = LocalDate.now(); nowEpoch = System.currentTimeMillis(); delay(1000) } }
+    val focusActive = state.rules.any { rule -> rule.enabled && (rule.focusUntilEpochMillis ?: 0) > nowEpoch }
+    // A one-second tick recomposes the whole screen; only the focus countdown needs it. Otherwise refresh the date each minute.
+    LaunchedEffect(focusActive) { while (true) { today = LocalDate.now(); nowEpoch = System.currentTimeMillis(); delay(if (focusActive) 1_000 else 60_000) } }
     val snackbar = remember { SnackbarHostState() }
     LocalizedApp(state.language) {
         val text = uiText()
@@ -91,7 +93,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 selectLanguage = model::selectLanguage, refreshHistory = model::refreshHistory,
                 banner = state.ads.takeIf {
                     AdPolicy.showBanner(tab, it.configured, state.adFree, it.canRequestAds,
-                        focusActive = state.rules.any { rule -> rule.enabled && (rule.focusUntilEpochMillis ?: 0) > nowEpoch })
+                        focusActive = focusActive)
                 }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
                 privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription, retryBilling = retryBilling,
@@ -204,9 +206,11 @@ private val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
 @Composable
 internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> Unit,
     onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null) {
-    var draft by rememberSaveable(stateSaver = RuleDraftSaver) { mutableStateOf(
-        if (saved != null && initialRecipe != null) suggestedDraft(saved.toDomain(), initialRecipe)
-        else saved?.toDomain()?.let(RuleDraft::from) ?: RuleDraft()) }
+    var draft by rememberSaveable(stateSaver = RuleDraftSaver) { mutableStateOf(when {
+        saved != null && initialRecipe != null -> suggestedDraft(saved.toDomain(), initialRecipe)
+        initialRecipe != null -> initialRecipe.draft // Suggested from history for an app that has no rule yet.
+        else -> saved?.toDomain()?.let(RuleDraft::from) ?: RuleDraft()
+    }) }
     var dailyTime by rememberSaveable(stateSaver = DailyTimeInputSaver) {
         mutableStateOf(DailyTimeInput.fromSeconds(draft.daily))
     }
@@ -216,7 +220,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
     var cooldownTime by rememberSaveable(stateSaver = DailyTimeInputSaver) {
         mutableStateOf(DailyTimeInput.fromSeconds(draft.cooldown))
     }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by rememberSaveable { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
     val editorScroll = rememberScrollState()
     LaunchedEffect(error) { if (error != null) editorScroll.animateScrollTo(editorScroll.maxValue) }
@@ -245,9 +249,10 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
         HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .15f))
         Column(Modifier.verticalScroll(editorScroll).padding(horizontal = 24.dp, vertical = 16.dp).navigationBarsPadding().imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().toggleable(value = draft.enabled, enabled = !saving, role = Role.Switch) { draft = draft.copy(enabled = it) },
+                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(tr("제한 사용"))
-                Switch(checked = draft.enabled, onCheckedChange = { draft = draft.copy(enabled = it) }, enabled = !saving)
+                Switch(checked = draft.enabled, onCheckedChange = null, enabled = !saving)
             }
             Text(tr("집중 레시피"), fontWeight = FontWeight.Bold)
             if (initialRecipe != null) Text(tr("기록 기반 제안이 준비됐습니다. 기존 제한은 유지하고 비어 있는 항목만 채웠습니다. 확인 후 저장하세요."), style = MaterialTheme.typography.bodySmall)
@@ -460,7 +465,7 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             val date = today.minusDays(offset)
             val total = totals[date.toString()]
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(date.format(DateTimeFormatter.ofPattern("M/d")), modifier = Modifier.width(40.dp), style = MaterialTheme.typography.bodySmall)
+                Text(dateText(date), modifier = Modifier.width(40.dp), style = MaterialTheme.typography.bodySmall)
                 // Today's bar carries the accent; earlier days recede so the comparison reads at a glance.
                 val bar = if (offset == 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .55f)
                 LinearProgressIndicator(progress = { ((total ?: 0L).toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.weight(1f),

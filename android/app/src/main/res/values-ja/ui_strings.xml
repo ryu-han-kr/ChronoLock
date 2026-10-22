@@ -212,6 +212,10 @@
     <string name="mascot_happy">"ちょうどいいペースです。"</string>
     <string name="mascot_surprised">"あれ、思ったより使っています！"</string>
     <string name="mascot_dizzy">"目が回る…少し休みましょう。"</string>
+    <string name="mascot_relaxed_2">"スマホより一日のほうが長かったですね。"</string>
+    <string name="mascot_happy_2">"今日もバランスの取れた一日！"</string>
+    <string name="mascot_surprised_2">"ほっぺがはち切れそう。ちょっと待って！"</string>
+    <string name="mascot_dizzy_2">"今日はスマホを置く時間です。"</string>
     <string name="accessibility_steps">"設定が開いたら ①「インストール済みアプリ」（または「ダウンロードしたアプリ」）で ChronoLock をタップ ②「ChronoLock を使用」をオン ③「許可」をタップ。端末により名称や位置が異なります。"</string>
     <string name="accessibility_hint">"ユーザー補助 → インストール済みアプリ → ChronoLock → オン → 許可"</string>
     <string name="recommend_title">"おすすめのアプリ制限"</string>
@@ -288,6 +292,7 @@
     <string name="manage_subscription">"サブスクリプション管理"</string>
     <string name="billing_pending">"支払いの確認を待っています。完了すると広告が消えます。"</string>
     <string name="buy_ad_free">"広告を削除 · 月 %1$s"</string>
+    <string name="buy_ad_free_no_price">"広告を削除"</string>
     <string name="billing_terms">"Google Play の定期購入です。Play ストアでいつでも解約できます。"</string>
     <string name="billing_unavailable">"広告なしプランを読み込めませんでした。Play ストアからインストールしたアプリか確認してください。"</string>
     <string name="billing_checking">"広告なしプランを確認しています…"</string>

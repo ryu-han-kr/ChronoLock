@@ -1,6 +1,8 @@
 package com.chronolock.account
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -38,14 +40,20 @@ class AccountRepository @Inject constructor(@ApplicationContext private val cont
     /** Ends the session locally even when the server cannot be reached; the refresh token is discarded. */
     suspend fun signOut() = mutex.withLock {
         val session = stored()
-        try { if (session != null) auth.signOut(validAccessToken(session)) } finally { context.account.edit { it.clear() } }
+        try { if (session != null) auth.signOut(validAccessToken(session)) } finally { clearLocal() }
     }
 
     /** Deletes the Supabase user, then the local session. Local rules and history stay on the device. */
     suspend fun deleteAccount() = mutex.withLock {
         val session = checkNotNull(stored()) { "Not signed in" }
         auth.deleteAccount(validAccessToken(session))
+        clearLocal()
+    }
+
+    /** Drops the stored session and Credential Manager's remembered account, so the next sign-in shows the chooser again. */
+    private suspend fun clearLocal() {
         context.account.edit { it.clear() }
+        runCatching { CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest()) }
     }
 
     private suspend fun validAccessToken(session: AuthSession): String =

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,7 +44,8 @@ class AdsController @Inject constructor() {
         if (bannerId.isBlank()) return
         val consent = UserMessagingPlatform.getConsentInformation(activity)
         consent.requestConsentInfoUpdate(activity, ConsentRequestParameters.Builder().build(), {
-            UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { update(activity, consent) }
+            // The activity may have been rotated away while the request was in flight; the next resume asks again.
+            if (!activity.isDestroyed) UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { update(activity, consent) }
         }, { update(activity, consent) })
         update(activity, consent) // Consent from a previous launch allows ads before the update returns.
     }
@@ -69,9 +71,10 @@ fun BannerAd(unitId: String) {
             AdView(context).apply {
                 adUnitId = unitId
                 setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width))
-                loadAd(AdRequest.Builder().build())
             }
         }
+        // Request outside composition so a discarded composition never fires a billable ad request.
+        LaunchedEffect(view) { view.loadAd(AdRequest.Builder().build()) }
         DisposableEffect(view) { onDispose { view.destroy() } }
         AndroidView(factory = { view }, modifier = Modifier.fillMaxWidth())
     }

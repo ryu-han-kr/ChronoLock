@@ -56,13 +56,16 @@ data class BillingState(val status: BillingStatus = BillingStatus.CONNECTING, va
  */
 @Singleton
 class BillingController @Inject constructor(@ApplicationContext private val context: Context) {
-    private val mutable = MutableStateFlow(BillingState())
+    // The last entitlement Play confirmed, so a subscriber never sees a banner while the purchase query is in flight.
+    private val prefs = context.getSharedPreferences("billing", Context.MODE_PRIVATE)
+    private val mutable = MutableStateFlow(BillingState(adFree = prefs.getBoolean(KEY_AD_FREE, false)))
     val state: StateFlow<BillingState> = mutable.asStateFlow()
-    private var product: ProductDetails? = null
+    @Volatile private var product: ProductDetails? = null
     @Volatile private var connecting = false
 
     private val client = BillingClient.newBuilder(context)
-        .setListener { result, _ -> if (result.ok) refreshPurchases() }
+        // ITEM_ALREADY_OWNED: subscribed on another device; the purchase query picks the entitlement up.
+        .setListener { result, _ -> if (result.ok || result.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) refreshPurchases() }
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .enableAutoServiceReconnection()
         .build()
@@ -95,7 +98,7 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
     /** Returns false when the purchase sheet could not be opened. */
     fun purchase(activity: Activity): Boolean {
         val details = product ?: return false
-        val offer = details.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: return false
+        val offer = details.baseOffer()?.offerToken ?: return false
         val params = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offer).build())).build()
         return client.launchBillingFlow(activity, params).ok
@@ -112,7 +115,7 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
         mutable.update { it.copy(status = BillingStatus.CONNECTING) }
         client.queryProductDetailsAsync(params) { result, details ->
             product = details.productDetailsList.firstOrNull().takeIf { result.ok }
-            val price = product?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
+            val price = product?.baseOffer()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
             if (product == null) android.util.Log.w("ChronoLock", "Billing product query: ${result.responseCode} ${result.debugMessage}")
             val status = when {
                 product != null -> BillingStatus.READY
@@ -128,13 +131,23 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { result, purchases ->
             if (!result.ok) return@queryPurchasesAsync
             val store = purchases.map { StorePurchase(it.products, it.purchaseState == Purchase.PurchaseState.PURCHASED, it.isAcknowledged, it.purchaseToken) }
-            mutable.update { it.copy(adFree = AdFreeProduct.entitled(store),
+            val adFree = AdFreeProduct.entitled(store)
+            prefs.edit().putBoolean(KEY_AD_FREE, adFree).apply()
+            mutable.update { it.copy(adFree = adFree,
                 pending = purchases.any { p -> AdFreeProduct.ID in p.products && p.purchaseState == Purchase.PurchaseState.PENDING }) }
             AdFreeProduct.toAcknowledge(store).forEach { purchase ->
-                client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.token).build()) {}
+                client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.token).build()) { ack ->
+                    // Unacknowledged purchases are refunded by Play after three days; the next refresh retries.
+                    if (!ack.ok) android.util.Log.w("ChronoLock", "Billing acknowledge failed: ${ack.responseCode} ${ack.debugMessage}")
+                }
             }
         }
     }
 
+    /** The base plan (no offer id) when the console also lists intro or promo offers, else the first offer. */
+    private fun ProductDetails.baseOffer() = subscriptionOfferDetails?.let { offers -> offers.firstOrNull { it.offerId == null } ?: offers.firstOrNull() }
+
     private val BillingResult.ok get() = responseCode == BillingClient.BillingResponseCode.OK
+
+    private companion object { const val KEY_AD_FREE = "ad_free" }
 }
