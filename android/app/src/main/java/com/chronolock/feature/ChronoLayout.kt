@@ -208,7 +208,7 @@ internal fun ChronoScreen(
                                 }
                             }
                             2 -> {
-                                item(span = { GridItemSpan(maxLineSpan) }) { HistoryPanel(state, today, refreshHistory, usagePermission) }
+                                item(span = { GridItemSpan(maxLineSpan) }) { HistoryPanel(state, today, refreshHistory, usagePermission, suggest = { app, recipe -> edit(app, recipe) }) }
                             }
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }

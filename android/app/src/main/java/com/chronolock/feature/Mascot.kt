@@ -1,5 +1,6 @@
 package com.chronolock.feature
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.EaseInOutSine
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -8,26 +9,33 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import java.time.LocalDate
 
-/** How the hamster feels about the usage it is looking at. */
+/** How the mascot feels about the usage it is looking at. */
 enum class Mood { SLEEPY, RELAXED, HAPPY, SURPRISED, DIZZY }
 
 private const val HOUR = 3_600_000L
@@ -41,13 +49,54 @@ fun moodFor(averageMillisPerDay: Long, hasRecords: Boolean): Mood = when {
     else -> Mood.DIZZY
 }
 
-/** What the hamster says; Korean source strings, translated through tr(). */
-internal val Mood.message: String get() = when (this) {
-    Mood.SLEEPY -> "아직 기록이 없어요. 쿨쿨…"
-    Mood.RELAXED -> "여유로운 하루네요. 이대로만!"
-    Mood.HAPPY -> "딱 좋은 페이스예요."
-    Mood.SURPRISED -> "어, 생각보다 많이 썼어요!"
-    Mood.DIZZY -> "눈이 빙글빙글… 잠깐 쉬어요."
+/**
+ * What the mascot says, per mood. Korean source strings; each goes through tr() so a line without a translation
+ * still shows in Korean. Several lines per mood rotate by date. Edit here (see docs/MASCOT.md).
+ */
+object MascotLines {
+    val lines: Map<Mood, List<String>> = mapOf(
+        Mood.SLEEPY to listOf("아직 기록이 없어요. 쿨쿨…"),
+        Mood.RELAXED to listOf("여유로운 하루네요. 이대로만!", "폰보다 하루가 더 길었네요."),
+        Mood.HAPPY to listOf("딱 좋은 페이스예요.", "오늘도 균형 잡힌 하루!"),
+        Mood.SURPRISED to listOf("어, 생각보다 많이 썼어요!", "볼이 터질 것 같아요. 잠깐만요!"),
+        Mood.DIZZY to listOf("눈이 빙글빙글… 잠깐 쉬어요.", "오늘은 폰을 내려놓을 시간이에요."),
+    )
+}
+
+/** The first line of the mood; stable, used by tests and content descriptions. */
+internal val Mood.message: String get() = MascotLines.lines.getValue(this).first()
+
+/** The line for [day]: rotates through the mood's lines so it changes across days but not within one. */
+internal fun Mood.line(day: LocalDate): String {
+    val options = MascotLines.lines.getValue(this)
+    return options[day.toEpochDay().mod(options.size)]
+}
+
+/**
+ * The history mascot. Draws a PNG named `mascot_<mood>` from res/drawable when one exists (artist-supplied), and the
+ * built-in hamster otherwise. Either way it breathes, and wobbles when dizzy.
+ */
+@Composable
+internal fun Mascot(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp) {
+    val context = LocalContext.current
+    @SuppressLint("DiscouragedApi")
+    val artwork = remember(mood) {
+        context.resources.getIdentifier("mascot_${mood.name.lowercase()}", "drawable", context.packageName).takeIf { it != 0 }
+    }
+    val transition = rememberInfiniteTransition(label = "mascot")
+    val breath by transition.animateFloat(1f, 1.035f,
+        infiniteRepeatable(tween(1600, easing = EaseInOutSine), RepeatMode.Reverse), label = "breath")
+    val wobble by transition.animateFloat(-7f, 7f,
+        infiniteRepeatable(tween(900, easing = EaseInOutSine), RepeatMode.Reverse), label = "wobble")
+    val description = tr(mood.message)
+    val tagged = modifier.size(size).semantics { contentDescription = description }.testTag("hamster-${mood.name.lowercase()}")
+    if (artwork != null) {
+        Image(painterResource(artwork), contentDescription = null, modifier = tagged.graphicsLayer {
+            scaleX = breath; scaleY = breath
+            rotationZ = if (mood == Mood.DIZZY) wobble else 0f
+            transformOrigin = TransformOrigin(.5f, .95f)
+        })
+    } else Hamster(mood, tagged, breath, wobble)
 }
 
 // The hamster keeps its own fur so it reads as the same character on every theme.
@@ -58,16 +107,12 @@ private val Pink = Color(0xFFF3A4AA)
 private val Ink = Color(0xFF3B2B22)
 
 /**
- * A round hamster drawn with primitives: ears, a blobby body, puffed cheek pouches, paws, whiskers and a face that
- * changes with [mood]. It breathes slowly, blinks when its eyes are open and wobbles when dizzy.
+ * The built-in hamster drawn with primitives: ears, a blobby body, puffed cheek pouches, paws, whiskers and a face
+ * that changes with [mood]. Blinks when its eyes are open.
  */
 @Composable
-internal fun Hamster(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp) {
+private fun Hamster(mood: Mood, modifier: Modifier, breath: Float, wobble: Float) {
     val transition = rememberInfiniteTransition(label = "hamster")
-    val breath by transition.animateFloat(1f, 1.035f,
-        infiniteRepeatable(tween(1600, easing = EaseInOutSine), RepeatMode.Reverse), label = "breath")
-    val wobble by transition.animateFloat(-7f, 7f,
-        infiniteRepeatable(tween(900, easing = EaseInOutSine), RepeatMode.Reverse), label = "wobble")
     val blink by transition.animateFloat(1f, 1f, infiniteRepeatable(keyframes {
         durationMillis = 4200
         1f at 0
@@ -75,8 +120,7 @@ internal fun Hamster(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp
         .12f at 3900
         1f at 4000
     }), label = "blink")
-    val description = tr(mood.message)
-    Canvas(modifier.size(size).semantics { contentDescription = description }.testTag("hamster-${mood.name.lowercase()}")) {
+    Canvas(modifier) {
         val u = this.size.width / 100f
         fun o(x: Float, y: Float) = Offset(x * u, y * u)
         rotate(if (mood == Mood.DIZZY) wobble else 0f, pivot = o(50f, 92f)) {

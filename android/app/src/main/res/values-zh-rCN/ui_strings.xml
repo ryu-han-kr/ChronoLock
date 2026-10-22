@@ -214,6 +214,9 @@
     <string name="mascot_dizzy">"头晕了……休息一下吧。"</string>
     <string name="accessibility_steps">"打开设置后：① 在“已安装的应用”（或“已下载的应用”）中点按 ChronoLock，② 开启“使用 ChronoLock”，③ 点按“允许”。不同设备的名称和位置可能不同。"</string>
     <string name="accessibility_hint">"无障碍 → 已安装的应用 → ChronoLock → 开启 → 允许"</string>
+    <string name="recommend_title">"推荐的应用限制"</string>
+    <string name="recommend_hint">"这段时间常用但尚未设限的应用。选择一个方案并保存即可生效。"</string>
+    <string name="recommend_add">"添加限制"</string>
     <string name="accessibility_title">"关于无障碍权限"</string>
     <string name="usage_title">"关于使用情况访问"</string>
     <string name="accessibility_disclosure">"ChronoLock通过应用切换事件识别当前应用，并根据您设置的限制显示拦截画面。不会读取屏幕文字、密码或输入内容。所选应用的包名及使用和拦截记录仅保存在本机，不会传输。可随时在Android设置中撤销权限。如同意，请在下一设置页面手动启用ChronoLock。"</string>

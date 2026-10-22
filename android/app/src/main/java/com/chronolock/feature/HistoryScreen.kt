@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.chronolock.domain.RuleRecipe
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.Instant
@@ -17,8 +19,16 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+/** Picks a starting recipe for an app from how it was used: many short visits call for fewer opens, otherwise short sessions with a pause. */
+internal fun recommendRecipe(usageMillis: Long, opens: Int, recordedDays: Int): RuleRecipe {
+    val sessionMillis = if (opens > 0) usageMillis / opens else usageMillis
+    val opensPerDay = if (recordedDays > 0) opens.toDouble() / recordedDays else opens.toDouble()
+    return if (opensPerDay >= 8 && sessionMillis < 3 * 60_000L) RuleRecipe.LESS_CHECKING else RuleRecipe.SHORT_BREAK
+}
+
 @Composable
-internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Unit, permission: () -> Unit) {
+internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Unit, permission: () -> Unit,
+    suggest: (String, RuleRecipe) -> Unit = { _, _ -> }) {
     var days by rememberSaveable { mutableIntStateOf(1) }
     var byOpens by rememberSaveable { mutableStateOf(false) }
     var showDays by rememberSaveable { mutableStateOf(false) }
@@ -55,10 +65,10 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(tr("총 사용 시간"), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(duration(total / 1000), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
-                    Text(tr(mood.message), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(duration(total / 1000), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(tr(mood.line(today)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                 }
-                Hamster(mood, size = 104.dp)
+                Mascot(mood, size = 92.dp)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Column(Modifier.weight(1f)) { Metric(tr("실행 횟수"), records.sumOf { it.opens }.toString()) }
@@ -87,6 +97,28 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
                     Text(date, style = MaterialTheme.typography.bodySmall)
                     LinearProgressIndicator(progress = { (rows.sumOf { it.usageMillis }.toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                     Text(if (rows.isEmpty()) tr("기록 없음") else tr("%1\$s · %2\$d회 실행", duration(rows.sumOf { it.usageMillis } / 1000), rows.sumOf { it.opens }), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        val ownPackage = LocalContext.current.packageName
+        val candidates = remember(apps, state.rules) {
+            apps.filter { app -> app.packageName != ownPackage && state.rules.none { it.packageName == app.packageName } }.take(3)
+        }
+        if (candidates.isNotEmpty()) CardBox {
+            Text(tr("추천 앱 잠금"), style = MaterialTheme.typography.titleLarge)
+            Text(tr("이 기간에 많이 쓴 앱 중 아직 제한이 없는 앱이에요. 레시피를 고른 뒤 저장하면 바로 적용돼요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            candidates.forEach { app ->
+                val recipe = recommendRecipe(app.usageMillis, app.opens, recordedDays)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    AppIcon(app.packageName, app.appName, 36.dp)
+                    Column(Modifier.weight(1f)) {
+                        Text(app.appName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(tr("%1\$s · %2\$d회 실행", duration(app.usageMillis / 1000), app.opens),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(tr(recipe.title), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+                    }
+                    FilledTonalButton(onClick = { suggest(app.packageName, recipe) }) { Text(tr("제한 추가")) }
                 }
             }
         }

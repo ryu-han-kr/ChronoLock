@@ -38,7 +38,7 @@ class MascotUiTest {
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Mood.values().forEach { mood ->
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Hamster(mood, size = 64.dp)
+                                        Mascot(mood, size = 64.dp)
                                         Text(mood.name.lowercase(), style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
