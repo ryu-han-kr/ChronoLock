@@ -2,6 +2,24 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.6.1 (versionCode 9) — 2026-10-22
+
+AAB: `release/chronolock-0.6.1-vc9.aab`
+
+### ko
+- 키보드나 권한 창을 띄워도 사용 시간이 끊기지 않도록 고쳤어요.
+- 화면 잠금을 풀었을 때 보던 앱을 다시 정확히 인식해요.
+- 히스토리 추천 앱 잠금이 레시피 값을 채운 채로 열려요.
+- 오래 쓴 기록도 히스토리가 더 가볍게 열리고, 어두운 테마의 버튼 테두리가 더 잘 보여요.
+- 광고 제거 구독자는 앱을 열 때 광고가 잠깐 보이던 문제를 고쳤어요.
+
+### en
+- Usage keeps counting while a keyboard or permission prompt is open.
+- The app you were using is recognized again after unlocking.
+- Suggested limits in History open with the recipe filled in.
+- History opens faster with long records; button outlines are clearer in dark themes.
+- Ad-free subscribers no longer see a brief banner at launch.
+
 ## 0.6.0 (versionCode 8) — 2026-10-22
 
 AAB: `release/chronolock-0.6.0-vc8.aab`
