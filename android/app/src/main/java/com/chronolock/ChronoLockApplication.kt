@@ -12,6 +12,6 @@ class ChronoLockApplication : Application(), Configuration.Provider {
     }
 
     // The ads SDK uses WorkManager; keep its JobScheduler IDs away from HistoryJobService (301).
-    override fun getWorkManagerConfiguration(): Configuration =
-        Configuration.Builder().setJobSchedulerJobIdRange(1_000, 100_000).build()
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().setJobSchedulerJobIdRange(1_000, 100_000).build()
 }

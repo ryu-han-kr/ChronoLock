@@ -11,7 +11,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,8 +45,10 @@ private fun loadIcon(context: Context, packageName: String, px: Int): ImageBitma
 internal fun AppIcon(packageName: String, label: String, size: Dp) {
     val context = LocalContext.current
     val px = with(LocalDensity.current) { size.roundToPx() }
-    val icon by produceState(icons.get(packageName), packageName, px) {
-        if (value == null) value = withContext(Dispatchers.IO) { loadIcon(context, packageName, px) }
+    // Keyed state: a slot reused for another app starts from that app's cached icon, never the previous app's.
+    var icon by remember(packageName, px) { mutableStateOf(icons.get(packageName)) }
+    LaunchedEffect(packageName, px) {
+        if (icon == null) icon = withContext(Dispatchers.IO) { loadIcon(context, packageName, px) }
     }
     val shape = RoundedCornerShape(size * .28f)
     icon?.let { Image(it, contentDescription = null, modifier = Modifier.size(size).clip(shape)) } ?: Box(

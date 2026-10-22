@@ -141,16 +141,17 @@ class LocalRepositoryTest {
         assertEquals(rule, database.dao().rules().single().toDomain())
     }
 
-    @Test fun sessionBlock_survivesDatabaseReopenWithoutChargingOverlayTime() = runBlocking {
+    @Test fun sessionBlock_survivesDatabaseReopen_andBillsUseAfterOverlayDied() = runBlocking {
         val repository = LocalRepository(database)
         repository.saveRule(AppRule("test.app", "Test", sessionLimitSeconds = 1))
         repository.foreground("test.app", clock(0))
         repository.tick(clock(1000))
         database.close()
         database = openDatabase()
+        // The overlay died with the old service; the 9 s recovered afterwards were real use and are billed.
         val restored = LocalRepository(database).reconnect(clock(10000), mapOf("test.app" to 9000L), "test.app")
         assertEquals(listOf(Reason.SESSION_USAGE), restored.decision.reasons)
-        assertEquals(1000L, database.dao().daily().single().usageMillis)
+        assertEquals(10000L, database.dao().daily().single().usageMillis)
         assertEquals(1, database.dao().daily().single().blockedAttempts)
         assertEquals(1000L, database.dao().checkpoint()?.blockedSessionMillis)
     }
