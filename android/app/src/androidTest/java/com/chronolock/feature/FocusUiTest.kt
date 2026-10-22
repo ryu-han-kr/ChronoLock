@@ -5,6 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -16,6 +19,7 @@ import com.chronolock.blocking.Health
 import com.chronolock.blocking.InstalledApp
 import com.chronolock.data.RuleEntity
 import com.chronolock.data.AppTheme
+import com.chronolock.data.ThemeCatalog
 import com.chronolock.domain.AppRule
 import java.io.File
 import org.junit.Assert.*
@@ -99,15 +103,19 @@ class FocusUiTest {
         ui.runOnIdle { assertEquals(setOf(java.time.DayOfWeek.WEDNESDAY), saved?.schedule?.days) }
     }
 
-    @Test fun themePicker_switchesAllFiveThemes() {
+    @Test fun themePicker_switchesEveryTheme() {
         val selected = mutableStateOf(AppTheme.DARK)
         ui.setContent { ChronoTheme(selected.value) {
-            Surface(Modifier.fillMaxSize()) { ThemePicker(selected.value) { selected.value = it } }
+            Surface(Modifier.fillMaxSize()) { Column(Modifier.verticalScroll(rememberScrollState())) { ThemePicker(selected.value) { selected.value = it } } }
         } }
-        AppTheme.values().forEach { theme ->
-            ui.onNodeWithText(theme.title).performClick().assertIsSelected()
-            ui.runOnIdle { assertEquals(theme, selected.value) }
-            screenshot("theme-${theme.name.lowercase()}", ui.onRoot())
+        val sections = listOf(ThemeCatalog.BASIC to AppTheme.builtIn) + ThemeCatalog.sections
+        sections.forEach { (family, themes) ->
+            themes.forEach { theme ->
+                ui.onNodeWithTag("themes-$family").performScrollTo().performScrollToNode(hasTestTag("theme-${theme.name}"))
+                ui.onNodeWithTag("theme-${theme.name}").performClick().assertIsSelected()
+                ui.runOnIdle { assertEquals(theme, selected.value) }
+                if (theme in AppTheme.builtIn || theme == themes.first()) screenshot("theme-${theme.name.lowercase()}", ui.onRoot())
+            }
         }
     }
 

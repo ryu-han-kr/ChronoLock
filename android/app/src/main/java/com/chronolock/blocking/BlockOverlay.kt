@@ -41,8 +41,12 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         (root as? LinearLayout)?.let(::applyTheme)
     }
 
+    private fun themeBackground() = android.graphics.drawable.GradientDrawable(
+        android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+        intArrayOf(theme.background.toInt(), (theme.gradientEnd ?: theme.background).toInt()))
+
     private fun applyTheme(content: LinearLayout) {
-        content.setBackgroundColor(theme.background.toInt())
+        content.background = themeBackground()
         for (index in 0 until content.childCount) {
             when (val child = content.getChildAt(index)) {
                 is Button -> {
@@ -67,7 +71,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(28), dp(48), dp(28), dp(48))
-                setBackgroundColor(theme.background.toInt())
+                background = themeBackground()
                 isFocusableInTouchMode = true
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             }

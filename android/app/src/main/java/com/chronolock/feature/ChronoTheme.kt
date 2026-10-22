@@ -15,7 +15,15 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
+import com.chronolock.data.ThemeCatalog
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalView
@@ -101,34 +109,46 @@ private fun Context.activity(): Activity? = when (this) {
     else -> null
 }
 
+/** Flat colour or the top-to-bottom gradient a palette asks for; drawn behind every screen and the block overlay. */
+internal fun AppTheme.backgroundBrush(): Brush =
+    gradientEnd?.let { Brush.verticalGradient(listOf(Color(background), Color(it))) } ?: SolidColor(Color(background))
+
 @Composable
 internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit) {
     CardBox {
         Text(tr("화면 테마"), style = MaterialTheme.typography.titleLarge)
         Text(tr("원하는 분위기를 선택하세요. 다음 실행에도 유지됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            AppTheme.values().forEach { theme ->
-                val chosen = theme == selected
-                Row(Modifier.fillMaxWidth()
-                    .background(if (chosen) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(16.dp))
-                    .selectable(selected = chosen, role = Role.RadioButton, onClick = { select(theme) })
-                    .padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // A small swatch of the real palette: page, card and accent.
-                    Row(Modifier.size(width = 52.dp, height = 36.dp).clip(RoundedCornerShape(10.dp))
-                        .border(1.dp, Color(theme.muted).copy(alpha = .35f), RoundedCornerShape(10.dp))) {
-                        listOf(theme.background, theme.surface, theme.primary).forEach { swatch ->
-                            Box(Modifier.weight(1f).fillMaxHeight().background(Color(swatch)))
-                        }
-                    }
-                    Column(Modifier.weight(1f)) {
-                        Text(tr(theme.title), fontWeight = FontWeight.SemiBold)
-                        Text(tr(theme.description), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    }
-                    RadioButton(selected = chosen, onClick = null)
-                }
+        ThemeSection(ThemeCatalog.BASIC, AppTheme.builtIn, selected, select)
+        ThemeCatalog.sections.forEach { (family, themes) -> ThemeSection(family, themes, selected, select) }
+        if (selected.description.isNotBlank()) Text(tr(selected.description), color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun ThemeSection(family: String, themes: List<AppTheme>, selected: AppTheme, select: (AppTheme) -> Unit) {
+    Text(tr(family), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp))
+    LazyRow(Modifier.selectableGroup().testTag("themes-$family"), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        items(themes, key = { it.name }) { theme -> ThemeTile(theme, theme == selected) { select(theme) } }
+    }
+}
+
+/** A miniature of the palette: page background (or gradient), a card, the accent and a line of text. */
+@Composable
+private fun ThemeTile(theme: AppTheme, chosen: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(16.dp)
+    Column(Modifier.width(76.dp).clip(RoundedCornerShape(12.dp)).testTag("theme-${theme.name}").selectable(selected = chosen, role = Role.RadioButton, onClick = onClick).padding(2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.size(64.dp).clip(shape).background(theme.backgroundBrush())
+            .border(if (chosen) 2.5.dp else 1.dp, if (chosen) MaterialTheme.colorScheme.primary else Color(theme.muted).copy(alpha = .35f), shape)
+            .padding(12.dp)) {
+            Box(Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)).background(Color(theme.surface)).padding(6.dp)) {
+                Box(Modifier.size(12.dp).background(Color(theme.primary), CircleShape))
+                Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(.7f).height(4.dp)
+                    .background(Color(theme.text).copy(alpha = .55f), RoundedCornerShape(2.dp)))
             }
         }
+        Text(theme.shortLabel.map { tr(it) }.joinToString(" "), style = MaterialTheme.typography.labelMedium, maxLines = 1,
+            overflow = TextOverflow.Ellipsis, color = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
     }
 }

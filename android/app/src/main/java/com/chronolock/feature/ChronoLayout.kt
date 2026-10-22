@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.geometry.Size
@@ -71,11 +72,11 @@ internal fun ChronoScreen(
                     app.packageName.contains(query.trim(), ignoreCase = true))
         }
     }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(state.theme.backgroundBrush())) {
         val expanded = maxWidth >= 840.dp
-        Scaffold(containerColor = MaterialTheme.colorScheme.background, snackbarHost = { SnackbarHost(snackbar) }, bottomBar = { Column {
+        Scaffold(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground, snackbarHost = { SnackbarHost(snackbar) }, bottomBar = { Column {
             banner?.invoke()
-            if (!expanded) NavigationBar(containerColor = MaterialTheme.colorScheme.background) {
+            if (!expanded) NavigationBar(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
                 destinations.forEachIndexed { index, title ->
                     NavigationBarItem(selected = tab == index, onClick = { selectTab(index) },
                         label = { Text(title) }, icon = { DestinationIcon(index) })
@@ -83,7 +84,7 @@ internal fun ChronoScreen(
             }
         } }) { insets ->
             Row(Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets)) {
-                if (expanded) NavigationRail(containerColor = MaterialTheme.colorScheme.background, windowInsets = WindowInsets(0, 0, 0, 0),
+                if (expanded) NavigationRail(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground, windowInsets = WindowInsets(0, 0, 0, 0),
                     modifier = Modifier.fillMaxHeight(), header = {
                         Text("CL", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(vertical = 24.dp))
