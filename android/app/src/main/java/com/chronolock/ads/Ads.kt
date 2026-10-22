@@ -70,6 +70,8 @@ fun BannerAd(unitId: String) {
         val view = remember(unitId, width) {
             AdView(context).apply {
                 adUnitId = unitId
+                // The "large" replacement is about twice as tall and would cover the today card; keep the standard anchored size.
+                @Suppress("DEPRECATION")
                 setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, width))
             }
         }
