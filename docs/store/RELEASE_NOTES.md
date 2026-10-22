@@ -2,6 +2,18 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.6.3 (versionCode 11) — 2026-10-22
+
+AAB: `release/chronolock-0.6.3-vc11.aab`
+
+### ko
+- 세부 기록이 없는 이전 날짜도 기기 사용 통계로 추정해 한 달 기록을 채워요(추정 시간은 따로 표시돼요).
+- 접근성 서비스가 다시 시작될 때 연결 끊김으로 잘못 표시되던 문제를 고쳤어요.
+
+### en
+- History now fills older days of the month with estimates from your device's usage stats (marked as estimates).
+- Fixed the accessibility service sometimes showing as disconnected after it restarted.
+
 ## 0.6.2 (versionCode 10) — 2026-10-22
 
 AAB: `release/chronolock-0.6.2-vc10.aab`
