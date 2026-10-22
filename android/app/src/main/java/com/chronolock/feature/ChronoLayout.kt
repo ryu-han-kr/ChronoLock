@@ -14,6 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
@@ -64,14 +67,17 @@ internal fun ChronoScreen(
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
     var onlyConfigured by rememberSaveable { mutableStateOf(false) }
+    var sortName by rememberSaveable { mutableStateOf(AppSort.NAME.name) }
+    val sort = AppSort.valueOf(sortName)
+    val usage = remember(state.history, today) { summarizeUsage(state.history, today.minusDays(6)) }
     val ready = state.permissions.usage && state.permissions.accessibility && state.health.connected
     val rulesByPackage = remember(state.rules) { state.rules.associateBy { it.packageName } }
-    val filteredApps = remember(state.apps, rulesByPackage, query, onlyConfigured) {
-        state.apps.filter { app ->
+    val filteredApps = remember(state.apps, rulesByPackage, query, onlyConfigured, sort, usage) {
+        sortApps(state.apps.filter { app ->
             (!onlyConfigured || app.packageName in rulesByPackage) &&
                 (app.label.contains(query.trim(), ignoreCase = true) ||
                     app.packageName.contains(query.trim(), ignoreCase = true))
-        }
+        }, sort, usage)
     }
     BoxWithConstraints(Modifier.fillMaxSize().background(state.theme.backgroundBrush())) {
         val expanded = maxWidth >= 840.dp
@@ -186,6 +192,11 @@ internal fun ChronoScreen(
                                             FilterChip(selected = !onlyConfigured, onClick = { onlyConfigured = false }, label = { Text(tr("전체 앱")) })
                                             FilterChip(selected = onlyConfigured, onClick = { onlyConfigured = true }, label = { Text(tr("설정한 앱")) })
                                         }
+                                        Row(Modifier.horizontalScroll(rememberScrollState()).testTag("app-sort"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            listOf(AppSort.NAME to "이름순", AppSort.USAGE to "사용량순", AppSort.RECENT to "최근순").forEach { (option, label) ->
+                                                FilterChip(selected = sort == option, onClick = { sortName = option.name }, label = { Text(tr(label)) })
+                                            }
+                                        }
                                         Text(tr("%1\$d개 앱 · 설정·홈·전화 등 필수 앱은 제외합니다.", filteredApps.size), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
@@ -204,6 +215,10 @@ internal fun ChronoScreen(
                                         AppHeading(app.label, app.packageName) { edit(app.packageName, null) }
                                         Text(rule?.let { ruleSummary(it) } ?: tr("내 사용 기준을 설정해 보세요"),
                                             color = if (rule?.enabled == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                                        if (sort != AppSort.NAME) Text(usage[app.packageName]?.let { summary ->
+                                            tr("최근 7일 %1\$s · %2\$d회 실행", duration(summary.usageMillis / 1000), summary.opens) +
+                                                if (sort == AppSort.RECENT) " · " + tr("마지막 사용 %1\$s", LocalDate.parse(summary.lastDate).format(DateTimeFormatter.ofPattern("M/d"))) else ""
+                                        } ?: tr("최근 7일 기록 없음"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
                             }

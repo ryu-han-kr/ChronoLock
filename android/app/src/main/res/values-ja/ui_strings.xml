@@ -217,6 +217,12 @@
     <string name="recommend_title">"おすすめのアプリ制限"</string>
     <string name="recommend_hint">"この期間によく使ったのに、まだ制限がないアプリです。レシピを選んで保存すればすぐ適用されます。"</string>
     <string name="recommend_add">"制限を追加"</string>
+    <string name="sort_name">"名前順"</string>
+    <string name="sort_usage">"使用量順"</string>
+    <string name="sort_recent">"最近使った順"</string>
+    <string name="usage_week">"直近7日 %1$s · %2$d回起動"</string>
+    <string name="usage_week_none">"直近7日の記録なし"</string>
+    <string name="last_used">"最終使用 %1$s"</string>
     <string name="accessibility_title">"ユーザー補助の権限について"</string>
     <string name="usage_title">"使用状況へのアクセスについて"</string>
     <string name="accessibility_disclosure">"ChronoLockはアプリ切替イベントで使用中のアプリを確認し、設定した制限に従ってブロック画面を表示します。画面の文字、パスワード、入力内容は読み取りません。選択したアプリのパッケージ名と利用・ブロック記録は端末内にのみ保存し、送信しません。Androidの設定でいつでも解除できます。同意する場合、次の設定画面でChronoLockを有効にしてください。"</string>

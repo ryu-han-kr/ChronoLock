@@ -217,6 +217,12 @@
     <string name="recommend_title">"Límites sugeridos"</string>
     <string name="recommend_hint">"Apps que más usaste en este periodo y aún no tienen límite. Elige una receta y guarda para aplicarla."</string>
     <string name="recommend_add">"Añadir límite"</string>
+    <string name="sort_name">"Por nombre"</string>
+    <string name="sort_usage">"Por uso"</string>
+    <string name="sort_recent">"Más recientes"</string>
+    <string name="usage_week">"Últimos 7 días %1$s · %2$d aperturas"</string>
+    <string name="usage_week_none">"Sin uso en los últimos 7 días"</string>
+    <string name="last_used">"Último uso %1$s"</string>
     <string name="accessibility_title">"Sobre la accesibilidad"</string>
     <string name="usage_title">"Sobre el acceso al uso"</string>
     <string name="accessibility_disclosure">"ChronoLock usa eventos de cambio de app para identificar la app activa y mostrar un bloqueo según tus límites. No lee texto de pantalla, contraseñas ni lo que escribes. Los nombres de paquete y registros de uso y bloqueo se guardan solo en este dispositivo y no se transmiten. Puedes revocar el acceso en Ajustes de Android. Si aceptas, activa ChronoLock en la siguiente pantalla."</string>
