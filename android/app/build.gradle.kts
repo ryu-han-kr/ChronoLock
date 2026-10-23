@@ -42,6 +42,22 @@ android {
         manifestPlaceholders["admobAppId"] = admobAppId.ifBlank { "ca-app-pub-3940256099942544~3347511713" }
     }
     buildFeatures { compose = true; buildConfig = true }
+    buildTypes {
+        // R8 shrinks and optimizes the DEX code and drops unused resources; Play flags unoptimized DEX.
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        // The release build as shipped (R8 on), but debug-signed and installed beside the Play app for device checks.
+        create("releaseCheck") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".verification"
+            matchingFallbacks += "release"
+            buildConfigField("Boolean", "TEST_ADS", "false")
+        }
+    }
     // Upload key for Play App Signing lives outside the repo; local.properties points to it.
     fun localSetting(name: String) = providers.gradleProperty(name).orNull ?: localSettings.getProperty(name).orEmpty()
     val releaseStore = localSetting("chronolock.releaseStoreFile")
@@ -97,6 +113,8 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.1")
     implementation("com.android.billingclient:billing:9.1.0")
     implementation("com.google.android.play:app-update:2.1.0")
+    // Installs the bundled baseline profiles (Compose, app) at install time for faster start and scrolling.
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
     implementation("com.google.android.gms:play-services-ads:25.5.0")
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
