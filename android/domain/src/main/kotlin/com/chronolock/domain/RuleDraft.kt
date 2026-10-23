@@ -80,3 +80,12 @@ enum class RuleRecipe(val title: String, val description: String, val draft: Rul
     SLEEP("취침 시간 지키기", "매일 23:00~다음 날 07:00 차단",
         RuleDraft(daily = "", scheduleEnabled = true, schedules = listOf(ScheduleDraft(daysMask = ScheduleDraft.EVERY_DAY)))),
 }
+
+/** What the person wants to cut down on, asked at first run; each suggests a recipe and, for websites, a site preset. */
+enum class OnboardingGoal(val emoji: String, val label: String, val recipe: RuleRecipe?, val preset: SitePreset?) {
+    SOCIAL("💬", "SNS", RuleRecipe.LESS_CHECKING, SitePreset.SOCIAL),
+    VIDEO("📺", "영상", RuleRecipe.SHORT_BREAK, SitePreset.VIDEO),
+    GAMES("🎮", "게임", null, null),
+    SHOPPING("🛒", "쇼핑·커뮤니티", RuleRecipe.LESS_CHECKING, SitePreset.SHOPPING),
+    SLEEP("🌙", "수면", RuleRecipe.SLEEP, null),
+}

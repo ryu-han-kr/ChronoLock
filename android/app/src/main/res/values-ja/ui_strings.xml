@@ -606,4 +606,22 @@
     <string name="fr_checkin_detail">"%1$sを使い続けますか？"</string>
     <string name="fr_checkin_continue">"続ける"</string>
     <string name="fr_block_resisted">"今日は%1$d回がまんしました。いい調子です！"</string>
+    <string name="onb_goal_question">"何を減らしたいですか？"</string>
+    <string name="onb_goal_hint">"選んだ内容に合わせて最初の制限をおすすめします。複数選べて、後から変えられます。"</string>
+    <string name="onb_goal_games">"ゲーム"</string>
+    <string name="onb_goal_shopping">"ショッピング・コミュニティ"</string>
+    <string name="onb_goal_sleep">"睡眠"</string>
+    <string name="onb_perm_title">"2つの権限が必要です"</string>
+    <string name="onb_perm_usage">"使用状況へのアクセス"</string>
+    <string name="onb_perm_usage_body">"アプリごとの利用時間と起動回数を記録と上限に使います。"</string>
+    <string name="onb_perm_a11y">"ユーザー補助サービス"</string>
+    <string name="onb_perm_a11y_body">"上限に達したアプリを開くとブロック画面を表示します。画面の内容や入力は読み取りません。"</string>
+    <string name="onb_perm_next">"次の画面の「今日」タブから案内に沿ってすぐ有効にできます。"</string>
+    <string name="onb_next">"次へ"</string>
+    <string name="goal_start_title">"あなたへのおすすめ"</string>
+    <string name="goal_start_body">"最初に選んだ目標に合わせたおすすめです。アプリを選ぶとおすすめ設定が入力されます。"</string>
+    <string name="goal_start_default">"まずは1日1時間から始めましょう。"</string>
+    <string name="goal_pick_app">"アプリを選ぶ"</string>
+    <string name="goal_block_sites">"サイトもブロック"</string>
+    <string name="goal_pick_hint">"「%1$s」を適用するアプリをタップしてください。"</string>
 </resources>

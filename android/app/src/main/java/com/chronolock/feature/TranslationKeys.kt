@@ -554,6 +554,23 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "%1\$s, 계속 쓸까요?" to R.string.fr_checkin_detail,
     "계속 쓰기" to R.string.fr_checkin_continue,
     "오늘 %1\$d번 참았어요. 잘하고 있어요!" to R.string.fr_block_resisted,
+    "무엇을 줄이고 싶나요?" to R.string.onb_goal_question,
+    "고른 것에 맞춰 첫 제한을 추천해 드려요. 여러 개 골라도 되고, 나중에 바꿀 수 있어요." to R.string.onb_goal_hint,
+    "게임" to R.string.onb_goal_games,
+    "쇼핑·커뮤니티" to R.string.onb_goal_shopping,
+    "수면" to R.string.onb_goal_sleep,
+    "두 가지 권한이 필요해요" to R.string.onb_perm_title,
+    "사용 정보 접근" to R.string.onb_perm_usage,
+    "앱별 사용 시간과 실행 횟수를 확인해 기록과 한도에 써요." to R.string.onb_perm_usage_body,
+    "접근성 서비스" to R.string.onb_perm_a11y,
+    "한도에 닿은 앱을 열 때 차단 화면을 띄워요. 화면 내용이나 입력은 읽지 않아요." to R.string.onb_perm_a11y_body,
+    "다음 화면의 '오늘' 탭에서 안내를 보고 바로 켤 수 있어요." to R.string.onb_perm_next,
+    "맞춤 시작" to R.string.goal_start_title,
+    "처음에 고른 목표에 맞춰 추천해요. 앱을 고르면 추천 설정이 미리 채워져요." to R.string.goal_start_body,
+    "하루 1시간부터 시작해 보세요." to R.string.goal_start_default,
+    "앱 고르기" to R.string.goal_pick_app,
+    "사이트도 막기" to R.string.goal_block_sites,
+    "'%1\$s'을(를) 적용할 앱을 눌러 주세요." to R.string.goal_pick_hint,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

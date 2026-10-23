@@ -229,17 +229,20 @@ class FocusUiTest {
     }
 
     @Test fun onboardingStartsAndSwitchesLanguage() {
-        var started = false
+        var started: Set<String>? = null
         val language = mutableStateOf(com.chronolock.data.AppLanguage.KOREAN)
         ui.setContent { LocalizedApp(language.value) { ChronoTheme(AppTheme.DARK) {
-            OnboardingScreen(language.value, { language.value = it }) { started = true }
+            OnboardingScreen(language.value, { language.value = it }) { started = it }
         } } }
         ui.onNodeWithText("기록은 이 기기에만").assertExists()
         screenshot("onboarding", ui.onRoot())
         ui.onNodeWithText("English").performClick()
         ui.onNodeWithText("Records stay on this device").assertExists()
+        ui.onNodeWithTag("onboarding-next").performScrollTo().performClick()
+        ui.onNodeWithTag("goal-VIDEO").performScrollTo().performClick()
+        ui.onNodeWithTag("onboarding-next").performScrollTo().performClick()
         ui.onNodeWithText("Get started").performScrollTo().performClick()
-        ui.runOnIdle { assertTrue(started) }
+        ui.runOnIdle { assertEquals(setOf("VIDEO"), started) }
     }
 
     @Test fun runningFocusShowsCountdownAndCanBeStopped() {

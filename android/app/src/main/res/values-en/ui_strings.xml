@@ -617,4 +617,22 @@
     <string name="fr_checkin_detail">"Keep using %1$s?"</string>
     <string name="fr_checkin_continue">"Keep going"</string>
     <string name="fr_block_resisted">"You held back %1$d× today. Nice work!"</string>
+    <string name="onb_goal_question">"What do you want to cut down on?"</string>
+    <string name="onb_goal_hint">"We\'ll suggest your first limits from what you pick. Choose several if you like; you can change them later."</string>
+    <string name="onb_goal_games">"Games"</string>
+    <string name="onb_goal_shopping">"Shopping &amp; communities"</string>
+    <string name="onb_goal_sleep">"Sleep"</string>
+    <string name="onb_perm_title">"Two permissions are needed"</string>
+    <string name="onb_perm_usage">"Usage access"</string>
+    <string name="onb_perm_usage_body">"Reads each app\'s time and opens for your history and limits."</string>
+    <string name="onb_perm_a11y">"Accessibility service"</string>
+    <string name="onb_perm_a11y_body">"Shows the block screen when you open an app that reached its limit. It does not read screen content or typing."</string>
+    <string name="onb_perm_next">"You can switch them on right away from the Today tab on the next screen."</string>
+    <string name="onb_next">"Next"</string>
+    <string name="goal_start_title">"Your start"</string>
+    <string name="goal_start_body">"Suggestions from the goals you picked. Pick an app and the suggested settings are filled in."</string>
+    <string name="goal_start_default">"Start with one hour a day."</string>
+    <string name="goal_pick_app">"Pick an app"</string>
+    <string name="goal_block_sites">"Block the sites too"</string>
+    <string name="goal_pick_hint">"Tap the app to apply \'%1$s\' to."</string>
 </resources>

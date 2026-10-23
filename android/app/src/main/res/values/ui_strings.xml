@@ -606,4 +606,22 @@
     <string name="fr_checkin_detail">"%1$s, 계속 쓸까요?"</string>
     <string name="fr_checkin_continue">"계속 쓰기"</string>
     <string name="fr_block_resisted">"오늘 %1$d번 참았어요. 잘하고 있어요!"</string>
+    <string name="onb_goal_question">"무엇을 줄이고 싶나요?"</string>
+    <string name="onb_goal_hint">"고른 것에 맞춰 첫 제한을 추천해 드려요. 여러 개 골라도 되고, 나중에 바꿀 수 있어요."</string>
+    <string name="onb_goal_games">"게임"</string>
+    <string name="onb_goal_shopping">"쇼핑·커뮤니티"</string>
+    <string name="onb_goal_sleep">"수면"</string>
+    <string name="onb_perm_title">"두 가지 권한이 필요해요"</string>
+    <string name="onb_perm_usage">"사용 정보 접근"</string>
+    <string name="onb_perm_usage_body">"앱별 사용 시간과 실행 횟수를 확인해 기록과 한도에 써요."</string>
+    <string name="onb_perm_a11y">"접근성 서비스"</string>
+    <string name="onb_perm_a11y_body">"한도에 닿은 앱을 열 때 차단 화면을 띄워요. 화면 내용이나 입력은 읽지 않아요."</string>
+    <string name="onb_perm_next">"다음 화면의 \'오늘\' 탭에서 안내를 보고 바로 켤 수 있어요."</string>
+    <string name="onb_next">"다음"</string>
+    <string name="goal_start_title">"맞춤 시작"</string>
+    <string name="goal_start_body">"처음에 고른 목표에 맞춰 추천해요. 앱을 고르면 추천 설정이 미리 채워져요."</string>
+    <string name="goal_start_default">"하루 1시간부터 시작해 보세요."</string>
+    <string name="goal_pick_app">"앱 고르기"</string>
+    <string name="goal_block_sites">"사이트도 막기"</string>
+    <string name="goal_pick_hint">"\'%1$s\'을(를) 적용할 앱을 눌러 주세요."</string>
 </resources>

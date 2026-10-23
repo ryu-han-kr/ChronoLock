@@ -38,6 +38,8 @@ data class MainState(
     val favoriteThemes: Set<String> = emptySet(),
     /** Day/night themes that follow the device's dark mode, and which of the two the picker is editing. */
     val followSystem: Boolean = false,
+    /** First-run goals, as [com.chronolock.domain.OnboardingGoal] names. */
+    val goals: Set<String> = emptySet(),
     val nightTheme: AppTheme = AppTheme.DARK,
     val editingNight: Boolean = false,
     /** Day totals for the year calendar, and whether a password for deleting history exists. */
@@ -108,6 +110,7 @@ class MainViewModel @Inject constructor(
         .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
         .combine(preferences.favoriteThemes) { data, favorites -> data.copy(favoriteThemes = favorites) }
         .combine(preferences.followSystem) { data, follow -> data.copy(followSystem = follow) }
+        .combine(preferences.goals) { data, goals -> data.copy(goals = goals) }
         .combine(preferences.nightTheme) { data, night -> data.copy(nightTheme = night) }
         .combine(historyRepository.year) { data, year -> data.copy(historyYear = year) }
         .combine(preferences.historyPinSet) { data, set -> data.copy(historyPinSet = set) }
@@ -126,7 +129,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme)
+            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -498,8 +501,8 @@ class MainViewModel @Inject constructor(
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("기록을 삭제하지 못했습니다.") }
     }
-    fun finishOnboarding() = viewModelScope.launch {
-        try { preferences.finishOnboarding() }
+    fun finishOnboarding(goals: Set<String> = emptySet()) = viewModelScope.launch {
+        try { preferences.finishOnboarding(goals) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }

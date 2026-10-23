@@ -34,6 +34,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val focusMinutesKey = intPreferencesKey("last_focus_minutes")
     private val favoriteThemesKey = stringSetPreferencesKey("favorite_themes")
     private val followSystemKey = booleanPreferencesKey("theme_follow_system")
+    private val goalsKey = stringSetPreferencesKey("onboarding_goals")
     private val nightThemeKey = stringPreferencesKey("night_theme")
     private val historyPinKey = stringPreferencesKey("history_pin")
     private val lockUntilKey = longPreferencesKey("lock_until")
@@ -65,7 +66,9 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     /** The last focus length started from the app, reused by the quick settings tile. */
     val focusMinutes = context.preferences.data.map { it[focusMinutesKey] ?: 25 }
     suspend fun setFocusMinutes(minutes: Int) { context.preferences.edit { it[focusMinutesKey] = minutes } }
-    suspend fun finishOnboarding() { context.preferences.edit { it[onboardedKey] = true } }
+    /** Goals picked at first run (OnboardingGoal names); they shape the first suggestions on the Today tab. */
+    val goals = context.preferences.data.map { it[goalsKey] ?: emptySet() }
+    suspend fun finishOnboarding(goals: Set<String> = emptySet()) { context.preferences.edit { it[onboardedKey] = true; it[goalsKey] = goals } }
     suspend fun acknowledge() { context.preferences.edit { it[disclosure] = true } }
     val lock = context.preferences.data.map { prefs ->
         val code = prefs[goalCodeKey]

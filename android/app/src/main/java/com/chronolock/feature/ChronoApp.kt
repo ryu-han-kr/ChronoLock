@@ -65,6 +65,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     /** 0 creates a new group. */
     var editGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
+    /** A recipe chosen from the Today suggestions; the next app picked in the app list opens with it. */
+    var pickRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var themeGallery by rememberSaveable { mutableStateOf(false) }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
@@ -103,7 +105,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
-                edit = { app, recipe -> editPackage = app; suggestedRecipe = recipe?.name },
+                edit = { app, recipe -> editPackage = app; suggestedRecipe = (recipe ?: pickRecipe?.let(RuleRecipe::valueOf))?.name; pickRecipe = null },
+                pickRecipe = pickRecipe?.let(RuleRecipe::valueOf), choosePickRecipe = { pickRecipe = it?.name },
                 startFocus = { confirmFocus = it }, stopFocus = model::stopFocus,
                 usagePermission = { permissionDialog = false },
                 accessibilityPermission = { permissionDialog = true },
