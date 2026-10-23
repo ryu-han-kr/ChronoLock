@@ -534,6 +534,11 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "쇼핑" to R.string.site_preset_shopping,
     "커뮤니티" to R.string.site_preset_community,
     "이미 모두 추가되어 있어요." to R.string.site_preset_all_added,
+    "기기 다크 모드 따라가기" to R.string.theme_follow,
+    "다크 모드일 때는 밤 테마, 아닐 때는 낮 테마를 써요. 아래에서 고를 테마를 정하세요." to R.string.theme_follow_hint,
+    "낮 테마" to R.string.theme_day,
+    "밤 테마" to R.string.theme_night,
+    "랜덤" to R.string.theme_random,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

@@ -607,4 +607,9 @@
     <string name="site_preset_shopping">"Compras"</string>
     <string name="site_preset_community">"Comunidades"</string>
     <string name="site_preset_all_added">"Ya están todos añadidos."</string>
+    <string name="theme_follow">"Seguir el modo oscuro del dispositivo"</string>
+    <string name="theme_follow_hint">"Usa el tema de noche en modo oscuro y el de día si no. Elige abajo cuál ajustar."</string>
+    <string name="theme_day">"Tema de día"</string>
+    <string name="theme_night">"Tema de noche"</string>
+    <string name="theme_random">"Aleatorio"</string>
 </resources>

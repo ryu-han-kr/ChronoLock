@@ -585,4 +585,9 @@
     <string name="site_preset_shopping">"购物"</string>
     <string name="site_preset_community">"社区"</string>
     <string name="site_preset_all_added">"已全部添加。"</string>
+    <string name="theme_follow">"跟随设备深色模式"</string>
+    <string name="theme_follow_hint">"深色模式时使用夜间主题，否则使用日间主题。请在下方选择要设置的主题。"</string>
+    <string name="theme_day">"日间主题"</string>
+    <string name="theme_night">"夜间主题"</string>
+    <string name="theme_random">"随机"</string>
 </resources>

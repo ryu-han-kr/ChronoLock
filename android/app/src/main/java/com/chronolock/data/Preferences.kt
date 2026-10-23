@@ -33,6 +33,8 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val strictPendingAtKey = longPreferencesKey("strict_pending_at")
     private val focusMinutesKey = intPreferencesKey("last_focus_minutes")
     private val favoriteThemesKey = stringSetPreferencesKey("favorite_themes")
+    private val followSystemKey = booleanPreferencesKey("theme_follow_system")
+    private val nightThemeKey = stringPreferencesKey("night_theme")
     private val historyPinKey = stringPreferencesKey("history_pin")
     private val lockUntilKey = longPreferencesKey("lock_until")
     private val lockUntilElapsedKey = longPreferencesKey("lock_until_elapsed")
@@ -165,6 +167,11 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     suspend fun toggleFavoriteTheme(theme: AppTheme) {
         context.preferences.edit { val current = it[favoriteThemesKey] ?: emptySet(); it[favoriteThemesKey] = if (theme.name in current) current - theme.name else current + theme.name }
     }
+    /** With [followSystem] on, [nightTheme] is used while the device is in dark mode and [theme] otherwise. */
+    val followSystem = context.preferences.data.map { it[followSystemKey] ?: false }
+    val nightTheme = context.preferences.data.map { prefs -> prefs[nightThemeKey]?.let { AppTheme.fromStored(it) } ?: AppTheme.DARK }
+    suspend fun setFollowSystem(on: Boolean) { context.preferences.edit { it[followSystemKey] = on } }
+    suspend fun setNightTheme(theme: AppTheme) { context.preferences.edit { it[nightThemeKey] = theme.name } }
     suspend fun setTheme(theme: AppTheme) { context.preferences.edit { it[themeKey] = theme.name } }
     suspend fun setLanguage(language: AppLanguage) { context.preferences.edit { it[languageKey] = language.name } }
 

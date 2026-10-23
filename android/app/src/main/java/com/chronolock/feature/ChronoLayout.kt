@@ -84,6 +84,8 @@ internal fun ChronoScreen(
     collectPiece: (Int) -> Unit = {},
     changeGoalPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
     buyPro: () -> Unit = {},
+    setFollowSystem: (Boolean) -> Unit = {},
+    editNightTheme: (Boolean) -> Unit = {},
     deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> },
     exportBackup: () -> Unit = {},
     restoreBackup: () -> Unit = {},
@@ -285,7 +287,10 @@ internal fun ChronoScreen(
                                 if (com.chronolock.BuildConfig.PRO_GATING) item { ProCard(state, buyPro) }
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
-                                item { ThemePicker(state.theme, selectTheme, openThemeGallery, state.favoriteThemes) }
+                                item {
+                                    ThemePicker(if (state.followSystem && state.editingNight) state.nightTheme else state.theme, selectTheme, openThemeGallery,
+                                        state.favoriteThemes, state.followSystem, state.editingNight, setFollowSystem, editNightTheme)
+                                }
                                 item { StrictModeCard(state, nowEpoch, setStrict, cancelStrict) }
                                 item {
                                     // Completed days since the goal lock began; a day without any use of the limited apps counts as kept.

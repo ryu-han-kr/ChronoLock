@@ -6,6 +6,10 @@ import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -135,7 +139,8 @@ internal fun AppTheme.backgroundBrush(): Brush =
 
 /** Settings card: the built-in palettes, the current pick when it comes from the catalog, and a tile that opens the gallery. */
 @Composable
-internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGallery: () -> Unit = {}, favorites: Set<String> = emptySet()) {
+internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGallery: () -> Unit = {}, favorites: Set<String> = emptySet(),
+    followSystem: Boolean = false, editingNight: Boolean = false, setFollowSystem: (Boolean) -> Unit = {}, editNight: (Boolean) -> Unit = {}) {
     // Pinned palettes come first, then the built-ins; the current one leads only when it is neither.
     val pinned = AppTheme.values().filter { it.name in favorites }
     val row = pinned + AppTheme.builtIn.filter { it !in pinned }
@@ -146,6 +151,19 @@ internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGal
             TextButton(onClick = openGallery, modifier = Modifier.testTag("theme-more")) { Text("+ " + tr("더보기")) }
         }
         Text(tr("원하는 분위기를 선택하세요. 다음 실행에도 유지됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.fillMaxWidth().toggleable(value = followSystem, role = Role.Switch, onValueChange = setFollowSystem).testTag("theme-follow"),
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(tr("기기 다크 모드 따라가기"), Modifier.weight(1f))
+            Switch(checked = followSystem, onCheckedChange = null)
+        }
+        if (followSystem) {
+            Text(tr("다크 모드일 때는 밤 테마, 아닐 때는 낮 테마를 써요. 아래에서 고를 테마를 정하세요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FilterChip(selected = !editingNight, onClick = { editNight(false) }, label = { Text("☀ " + tr("낮 테마")) }, modifier = Modifier.testTag("theme-day"))
+                FilterChip(selected = editingNight, onClick = { editNight(true) }, label = { Text("☾ " + tr("밤 테마")) }, modifier = Modifier.testTag("theme-night"))
+            }
+        }
         LazyRow(Modifier.selectableGroup().testTag("themes-${ThemeCatalog.BASIC}"), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (selected !in row) item(key = "current") { ThemeTile(selected, chosen = true, tag = "theme-current") {} }
             items(row, key = { it.name }) { theme -> ThemeTile(theme, theme == selected, pinned = theme in pinned) { select(theme) } }
@@ -164,13 +182,34 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favori
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize(), color = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
             Column(Modifier.fillMaxSize().background(selected.backgroundBrush()).systemBarsPadding().testTag("theme-gallery")) {
+                val pinnedThemes = AppTheme.values().filter { it.name in favorites }
+                val families = listOfNotNull(pinnedThemes.takeIf { it.isNotEmpty() }?.let { "찜한 테마" to it }, ThemeCatalog.BASIC to AppTheme.builtIn) +
+                    ThemeCatalog.sections
+                // Grid positions of each family header: the custom card and the hint come first.
+                val headerIndex = remember(families) {
+                    var index = 2
+                    families.associate { (family, themes) -> (family to index).also { index += 1 + themes.size } }
+                }
+                val grid = rememberLazyGridState()
+                val scope = rememberCoroutineScope()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = close) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = tr("뒤로")) }
                     Text(tr("테마"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { select(AppTheme.values().filter { it != selected }.random()) }, modifier = Modifier.testTag("theme-random")) {
+                        Text("🎲 " + tr("랜덤"))
+                    }
                     Text(tr("테마 %1\$d개", AppTheme.values().size), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 12.dp))
                 }
-                LazyVerticalGrid(columns = GridCells.Adaptive(76.dp), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                // Jump straight to a family instead of scrolling past a hundred palettes.
+                Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    AssistChip(onClick = { scope.launch { grid.animateScrollToItem(0) } }, label = { Text(tr("나만의 테마")) })
+                    families.forEach { (family, _) ->
+                        AssistChip(onClick = { scope.launch { grid.animateScrollToItem(headerIndex.getValue(family)) } }, label = { Text(tr(family)) },
+                            modifier = Modifier.testTag("theme-jump-$family"))
+                    }
+                }
+                LazyVerticalGrid(columns = GridCells.Adaptive(76.dp), state = grid, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(14.dp),
                     modifier = Modifier.fillMaxSize().selectableGroup().testTag("theme-gallery-grid")) {
                     item(key = "custom", span = { GridItemSpan(maxLineSpan) }) { CustomThemeCard(selected, select) }
@@ -178,9 +217,7 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favori
                         Text(tr("♡를 누르면 찜한 테마가 설정의 테마 목록 앞쪽에 나옵니다."), style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    val pinned = AppTheme.values().filter { it.name in favorites }
-                    (listOfNotNull(pinned.takeIf { it.isNotEmpty() }?.let { "찜한 테마" to it }, ThemeCatalog.BASIC to AppTheme.builtIn) +
-                        ThemeCatalog.sections).forEach { (family, themes) ->
+                    families.forEach { (family, themes) ->
                         item(key = "family-$family", span = { GridItemSpan(maxLineSpan) }) {
                             Text(tr(family), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 10.dp))
                         }
