@@ -16,6 +16,7 @@ import com.chronolock.ads.AdsController
 import com.chronolock.billing.BillingController
 import com.chronolock.feature.ChronoApp
 import com.chronolock.feature.MainViewModel
+import com.chronolock.update.InAppUpdates
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
     private val model: MainViewModel by viewModels()
     @Inject lateinit var ads: AdsController
     @Inject lateinit var billing: BillingController
+    private val updates = InAppUpdates(this) { model.updateDownloaded() }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -33,8 +35,11 @@ class MainActivity : ComponentActivity() {
         billing.connect()
         setContent { ChronoApp(model, ::openPermissionSettings, ::signIn, { ads.showPrivacyOptions(this) },
             buyAdFree = { if (!billing.purchase(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") },
-            manageSubscription = { billing.manageSubscription(this) }, retryBilling = billing::connect) }
+            manageSubscription = { billing.manageSubscription(this) }, retryBilling = billing::connect,
+            installUpdate = updates::complete) }
+        updates.check()
     }
+    override fun onDestroy() { updates.stop(); super.onDestroy() }
     private fun signIn() = lifecycleScope.launch {
         try { GoogleSignIn.request(this@MainActivity, AuthConfig.fromBuild().googleWebClientId)?.let(model::signIn) }
         catch (cancelled: CancellationException) { throw cancelled }

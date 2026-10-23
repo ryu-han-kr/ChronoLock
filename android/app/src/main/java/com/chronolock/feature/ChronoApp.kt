@@ -57,7 +57,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}, privacyOptions: () -> Unit = {},
-    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}, retryBilling: () -> Unit = {}) {
+    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}, retryBilling: () -> Unit = {}, installUpdate: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -83,6 +83,10 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     LocalizedApp(state.language) {
         val text = uiText()
         LaunchedEffect(state.error, state.language) { state.error?.let { snackbar.showSnackbar(text(it)); model.dismissError() } }
+        LaunchedEffect(state.updateReady, state.language) {
+            if (state.updateReady && snackbar.showSnackbar(text("새 버전을 내려받았습니다."), actionLabel = text("다시 시작"),
+                    duration = SnackbarDuration.Indefinite) == SnackbarResult.ActionPerformed) installUpdate()
+        }
         if (state.onboarded != true) {
             ChronoTheme(state.theme) {
                 if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding)
