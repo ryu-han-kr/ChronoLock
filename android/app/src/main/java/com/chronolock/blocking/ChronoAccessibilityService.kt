@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import androidx.core.content.ContextCompat
 import com.chronolock.MainActivity
 import com.chronolock.data.LocalRepository
@@ -181,9 +183,20 @@ class ChronoAccessibilityService : AccessibilityService() {
         }
     }
 
+    /**
+     * The browser's address bar. Samsung tablets often report no active-window root (taskbar, pop-up and split views),
+     * so the browser's own application window is searched first.
+     */
+    private fun addressBar(browser: String): AccessibilityNodeInfo? {
+        val id = Browsers.urlBarIds.getValue(browser)
+        val roots = windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }.mapNotNull { it.root }
+            .filter { it.packageName == browser } + listOfNotNull(rootInActiveWindow)
+        return roots.firstNotNullOfOrNull { it.findAccessibilityNodeInfosByViewId(id).firstOrNull() }
+    }
+
     private fun checkSite(browser: String) {
         val match = if (sites.isEmpty()) null else {
-            val bar = runCatching { rootInActiveWindow?.findAccessibilityNodeInfosByViewId(Browsers.urlBarIds.getValue(browser))?.firstOrNull() }
+            val bar = runCatching { addressBar(browser) }
                 .getOrNull() ?: return // another window is in front, or the bar scrolled away: keep the last answer
             // While the person types an address the bar holds their input, not the page.
             if (bar.isFocused) return

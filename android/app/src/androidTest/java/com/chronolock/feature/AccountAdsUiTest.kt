@@ -31,7 +31,7 @@ class AccountAdsUiTest {
         } }
     }
 
-    private fun scrollTo(text: String) = ui.onNode(hasScrollToIndexAction()).performScrollToNode(hasText(text))
+    private fun scrollTo(text: String) = ui.onNodeWithTag("main-list").performScrollToNode(hasText(text))
 
     @Test fun unconfiguredServices_hideAccountAndAdCards() {
         show(MainState())

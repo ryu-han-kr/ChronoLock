@@ -441,4 +441,12 @@
     <string name="site_delete_failed">"无法删除网站。"</string>
     <string name="update_ready">"新版本已下载。"</string>
     <string name="update_restart">"重新启动"</string>
+    <string name="theme_word_ivory">"象牙白"</string>
+    <string name="theme_word_white">"白"</string>
+    <string name="theme_word_cream">"奶油"</string>
+    <string name="theme_word_butter">"黄油"</string>
+    <string name="theme_favorites">"收藏的主题"</string>
+    <string name="theme_favorite_add">"收藏"</string>
+    <string name="theme_favorite_remove">"取消收藏"</string>
+    <string name="theme_favorites_hint">"点按 ♡ 可将主题固定在设置中主题列表的最前面。"</string>
 </resources>

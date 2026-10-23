@@ -412,6 +412,14 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "사이트를 삭제하지 못했습니다." to R.string.site_delete_failed,
     "새 버전을 내려받았습니다." to R.string.update_ready,
     "다시 시작" to R.string.update_restart,
+    "아이보리" to R.string.theme_word_ivory,
+    "화이트" to R.string.theme_word_white,
+    "크림" to R.string.theme_word_cream,
+    "버터" to R.string.theme_word_butter,
+    "찜한 테마" to R.string.theme_favorites,
+    "찜하기" to R.string.theme_favorite_add,
+    "찜 해제" to R.string.theme_favorite_remove,
+    "♡를 누르면 찜한 테마가 설정의 테마 목록 앞쪽에 나옵니다." to R.string.theme_favorites_hint,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

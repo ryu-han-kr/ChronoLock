@@ -441,4 +441,12 @@
     <string name="site_delete_failed">"サイトを削除できませんでした。"</string>
     <string name="update_ready">"新しいバージョンをダウンロードしました。"</string>
     <string name="update_restart">"再起動"</string>
+    <string name="theme_word_ivory">"アイボリー"</string>
+    <string name="theme_word_white">"ホワイト"</string>
+    <string name="theme_word_cream">"クリーム"</string>
+    <string name="theme_word_butter">"バター"</string>
+    <string name="theme_favorites">"お気に入り"</string>
+    <string name="theme_favorite_add">"お気に入りに追加"</string>
+    <string name="theme_favorite_remove">"お気に入りから削除"</string>
+    <string name="theme_favorites_hint">"♡をタップすると、設定のテーマ一覧の先頭に表示されます。"</string>
 </resources>

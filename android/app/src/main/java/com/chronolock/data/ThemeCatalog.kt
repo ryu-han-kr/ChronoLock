@@ -66,13 +66,17 @@ object ThemeCatalog {
         Solid("beige", "베이지", 40, .30, .90), Solid("sand", "샌드", 45, .40, .88), Solid("stone", "스톤", 200, .08, .86),
         Solid("oat", "오트", 50, .22, .92), Solid("graphite", "그라파이트", 220, .05, .13), Solid("sepia", "세피아", 30, .30, .13))
 
+    /**
+     * Trend palettes are named page colour first, then accent ("민트 핑크"), since the page is what the tile mostly shows.
+     * A number is added only when two seeds look alike under the same words.
+     */
     val trend: List<AppTheme> = trendSeeds.mapIndexed { index, seed -> fromSeed("trend_${index + 1}", listOf(TREND), seed) }.let { themes ->
-        val words = themes.map { wordFor(hueOf(it.primary)) }
+        val words = themes.map { theme -> listOf(pageWord(theme.background), wordFor(hueOf(theme.primary))).distinct() }
         themes.mapIndexed { index, theme ->
             val word = words[index]
             val duplicates = words.count { it == word }
             val ordinal = words.take(index + 1).count { it == word }
-            theme.copy(label = if (duplicates > 1) listOf(TREND, word, "$ordinal") else listOf(TREND, word))
+            theme.copy(label = listOf(TREND) + word + if (duplicates > 1) listOf("$ordinal") else emptyList())
         }
     }
     val pastel: List<AppTheme> = hues.map { hue -> tint("pastel_$hue", listOf(PASTEL, wordFor(hue)), hue, hue, .70, .90) }
@@ -92,6 +96,21 @@ object ThemeCatalog {
     val sections: List<Pair<String, List<AppTheme>>> = listOf(TREND to trend, PASTEL to pastel, COOL to cool, DUOTONE to duotone,
         GRADIENT to gradient, DUAL to dual, DEEP to deep, MIDNIGHT to midnight, NEUTRAL to neutral)
     val all: List<AppTheme> = sections.flatMap { it.second }
+
+    /** A word for a page colour: neutral words for near-white, greyish and pale yellow pages, else the nearest hue. */
+    private fun pageWord(color: Long): String {
+        val (r, g, b) = channels(color).map { it / 255.0 }
+        val lightness = (max(r, max(g, b)) + min(r, min(g, b))) / 2
+        val hue = hueOf(color)
+        val yellowish = hue in 30..70
+        return when {
+            lightness >= .96 -> if (yellowish) "아이보리" else "화이트"
+            saturation(color) < .25 -> if (hue in 90..270) "쿨 그레이" else "웜 그레이"
+            yellowish && hue >= 35 && lightness >= .85 -> "크림"
+            yellowish && hue >= 35 && lightness >= .7 -> "버터"
+            else -> wordFor(hue)
+        }
+    }
 
     private fun wordFor(hue: Int): String = hueWords.minByOrNull { (word, _) -> hueDistance(hue, word) }!!.second
 

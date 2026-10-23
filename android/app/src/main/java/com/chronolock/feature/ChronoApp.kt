@@ -122,7 +122,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
                 restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             )
-            if (themeGallery) ThemeGallery(state.theme, model::selectTheme) { themeGallery = false }
+            if (themeGallery) ThemeGallery(state.theme, model::selectTheme, state.favoriteThemes, model::toggleFavoriteTheme) { themeGallery = false }
             }
             editPackage?.let { appId ->
                 val saved = state.rules.firstOrNull { it.packageName == appId }

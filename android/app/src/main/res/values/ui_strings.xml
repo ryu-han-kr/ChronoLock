@@ -441,4 +441,12 @@
     <string name="site_delete_failed">"사이트를 삭제하지 못했습니다."</string>
     <string name="update_ready">"새 버전을 내려받았습니다."</string>
     <string name="update_restart">"다시 시작"</string>
+    <string name="theme_word_ivory">"아이보리"</string>
+    <string name="theme_word_white">"화이트"</string>
+    <string name="theme_word_cream">"크림"</string>
+    <string name="theme_word_butter">"버터"</string>
+    <string name="theme_favorites">"찜한 테마"</string>
+    <string name="theme_favorite_add">"찜하기"</string>
+    <string name="theme_favorite_remove">"찜 해제"</string>
+    <string name="theme_favorites_hint">"♡를 누르면 찜한 테마가 설정의 테마 목록 앞쪽에 나옵니다."</string>
 </resources>

@@ -30,4 +30,14 @@ class ThemePreferencesTest {
             }
         } finally { preferences.setTheme(original) }
     }
+    @Test fun favoriteThemes_toggleAndPersist() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val preferences = Preferences(context)
+        val theme = ThemeCatalog.pastel.first()
+        val had = theme.name in preferences.favoriteThemes.first()
+        try {
+            preferences.toggleFavoriteTheme(theme)
+            assertEquals(!had, theme.name in Preferences(context).favoriteThemes.first())
+        } finally { if (theme.name in preferences.favoriteThemes.first() != had) preferences.toggleFavoriteTheme(theme) }
+    }
 }

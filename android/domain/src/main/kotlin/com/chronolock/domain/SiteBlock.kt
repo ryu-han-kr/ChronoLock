@@ -23,7 +23,8 @@ object SiteDomains {
      * phrase instead of an address; anything that is not a host gives null.
      */
     fun hostOf(text: String): String? {
-        val trimmed = text.trim().lowercase()
+        // Samsung Internet prefixes the address with a left-to-right mark; drop such invisible format characters.
+        val trimmed = text.filterNot { Character.getType(it) == Character.FORMAT.toInt() }.trim().lowercase()
         if (trimmed.isEmpty() || trimmed.any(Char::isWhitespace)) return null
         val afterScheme = trimmed.substringAfter("://", trimmed)
         val host = afterScheme.substringBefore('/').substringBefore('?').substringBefore('#')

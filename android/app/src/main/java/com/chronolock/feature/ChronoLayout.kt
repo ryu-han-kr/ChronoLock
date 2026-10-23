@@ -125,7 +125,7 @@ internal fun ChronoScreen(
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(if (expanded && tab < 2) 2 else 1),
                         state = when (tab) { 0 -> todayScroll; 1 -> appsScroll; 2 -> historyScroll; else -> settingsScroll },
-                        modifier = Modifier.widthIn(max = 1120.dp).fillMaxSize(),
+                        modifier = Modifier.widthIn(max = 1120.dp).fillMaxSize().testTag("main-list"),
                         contentPadding = PaddingValues(if (expanded) 32.dp else 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -267,7 +267,7 @@ internal fun ChronoScreen(
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
-                                item { ThemePicker(state.theme, selectTheme, openThemeGallery) }
+                                item { ThemePicker(state.theme, selectTheme, openThemeGallery, state.favoriteThemes) }
                                 item { StrictModeCard(state, nowEpoch, setStrict, cancelStrict) }
                                 item { PermissionCard(state, usagePermission, accessibilityPermission) }
                                 item { CardBox {

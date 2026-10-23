@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.chronolock.domain.StrictSetting
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,6 +26,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val strictPendingKey = intPreferencesKey("strict_pending_minutes")
     private val strictPendingAtKey = longPreferencesKey("strict_pending_at")
     private val focusMinutesKey = intPreferencesKey("last_focus_minutes")
+    private val favoriteThemesKey = stringSetPreferencesKey("favorite_themes")
     val language = context.preferences.data.map { AppLanguage.fromStored(it[languageKey]) }
     val theme = context.preferences.data.map { AppTheme.fromStored(it[themeKey]) }
     val acknowledged = context.preferences.data.map { it[disclosure] ?: false }
@@ -47,6 +49,11 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     suspend fun setFocusMinutes(minutes: Int) { context.preferences.edit { it[focusMinutesKey] = minutes } }
     suspend fun finishOnboarding() { context.preferences.edit { it[onboardedKey] = true } }
     suspend fun acknowledge() { context.preferences.edit { it[disclosure] = true } }
+    /** Theme names the person pinned; names of removed palettes are simply never matched. */
+    val favoriteThemes = context.preferences.data.map { it[favoriteThemesKey] ?: emptySet() }
+    suspend fun toggleFavoriteTheme(theme: AppTheme) {
+        context.preferences.edit { val current = it[favoriteThemesKey] ?: emptySet(); it[favoriteThemesKey] = if (theme.name in current) current - theme.name else current + theme.name }
+    }
     suspend fun setTheme(theme: AppTheme) { context.preferences.edit { it[themeKey] = theme.name } }
     suspend fun setLanguage(language: AppLanguage) { context.preferences.edit { it[languageKey] = language.name } }
 }

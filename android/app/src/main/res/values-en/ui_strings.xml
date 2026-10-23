@@ -448,4 +448,12 @@
     <string name="site_delete_failed">"Could not remove the site."</string>
     <string name="update_ready">"A new version has been downloaded."</string>
     <string name="update_restart">"Restart"</string>
+    <string name="theme_word_ivory">"Ivory"</string>
+    <string name="theme_word_white">"White"</string>
+    <string name="theme_word_cream">"Cream"</string>
+    <string name="theme_word_butter">"Butter"</string>
+    <string name="theme_favorites">"Favorites"</string>
+    <string name="theme_favorite_add">"Add to favorites"</string>
+    <string name="theme_favorite_remove">"Remove from favorites"</string>
+    <string name="theme_favorites_hint">"Tap ♡ to pin a theme to the front of the theme list in Settings."</string>
 </resources>

@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.items as gridItems
@@ -123,7 +125,10 @@ internal fun AppTheme.backgroundBrush(): Brush =
 
 /** Settings card: the built-in palettes, the current pick when it comes from the catalog, and a tile that opens the gallery. */
 @Composable
-internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGallery: () -> Unit = {}) {
+internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGallery: () -> Unit = {}, favorites: Set<String> = emptySet()) {
+    // Pinned palettes come first, then the built-ins; the current one leads only when it is neither.
+    val pinned = AppTheme.values().filter { it.name in favorites }
+    val row = pinned + AppTheme.builtIn.filter { it !in pinned }
     CardBox {
         // The gallery entry sits beside the title so it is visible without scrolling the row.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -132,8 +137,8 @@ internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGal
         }
         Text(tr("원하는 분위기를 선택하세요. 다음 실행에도 유지됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
         LazyRow(Modifier.selectableGroup().testTag("themes-${ThemeCatalog.BASIC}"), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (selected !in AppTheme.builtIn) item(key = "current") { ThemeTile(selected, chosen = true, tag = "theme-current") {} }
-            items(AppTheme.builtIn, key = { it.name }) { theme -> ThemeTile(theme, theme == selected) { select(theme) } }
+            if (selected !in row) item(key = "current") { ThemeTile(selected, chosen = true, tag = "theme-current") {} }
+            items(row, key = { it.name }) { theme -> ThemeTile(theme, theme == selected, pinned = theme in pinned) { select(theme) } }
         }
         Text(tr("선택: %1\$s", selected.label.map { tr(it) }.joinToString(" ")) +
             selected.description.takeIf { it.isNotBlank() }?.let { " · " + tr(it) }.orEmpty(),
@@ -143,7 +148,8 @@ internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGal
 
 /** Full-screen overlay listing every palette by family; the caller stacks it above the screen and it closes on back. */
 @Composable
-internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, close: () -> Unit) {
+internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favorites: Set<String> = emptySet(),
+    toggleFavorite: (AppTheme) -> Unit = {}, close: () -> Unit) {
     BackHandler(onBack = close)
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize(), color = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
@@ -157,11 +163,21 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, close:
                 LazyVerticalGrid(columns = GridCells.Adaptive(76.dp), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(14.dp),
                     modifier = Modifier.fillMaxSize().selectableGroup().testTag("theme-gallery-grid")) {
-                    (listOf(ThemeCatalog.BASIC to AppTheme.builtIn) + ThemeCatalog.sections).forEach { (family, themes) ->
+                    item(key = "favorites-hint", span = { GridItemSpan(maxLineSpan) }) {
+                        Text(tr("♡를 누르면 찜한 테마가 설정의 테마 목록 앞쪽에 나옵니다."), style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    val pinned = AppTheme.values().filter { it.name in favorites }
+                    (listOfNotNull(pinned.takeIf { it.isNotEmpty() }?.let { "찜한 테마" to it }, ThemeCatalog.BASIC to AppTheme.builtIn) +
+                        ThemeCatalog.sections).forEach { (family, themes) ->
                         item(key = "family-$family", span = { GridItemSpan(maxLineSpan) }) {
                             Text(tr(family), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 10.dp))
                         }
-                        gridItems(themes, key = { it.name }) { theme -> ThemeTile(theme, theme == selected) { select(theme) } }
+                        // A pinned palette appears twice; its key in the pinned section must differ from its family one.
+                        gridItems(themes, key = { if (family == "찜한 테마") "pinned-${it.name}" else it.name }) { theme ->
+                            ThemeTile(theme, theme == selected, tag = if (family == "찜한 테마") "theme-pinned-${theme.name}" else "theme-${theme.name}",
+                                pinned = theme.name in favorites, togglePin = { toggleFavorite(theme) }) { select(theme) }
+                        }
                     }
                 }
             }
@@ -171,7 +187,8 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, close:
 
 /** A miniature of the palette: page background (or gradient), a card, the accent and a line of text. */
 @Composable
-private fun ThemeTile(theme: AppTheme, chosen: Boolean, tag: String = "theme-${theme.name}", onClick: () -> Unit) {
+private fun ThemeTile(theme: AppTheme, chosen: Boolean, tag: String = "theme-${theme.name}", pinned: Boolean = false,
+    togglePin: (() -> Unit)? = null, onClick: () -> Unit) {
     val shape = RoundedCornerShape(16.dp)
     Column(Modifier.width(76.dp).clip(RoundedCornerShape(12.dp)).testTag(tag).selectable(selected = chosen, role = Role.RadioButton, onClick = onClick).padding(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -182,6 +199,15 @@ private fun ThemeTile(theme: AppTheme, chosen: Boolean, tag: String = "theme-${t
                 Box(Modifier.size(12.dp).background(Color(theme.primary), CircleShape))
                 Box(Modifier.align(Alignment.BottomStart).fillMaxWidth(.7f).height(4.dp)
                     .background(Color(theme.text).copy(alpha = .55f), RoundedCornerShape(2.dp)))
+            }
+            when {
+                togglePin != null -> IconButton(onClick = togglePin, modifier = Modifier.align(Alignment.TopEnd).offset(10.dp, (-10).dp).size(32.dp)
+                    .testTag("pin-${theme.name}")) {
+                    Icon(if (pinned) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = if (pinned) tr("찜 해제") else tr("찜하기"), tint = Color(theme.primary), modifier = Modifier.size(18.dp))
+                }
+                pinned -> Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color(theme.primary),
+                    modifier = Modifier.align(Alignment.TopEnd).offset(6.dp, (-6).dp).size(14.dp))
             }
         }
         Text(theme.shortLabel.map { tr(it) }.joinToString(" "), style = MaterialTheme.typography.labelMedium, maxLines = 1,
