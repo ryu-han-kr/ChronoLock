@@ -14,15 +14,17 @@ AAB: `release/chronolock-0.7.0-vc12.aab` (0.6.3을 올리지 않았다면 0.6.3 
 - 빠른 설정 타일로 바로 집중을 시작해요.
 - 연속으로 한도를 지킨 날과 지난주 대비 사용량을 보여 줘요.
 - 규칙과 설정을 파일로 백업하고 복원할 수 있어요.
+- 새 제한을 만들 때 하루 허용 시간이 1시간으로 미리 채워져요.
 
 ### en
 - Strict mode: turning off or relaxing a limit waits 10 min–1 h.
-- Take a break: pause a limit for 10/30/60 min or today; it turns back on by itself.
-- Multiple schedule windows per app with every day, weekday and weekend presets.
+- Take a break: pause a limit for 10/30/60 min or today; it resumes by itself.
+- Multiple schedule windows per app (every day, weekdays, weekends).
 - App groups: several apps share one daily time and open count.
-- Start a focus right from a Quick Settings tile.
-- See your streak of days within limits and the change from last week.
+- Start a focus from a Quick Settings tile.
+- See your streak within limits and the change from last week.
 - Back up and restore your limits and settings with a file.
+- New limits start with a 1-hour daily time.
 
 ## 0.6.3 (versionCode 11) — 2026-10-22
 
