@@ -2,6 +2,16 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.8.4 (versionCode 17) — 미업로드
+
+AAB: `release/chronolock-0.8.4-vc17.aab`. 0.8.3 + 홈 이동 이벤트 누락 보정(PR #39). 0.8.3 검토가 끝나기 전에 올리면 0.8.3 노트와 합쳐 쓴다.
+
+### ko
+- 홈으로 나간 뒤에도 앱 사용 시간이 계속 늘어날 수 있던 문제를 고쳤어요.
+
+### en
+- Fixed usage time that could keep counting after going back to the home screen.
+
 ## 0.8.3 (versionCode 16) — 2026-10-23 내부·비공개 테스트 업로드(사용자)
 
 AAB: `release/chronolock-0.8.3-vc16.aab`. 0.8.2 + 다른 AI 리뷰 반영(안정성·정책 리뷰 수정, 제품 리뷰 상위 3개). 0.8.2를 아직 안 올렸다면 0.8.3만 올리고 0.8.2 노트와 합쳐 쓴다.
