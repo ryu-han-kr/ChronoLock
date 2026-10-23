@@ -36,6 +36,9 @@ object Strictness {
             !next.members.keys.containsAll(current.members.keys)
     }
 
+    /** Whether replacing [current] with [next] (null removes the site) lets the site open again. */
+    fun loosens(current: BlockedSite?, next: BlockedSite?): Boolean = current?.enabled == true && next?.enabled != true
+
     /** Whether lowering the delay from [current] to [next] minutes must itself wait. */
     fun loosensDelay(current: Int, next: Int) = next < current
 

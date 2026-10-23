@@ -227,7 +227,7 @@
     <string name="last_used">"Last used %1$s"</string>
     <string name="accessibility_title">"About accessibility access"</string>
     <string name="usage_title">"About usage access"</string>
-    <string name="accessibility_disclosure">"ChronoLock uses app-switch events to identify the active app and display a blocking screen according to your limits. It does not read screen text, passwords or typed content. Selected app package names and usage/blocking records stay on this device and are not transmitted. You can revoke access in Android settings at any time. If you agree, enable ChronoLock on the next settings screen."</string>
+    <string name="accessibility_disclosure">"ChronoLock uses app-switch events to identify the active app and display a blocking screen according to your limits. With website blocking, it checks only the domain in a supported browser\'s address bar. It does not read other screen text, passwords or typed content. Selected app package names, your blocked-site list and usage/blocking records stay on this device and are not transmitted; visited addresses are not saved. You can revoke access in Android settings at any time. If you agree, enable ChronoLock on the next settings screen."</string>
     <string name="usage_disclosure">"Usage access lets ChronoLock read time and opens for each app. History works without blocking rules and is kept for up to 30 days on this device only, never on a server. Accessibility access is not needed just to view history. You can revoke usage access in Android settings at any time."</string>
     <string name="consent_settings">"Agree and open settings"</string>
     <string name="error_data">"Could not read saved data. Reopen the app."</string>
@@ -268,7 +268,7 @@
     <string name="overlay_reset">"Daily limits reset at local midnight."</string>
     <string name="error_settings">"Could not open settings. Enable the permission in Android settings."</string>
     <string name="service_label">"ChronoLock app limits"</string>
-    <string name="accessibility_description">"Detects switches to selected apps and shows a blocking screen when your limits are reached. It does not read screen text or input. Data stays on this device. You can disable this service in Android settings at any time."</string>
+    <string name="accessibility_description">"Detects switches to selected apps and shows a blocking screen when your limits are reached. With website blocking, it checks only the domain in a supported browser\'s address bar. It does not read other screen text or input. Data stays on this device. You can disable this service in Android settings at any time."</string>
     <string name="account_title">"Account"</string>
     <string name="account_signed_in">"Signed in: %1$s"</string>
     <string name="account_google">"Google account"</string>
@@ -432,4 +432,18 @@
         <item quantity="one">"%1$d day in a row within your limits"</item>
         <item quantity="other">"%1$d days in a row within your limits"</item>
     </plurals>
+    <string name="site_title">"Website blocking"</string>
+    <string name="site_description">"Opening these sites in Chrome, Samsung Internet or another supported browser shows a block screen. Only the domain in the address bar is checked; visited pages are not saved."</string>
+    <string name="site_input">"Site address"</string>
+    <string name="site_add">"Add"</string>
+    <string name="site_remove">"Remove"</string>
+    <string name="held_site_delete">"Remove site"</string>
+    <string name="held_site_off">"Turn off blocking"</string>
+    <string name="site_browsers">"Supported browsers: Chrome, Samsung Internet, Edge, Firefox, Brave, Opera, Whale, DuckDuckGo, Vivaldi"</string>
+    <string name="site_block_heading">"%1$s\nYou chose not to open this now"</string>
+    <string name="site_block_detail">"This site is on your block list. Only the domain in the address bar is checked; visited pages are not saved."</string>
+    <string name="site_invalid">"Enter a site address such as youtube.com."</string>
+    <string name="sites_full">"You can block up to 50 sites."</string>
+    <string name="site_save_failed">"Could not save the site. Please try again."</string>
+    <string name="site_delete_failed">"Could not remove the site."</string>
 </resources>

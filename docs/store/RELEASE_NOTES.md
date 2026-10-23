@@ -2,6 +2,18 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.8.0 (versionCode 13) — 미업로드
+
+AAB: `release/chronolock-0.8.0-vc13.aab`. 업로드 전 접근성 API 신고(웹사이트 차단 추가)·시연 영상·개인정보처리방침 갱신 필요.
+
+### ko
+- 웹사이트 차단: Chrome·삼성 인터넷 등에서 정한 사이트를 열면 차단 화면을 띄워요.
+- 테마 화면의 "더보기"를 카드 오른쪽 위로 옮겼어요.
+
+### en
+- Website blocking: chosen sites show a block screen in Chrome, Samsung Internet and more.
+- "More" themes now sits at the top right of the theme card.
+
 ## 0.7.0 (versionCode 12) — 2026-10-22
 
 AAB: `release/chronolock-0.7.0-vc12.aab` (0.6.3을 올리지 않았다면 0.6.3 변경도 포함됨)

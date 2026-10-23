@@ -52,6 +52,19 @@ data class PendingGroupEntity(
     @Embedded(prefix = "group_") val group: GroupEntity,
 )
 
+/** A website blocked in supported browsers; see [com.chronolock.domain.BlockedSite]. */
+@Entity(tableName = "blocked_sites")
+data class SiteEntity(@PrimaryKey val domain: String, val enabled: Boolean = true)
+
+/** A change that unblocks a site, held back by strict mode like [PendingRuleEntity]. */
+@Entity(tableName = "pending_sites")
+data class PendingSiteEntity(
+    @PrimaryKey val domain: String,
+    val applyAtEpochMillis: Long,
+    val remove: Boolean,
+    @Embedded(prefix = "site_") val site: SiteEntity,
+)
+
 @Entity(tableName = "daily_usage_stats", primaryKeys = ["packageName", "date"])
 data class DailyEntity(val packageName: String, val date: String, val usageMillis: Long, val opens: Int, val blockedAttempts: Int)
 
@@ -116,17 +129,34 @@ interface ChronoDao {
     @Upsert suspend fun savePendingGroup(row: PendingGroupEntity)
     @Query("DELETE FROM pending_groups WHERE groupId = :id") suspend fun deletePendingGroup(id: Long)
     @Query("DELETE FROM pending_groups") suspend fun clearPendingGroups()
+    @Query("SELECT * FROM blocked_sites ORDER BY domain") fun observeSites(): Flow<List<SiteEntity>>
+    @Query("SELECT * FROM blocked_sites") suspend fun sites(): List<SiteEntity>
+    @Upsert suspend fun saveSite(site: SiteEntity)
+    @Query("DELETE FROM blocked_sites WHERE domain = :domain") suspend fun deleteSite(domain: String)
+    @Query("DELETE FROM blocked_sites") suspend fun clearSites()
+    @Query("SELECT * FROM pending_sites ORDER BY applyAtEpochMillis") fun observePendingSites(): Flow<List<PendingSiteEntity>>
+    @Query("SELECT * FROM pending_sites WHERE applyAtEpochMillis <= :now") suspend fun duePendingSites(now: Long): List<PendingSiteEntity>
+    @Upsert suspend fun savePendingSite(row: PendingSiteEntity)
+    @Query("DELETE FROM pending_sites WHERE domain = :domain") suspend fun deletePendingSite(domain: String)
+    @Query("DELETE FROM pending_sites") suspend fun clearPendingSites()
 }
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
     HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class,
-    GroupEntity::class, PendingGroupEntity::class],
-    version = 6, exportSchema = true)
+    GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class],
+    version = 7, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS blocked_sites (domain TEXT NOT NULL, enabled INTEGER NOT NULL, PRIMARY KEY(domain))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS pending_sites (domain TEXT NOT NULL, applyAtEpochMillis INTEGER NOT NULL, " +
+                    "remove INTEGER NOT NULL, site_domain TEXT NOT NULL, site_enabled INTEGER NOT NULL, PRIMARY KEY(domain))")
+            }
+        }
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS app_groups (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, " +

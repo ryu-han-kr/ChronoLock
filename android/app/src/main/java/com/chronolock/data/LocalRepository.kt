@@ -37,6 +37,9 @@ fun GroupEntity.toDomain() = AppGroup(id, name, members.split('\n').mapNotNull {
     line.split('\t', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }
 }.toMap(), dailyLimitSeconds, maxOpenCount, enabled)
 
+fun SiteEntity.toDomain() = BlockedSite(domain, enabled)
+fun BlockedSite.toEntity() = SiteEntity(domain, enabled)
+
 fun AppGroup.toEntity() = GroupEntity(id, name, members.entries.joinToString("\n") { "${it.key}\t${it.value.replace('\n', ' ').replace('\t', ' ')}" },
     dailyLimitSeconds, maxOpenCount, enabled)
 
@@ -116,7 +119,10 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         }
     }
 
-    companion object { const val GROUP_TAKEN = "다른 묶음에 들어 있는 앱은 함께 넣을 수 없습니다." }
+    companion object {
+        const val GROUP_TAKEN = "다른 묶음에 들어 있는 앱은 함께 넣을 수 없습니다."
+        const val SITES_FULL = "차단할 사이트는 최대 50개까지 추가할 수 있습니다."
+    }
 
     suspend fun requestDeleteGroup(id: Long, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
         database.withTransaction { changeGroup(id, dao.groups().firstOrNull { it.id == id }?.toDomain(), null, delayMillis, nowEpochMillis) }
@@ -140,7 +146,53 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         dao.insertEvents(listOf(EventEntity(type = if (group == null) "GROUP_DELETED" else "GROUP_UPDATED", packageName = null, epochMillis = epochMillis)))
     }
 
+    val sites = dao.observeSites()
+    val pendingSites = dao.observePendingSites()
+
+    /** Adds, re-enables or disables a site; disabling under strict mode waits like [requestRule]. */
+    suspend fun requestSite(site: BlockedSite, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+        database.withTransaction {
+            val all = dao.sites()
+            val current = all.firstOrNull { it.domain == site.domain }?.toDomain()
+            require(current != null || all.size < SiteDomains.MAX_SITES) { SITES_FULL }
+            changeSite(site.domain, current, site, delayMillis, nowEpochMillis)
+        }
+    }
+
+    suspend fun requestDeleteSite(domain: String, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+        database.withTransaction { changeSite(domain, dao.sites().firstOrNull { it.domain == domain }?.toDomain(), null, delayMillis, nowEpochMillis) }
+    }
+
+    suspend fun cancelPendingSite(domain: String) = mutex.withLock { dao.deletePendingSite(domain) }
+
+    /** Enabled sites after applying held changes whose time has come; the accessibility service checks addresses against these. */
+    suspend fun blockedSites(nowEpochMillis: Long): List<BlockedSite> = mutex.withLock {
+        applyDue(nowEpochMillis)
+        dao.sites().map { it.toDomain() }.filter { it.enabled }
+    }
+
+    private suspend fun changeSite(domain: String, current: BlockedSite?, next: BlockedSite?, delayMillis: Long, nowEpochMillis: Long): Long? {
+        if (delayMillis > 0 && Strictness.loosens(current, next)) {
+            val applyAt = Math.addExact(nowEpochMillis, delayMillis)
+            dao.savePendingSite(PendingSiteEntity(domain, applyAt, next == null, (next ?: current!!).toEntity()))
+            return applyAt
+        }
+        dao.deletePendingSite(domain)
+        if (next == null) dao.deleteSite(domain) else dao.saveSite(next.toEntity())
+        return null
+    }
+
     private suspend fun applyDue(nowEpochMillis: Long) {
+        dao.duePendingSites(nowEpochMillis).takeIf { it.isNotEmpty() }?.let { due ->
+            database.withTransaction {
+                due.forEach { held ->
+                    // A site removed meanwhile stays removed; the held change has nothing left to unblock.
+                    if (held.remove) dao.deleteSite(held.domain)
+                    else if (dao.sites().any { it.domain == held.domain }) dao.saveSite(held.site)
+                    dao.deletePendingSite(held.domain)
+                }
+            }
+        }
         dao.duePendingGroups(nowEpochMillis).takeIf { it.isNotEmpty() }?.let { due ->
             database.withTransaction {
                 due.forEach { held ->
@@ -217,10 +269,11 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         update.state
     }
 
-    /** Replaces every rule and group, as a restore does; usage history and the monitor state stay. */
-    suspend fun replaceAll(rules: List<AppRule>, groups: List<AppGroup>, nowEpochMillis: Long) = mutex.withLock {
+    /** Replaces every rule, group and site, as a restore does; usage history and the monitor state stay. */
+    suspend fun replaceAll(rules: List<AppRule>, groups: List<AppGroup>, sites: List<BlockedSite>, nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups()
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites()
+            sites.take(SiteDomains.MAX_SITES).forEach { dao.saveSite(it.toEntity()) }
             rules.forEach { dao.saveRule(it.copy(focusUntilEpochMillis = null, pausedUntilEpochMillis = null).toEntity()) }
             groups.forEach { dao.insertGroup(it.copy(id = 0).toEntity()) }
             dao.insertEvents(listOf(EventEntity(type = "BACKUP_RESTORED", packageName = null, epochMillis = nowEpochMillis)))
@@ -229,7 +282,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     suspend fun clearAll() = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
             database.historyDao().apply {
                 clearDaily(); clearEvents(); clearEstimates()
                 saveMeta(HistoryMetaEntity(clearedAt = System.currentTimeMillis()))

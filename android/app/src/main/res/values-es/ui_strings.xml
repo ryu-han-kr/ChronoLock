@@ -227,7 +227,7 @@
     <string name="last_used">"Último uso %1$s"</string>
     <string name="accessibility_title">"Sobre la accesibilidad"</string>
     <string name="usage_title">"Sobre el acceso al uso"</string>
-    <string name="accessibility_disclosure">"ChronoLock usa eventos de cambio de app para identificar la app activa y mostrar un bloqueo según tus límites. No lee texto de pantalla, contraseñas ni lo que escribes. Los nombres de paquete y registros de uso y bloqueo se guardan solo en este dispositivo y no se transmiten. Puedes revocar el acceso en Ajustes de Android. Si aceptas, activa ChronoLock en la siguiente pantalla."</string>
+    <string name="accessibility_disclosure">"ChronoLock usa eventos de cambio de app para identificar la app activa y mostrar un bloqueo según tus límites. Con el bloqueo de sitios, solo comprueba el dominio de la barra de direcciones de un navegador compatible. No lee otro texto de pantalla, contraseñas ni lo que escribes. Los nombres de paquete, tu lista de sitios bloqueados y los registros de uso y bloqueo se guardan solo en este dispositivo y no se transmiten; no se guardan las direcciones visitadas. Puedes revocar el acceso en Ajustes de Android. Si aceptas, activa ChronoLock en la siguiente pantalla."</string>
     <string name="usage_disclosure">"El acceso al uso permite leer el tiempo y las aperturas de cada app. El historial funciona sin reglas de bloqueo y se guarda hasta 30 días solo en este dispositivo, nunca en un servidor. No requiere accesibilidad para consultar registros. Puedes revocar el permiso en Ajustes de Android."</string>
     <string name="consent_settings">"Aceptar y abrir ajustes"</string>
     <string name="error_data">"No se pudieron leer los datos. Vuelve a abrir la app."</string>
@@ -268,7 +268,7 @@
     <string name="overlay_reset">"Los límites diarios se reinician a medianoche local."</string>
     <string name="error_settings">"No se pudieron abrir los ajustes. Activa el permiso en Ajustes de Android."</string>
     <string name="service_label">"Límites de ChronoLock"</string>
-    <string name="accessibility_description">"Detecta cambios a las apps elegidas y muestra un bloqueo al alcanzar tus límites. No lee texto ni entradas. Los datos se guardan solo en este dispositivo. Puedes desactivar el servicio en Ajustes de Android."</string>
+    <string name="accessibility_description">"Detecta cambios a las apps elegidas y muestra un bloqueo al alcanzar tus límites. Con el bloqueo de sitios, solo comprueba el dominio de la barra de direcciones de un navegador compatible. No lee otro texto ni entradas. Los datos se guardan solo en este dispositivo. Puedes desactivar el servicio en Ajustes de Android."</string>
     <string name="account_title">"Cuenta"</string>
     <string name="account_signed_in">"Sesión iniciada: %1$s"</string>
     <string name="account_google">"Cuenta de Google"</string>
@@ -439,4 +439,18 @@
         <item quantity="many">"%1$d días seguidos dentro de tus límites"</item>
         <item quantity="other">"%1$d días seguidos dentro de tus límites"</item>
     </plurals>
+    <string name="site_title">"Bloqueo de sitios web"</string>
+    <string name="site_description">"Si abres estos sitios en Chrome, Samsung Internet u otro navegador compatible, aparece un bloqueo. Solo se comprueba el dominio de la barra de direcciones; no se guardan las páginas visitadas."</string>
+    <string name="site_input">"Dirección del sitio"</string>
+    <string name="site_add">"Añadir"</string>
+    <string name="site_remove">"Quitar"</string>
+    <string name="held_site_delete">"Quitar sitio"</string>
+    <string name="held_site_off">"Desactivar bloqueo"</string>
+    <string name="site_browsers">"Navegadores compatibles: Chrome, Samsung Internet, Edge, Firefox, Brave, Opera, Whale, DuckDuckGo, Vivaldi"</string>
+    <string name="site_block_heading">"%1$s\nDecidiste no abrirlo ahora"</string>
+    <string name="site_block_detail">"Este sitio está en tu lista de bloqueo. Solo se comprueba el dominio de la barra de direcciones; no se guardan las páginas visitadas."</string>
+    <string name="site_invalid">"Escribe una dirección como youtube.com."</string>
+    <string name="sites_full">"Puedes bloquear hasta 50 sitios."</string>
+    <string name="site_save_failed">"No se pudo guardar el sitio. Inténtalo de nuevo."</string>
+    <string name="site_delete_failed">"No se pudo quitar el sitio."</string>
 </resources>

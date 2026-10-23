@@ -15,7 +15,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -126,12 +125,15 @@ internal fun AppTheme.backgroundBrush(): Brush =
 @Composable
 internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGallery: () -> Unit = {}) {
     CardBox {
-        Text(tr("화면 테마"), style = MaterialTheme.typography.titleLarge)
+        // The gallery entry sits beside the title so it is visible without scrolling the row.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(tr("화면 테마"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+            TextButton(onClick = openGallery, modifier = Modifier.testTag("theme-more")) { Text("+ " + tr("더보기")) }
+        }
         Text(tr("원하는 분위기를 선택하세요. 다음 실행에도 유지됩니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
         LazyRow(Modifier.selectableGroup().testTag("themes-${ThemeCatalog.BASIC}"), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (selected !in AppTheme.builtIn) item(key = "current") { ThemeTile(selected, chosen = true, tag = "theme-current") {} }
             items(AppTheme.builtIn, key = { it.name }) { theme -> ThemeTile(theme, theme == selected) { select(theme) } }
-            item(key = "more") { MoreTile(ThemeCatalog.all.size, openGallery) }
         }
         Text(tr("선택: %1\$s", selected.label.map { tr(it) }.joinToString(" ")) +
             selected.description.takeIf { it.isNotBlank() }?.let { " · " + tr(it) }.orEmpty(),
@@ -184,19 +186,6 @@ private fun ThemeTile(theme: AppTheme, chosen: Boolean, tag: String = "theme-${t
         }
         Text(theme.shortLabel.map { tr(it) }.joinToString(" "), style = MaterialTheme.typography.labelMedium, maxLines = 1,
             overflow = TextOverflow.Ellipsis, color = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-    }
-}
-
-@Composable
-private fun MoreTile(count: Int, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(16.dp)
-    Column(Modifier.width(76.dp).clip(RoundedCornerShape(12.dp)).testTag("theme-more").clickable(onClick = onClick).padding(2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(Modifier.size(64.dp).clip(shape).background(MaterialTheme.colorScheme.secondaryContainer)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape), contentAlignment = Alignment.Center) {
-            Text("+$count", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-        }
-        Text(tr("더보기"), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
     }
 }
 

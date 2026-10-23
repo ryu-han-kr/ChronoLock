@@ -70,6 +70,10 @@ internal fun ChronoScreen(
     cancelStrict: () -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
+    addSite: (String, () -> Unit) -> Unit = { _, _ -> },
+    toggleSite: (com.chronolock.domain.BlockedSite, Boolean) -> Unit = { _, _ -> },
+    removeSite: (String) -> Unit = {},
+    cancelPendingSite: (String) -> Unit = {},
     exportBackup: () -> Unit = {},
     restoreBackup: () -> Unit = {},
 ) {
@@ -201,6 +205,12 @@ internal fun ChronoScreen(
                                 items(state.groups, key = { "group:${it.id}" }) { group ->
                                     GroupCard(group, stats, state.pendingGroups.firstOrNull { it.groupId == group.id },
                                         edit = { editGroup(group.id) }, cancelHeld = { cancelPendingGroup(group.id) })
+                                }
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Text(tr("웹사이트 차단"), style = MaterialTheme.typography.titleLarge)
+                                }
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    SitesCard(state.sites, state.pendingSites, addSite, toggleSite, removeSite, cancelPendingSite)
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today) { app, recipe -> edit(app, recipe) } }
                                 item(span = { GridItemSpan(maxLineSpan) }) {

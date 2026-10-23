@@ -12,6 +12,9 @@ import com.chronolock.data.LocalRepository
 import com.chronolock.data.toDomain
 import com.chronolock.data.Preferences
 import com.chronolock.domain.AppRule
+import com.chronolock.domain.BlockedSite
+import com.chronolock.domain.Browsers
+import com.chronolock.domain.SiteDomains
 import com.chronolock.domain.MonitorState
 import com.chronolock.feature.forLanguage
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,6 +40,12 @@ class ChronoAccessibilityService : AccessibilityService() {
     /** The app on screen before the screen turned off; re-observed after unlock when usage events cannot tell. */
     private var observed: String? = null
     private var beforeScreenOff: String? = null
+    private var sites: List<BlockedSite> = emptyList()
+    /** The blocked site open in [siteBrowser]; only its domain is kept, never the address. */
+    private var blockedSite: String? = null
+    private var siteBrowser: String? = null
+    private var siteCheckScheduled = false
+    private var lastState: MonitorState? = null
     private sealed interface Command {
         data class Foreground(val packageName: String?) : Command
         data object Tick : Command
@@ -57,7 +66,7 @@ class ChronoAccessibilityService : AccessibilityService() {
         started = true
         android.util.Log.i("ChronoLock", "Accessibility service connected; restoring usage")
         overlay = BlockOverlay(this, onHome = {
-            if (performGlobalAction(GLOBAL_ACTION_HOME)) commands.trySend(Command.Foreground(null))
+            if (performGlobalAction(GLOBAL_ACTION_HOME)) { blockedSite = null; commands.trySend(Command.Foreground(null)) }
         }, onSettings = {
             startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             commands.trySend(Command.Foreground(null))
@@ -76,6 +85,15 @@ class ChronoAccessibilityService : AccessibilityService() {
             try { repository.rules.collect { list -> rules = list.associate { it.packageName to it.toDomain() } } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe rules", error) }
+        }
+        scope.launch {
+            try {
+                repository.sites.collect { list ->
+                    sites = list.map { it.toDomain() }.filter { it.enabled }
+                    siteBrowser?.let(::requestSiteCheck)
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe blocked sites", error) }
         }
         ContextCompat.registerReceiver(this, screenReceiver, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT)
@@ -132,17 +150,53 @@ class ChronoAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-        val app = event.packageName?.toString() ?: return
+        val app = event?.packageName?.toString() ?: return
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            // Content changes arrive constantly from every app; only a browser's address bar matters here.
+            if (app in Browsers.urlBarIds) requestSiteCheck(app)
+            return
+        }
+        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         if (::overlay.isInitialized && overlay.visible && app == packageName) return
         when (environment.windowKind(app)) {
             WindowKind.TRANSIENT, WindowKind.NONE -> Unit // keyboard, permission prompt, status bar: the app underneath stays observed
-            WindowKind.LEAVE -> commands.trySend(Command.Foreground(null))
-            WindowKind.APP -> commands.trySend(Command.Foreground(app))
+            WindowKind.LEAVE -> { blockedSite = null; commands.trySend(Command.Foreground(null)) }
+            WindowKind.APP -> {
+                if (app != siteBrowser) blockedSite = null
+                if (app in Browsers.urlBarIds) requestSiteCheck(app)
+                commands.trySend(Command.Foreground(app))
+            }
         }
     }
 
+    /** Reads the address bar at most once per [SITE_CHECK_MS], always once more after the last change. */
+    private fun requestSiteCheck(browser: String) {
+        siteBrowser = browser
+        if (siteCheckScheduled) return
+        siteCheckScheduled = true
+        scope.launch {
+            delay(SITE_CHECK_MS)
+            siteCheckScheduled = false
+            siteBrowser?.let(::checkSite)
+        }
+    }
+
+    private fun checkSite(browser: String) {
+        val match = if (sites.isEmpty()) null else {
+            val bar = runCatching { rootInActiveWindow?.findAccessibilityNodeInfosByViewId(Browsers.urlBarIds.getValue(browser))?.firstOrNull() }
+                .getOrNull() ?: return // another window is in front, or the bar scrolled away: keep the last answer
+            // While the person types an address the bar holds their input, not the page.
+            if (bar.isFocused) return
+            val host = SiteDomains.hostOf(bar.text?.toString().orEmpty()) ?: return
+            SiteDomains.match(host, sites)?.domain
+        }
+        if (match == blockedSite) return
+        blockedSite = match
+        lastState?.let(::render)
+    }
+
     private fun render(state: MonitorState) {
+        lastState = state
         observed = state.observedPackage
         runCatching { surfaces.update(state, rules, localized) }
             .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
@@ -150,7 +204,10 @@ class ChronoAccessibilityService : AccessibilityService() {
         if (target != null && state.decision.denied) {
             val label = runCatching { packageManager.getApplicationLabel(packageManager.getApplicationInfo(target, 0)).toString() }.getOrDefault(target)
             overlay.show(label, state.decision)
-        } else overlay.hide()
+        } else {
+            val site = blockedSite
+            if (site != null && target != null && target == siteBrowser) overlay.showSite(site) else overlay.hide()
+        }
     }
 
     // Called when feedback should stop (e.g. another service speaks); this service gives no feedback and keeps running.
@@ -159,6 +216,7 @@ class ChronoAccessibilityService : AccessibilityService() {
     private companion object {
         const val MAX_FAILURES = 5
         const val RECOVER_DELAY_MS = 400L
+        const val SITE_CHECK_MS = 300L
     }
     override fun onDestroy() {
         if (::overlay.isInitialized) overlay.hide()
