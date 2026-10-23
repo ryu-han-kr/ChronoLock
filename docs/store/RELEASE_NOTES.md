@@ -15,6 +15,7 @@ AAB: `release/chronolock-0.8.0-vc13.aab`. 업로드 전 접근성 API 신고(웹
 - 한 앱을 여러 그룹에 넣고, 앱을 한 번에 선택할 수 있어요.
 - 나만의 테마(색상 코드+효과)와 테마 찜을 추가했어요.
 - 앱 안에서 바로 업데이트할 수 있어요.
+- 앱 크기를 줄이고 더 빠르게 열리도록 최적화했어요.
 
 ### en
 - Website blocking in Chrome, Samsung Internet and more.
@@ -25,6 +26,7 @@ AAB: `release/chronolock-0.8.0-vc13.aab`. 업로드 전 접근성 API 신고(웹
 - Apps can join several groups; select apps all at once.
 - Custom colour themes and favourites.
 - Update right inside the app.
+- Smaller and faster to open.
 
 ## 0.7.0 (versionCode 12) — 2026-10-22
 
