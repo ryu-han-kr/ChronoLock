@@ -585,4 +585,9 @@
     <string name="site_preset_shopping">"쇼핑"</string>
     <string name="site_preset_community">"커뮤니티"</string>
     <string name="site_preset_all_added">"이미 모두 추가되어 있어요."</string>
+    <string name="theme_follow">"기기 다크 모드 따라가기"</string>
+    <string name="theme_follow_hint">"다크 모드일 때는 밤 테마, 아닐 때는 낮 테마를 써요. 아래에서 고를 테마를 정하세요."</string>
+    <string name="theme_day">"낮 테마"</string>
+    <string name="theme_night">"밤 테마"</string>
+    <string name="theme_random">"랜덤"</string>
 </resources>

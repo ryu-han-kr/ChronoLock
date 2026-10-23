@@ -2,7 +2,25 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 0.8.1 (versionCode 14) — 미업로드
+## 0.8.2 (versionCode 15) — 미업로드
+
+AAB: `release/chronolock-0.8.2-vc15.aab`. 0.8.1 + 개선(주간 리포트·추천 행동·사이트 묶음·2열 설정·낮/밤 테마·테마 바로가기·랜덤).
+
+### ko
+- 기기 다크 모드에 맞춰 낮·밤 테마가 자동으로 바뀌어요.
+- 테마 화면에 분류 바로가기와 랜덤 버튼을 넣었어요.
+- 일요일 저녁에 이번 주 사용 리포트를 알려 드려요.
+- 웹사이트 차단에 SNS·영상·쇼핑·커뮤니티 묶음 추가를 넣었어요.
+- 차단 화면에서 대신 할 일을 추천해요. 큰 화면에서는 설정이 2열로 보여요.
+
+### en
+- Day and night themes follow the device's dark mode.
+- Theme gallery shortcuts and a random pick.
+- A weekly report every Sunday evening.
+- Add site sets: social, video, shopping, communities.
+- The block screen suggests something else to do; two-column settings on large screens.
+
+## 0.8.1 (versionCode 14) — 2026-10-23 내부 테스트 업로드(사용자)
 
 AAB: `release/chronolock-0.8.1-vc14.aab`. 0.8.0 기능 + QA 수정(docs/QA_REPORT_2026-10-23.md). 0.8.0을 아직 비공개 테스트에 안 올렸다면 0.8.1을 올리고 아래 0.8.0 노트와 합쳐 쓴다.
 

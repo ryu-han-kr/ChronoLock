@@ -36,6 +36,10 @@ data class MainState(
     val focusBusy: Boolean = false,
     val theme: AppTheme = AppTheme.DARK,
     val favoriteThemes: Set<String> = emptySet(),
+    /** Day/night themes that follow the device's dark mode, and which of the two the picker is editing. */
+    val followSystem: Boolean = false,
+    val nightTheme: AppTheme = AppTheme.DARK,
+    val editingNight: Boolean = false,
     /** Day totals for the year calendar, and whether a password for deleting history exists. */
     val historyYear: List<com.chronolock.data.HistoryYearEntity> = emptyList(),
     val historyPinSet: Boolean = false,
@@ -103,6 +107,8 @@ class MainViewModel @Inject constructor(
         .combine(repository.groups) { data, groups -> data.copy(groups = groups.map { it.toDomain() }) }
         .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
         .combine(preferences.favoriteThemes) { data, favorites -> data.copy(favoriteThemes = favorites) }
+        .combine(preferences.followSystem) { data, follow -> data.copy(followSystem = follow) }
+        .combine(preferences.nightTheme) { data, night -> data.copy(nightTheme = night) }
         .combine(historyRepository.year) { data, year -> data.copy(historyYear = year) }
         .combine(preferences.historyPinSet) { data, set -> data.copy(historyPinSet = set) }
         .combine(preferences.lock) { data, lock -> data.copy(lock = lock) }
@@ -120,7 +126,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock)
+            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -158,8 +164,21 @@ class MainViewModel @Inject constructor(
         catch (error: Exception) { showError("테마를 저장하지 못했습니다. 다시 선택해 주세요.") }
     }
 
+    fun setFollowSystem(on: Boolean) = viewModelScope.launch {
+        try { preferences.setFollowSystem(on); if (!on) local.update { it.copy(editingNight = false) } }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("테마를 저장하지 못했습니다. 다시 선택해 주세요.") }
+    }
+    fun editNightTheme(night: Boolean) { local.update { it.copy(editingNight = night) } }
+
     fun selectTheme(theme: AppTheme) = viewModelScope.launch {
         if (!state.value.pro && theme !in AppTheme.builtIn) { showError(PRO_THEMES); return@launch }
+        if (state.value.followSystem && state.value.editingNight) {
+            try { preferences.setNightTheme(theme) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { showError("테마를 저장하지 못했습니다. 다시 선택해 주세요.") }
+            return@launch
+        }
         try { preferences.setTheme(theme) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("테마를 저장하지 못했습니다. 다시 선택해 주세요.") }

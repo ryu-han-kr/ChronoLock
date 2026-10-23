@@ -76,7 +76,10 @@ class ChronoAccessibilityService : AccessibilityService() {
             commands.trySend(Command.Foreground(null))
         })
         scope.launch {
-            try { preferences.theme.collect { overlay.setTheme(it) } }
+            try {
+                combine(preferences.theme, preferences.nightTheme, preferences.followSystem) { day, night, follow -> Triple(day, night, follow) }
+                    .collect { themes = it; applyOverlayTheme() }
+            }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay theme", error) }
         }
@@ -233,6 +236,18 @@ class ChronoAccessibilityService : AccessibilityService() {
 
     // Called when feedback should stop (e.g. another service speaks); this service gives no feedback and keeps running.
     override fun onInterrupt() = Unit
+
+    /** Day, night and whether to follow the device's dark mode, as last read from preferences. */
+    private var themes: Triple<com.chronolock.data.AppTheme, com.chronolock.data.AppTheme, Boolean>? = null
+    private fun applyOverlayTheme() {
+        val (day, night, follow) = themes ?: return
+        val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        if (::overlay.isInitialized) overlay.setTheme(if (follow && dark) night else day)
+    }
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        applyOverlayTheme()
+    }
 
     private companion object {
         const val MAX_FAILURES = 5

@@ -81,6 +81,9 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     // A one-second tick recomposes the whole screen; only the focus countdown needs it. Otherwise refresh the date each minute.
     LaunchedEffect(focusActive) { while (true) { today = LocalDate.now(); nowEpoch = System.currentTimeMillis(); delay(if (focusActive) 1_000 else 60_000) } }
     val snackbar = remember { SnackbarHostState() }
+    // The theme on screen: the night one while the device is dark and the person asked to follow it.
+    val shown = if (state.followSystem && androidx.compose.foundation.isSystemInDarkTheme()) state.nightTheme else state.theme
+    val editing = if (state.followSystem && state.editingNight) state.nightTheme else state.theme
     LocalizedApp(state.language) {
         val text = uiText()
         LaunchedEffect(state.error, state.language) { state.error?.let { snackbar.showSnackbar(text(it)); model.dismissError() } }
@@ -89,13 +92,13 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                     duration = SnackbarDuration.Indefinite) == SnackbarResult.ActionPerformed) installUpdate()
         }
         if (state.onboarded != true) {
-            ChronoTheme(state.theme) {
+            ChronoTheme(shown) {
                 if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding)
                 else Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             }
             return@LocalizedApp
         }
-        ChronoTheme(state.theme) {
+        ChronoTheme(shown) {
             Box {
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
@@ -123,10 +126,11 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,
                 lockFor = model::lockFor, startGoalLock = model::startGoalLock, endGoalLock = model::endGoalLock,
                 collectPiece = model::collectPiece, changeGoalPin = model::changeGoalPin, buyPro = buyPro,
+                setFollowSystem = model::setFollowSystem, editNightTheme = model::editNightTheme,
                 exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
                 restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             )
-            if (themeGallery) ThemeGallery(state.theme, model::selectTheme, state.favoriteThemes, model::toggleFavoriteTheme) { themeGallery = false }
+            if (themeGallery) ThemeGallery(editing, model::selectTheme, state.favoriteThemes, model::toggleFavoriteTheme) { themeGallery = false }
             }
             editPackage?.let { appId ->
                 val saved = state.rules.firstOrNull { it.packageName == appId }
