@@ -410,6 +410,8 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "차단할 사이트는 최대 50개까지 추가할 수 있습니다." to R.string.sites_full,
     "사이트를 저장하지 못했습니다. 다시 시도해 주세요." to R.string.site_save_failed,
     "사이트를 삭제하지 못했습니다." to R.string.site_delete_failed,
+    "새 버전을 내려받았습니다." to R.string.update_ready,
+    "다시 시작" to R.string.update_restart,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

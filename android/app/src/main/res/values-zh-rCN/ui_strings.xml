@@ -439,4 +439,6 @@
     <string name="sites_full">"最多可拦截 50 个网站。"</string>
     <string name="site_save_failed">"无法保存网站，请重试。"</string>
     <string name="site_delete_failed">"无法删除网站。"</string>
+    <string name="update_ready">"新版本已下载。"</string>
+    <string name="update_restart">"重新启动"</string>
 </resources>

@@ -453,4 +453,6 @@
     <string name="sites_full">"Puedes bloquear hasta 50 sitios."</string>
     <string name="site_save_failed">"No se pudo guardar el sitio. Inténtalo de nuevo."</string>
     <string name="site_delete_failed">"No se pudo quitar el sitio."</string>
+    <string name="update_ready">"Se descargó una nueva versión."</string>
+    <string name="update_restart">"Reiniciar"</string>
 </resources>

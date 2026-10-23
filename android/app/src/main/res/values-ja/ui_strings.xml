@@ -439,4 +439,6 @@
     <string name="sites_full">"ブロックできるサイトは最大50件です。"</string>
     <string name="site_save_failed">"サイトを保存できませんでした。もう一度お試しください。"</string>
     <string name="site_delete_failed">"サイトを削除できませんでした。"</string>
+    <string name="update_ready">"新しいバージョンをダウンロードしました。"</string>
+    <string name="update_restart">"再起動"</string>
 </resources>

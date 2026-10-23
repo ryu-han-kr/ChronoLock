@@ -31,6 +31,8 @@ data class MainState(
     val health: Health = Health(),
     val loading: Boolean = true,
     val error: String? = null,
+    /** Play finished downloading a newer build; a restart installs it. */
+    val updateReady: Boolean = false,
     val focusBusy: Boolean = false,
     val theme: AppTheme = AppTheme.DARK,
     val language: AppLanguage = AppLanguage.KOREAN,
@@ -343,4 +345,5 @@ class MainViewModel @Inject constructor(
     private companion object { const val HELD = "엄격 모드라 완화한 설정은 대기 시간이 지난 뒤 적용됩니다." }
     fun showError(message: String) { local.update { it.copy(error = message) } }
     fun dismissError() { local.update { it.copy(error = null) } }
+    fun updateDownloaded() { local.update { it.copy(updateReady = true) } }
 }
