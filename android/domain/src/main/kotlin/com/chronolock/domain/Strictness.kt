@@ -23,6 +23,8 @@ object Strictness {
             raised(current.maxOpenCount?.toLong(), next.maxOpenCount?.toLong()) ||
             lowered(current.cooldownSeconds, next.cooldownSeconds) ||
             !next.schedules.containsAll(current.schedules) ||
+            lowered(current.pauseSeconds?.toLong(), next.pauseSeconds?.toLong()) ||
+            raised(current.checkInMinutes?.toLong(), next.checkInMinutes?.toLong()) ||
             (next.pausedUntilEpochMillis ?: 0) > oldPause
     }
 

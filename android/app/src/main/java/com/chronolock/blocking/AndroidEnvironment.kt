@@ -27,7 +27,7 @@ data class InstalledApp(val packageName: String, val label: String)
 data class UsageRecovery(val dailyMillis: Map<String, Long>, val foregroundPackage: String?)
 
 @Singleton
-class AndroidEnvironment @Inject constructor(@ApplicationContext private val context: Context) {
+class AndroidEnvironment @Inject constructor(@ApplicationContext val context: Context) {
     fun clock() = ClockReading(System.currentTimeMillis(), SystemClock.elapsedRealtime(),
         Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, 0), ZoneId.systemDefault())
 
@@ -58,6 +58,7 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext private val con
         if (cachedAt != 0L && SystemClock.elapsedRealtime() - cachedAt < 60_000) return
         cachedSafety = querySafetyPackages()
         cachedTransient = queryTransientPackages()
+        launchable.clear()
         cachedAt = SystemClock.elapsedRealtime()
     }
 
@@ -91,8 +92,11 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext private val con
             .distinctBy { it.packageName }.filterNot { it.packageName in safe }.sortedBy { it.label.lowercase() }
     }
 
-    fun windowKind(packageName: String): WindowKind =
-        classifyWindow(packageName, transientPackages(), safetyPackages(), context.packageManager.getLaunchIntentForPackage(packageName) != null)
+    /** Whether a package has a launcher entry; cached with the package sets so window events skip the binder call. */
+    private val launchable = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+
+    fun windowKind(packageName: String): WindowKind = classifyWindow(packageName, transientPackages(), safetyPackages(),
+        launchable.getOrPut(packageName) { context.packageManager.getLaunchIntentForPackage(packageName) != null })
 
     /** Rebuild foreground duration from events, not day-sized queryUsageStats buckets. */
     suspend fun recoverUsage(sinceEpochMillis: Long? = null): UsageRecovery = withContext(Dispatchers.IO) {

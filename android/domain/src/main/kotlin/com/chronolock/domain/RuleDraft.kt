@@ -36,6 +36,9 @@ data class RuleDraft(
     val scheduleEnabled: Boolean = false,
     val schedules: List<ScheduleDraft> = listOf(ScheduleDraft()),
     val enabled: Boolean = true,
+    /** 0 means off. */
+    val pauseSeconds: Int = 0,
+    val checkInMinutes: Int = 0,
 ) {
     fun build(packageName: String, appName: String): AppRule {
         fun limit(value: String, maximum: Long, label: String): Long? {
@@ -53,10 +56,12 @@ data class RuleDraft(
             require(schedules.size <= AppRule.MAX_SCHEDULES) { "예약 구간은 최대 5개까지 설정할 수 있습니다." }
             schedules.map { it.build() }.distinct()
         } else emptyList()
-        require(dailySeconds != null || openCount != null || cooldownSeconds != null || sessionSeconds != null || built.isNotEmpty()) {
+        require(dailySeconds != null || openCount != null || cooldownSeconds != null || sessionSeconds != null || built.isNotEmpty() ||
+            pauseSeconds > 0 || checkInMinutes > 0) {
             "한 가지 이상의 제한을 설정해 주세요."
         }
-        return AppRule(packageName, appName, dailySeconds, openCount, cooldownSeconds, sessionSeconds, built, enabled = enabled)
+        return AppRule(packageName, appName, dailySeconds, openCount, cooldownSeconds, sessionSeconds, built, enabled = enabled,
+            pauseSeconds = pauseSeconds.takeIf { it > 0 }, checkInMinutes = checkInMinutes.takeIf { it > 0 })
     }
 
     companion object {
@@ -64,6 +69,7 @@ data class RuleDraft(
             rule.dailyLimitSeconds?.toString().orEmpty(), rule.maxOpenCount?.toString().orEmpty(),
             rule.cooldownSeconds?.toString().orEmpty(), rule.sessionLimitSeconds?.toString().orEmpty(),
             rule.schedules.isNotEmpty(), rule.schedules.map(ScheduleDraft::from).ifEmpty { listOf(ScheduleDraft()) }, rule.enabled,
+            rule.pauseSeconds ?: 0, rule.checkInMinutes ?: 0,
         )
     }
 }
@@ -73,4 +79,13 @@ enum class RuleRecipe(val title: String, val description: String, val draft: Rul
     LESS_CHECKING("확인 횟수 줄이기", "하루 5회 · 한 번에 3분", RuleDraft(daily = "", opens = "5", session = "180")),
     SLEEP("취침 시간 지키기", "매일 23:00~다음 날 07:00 차단",
         RuleDraft(daily = "", scheduleEnabled = true, schedules = listOf(ScheduleDraft(daysMask = ScheduleDraft.EVERY_DAY)))),
+}
+
+/** What the person wants to cut down on, asked at first run; each suggests a recipe and, for websites, a site preset. */
+enum class OnboardingGoal(val emoji: String, val label: String, val recipe: RuleRecipe?, val preset: SitePreset?) {
+    SOCIAL("💬", "SNS", RuleRecipe.LESS_CHECKING, SitePreset.SOCIAL),
+    VIDEO("📺", "영상", RuleRecipe.SHORT_BREAK, SitePreset.VIDEO),
+    GAMES("🎮", "게임", null, null),
+    SHOPPING("🛒", "쇼핑·커뮤니티", RuleRecipe.LESS_CHECKING, SitePreset.SHOPPING),
+    SLEEP("🌙", "수면", RuleRecipe.SLEEP, null),
 }

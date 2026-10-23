@@ -50,6 +50,15 @@ class ChronoAccessibilityService : AccessibilityService() {
     private var siteBrowser: String? = null
     private var siteCheckScheduled = false
     private var lastState: MonitorState? = null
+    /** The app of the current visit; a passed pause and the next check-in belong to it and reset when it changes. */
+    private var visitApp: String? = null
+    private var passedApp: String? = null
+    private var nextCheckInMillis = 0L
+    /** Strict delay and lock as last read; the block screen hides its settings shortcut while either holds. */
+    @Volatile private var strict = com.chronolock.domain.StrictSetting()
+    @Volatile private var lock = com.chronolock.domain.LockSetting()
+    /** App labels for the block screen; looked up once per app instead of every second while blocked. */
+    private val labels = mutableMapOf<String, String>()
     private sealed interface Command {
         data class Foreground(val packageName: String?) : Command
         data object Tick : Command
@@ -99,9 +108,15 @@ class ChronoAccessibilityService : AccessibilityService() {
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe rules", error) }
         }
         scope.launch {
+            try { combine(preferences.strict, preferences.lock) { s, l -> s to l }.collect { (s, l) -> strict = s; lock = l } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe strict mode", error) }
+        }
+        scope.launch {
             try {
                 repository.sites.collect { list ->
                     sites = list.map { it.toDomain() }.filter { it.enabled }
+                    watchContent(sites.isNotEmpty())
                     siteBrowser?.let(::requestSiteCheck)
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
@@ -112,6 +127,30 @@ class ChronoAccessibilityService : AccessibilityService() {
         }, ContextCompat.RECEIVER_NOT_EXPORTED)
         screenReceiverRegistered = true
         scope.launch {
+            // A persistent fault (e.g. a full disk) pauses monitoring and retries with back-off instead of ending it for good.
+            var backoff = RESTART_MIN_MS
+            while (isActive) {
+                runMonitoring()
+                delay(backoff)
+                backoff = (backoff * 2).coerceAtMost(RESTART_MAX_MS)
+            }
+        }
+        scope.launch {
+            var wasInteractive = true
+            var ticks = 0
+            while (isActive) {
+                delay(1000)
+                val interactive = environment.interactive()
+                // One tick closes the session when the screen locks; none while it stays off, so no per-second writes.
+                if (interactive || wasInteractive) commands.send(Command.Tick)
+                if (interactive && ++ticks % RECONCILE_TICKS == 0) reconcileForeground()
+                wasInteractive = interactive
+            }
+        }
+    }
+
+    /** Connects the monitor and processes commands; returns after repeated failures so the caller can retry. */
+    private suspend fun runMonitoring() {
             try {
                 val recovery = environment.recoverUsage(repository.recoveryStartEpochMillis())
                 repository.reconnect(environment.clock(), recovery.dailyMillis, recovery.foregroundPackage)
@@ -142,24 +181,11 @@ class ChronoAccessibilityService : AccessibilityService() {
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) {
-                android.util.Log.e("ChronoLock", "Monitoring adapter failed", error)
+                android.util.Log.e("ChronoLock", "Monitoring adapter failed; retrying", error)
                 health.error(this@ChronoAccessibilityService)
                 overlay.hide()
                 surfaces.clearLive()
-                commands.close()
-                scope.coroutineContext.cancelChildren()
             }
-        }
-        scope.launch {
-            var wasInteractive = true
-            while (isActive) {
-                delay(1000)
-                val interactive = environment.interactive()
-                // One tick closes the session when the screen locks; none while it stays off, so no per-second writes.
-                if (interactive || wasInteractive) commands.send(Command.Tick)
-                wasInteractive = interactive
-            }
-        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -173,13 +199,45 @@ class ChronoAccessibilityService : AccessibilityService() {
         if (::overlay.isInitialized && overlay.visible && app == packageName) return
         when (environment.windowKind(app)) {
             WindowKind.TRANSIENT, WindowKind.NONE -> Unit // keyboard, permission prompt, status bar: the app underneath stays observed
-            WindowKind.LEAVE -> { blockedSite = null; commands.trySend(Command.Foreground(null)) }
+            WindowKind.LEAVE -> { blockedSite = null; commands.trySend(Command.Foreground(limitedWindowApp())) }
             WindowKind.APP -> {
                 if (app != siteBrowser) blockedSite = null
                 if (app in Browsers.urlBarIds) requestSiteCheck(app)
-                commands.trySend(Command.Foreground(app))
+                commands.trySend(Command.Foreground(limitedWindowApp() ?: app))
             }
         }
+    }
+
+    /**
+     * Android occasionally drops the window-state event of an app switch (seen right after the service reconnects), which
+     * would leave the previous app observed until the next switch. Compares the active application window with what is
+     * observed and sends the switch that was missed.
+     */
+    private fun reconcileForeground() {
+        val top = runCatching {
+            windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.isActive }?.root?.packageName?.toString()
+        }.getOrNull() ?: return
+        if (top == observed || top == packageName || (::overlay.isInitialized && overlay.visible)) return
+        // Only a missed switch into an app; the launcher or taskbar can hold the active window while an app is still on screen.
+        if (environment.windowKind(top) == WindowKind.APP) {
+            commands.trySend(Command.Foreground(limitedWindowApp() ?: top))
+        }
+    }
+
+    /**
+     * A limited app still visible in any application window: split screen, a pop-up window or picture-in-picture.
+     * Observing it keeps its time counted and the block screen up even when another app takes focus beside it.
+     */
+    private fun limitedWindowApp(): String? = runCatching {
+        windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }.mapNotNull { it.root?.packageName?.toString() }
+            .firstOrNull { it != packageName && rules[it]?.enabled == true && it !in environment.safetyPackages() }
+    }.getOrNull()
+
+    /** Content-change events wake the service for every app; they are only needed while some site is blocked. */
+    private fun watchContent(on: Boolean) {
+        val info = serviceInfo ?: return
+        val types = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or (if (on) AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED else 0)
+        if (info.eventTypes != types) { info.eventTypes = types; serviceInfo = info }
     }
 
     /** Reads the address bar at most once per [SITE_CHECK_MS], always once more after the last change. */
@@ -190,7 +248,7 @@ class ChronoAccessibilityService : AccessibilityService() {
         scope.launch {
             delay(SITE_CHECK_MS)
             siteCheckScheduled = false
-            siteBrowser?.let(::checkSite)
+            siteBrowser?.let { checkSite(it) }
         }
     }
 
@@ -205,14 +263,17 @@ class ChronoAccessibilityService : AccessibilityService() {
         return roots.firstNotNullOfOrNull { it.findAccessibilityNodeInfosByViewId(id).firstOrNull() }
     }
 
-    private fun checkSite(browser: String) {
-        val match = if (sites.isEmpty()) null else {
-            val bar = runCatching { addressBar(browser) }
-                .getOrNull() ?: return // another window is in front, or the bar scrolled away: keep the last answer
+    private suspend fun checkSite(browser: String) {
+        val current = sites
+        val match = if (current.isEmpty()) null else {
+            // Node queries are binder calls that can stall on heavy pages; keep them off the main thread.
+            val text = withContext(Dispatchers.Default) {
+                runCatching { addressBar(browser)?.let { bar -> if (bar.isFocused) FOCUSED else bar.text?.toString().orEmpty() } }.getOrNull()
+            } ?: return // another window is in front, or the bar scrolled away: keep the last answer
             // While the person types an address the bar holds their input, not the page.
-            if (bar.isFocused) return
-            val host = SiteDomains.hostOf(bar.text?.toString().orEmpty()) ?: return
-            SiteDomains.match(host, sites)?.domain
+            if (text === FOCUSED) return
+            val host = SiteDomains.hostOf(text) ?: return
+            SiteDomains.match(host, current)?.domain
         }
         if (match == blockedSite) return
         blockedSite = match
@@ -225,13 +286,45 @@ class ChronoAccessibilityService : AccessibilityService() {
         runCatching { surfaces.update(state, rules, localized) }
             .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
         val target = state.observedPackage
+        if (target != visitApp) { visitApp = target; passedApp = null; nextCheckInMillis = 0 }
         if (target != null && state.decision.denied) {
-            val label = runCatching { packageManager.getApplicationLabel(packageManager.getApplicationInfo(target, 0)).toString() }.getOrDefault(target)
-            overlay.show(label, state.decision)
-        } else {
-            val site = blockedSite
-            if (site != null && target != null && target == siteBrowser) overlay.showSite(site) else overlay.hide()
+            val now = environment.clock()
+            val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
+            overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now.epochMillis) == 0 && !lock.lockedAt(now))
+            return
         }
+        val site = blockedSite
+        if (site != null && target != null && target == siteBrowser) { overlay.showSite(site); return }
+        if (target != null && intervene(target, state)) return
+        overlay.hide()
+    }
+
+    private fun label(target: String) = labels.getOrPut(target) {
+        runCatching { packageManager.getApplicationLabel(packageManager.getApplicationInfo(target, 0)).toString() }.getOrDefault(target)
+    }
+
+    /**
+     * Gentle friction for an allowed app: a breathing pause before it opens, then a check-in every few minutes of use.
+     * Returns true while one of them is on screen.
+     */
+    private fun intervene(target: String, state: MonitorState): Boolean {
+        val rule = rules[target]?.takeIf { it.enabled && !it.pausedAt(state.clock?.epochMillis ?: 0) } ?: return false
+        val opens = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.opens } ?: 0
+        val session = state.active?.takeIf { it.packageName == target }?.usageMillis ?: 0
+        val pause = rule.pauseSeconds
+        if (pause != null && passedApp != target) {
+            if (overlay.mode != "pause:$target") overlay.showPause(target, label(target), com.chronolock.domain.pauseDelaySeconds(pause, (opens - 1).coerceAtLeast(0)), (opens - 1).coerceAtLeast(0)) {
+                passedApp = target; nextCheckInMillis = 0; lastState?.let(::render)
+            }
+            return true
+        }
+        val checkIn = rule.checkInMinutes ?: return false
+        if (nextCheckInMillis == 0L) nextCheckInMillis = session + checkIn * 60_000L
+        if (session < nextCheckInMillis) return false
+        if (overlay.mode != "checkin:$target") overlay.showCheckIn(target, label(target), checkIn) {
+            nextCheckInMillis = (lastState?.active?.usageMillis ?: session) + checkIn * 60_000L; overlay.hide()
+        }
+        return true
     }
 
     // Called when feedback should stop (e.g. another service speaks); this service gives no feedback and keeps running.
@@ -253,6 +346,12 @@ class ChronoAccessibilityService : AccessibilityService() {
         const val MAX_FAILURES = 5
         const val RECOVER_DELAY_MS = 400L
         const val SITE_CHECK_MS = 300L
+        const val RESTART_MIN_MS = 5_000L
+        const val RESTART_MAX_MS = 300_000L
+        /** Seconds between checks for a missed app switch. */
+        const val RECONCILE_TICKS = 3
+        /** Marker for an address bar being edited. */
+        val FOCUSED = String(charArrayOf('\u0000'))
     }
     override fun onDestroy() {
         if (::overlay.isInitialized) overlay.hide()

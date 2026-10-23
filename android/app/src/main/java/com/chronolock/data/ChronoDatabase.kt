@@ -21,6 +21,8 @@ data class RuleEntity(
     /** All schedule windows as "startMinute-endMinute-daysMask" joined by ";"; the single-schedule columns above are legacy. */
     val schedules: String? = null,
     val pausedUntilEpochMillis: Long? = null,
+    val pauseSeconds: Int? = null,
+    val checkInMinutes: Int? = null,
 )
 
 /** A relaxing change held back by strict mode until [applyAtEpochMillis]; [remove] deletes the rule instead of saving [rule]. */
@@ -144,12 +146,20 @@ interface ChronoDao {
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
     HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class,
     GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class],
-    version = 8, exportSchema = true)
+    version = 9, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE blocking_rules ADD COLUMN pauseSeconds INTEGER")
+                db.execSQL("ALTER TABLE blocking_rules ADD COLUMN checkInMinutes INTEGER")
+                db.execSQL("ALTER TABLE pending_rules ADD COLUMN rule_pauseSeconds INTEGER")
+                db.execSQL("ALTER TABLE pending_rules ADD COLUMN rule_checkInMinutes INTEGER")
+            }
+        }
         val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS history_year (date TEXT NOT NULL, usageMillis INTEGER NOT NULL, estimated INTEGER NOT NULL, PRIMARY KEY(date))")

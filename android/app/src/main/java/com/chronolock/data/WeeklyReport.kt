@@ -35,6 +35,9 @@ internal object WeeklyReport {
         val week = weeklyReportDue(now, last) ?: return
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        // Not marked as sent while notifications or this channel are switched off; it goes out once they are on again.
+        val manager = NotificationManagerCompat.from(context)
+        if (!manager.areNotificationsEnabled() || manager.getNotificationChannel(CHANNEL)?.importance == NotificationManager.IMPORTANCE_NONE) return
         val totals = weekTotals(history.year.first().associate { LocalDate.parse(it.date) to it.usageMillis }, week.plusDays(6))
         prefs.edit { putString(KEY, week.toString()) }
         if (totals.thisWeekMillis == 0L) return
@@ -46,7 +49,6 @@ internal object WeeklyReport {
             else -> if (change <= 0) localized.getString(R.string.weekly_report_less, used, -change)
                 else localized.getString(R.string.weekly_report_more, used, change)
         }
-        val manager = NotificationManagerCompat.from(context)
         manager.createNotificationChannel(NotificationChannel(CHANNEL, localized.getString(R.string.weekly_report_channel), NotificationManager.IMPORTANCE_DEFAULT))
         val open = PendingIntent.getActivity(context, 1, Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             PendingIntent.FLAG_IMMUTABLE)

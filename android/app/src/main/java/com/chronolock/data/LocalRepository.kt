@@ -26,12 +26,13 @@ fun RuleEntity.toDomain() = AppRule(
             listOf(Schedule(LocalTime.ofSecondOfDay(scheduleStartMinute * 60L), LocalTime.ofSecondOfDay(scheduleEndMinute * 60L), daysOf(scheduleDaysMask)))
         } else emptyList(),
     focusUntilEpochMillis = focusUntilEpochMillis, enabled = enabled, pausedUntilEpochMillis = pausedUntilEpochMillis,
+    pauseSeconds = pauseSeconds, checkInMinutes = checkInMinutes,
 )
 
 fun AppRule.toEntity() = RuleEntity(packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, enabled,
     sessionLimitSeconds, focusUntilEpochMillis = focusUntilEpochMillis,
     schedules = schedules.takeIf { it.isNotEmpty() }?.joinToString(";") { "${it.start.toSecondOfDay() / 60}-${it.end.toSecondOfDay() / 60}-${it.days.mask()}" },
-    pausedUntilEpochMillis = pausedUntilEpochMillis)
+    pausedUntilEpochMillis = pausedUntilEpochMillis, pauseSeconds = pauseSeconds, checkInMinutes = checkInMinutes)
 
 fun GroupEntity.toDomain() = AppGroup(id, name, members.split('\n').mapNotNull { line ->
     line.split('\t', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }
@@ -126,6 +127,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         const val SITES_FULL = "차단할 사이트는 최대 50개까지 추가할 수 있습니다."
         /** Passed as the delay while a lock holds: loosening changes are refused, tightening ones apply at once. */
         const val LOCKED_DELAY = -1L
+        const val IDLE_WRITE_MS = 15_000L
         const val LOCKED = "잠금 중에는 제한을 풀거나 느슨하게 바꿀 수 없습니다."
     }
 
@@ -269,14 +271,16 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     }
 
     suspend fun foreground(packageName: String?, now: ClockReading): MonitorState = mutex.withLock {
-        val update = monitor.foreground(state ?: load(), packageName, now, ruleMap(now))
-        persist(update)
+        val rules = ruleMap(now)
+        val update = monitor.foreground(state ?: load(), packageName, now, rules)
+        persist(update, tracked = packageName in rules)
         update.state
     }
 
     suspend fun tick(now: ClockReading): MonitorState = mutex.withLock {
-        val update = monitor.tick(state ?: load(), now, ruleMap(now))
-        persist(update)
+        val rules = ruleMap(now)
+        val update = monitor.tick(state ?: load(), now, rules)
+        persist(update, tracked = update.state.observedPackage in rules)
         update.state
     }
 
@@ -320,10 +324,23 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         )
     }
 
-    private suspend fun persist(update: MonitorUpdate) {
+    /** The state last written to the database and when; writes are diffed against it. */
+    private var written: MonitorState? = null
+    private var writtenAt = 0L
+
+    /**
+     * Stores the monitor state. While no limited app is on screen and nothing else changed, the per-second checkpoint is
+     * written at most every [IDLE_WRITE_MS]; recovery fills a short gap from usage events after a crash.
+     */
+    private suspend fun persist(update: MonitorUpdate, tracked: Boolean = true) {
         val clock = update.state.clock ?: return
         val retained = update.state.copy(daily = update.state.daily.filterKeys { it.date >= clock.date.minusDays(30) })
-        val previous = state
+        val previous = written
+        val quiet = !tracked && update.events.isEmpty() && previous != null && previous.clock?.date == clock.date &&
+            previous.observedPackage == retained.observedPackage && previous.active?.packageName == retained.active?.packageName &&
+            previous.blockedSession?.packageName == retained.blockedSession?.packageName && previous.decision.denied == retained.decision.denied &&
+            clock.epochMillis - writtenAt in 0 until IDLE_WRITE_MS
+        if (quiet) { state = retained; return }
         database.withTransaction {
             dao.saveDaily(retained.daily.filter { (key, value) -> previous?.daily?.get(key) != value }.map { (key, value) ->
                 DailyEntity(key.packageName, key.date.toString(), value.usageMillis, value.opens, value.blockedAttempts)
@@ -342,5 +359,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
             }
         }
         state = retained
+        written = retained
+        writtenAt = clock.epochMillis
     }
 }

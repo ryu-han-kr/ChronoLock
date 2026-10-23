@@ -86,6 +86,8 @@ internal fun ChronoScreen(
     buyPro: () -> Unit = {},
     setFollowSystem: (Boolean) -> Unit = {},
     editNightTheme: (Boolean) -> Unit = {},
+    pickRecipe: RuleRecipe? = null,
+    choosePickRecipe: (RuleRecipe?) -> Unit = {},
     deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> },
     exportBackup: () -> Unit = {},
     restoreBackup: () -> Unit = {},
@@ -175,7 +177,9 @@ internal fun ChronoScreen(
                                         TextButton(onClick = { selectTab(1) }) { Text(tr("앱 추가")) }
                                     }
                                 }
-                                if (state.rules.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+                                if (state.rules.isEmpty() && state.goals.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+                                    GoalStartCard(state.goals, pick = { choosePickRecipe(it); selectTab(1) }, addSites = addSitePreset)
+                                } else if (state.rules.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
                                     CardBox {
                                         Text(tr("집중을 방해하는 앱이 있나요?"), style = MaterialTheme.typography.titleMedium)
                                         Text(tr("앱을 선택하고 나에게 맞는 사용시간과 실행 횟수를 정해 보세요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -236,6 +240,12 @@ internal fun ChronoScreen(
                                 }
                             }
                             1 -> {
+                                pickRecipe?.let { recipe -> item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                        Text(tr("'%1\$s'을(를) 적용할 앱을 눌러 주세요.", tr(recipe.title)), Modifier.weight(1f), color = MaterialTheme.colorScheme.primary)
+                                        TextButton(onClick = { choosePickRecipe(null) }) { Text(tr("취소")) }
+                                    }
+                                } }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         OutlinedTextField(value = query, onValueChange = { query = it },
@@ -476,5 +486,25 @@ private fun LayoutPreview(initialTab: Int) {
     ChronoTheme {
         ChronoScreen(state, today, 0, tab, { tab = it }, remember { SnackbarHostState() },
             { _, _ -> }, {}, {}, {}, {}, {})
+    }
+}
+
+/** First suggestions from the goals picked at first run: a recipe to apply to an app, and a site set to block. */
+@Composable
+private fun GoalStartCard(goals: Set<String>, pick: (RuleRecipe?) -> Unit, addSites: (List<String>) -> Unit) {
+    CardBox {
+        Text(tr("맞춤 시작"), style = MaterialTheme.typography.titleLarge)
+        Text(tr("처음에 고른 목표에 맞춰 추천해요. 앱을 고르면 추천 설정이 미리 채워져요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        com.chronolock.domain.OnboardingGoal.entries.filter { it.name in goals }.forEach { goal ->
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(goal.emoji + "  " + tr(goal.label), style = MaterialTheme.typography.titleMedium)
+                Text(goal.recipe?.let { tr(it.title) + " · " + tr(it.description) } ?: tr("하루 1시간부터 시작해 보세요."),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { pick(goal.recipe) }, modifier = Modifier.testTag("goal-pick-${goal.name}")) { Text(tr("앱 고르기")) }
+                    goal.preset?.let { preset -> OutlinedButton(onClick = { addSites(preset.domains) }) { Text(tr("사이트도 막기")) } }
+                }
+            }
+        }
     }
 }

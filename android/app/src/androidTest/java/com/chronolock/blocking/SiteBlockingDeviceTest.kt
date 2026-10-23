@@ -43,7 +43,7 @@ class SiteBlockingDeviceTest {
         shell("input keyevent KEYCODE_HOME")
         db = Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db")
             .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5,
-                ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8).build()
+                ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9).build()
         db.clearAllTables()
         runBlocking { db.dao().saveSite(SiteEntity("youtube.com")) }
         val services = (originalServices.split(':').filter { it.isNotBlank() && it != service } + service).joinToString(":")
@@ -81,6 +81,29 @@ class SiteBlockingDeviceTest {
         val file = File(context.getExternalFilesDir(null), "device-verification/$name.png")
         file.parentFile?.mkdirs()
         file.outputStream().use { automation.takeScreenshot().compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    @Test fun limitedAppInAPopUpWindow_staysBlocked_whenAnotherAppIsOpened() {
+        val installed = shell("pm list packages").lines().map { it.removePrefix("package:").trim() }.toSet()
+        assumeTrue("Chrome and Samsung Internet needed", "com.android.chrome" in installed && "com.sec.android.app.sbrowser" in installed)
+        // An all-day schedule blocks Chrome at once.
+        runBlocking { db.dao().saveRule(RuleEntity("com.android.chrome", "Chrome", null, null, null, schedules = "0-1439-127")) }
+        val services = shell("settings get secure enabled_accessibility_services").trim()
+        shell("settings put secure enabled_accessibility_services " + services.split(':').filter { it != service }.joinToString(":").ifEmpty { "null" })
+        SystemClock.sleep(1500)
+        shell("settings put secure enabled_accessibility_services $services")
+        SystemClock.sleep(3000)
+        val scheduleText = AppLanguage.values().filter { it != AppLanguage.SYSTEM }.map { UiText(context.forLanguage(it))("쓰지 않기로 정한 시간대예요.") }
+        fun blocked() = automation.windows.mapNotNull { it.root }.any { root -> scheduleText.any { t -> root.findAccessibilityNodeInfosByText(t).any { it.isVisibleToUser } } }
+        // Chrome in a pop-up (freeform) window, then another app full screen beside it.
+        shell("am start -W --windowingMode 5 -a android.intent.action.VIEW -d https://example.com -p com.android.chrome")
+        SystemClock.sleep(2000)
+        shell("am start -W --windowingMode 1 -a android.intent.action.VIEW -d https://example.org -p com.sec.android.app.sbrowser")
+        val shown = await(10_000, ::blocked)
+        capture("popup-blocked")
+        shell("am force-stop com.android.chrome")
+        shell("input keyevent KEYCODE_HOME")
+        assertTrue("block screen missing while Chrome stays in a pop-up window", shown)
     }
 
     @Test fun limitedApp_showsALiveNotification_untilItIsLeft() {

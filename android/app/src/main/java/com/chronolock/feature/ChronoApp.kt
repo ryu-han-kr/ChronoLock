@@ -65,6 +65,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     /** 0 creates a new group. */
     var editGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
+    /** A recipe chosen from the Today suggestions; the next app picked in the app list opens with it. */
+    var pickRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var themeGallery by rememberSaveable { mutableStateOf(false) }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
@@ -103,7 +105,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
-                edit = { app, recipe -> editPackage = app; suggestedRecipe = recipe?.name },
+                edit = { app, recipe -> editPackage = app; suggestedRecipe = (recipe ?: pickRecipe?.let(RuleRecipe::valueOf))?.name; pickRecipe = null },
+                pickRecipe = pickRecipe?.let(RuleRecipe::valueOf), choosePickRecipe = { pickRecipe = it?.name },
                 startFocus = { confirmFocus = it }, stopFocus = model::stopFocus,
                 usagePermission = { permissionDialog = false },
                 accessibilityPermission = { permissionDialog = true },
@@ -216,7 +219,11 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             OutlinedButton(onClick = usage, modifier = Modifier.fillMaxWidth()) { Text(tr("사용 정보 권한")) }
             OutlinedButton(onClick = accessibility, modifier = Modifier.fillMaxWidth()) { Text(tr("접근성 권한")) }
-            if (!state.permissions.accessibility) Text(tr("접근성 설정 → 설치된 앱 → ChronoLock → 사용 켜기 → 허용"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            if (!state.permissions.accessibility) {
+                Text(tr("접근성 설정 → 설치된 앱 → ChronoLock → 사용 켜기 → 허용"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Text(tr("스위치가 회색이라 켜지지 않으면: 앱 정보 → 오른쪽 위 ⋮ → '제한된 설정 허용' 후 다시 켜 주세요."),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
             NotificationPermissionButton()
         }
     }
@@ -235,10 +242,11 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
 }
 
 private val RuleDraftSaver = listSaver<RuleDraft, Any>(
-    save = { listOf(it.daily, it.opens, it.cooldown, it.session, it.scheduleEnabled, it.enabled) +
+    save = { listOf(it.daily, it.opens, it.cooldown, it.session, it.scheduleEnabled, it.enabled, it.pauseSeconds, it.checkInMinutes) +
         it.schedules.flatMap { window -> listOf(window.start, window.end, window.daysMask) } },
     restore = { RuleDraft(it[0] as String, it[1] as String, it[2] as String, it[3] as String, it[4] as Boolean,
-        it.drop(6).chunked(3).map { (start, end, mask) -> ScheduleDraft(start as String, end as String, mask as Int) }, it[5] as Boolean) },
+        it.drop(8).chunked(3).map { (start, end, mask) -> ScheduleDraft(start as String, end as String, mask as Int) }, it[5] as Boolean,
+        it[6] as Int, it[7] as Int) },
 )
 
 internal val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
@@ -325,6 +333,25 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
             TimeFields("1회 허용 시간", "session", sessionTime, !saving, presetMinutes = listOf(5, 10, 30)) { sessionTime = it; error = null }
             NumberField(tr("하루 허용 실행 횟수"), draft.opens, !saving) { draft = draft.copy(opens = it) }
             TimeFields("재실행 대기 시간", "cooldown", cooldownTime, !saving, presetMinutes = listOf(5, 10, 30)) { cooldownTime = it; error = null }
+            // Gentle friction: a short pause before opening, and a check-in while the app stays open.
+            Text(tr("열기 전 멈춤"), style = MaterialTheme.typography.titleSmall)
+            Text(tr("열 때마다 숨 한 번 쉬는 화면을 보여 줘요. 그날 여러 번 열수록 조금씩 길어져요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(0, 3, 5, 10).forEach { seconds ->
+                    FilterChip(selected = draft.pauseSeconds == seconds, onClick = { draft = draft.copy(pauseSeconds = seconds); error = null },
+                        enabled = !saving, label = { Text(if (seconds == 0) tr("끄기") else tr("%1\$d초", seconds)) }, modifier = Modifier.testTag("pause-$seconds"))
+                }
+            }
+            Text(tr("사용 중 확인"), style = MaterialTheme.typography.titleSmall)
+            Text(tr("계속 쓰고 있으면 정한 시간마다 계속할지 물어봐요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(0, 5, 10, 20).forEach { minutes ->
+                    FilterChip(selected = draft.checkInMinutes == minutes, onClick = { draft = draft.copy(checkInMinutes = minutes); error = null },
+                        enabled = !saving, label = { Text(if (minutes == 0) tr("끄기") else tr("%1\$d분", minutes)) }, modifier = Modifier.testTag("checkin-$minutes"))
+                }
+            }
             Text(tr("1회 한도 도달 시 앱을 떠나야 다음 사용을 시작합니다. 대기를 함께 설정하면 바로 재실행하는 것도 줄일 수 있습니다."), style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth().toggleable(value = draft.scheduleEnabled, enabled = !saving, role = Role.Switch,
                 onValueChange = { draft = draft.copy(scheduleEnabled = it) }),
@@ -440,6 +467,8 @@ internal fun formatDuration(seconds: Long, text: UiText): String = when {
         rule.sessionLimitSeconds?.let { add(text("한 번에 %1\$s", formatDuration(it, text))) }
         rule.maxOpenCount?.let { add(text("%1\$d회 실행", it)) }
         rule.cooldownSeconds?.let { add(text("%1\$s 대기", formatDuration(it, text))) }
+        rule.pauseSeconds?.let { add(text("열기 전 %1\$d초 멈춤", it)) }
+        rule.checkInMinutes?.let { add(text("%1\$d분마다 확인", it)) }
         rule.toDomain().schedules.forEach { schedule ->
             add(text("%1\$s %2\$s~%3\$s 차단", days(schedule.days), schedule.start.toString(),
                 (if (schedule.start > schedule.end) text("다음 날 ") else "") + schedule.end.toString()))
