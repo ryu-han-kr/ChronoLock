@@ -10,11 +10,13 @@ AAB: `release/chronolock-0.8.0-vc13.aab`. 업로드 전 접근성 API 신고(웹
 - 웹사이트 차단: Chrome·삼성 인터넷 등에서 정한 사이트를 열면 차단 화면을 띄워요.
 - 테마 화면의 "더보기"를 카드 오른쪽 위로 옮겼어요.
 - 새 버전이 나오면 앱 안에서 바로 업데이트할 수 있어요.
+- 자주 쓰는 테마를 ♡로 찜하고, 트렌드 테마 이름을 실제 색에 맞게 고쳤어요.
 
 ### en
 - Website blocking: chosen sites show a block screen in Chrome, Samsung Internet and more.
 - "More" themes now sits at the top right of the theme card.
 - Update right inside the app when a new version is out.
+- Pin favorite themes with ♡; trend theme names now match their colors.
 
 ## 0.7.0 (versionCode 12) — 2026-10-22
 

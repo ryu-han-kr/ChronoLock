@@ -22,6 +22,18 @@ class ThemePaletteTest {
         assertTrue(AppTheme.values().size > 50)
         AppTheme.values().forEach { assertEquals(it, AppTheme.fromStored(it.name)) }
     }
+    @Test fun themeTitles_areDistinctAndEveryWordIsTranslated() {
+        val titles = AppTheme.values().map { it.title }
+        assertEquals(titles.filter { title -> titles.count { it == title } > 1 }.distinct().toString(), titles.size, titles.toSet().size)
+        AppTheme.values().flatMap { it.label }.filterNot { it.all(Char::isDigit) }.distinct().forEach { word ->
+            assertTrue("Missing translation for theme word: $word", word in translationKeys)
+        }
+    }
+    @Test fun trendNames_startWithThePageColour() {
+        // Seed 14 is a mint page with pink buttons; it used to be called "pink 2".
+        assertEquals(listOf("트렌드", "민트", "핑크"), com.chronolock.data.ThemeCatalog.trend[13].label)
+        assertEquals(listOf("트렌드", "아이보리", "앰버"), com.chronolock.data.ThemeCatalog.trend[12].label)
+    }
     @Test fun missingOrUnknownPreference_fallsBackToDark() {
         assertEquals(AppTheme.DARK, AppTheme.fromStored(null))
         assertEquals(AppTheme.DARK, AppTheme.fromStored("removed-theme"))

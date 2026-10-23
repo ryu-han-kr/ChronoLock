@@ -455,4 +455,12 @@
     <string name="site_delete_failed">"No se pudo quitar el sitio."</string>
     <string name="update_ready">"Se descargó una nueva versión."</string>
     <string name="update_restart">"Reiniciar"</string>
+    <string name="theme_word_ivory">"Marfil"</string>
+    <string name="theme_word_white">"Blanco"</string>
+    <string name="theme_word_cream">"Crema"</string>
+    <string name="theme_word_butter">"Mantequilla"</string>
+    <string name="theme_favorites">"Favoritos"</string>
+    <string name="theme_favorite_add">"Añadir a favoritos"</string>
+    <string name="theme_favorite_remove">"Quitar de favoritos"</string>
+    <string name="theme_favorites_hint">"Toca ♡ para fijar un tema al principio de la lista de Ajustes."</string>
 </resources>

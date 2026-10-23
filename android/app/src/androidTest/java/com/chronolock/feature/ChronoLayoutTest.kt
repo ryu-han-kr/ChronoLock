@@ -39,7 +39,7 @@ class ChronoLayoutTest {
     }
 
     private fun navigate(title: String) = ui.onNode(hasText(title) and isSelectable()).performClick()
-    private fun scrollTo(text: String) = ui.onNode(hasScrollToIndexAction()).performScrollToNode(hasText(text))
+    private fun scrollTo(text: String) = ui.onNodeWithTag("main-list").performScrollToNode(hasText(text))
 
     @Test fun searchAndConfiguredFilter_surviveTabSwitchAndRestoration() {
         val restoration = StateRestorationTester(ui)

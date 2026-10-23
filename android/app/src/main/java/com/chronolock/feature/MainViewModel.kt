@@ -35,6 +35,7 @@ data class MainState(
     val updateReady: Boolean = false,
     val focusBusy: Boolean = false,
     val theme: AppTheme = AppTheme.DARK,
+    val favoriteThemes: Set<String> = emptySet(),
     val language: AppLanguage = AppLanguage.KOREAN,
     val history: List<HistoryDailyEntity> = emptyList(),
     /** Usage estimated from OS buckets for days before the first event record. */
@@ -92,6 +93,7 @@ class MainViewModel @Inject constructor(
         .combine(repository.pending) { data, pending -> data.copy(pending = pending) }
         .combine(repository.groups) { data, groups -> data.copy(groups = groups.map { it.toDomain() }) }
         .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
+        .combine(preferences.favoriteThemes) { data, favorites -> data.copy(favoriteThemes = favorites) }
         .combine(repository.sites) { data, sites -> data.copy(sites = sites.map { it.toDomain() }) }
         .combine(repository.pendingSites) { data, pending -> data.copy(pendingSites = pending) }
         .onEach { lastLoaded = it }
@@ -104,7 +106,8 @@ class MainViewModel @Inject constructor(
         ui.copy(rules = data.rules, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
             history = data.history, historyEstimates = data.historyEstimates, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
-            groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites)
+            groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
+            favoriteThemes = data.favoriteThemes)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -134,6 +137,12 @@ class MainViewModel @Inject constructor(
         try { preferences.setLanguage(language) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { showError("언어를 저장하지 못했습니다. 다시 선택해 주세요.") }
+    }
+
+    fun toggleFavoriteTheme(theme: AppTheme) = viewModelScope.launch {
+        try { preferences.toggleFavoriteTheme(theme) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("테마를 저장하지 못했습니다. 다시 선택해 주세요.") }
     }
 
     fun selectTheme(theme: AppTheme) = viewModelScope.launch {
