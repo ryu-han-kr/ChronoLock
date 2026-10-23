@@ -22,3 +22,11 @@ internal fun classifyWindow(packageName: String, transient: Set<String>, safety:
     launchable -> WindowKind.APP
     else -> WindowKind.NONE
 }
+
+/**
+ * Whether the application windows on screen ([windows], their packages or null when unreadable) show that the user left
+ * [observed] without its window event arriving: every one is home, settings or this app. An unreadable window, a
+ * keyboard or prompt, or any other app on screen keeps the observation.
+ */
+internal fun leftWithoutEvent(observed: String?, windows: List<String?>, kind: (String) -> WindowKind): Boolean =
+    observed != null && windows.isNotEmpty() && windows.all { it != null && it != observed && kind(it) == WindowKind.LEAVE }

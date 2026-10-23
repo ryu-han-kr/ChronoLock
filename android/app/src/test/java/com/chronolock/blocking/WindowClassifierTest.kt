@@ -1,6 +1,8 @@
 package com.chronolock.blocking
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WindowClassifierTest {
@@ -17,4 +19,21 @@ class WindowClassifierTest {
         assertEquals(WindowKind.APP, classifyWindow("com.kakao.talk", transient, safety, launchable = true))
     @Test fun serviceWithoutLauncher_isNone() =
         assertEquals(WindowKind.NONE, classifyWindow("com.google.android.gms", transient, safety, launchable = false))
+
+    private val kind = { name: String -> classifyWindow(name, transient, safety, launchable = true) }
+
+    @Test fun onlyLauncherOnScreen_meansLeft() =
+        assertTrue(leftWithoutEvent("com.kakao.talk", listOf("com.android.launcher3"), kind))
+    @Test fun observedAppBesideLauncher_staysObserved() =
+        assertFalse(leftWithoutEvent("com.kakao.talk", listOf("com.android.launcher3", "com.kakao.talk"), kind))
+    @Test fun anotherAppOnScreen_isNotLeaving() =
+        assertFalse(leftWithoutEvent("com.kakao.talk", listOf("com.android.launcher3", "com.example.other"), kind))
+    @Test fun unreadableOrMissingWindows_keepObservation() {
+        assertFalse(leftWithoutEvent("com.kakao.talk", listOf("com.android.launcher3", null), kind))
+        assertFalse(leftWithoutEvent("com.kakao.talk", emptyList(), kind))
+    }
+    @Test fun keyboardOrPrompt_isNotLeaving() =
+        assertFalse(leftWithoutEvent("com.kakao.talk", listOf("com.google.android.permissioncontroller"), kind))
+    @Test fun nothingObserved_hasNothingToLeave() =
+        assertFalse(leftWithoutEvent(null, listOf("com.android.launcher3"), kind))
 }

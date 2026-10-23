@@ -44,6 +44,8 @@ class ChronoAccessibilityService : AccessibilityService() {
     /** The app on screen before the screen turned off; re-observed after unlock when usage events cannot tell. */
     private var observed: String? = null
     private var beforeScreenOff: String? = null
+    /** The last check found only home or settings on screen while an app was still observed. */
+    private var leaveSuspected = false
     private var sites: List<BlockedSite> = emptyList()
     /** The blocked site open in [siteBrowser]; only its domain is kept, never the address. */
     private var blockedSite: String? = null
@@ -214,6 +216,20 @@ class ChronoAccessibilityService : AccessibilityService() {
      * observed and sends the switch that was missed.
      */
     private fun reconcileForeground() {
+        val apps = runCatching {
+            windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }.map { it.root?.packageName?.toString() }
+        }.getOrNull() ?: return
+        // A missed return home: only the launcher, settings or this app on screen. It must hold on two checks in a row so
+        // the moment between two apps, when the launcher can be alone on screen, is not taken for leaving.
+        val left = leftWithoutEvent(observed, apps, environment::windowKind)
+        if (left && leaveSuspected) {
+            leaveSuspected = false
+            blockedSite = null
+            commands.trySend(Command.Foreground(null))
+            return
+        }
+        leaveSuspected = left
+        if (left) return
         val top = runCatching {
             windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.isActive }?.root?.packageName?.toString()
         }.getOrNull() ?: return
