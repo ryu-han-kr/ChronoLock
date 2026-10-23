@@ -205,7 +205,6 @@
     <string name="theme_word_gallery_title">"테마"</string>
     <string name="theme_word_back">"뒤로"</string>
     <string name="theme_word_selected">"선택: %1$s"</string>
-    <string name="theme_word_count">"테마 %1$d개"</string>
     <string name="history_partial_range">"%1$s부터 모은 기록입니다. 기기는 그 이전 사용 이벤트를 보관하지 않아 기간 합계가 실제보다 적을 수 있습니다."</string>
     <string name="mascot_sleepy">"아직 기록이 없어요. 쿨쿨…"</string>
     <string name="mascot_relaxed">"여유로운 하루네요. 이대로만!"</string>
@@ -224,7 +223,6 @@
     <string name="sort_name">"이름순"</string>
     <string name="sort_usage">"사용량순"</string>
     <string name="sort_recent">"최근순"</string>
-    <string name="usage_week">"최근 7일 %1$s · %2$d회 실행"</string>
     <string name="usage_week_none">"최근 7일 기록 없음"</string>
     <string name="last_used">"마지막 사용 %1$s"</string>
     <string name="accessibility_title">"접근성 권한 안내"</string>
@@ -365,11 +363,8 @@
     <string name="group_section">"앱 묶음"</string>
     <string name="group_add">"묶음 만들기"</string>
     <string name="group_empty">"SNS처럼 비슷한 앱을 묶으면 하루 시간과 실행 횟수를 함께 쓰게 할 수 있습니다."</string>
-    <string name="group_used">"함께 오늘 %1$s · %2$d회 실행"</string>
     <string name="held_group_delete">"묶음 삭제"</string>
-    <string name="group_apps">"%1$d개 앱"</string>
     <string name="group_daily">"함께 하루 %1$s"</string>
-    <string name="group_opens">"함께 %1$d회 실행"</string>
     <string name="group_new">"새 앱 묶음"</string>
     <string name="group_intro">"묶은 앱들은 하루 시간과 실행 횟수를 함께 씁니다. 앱마다 정한 제한도 그대로 적용됩니다."</string>
     <string name="group_strict_note">"엄격 모드: 묶음을 끄거나 느슨하게 바꾸면 %1$d분 뒤에 적용됩니다."</string>
@@ -377,7 +372,6 @@
     <string name="group_name_hint">"예: SNS"</string>
     <string name="group_daily_title">"함께 쓰는 하루 시간"</string>
     <string name="group_opens_title">"함께 쓰는 하루 실행 횟수"</string>
-    <string name="group_selected">"묶을 앱 · %1$d개 선택"</string>
     <string name="group_taken_app">"다른 묶음에 들어 있음"</string>
     <string name="group_delete">"이 묶음 삭제"</string>
     <string name="group_error_name">"묶음 이름을 입력해 주세요."</string>
@@ -393,7 +387,6 @@
     <string name="tile_focus_until">"%1$s까지"</string>
     <string name="tile_focus_minutes">"%1$d분 집중"</string>
     <string name="tile_focus_failed">"집중을 바꾸지 못했습니다. 앱에서 다시 시도해 주세요."</string>
-    <string name="streak_days">"%1$d일 연속 한도를 지켰어요"</string>
     <string name="week_less">"지난주보다 %1$d%% 덜 썼어요"</string>
     <string name="week_more">"지난주보다 %1$d%% 더 썼어요"</string>
     <string name="week_same">"지난주와 비슷하게 썼어요"</string>
@@ -411,4 +404,25 @@
     <string name="backup_restored">"백업을 복원했습니다."</string>
     <string name="backup_restore_failed">"백업을 복원하지 못했습니다."</string>
     <string name="backup_invalid">"ChronoLock 백업 파일이 아니거나 손상되었습니다."</string>
+    <plurals name="theme_word_count">
+        <item quantity="other">"테마 %1$d개"</item>
+    </plurals>
+    <plurals name="usage_week">
+        <item quantity="other">"최근 7일 %1$s · %2$d회 실행"</item>
+    </plurals>
+    <plurals name="group_used">
+        <item quantity="other">"함께 오늘 %1$s · %2$d회 실행"</item>
+    </plurals>
+    <plurals name="group_apps">
+        <item quantity="other">"%1$d개 앱"</item>
+    </plurals>
+    <plurals name="group_opens">
+        <item quantity="other">"함께 %1$d회 실행"</item>
+    </plurals>
+    <plurals name="group_selected">
+        <item quantity="other">"묶을 앱 · %1$d개 선택"</item>
+    </plurals>
+    <plurals name="streak_days">
+        <item quantity="other">"%1$d일 연속 한도를 지켰어요"</item>
+    </plurals>
 </resources>

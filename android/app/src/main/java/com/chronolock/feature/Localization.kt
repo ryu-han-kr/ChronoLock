@@ -44,6 +44,7 @@ internal class UiText(private val context: Context) {
     val locale get() = context.resources.configuration.locales[0]
     operator fun invoke(source: String, vararg args: Any): String {
         translationKeys[source]?.let { return context.getString(it, *args) }
+        pluralKeys[source]?.let { (id, count) -> return context.resources.getQuantityString(id, (args[count] as Number).toInt(), *args) }
         // Validation stays platform-independent in the domain module; translate its structured messages here.
         Regex("^(.+): 1~([0-9]+) 범위의 정수를 입력해 주세요\\.$").matchEntire(source)?.let {
             return invoke("%1\$s: 1~%2\$s 범위의 정수를 입력해 주세요.", invoke(it.groupValues[1]), it.groupValues[2])

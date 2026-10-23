@@ -25,6 +25,24 @@ class LocalizationTest {
             }
         }
     }
+    @Test fun countedMessages_followPluralRules() {
+        val english = UiText(context.forLanguage(AppLanguage.ENGLISH))
+        assertEquals("1 app", english("%1\$d개 앱", 1))
+        assertEquals("3 apps", english("%1\$d개 앱", 3))
+        assertEquals("Last 7 days 5 min · 1 open", english("최근 7일 %1\$s · %2\$d회 실행", "5 min", 1L))
+        assertEquals("2 temas", UiText(context.forLanguage(AppLanguage.SPANISH))("테마 %1\$d개", 2))
+        AppLanguage.values().filter { it != AppLanguage.SYSTEM }.forEach { language ->
+            val text = UiText(context.forLanguage(language))
+            pluralKeys.keys.forEach { source ->
+                listOf(1, 12).forEach { count ->
+                    val args: Array<Any> = if (source.contains("%2")) arrayOf("Example", count) else arrayOf(count)
+                    val translated = text(source, *args)
+                    assertTrue("${language.name}: $translated", translated.contains(count.toString()))
+                    if (language != AppLanguage.KOREAN) assertFalse("${language.name}: $translated", Regex("[가-힣]").containsMatchIn(translated))
+                }
+            }
+        }
+    }
     @Test fun everyMascotLine_hasATranslation() {
         // Lines rotate by date, so a missing key shows Korean to other languages only on some days.
         MascotLines.lines.values.flatten().forEach { assertTrue("Missing translation key: $it", it in translationKeys) }

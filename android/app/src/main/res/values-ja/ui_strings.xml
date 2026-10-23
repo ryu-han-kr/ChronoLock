@@ -205,7 +205,6 @@
     <string name="theme_word_gallery_title">"テーマ"</string>
     <string name="theme_word_back">"戻る"</string>
     <string name="theme_word_selected">"選択中: %1$s"</string>
-    <string name="theme_word_count">"テーマ %1$d 件"</string>
     <string name="history_partial_range">"%1$s からの記録です。端末はそれ以前の利用イベントを保持しないため、期間の合計は実際より少ない場合があります。"</string>
     <string name="mascot_sleepy">"まだ記録がありません。すやすや…"</string>
     <string name="mascot_relaxed">"ゆったりした一日ですね。この調子！"</string>
@@ -224,7 +223,6 @@
     <string name="sort_name">"名前順"</string>
     <string name="sort_usage">"使用量順"</string>
     <string name="sort_recent">"最近使った順"</string>
-    <string name="usage_week">"直近7日 %1$s · %2$d回起動"</string>
     <string name="usage_week_none">"直近7日の記録なし"</string>
     <string name="last_used">"最終使用 %1$s"</string>
     <string name="accessibility_title">"ユーザー補助の権限について"</string>
@@ -365,11 +363,8 @@
     <string name="group_section">"アプリグループ"</string>
     <string name="group_add">"グループを作成"</string>
     <string name="group_empty">"SNSなど似たアプリをまとめると、1日の時間と起動回数を共有できます。"</string>
-    <string name="group_used">"今日の合計 %1$s · %2$d回起動"</string>
     <string name="held_group_delete">"グループの削除"</string>
-    <string name="group_apps">"%1$d個のアプリ"</string>
     <string name="group_daily">"合わせて1日%1$s"</string>
-    <string name="group_opens">"合わせて%1$d回起動"</string>
     <string name="group_new">"新しいアプリグループ"</string>
     <string name="group_intro">"グループのアプリは1日の時間と起動回数を共有します。アプリごとの制限もそのまま適用されます。"</string>
     <string name="group_strict_note">"厳格モード：グループをオフにしたり緩めたりすると、%1$d分後に反映されます。"</string>
@@ -377,7 +372,6 @@
     <string name="group_name_hint">"例：SNS"</string>
     <string name="group_daily_title">"共有する1日の時間"</string>
     <string name="group_opens_title">"共有する1日の起動回数"</string>
-    <string name="group_selected">"グループのアプリ · %1$d個選択"</string>
     <string name="group_taken_app">"別のグループに登録済み"</string>
     <string name="group_delete">"このグループを削除"</string>
     <string name="group_error_name">"グループ名を入力してください。"</string>
@@ -393,7 +387,6 @@
     <string name="tile_focus_until">"%1$sまで"</string>
     <string name="tile_focus_minutes">"%1$d分集中"</string>
     <string name="tile_focus_failed">"集中を切り替えられませんでした。アプリでもう一度お試しください。"</string>
-    <string name="streak_days">"%1$d日連続で制限を守りました"</string>
     <string name="week_less">"先週より%1$d%%少なく使いました"</string>
     <string name="week_more">"先週より%1$d%%多く使いました"</string>
     <string name="week_same">"先週とほぼ同じです"</string>
@@ -411,4 +404,25 @@
     <string name="backup_restored">"バックアップを復元しました。"</string>
     <string name="backup_restore_failed">"バックアップを復元できませんでした。"</string>
     <string name="backup_invalid">"ChronoLockのバックアップではないか、破損しています。"</string>
+    <plurals name="theme_word_count">
+        <item quantity="other">"テーマ %1$d 件"</item>
+    </plurals>
+    <plurals name="usage_week">
+        <item quantity="other">"直近7日 %1$s · %2$d回起動"</item>
+    </plurals>
+    <plurals name="group_used">
+        <item quantity="other">"今日の合計 %1$s · %2$d回起動"</item>
+    </plurals>
+    <plurals name="group_apps">
+        <item quantity="other">"%1$d個のアプリ"</item>
+    </plurals>
+    <plurals name="group_opens">
+        <item quantity="other">"合わせて%1$d回起動"</item>
+    </plurals>
+    <plurals name="group_selected">
+        <item quantity="other">"グループのアプリ · %1$d個選択"</item>
+    </plurals>
+    <plurals name="streak_days">
+        <item quantity="other">"%1$d日連続で制限を守りました"</item>
+    </plurals>
 </resources>
