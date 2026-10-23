@@ -42,7 +42,7 @@ class LocalRepositoryTest {
     }
 
     private fun openDatabase() = Room.databaseBuilder(context, ChronoDatabase::class.java, databaseName)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8).build()
 
     @Test fun databaseReopen_restoresRuleCountersAndCooldown() = runBlocking {
         val rule = AppRule("test.app", "Test", dailyLimitSeconds = 60, maxOpenCount = 3, cooldownSeconds = 30)
@@ -92,16 +92,41 @@ class LocalRepositoryTest {
         assertFalse(second.tick(clock(31000)).decision.denied)
     }
 
-    @Test fun clearAll_removesRulesEventsCheckpointsAndActiveState() = runBlocking {
+    @Test fun resetRules_removesRulesGroupsAndSites_butKeepsTodaysUsage() = runBlocking {
         val repository = LocalRepository(database)
         repository.saveRule(AppRule("test.app", "Test", dailyLimitSeconds = 1))
+        repository.requestGroup(AppGroup(0, "SNS", mapOf("a" to "A", "b" to "B"), maxOpenCount = 3), 0, origin)
+        repository.requestSite(com.chronolock.domain.BlockedSite("youtube.com"), 0, origin)
         repository.foreground("test.app", clock(0))
         repository.tick(clock(1000))
-        repository.clearAll()
+        repository.resetRules(origin)
         assertTrue(database.dao().rules().isEmpty())
-        assertTrue(database.dao().daily().isEmpty())
-        assertNull(database.dao().checkpoint())
+        assertTrue(database.dao().groups().isEmpty())
+        assertTrue(database.dao().sites().isEmpty())
+        // Usage counted today stays, so a reset cannot be used to clear what was used.
+        assertTrue(database.dao().daily().isNotEmpty())
         assertFalse(repository.tick(clock(2000)).decision.denied)
+    }
+
+    @Test fun lock_refusesEveryLoosening_butLetsTighteningThrough() = runBlocking {
+        val repository = LocalRepository(database)
+        val locked = LocalRepository.LOCKED_DELAY
+        repository.saveRule(AppRule("a", "A", dailyLimitSeconds = 600))
+        repository.requestSite(com.chronolock.domain.BlockedSite("youtube.com"), 0, origin)
+        repository.requestGroup(AppGroup(0, "SNS", mapOf("a" to "A", "b" to "B"), maxOpenCount = 3), 0, origin)
+        val group = database.dao().groups().single().toDomain()
+        fun refused(block: suspend () -> Any?) = runBlocking { assertEquals(LocalRepository.LOCKED, runCatching { block() }.exceptionOrNull()?.message) }
+        refused { repository.requestDelete("a", locked, origin) }
+        refused { repository.requestRule(AppRule("a", "A", dailyLimitSeconds = 1200), locked, origin) }
+        refused { repository.requestPause("a", 10, locked, origin, java.time.ZoneId.of("Asia/Seoul")) }
+        refused { repository.requestSite(com.chronolock.domain.BlockedSite("youtube.com", enabled = false), locked, origin) }
+        refused { repository.requestDeleteGroup(group.id, locked, origin) }
+        // Tightening goes through at once.
+        assertNull(repository.requestRule(AppRule("a", "A", dailyLimitSeconds = 300), locked, origin))
+        assertEquals(300L, database.dao().rules().single().dailyLimitSeconds)
+        assertNull(repository.requestSite(com.chronolock.domain.BlockedSite("x.com"), locked, origin))
+        assertEquals(2, database.dao().sites().size)
+        assertEquals(0, database.dao().pendingCount())
     }
 
     @Test fun databaseReopen_afterRebootDoesNotReuseActiveOpen() = runBlocking {
@@ -300,12 +325,13 @@ class LocalRepositoryTest {
         assertEquals(listOf("a"), database.dao().rules().map { it.packageName })
     }
 
-    @Test fun group_membersStayUniqueAndStrictModeHoldsRelaxingEdits() = runBlocking {
+    @Test fun group_appsMayJoinSeveralGroupsAndStrictModeHoldsRelaxingEdits() = runBlocking {
         val repository = LocalRepository(database)
         repository.requestGroup(AppGroup(0, "SNS", mapOf("a" to "A", "b" to "B"), maxOpenCount = 3), 0, origin)
         val id = database.dao().groups().single().id
-        val taken = runCatching { repository.requestGroup(AppGroup(0, "Video", mapOf("b" to "B", "c" to "C"), maxOpenCount = 3), 0, origin) }
-        assertEquals(LocalRepository.GROUP_TAKEN, taken.exceptionOrNull()?.message)
+        repository.requestGroup(AppGroup(0, "Video", mapOf("b" to "B", "c" to "C"), maxOpenCount = 3), 0, origin)
+        assertEquals(2, database.dao().groups().size)
+        repository.requestDeleteGroup(database.dao().groups().first { it.name == "Video" }.id, 0, origin)
         val saved = database.dao().groups().single().toDomain()
         // Adding a member tightens and applies at once; raising the limit waits.
         assertNull(repository.requestGroup(saved.copy(members = saved.members + ("c" to "C")), 600_000, origin))
@@ -318,6 +344,5 @@ class LocalRepositoryTest {
         assertNotNull(repository.requestDeleteGroup(id, 600_000, origin))
         repository.tick(clock(600_000, origin + 600_000))
         assertTrue(database.dao().groups().isEmpty())
-        repository.clearAll()
     }
 }

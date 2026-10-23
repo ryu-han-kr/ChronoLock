@@ -52,7 +52,7 @@ internal fun GroupCard(group: AppGroup, today: List<DailyEntity>, held: PendingG
             style = MaterialTheme.typography.bodySmall)
         held?.let { change ->
             val what = when {
-                change.remove -> tr("묶음 삭제")
+                change.remove -> tr("그룹 삭제")
                 !change.group.enabled -> tr("제한 끄기")
                 else -> tr("설정 변경")
             }
@@ -83,7 +83,7 @@ private val GroupDraftSaver = listSaver<GroupDraft, String>(
 /** Creates or edits a group: its name, shared limits and member apps. Apps already in another group cannot be chosen. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, taken: Set<String>, strictMinutes: Int, onDismiss: () -> Unit,
+internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, strictMinutes: Int, onDismiss: () -> Unit,
     onSave: (AppGroup, () -> Unit) -> Unit, onDelete: () -> Unit) {
     var draft by rememberSaveable(stateSaver = GroupDraftSaver) { mutableStateOf(saved?.let(GroupDraft::from) ?: GroupDraft()) }
     var dailyTime by rememberSaveable(stateSaver = DailyTimeInputSaver) { mutableStateOf(DailyTimeInput.fromSeconds(draft.daily)) }
@@ -91,7 +91,8 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, taken: Set<
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
     val scroll = rememberScrollState()
-    LaunchedEffect(error) { if (error != null) scroll.animateScrollTo(scroll.maxValue) }
+    // The message sits above the form, next to the fields it is about; the app list below can be very long.
+    LaunchedEffect(error) { if (error != null) scroll.animateScrollTo(0) }
     fun submit() {
         try {
             val group = draft.copy(daily = dailyTime.toSecondsText("함께 쓰는 하루 시간")).build(saved?.id ?: 0)
@@ -103,16 +104,17 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, taken: Set<
     // Saved members first, so they are visible above a long list; the order stays put while boxes are ticked.
     // An uninstalled member still shows by its saved name.
     val savedMembers = saved?.members.orEmpty()
-    val choices = remember(apps, query, taken) {
+    var confirmAll by rememberSaveable { mutableStateOf(false) }
+    val choices = remember(apps, query) {
         (savedMembers + apps.associate { it.packageName to it.label }.filterKeys { it !in savedMembers }).entries
             .filter { (app, label) -> query.isBlank() || label.contains(query.trim(), true) || app.contains(query.trim(), true) }
-            .sortedWith(compareBy({ it.key !in savedMembers }, { it.key in taken }, { it.value.lowercase() }))
+            .sortedWith(compareBy({ it.key !in savedMembers }, { it.value.lowercase() }))
     }
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { it != SheetValue.Hidden || !saving })
     ModalBottomSheet(onDismissRequest = { if (!saving) onDismiss() }, sheetState = sheet) {
         Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(saved?.name ?: tr("새 앱 묶음"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(saved?.name ?: tr("새 앱 그룹"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             TextButton(enabled = !saving, onClick = onDismiss) { Text(tr("취소")) }
             Button(enabled = !saving, onClick = ::submit, modifier = Modifier.testTag("group-save")) { Text(if (saving) tr("저장 중") else tr("저장")) }
         }
@@ -125,10 +127,12 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, taken: Set<
                 Text(tr("제한 사용"))
                 Switch(checked = draft.enabled, onCheckedChange = null, enabled = !saving)
             }
-            if (strictMinutes > 0) Text(tr("엄격 모드: 묶음을 끄거나 느슨하게 바꾸면 %1\$d분 뒤에 적용됩니다.", strictMinutes),
+            if (strictMinutes > 0) Text(tr("엄격 모드: 그룹을 끄거나 느슨하게 바꾸면 %1\$d분 뒤에 적용됩니다.", strictMinutes),
                 color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            error?.let { Text(tr(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("group-error")) }
             OutlinedTextField(value = draft.name, onValueChange = { if (it.length <= 30) { draft = draft.copy(name = it); error = null } },
-                label = { Text(tr("묶음 이름")) }, placeholder = { Text(tr("예: SNS")) }, singleLine = true, enabled = !saving,
+                label = { Text(tr("그룹 이름")) }, placeholder = { Text(tr("예: SNS")) }, singleLine = true, enabled = !saving,
+                isError = error != null && draft.name.isBlank(),
                 modifier = Modifier.fillMaxWidth().testTag("group-name"))
             TimeFields("함께 쓰는 하루 시간", "group-daily", dailyTime, !saving, presetMinutes = listOf(30, 60, 120)) { dailyTime = it; error = null }
             NumberField(tr("함께 쓰는 하루 실행 횟수"), draft.opens, !saving) { draft = draft.copy(opens = it); error = null }
@@ -136,23 +140,33 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, taken: Set<
             Text(tr("묶을 앱 · %1\$d개 선택", draft.members.size), fontWeight = FontWeight.SemiBold)
             OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text(tr("앱 검색")) }, singleLine = true,
                 shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth())
+            // Bulk selection for limiting many apps at once; it asks first, as essential apps could end up limited too.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { confirmAll = true }, enabled = !saving && choices.any { it.key !in draft.members },
+                    modifier = Modifier.testTag("group-select-all")) { Text(tr("검색 결과 모두 선택")) }
+                TextButton(onClick = { draft = draft.copy(members = emptyMap()); error = null }, enabled = !saving && draft.members.isNotEmpty(),
+                    modifier = Modifier.testTag("group-select-none")) { Text(tr("모두 해제")) }
+            }
             choices.forEach { (app, label) ->
                 val chosen = app in draft.members
-                val blocked = app in taken && !chosen
-                Row(Modifier.fillMaxWidth().toggleable(value = chosen, enabled = !saving && !blocked, role = Role.Checkbox) { on ->
+                Row(Modifier.fillMaxWidth().toggleable(value = chosen, enabled = !saving, role = Role.Checkbox) { on ->
                     draft = draft.copy(members = if (on) draft.members + (app to label) else draft.members - app); error = null
                 }.testTag("group-app-$app").padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Checkbox(checked = chosen, onCheckedChange = null, enabled = !saving && !blocked)
+                    Checkbox(checked = chosen, onCheckedChange = null, enabled = !saving)
                     AppIcon(app, label, 28.dp)
-                    Column(Modifier.weight(1f)) {
-                        Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        if (blocked) Text(tr("다른 묶음에 들어 있음"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    }
+                    Text(label, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            error?.let { Text(tr(it), color = MaterialTheme.colorScheme.error) }
-            if (saved != null) TextButton(onClick = onDelete, enabled = !saving) { Text(tr("이 묶음 삭제"), color = MaterialTheme.colorScheme.error) }
+            if (saved != null) TextButton(onClick = onDelete, enabled = !saving) { Text(tr("이 그룹 삭제"), color = MaterialTheme.colorScheme.error) }
         }
     }
+    if (confirmAll) AlertDialog(onDismissRequest = { confirmAll = false }, title = { Text(tr("검색된 앱을 모두 선택할까요?")) },
+        text = { Text(tr("선택한 앱은 모두 이 그룹의 하루 시간과 실행 횟수를 함께 쓰게 됩니다. 메신저·지도·인증 앱처럼 꼭 필요한 앱까지 막힐 수 있으니 목록을 꼭 확인해 주세요. 전화·설정 등 필수 앱은 목록에서 빠져 있어요.")) },
+        confirmButton = { TextButton(onClick = {
+            val room = AppGroup.MAX_MEMBERS - draft.members.size
+            draft = draft.copy(members = draft.members + choices.filter { it.key !in draft.members }.take(room).associate { it.key to it.value })
+            error = null; confirmAll = false
+        }, modifier = Modifier.testTag("group-select-all-confirm")) { Text(tr("모두 선택")) } },
+        dismissButton = { TextButton(onClick = { confirmAll = false }) { Text(tr("취소")) } })
 }

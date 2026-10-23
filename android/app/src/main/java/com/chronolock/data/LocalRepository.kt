@@ -79,7 +79,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     suspend fun requestPause(packageName: String, minutes: Int?, delayMillis: Long, nowEpochMillis: Long, zone: ZoneId): Long? = mutex.withLock {
         database.withTransaction {
             val current = requireNotNull(dao.rules().firstOrNull { it.packageName == packageName })
-            val until = Strictness.pauseEnd(nowEpochMillis + delayMillis, minutes, zone)
+            val until = Strictness.pauseEnd(nowEpochMillis + delayMillis.coerceAtLeast(0), minutes, zone)
             change(packageName, current, current.toDomain().copy(pausedUntilEpochMillis = until), delayMillis, nowEpochMillis)
         }
     }
@@ -108,8 +108,6 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     suspend fun requestGroup(group: AppGroup, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
         database.withTransaction {
             val all = dao.groups()
-            val taken = all.filter { it.id != group.id }.flatMap { it.toDomain().members.keys }.toSet()
-            require(group.members.keys.none { it in taken }) { GROUP_TAKEN }
             if (group.id == 0L) {
                 dao.insertGroup(group.toEntity())
                 dao.insertEvents(listOf(EventEntity(type = "GROUP_UPDATED", packageName = null, epochMillis = nowEpochMillis)))
@@ -120,8 +118,10 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     }
 
     companion object {
-        const val GROUP_TAKEN = "다른 묶음에 들어 있는 앱은 함께 넣을 수 없습니다."
         const val SITES_FULL = "차단할 사이트는 최대 50개까지 추가할 수 있습니다."
+        /** Passed as the delay while a lock holds: loosening changes are refused, tightening ones apply at once. */
+        const val LOCKED_DELAY = -1L
+        const val LOCKED = "잠금 중에는 제한을 풀거나 느슨하게 바꿀 수 없습니다."
     }
 
     suspend fun requestDeleteGroup(id: Long, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
@@ -131,7 +131,9 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     suspend fun cancelPendingGroup(id: Long) = mutex.withLock { dao.deletePendingGroup(id) }
 
     private suspend fun changeGroup(id: Long, current: AppGroup?, next: AppGroup?, delayMillis: Long, nowEpochMillis: Long): Long? {
-        if (delayMillis > 0 && Strictness.loosens(current, next)) {
+        val loosens = Strictness.loosens(current, next)
+        if (delayMillis == LOCKED_DELAY && loosens) throw IllegalStateException(LOCKED)
+        if (delayMillis > 0 && loosens) {
             val applyAt = Math.addExact(nowEpochMillis, delayMillis)
             dao.savePendingGroup(PendingGroupEntity(id, applyAt, next == null, (next ?: current!!).toEntity()))
             return applyAt
@@ -172,7 +174,9 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     }
 
     private suspend fun changeSite(domain: String, current: BlockedSite?, next: BlockedSite?, delayMillis: Long, nowEpochMillis: Long): Long? {
-        if (delayMillis > 0 && Strictness.loosens(current, next)) {
+        val loosens = Strictness.loosens(current, next)
+        if (delayMillis == LOCKED_DELAY && loosens) throw IllegalStateException(LOCKED)
+        if (delayMillis > 0 && loosens) {
             val applyAt = Math.addExact(nowEpochMillis, delayMillis)
             dao.savePendingSite(PendingSiteEntity(domain, applyAt, next == null, (next ?: current!!).toEntity()))
             return applyAt
@@ -215,7 +219,9 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     }
 
     private suspend fun change(packageName: String, current: RuleEntity?, next: AppRule?, delayMillis: Long, nowEpochMillis: Long): Long? {
-        if (delayMillis > 0 && Strictness.loosens(current?.toDomain(), next, nowEpochMillis)) {
+        val loosens = Strictness.loosens(current?.toDomain(), next, nowEpochMillis)
+        if (delayMillis == LOCKED_DELAY && loosens) throw IllegalStateException(LOCKED)
+        if (delayMillis > 0 && loosens) {
             val applyAt = Math.addExact(nowEpochMillis, delayMillis)
             dao.savePending(PendingRuleEntity(packageName, applyAt, next == null, (next ?: current!!.toDomain()).toEntity()))
             return applyAt
@@ -280,15 +286,15 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         }
     }
 
-    suspend fun clearAll() = mutex.withLock {
+    /**
+     * Removes every rule, group and blocked site (and changes strict mode was holding back). Usage history and today's
+     * counts stay, so resetting cannot be used to clear what was used; history is deleted separately behind a password.
+     */
+    suspend fun resetRules(nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearDaily(); dao.clearCloses(); dao.clearCheckpoint(); dao.clearEvents()
-            database.historyDao().apply {
-                clearDaily(); clearEvents(); clearEstimates()
-                saveMeta(HistoryMetaEntity(clearedAt = System.currentTimeMillis()))
-            }
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites()
+            dao.insertEvents(listOf(EventEntity(type = "RULES_RESET", packageName = null, epochMillis = nowEpochMillis)))
         }
-        state = MonitorState()
     }
 
     private suspend fun ruleMap(now: ClockReading): Map<String, AppRule> {

@@ -19,7 +19,7 @@ class HistoryRepositoryTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val name = "history-test-${UUID.randomUUID()}.db"
     private var db = Room.databaseBuilder(context, ChronoDatabase::class.java, name)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8).build()
     private val zone = ZoneId.of("Asia/Seoul")
     private val now = Instant.parse("2026-10-15T03:00:00Z").toEpochMilli()
     private val labels = mapOf("app.a" to "App A", "home" to "Home")
@@ -55,9 +55,9 @@ class HistoryRepositoryTest {
         assertTrue(db.historyDao().estimates().isEmpty())
     }
 
-    @Test fun clearAll_removesEstimates_andNoEstimateBeforeTheReset() = runBlocking {
+    @Test fun clearHistory_removesEstimates_andNoEstimateBeforeTheReset() = runBlocking {
         repository().importEstimates(listOf(listOf(bucket("app.a", now - 3 * day, now - 3 * day + 1000, 5_000L))), labels, emptySet(), now, zone)
-        LocalRepository(db).clearAll()
+        repository().clearHistory(System.currentTimeMillis())
         assertTrue(db.historyDao().estimates().isEmpty())
         val cleared = db.historyDao().meta()!!.clearedAt
         val beforeReset = listOf(listOf(bucket("app.a", cleared - 2 * day, cleared - 2 * day + 1000, 5_000L)))
@@ -84,11 +84,11 @@ class HistoryRepositoryTest {
         assertEquals(2, db.historyDao().daily().size)
         assertEquals(2000L, db.historyDao().daily().sumOf { it.usageMillis })
     }
-    @Test fun clearAll_preventsOldEventsFromBeingImportedAgain() = runBlocking {
+    @Test fun clearHistory_preventsOldEventsFromBeingImportedAgain() = runBlocking {
         val before = System.currentTimeMillis() - 10_000
         val events = listOf(event(before, "RESUME"), event(before + 1000, "PAUSE"))
         repository().importEvents(events, labels, emptySet(), before + 2000, zone)
-        LocalRepository(db).clearAll()
+        repository().clearHistory(System.currentTimeMillis())
         assertTrue(db.historyDao().events().isEmpty())
         assertTrue(db.historyDao().daily().isEmpty())
         val cutoff = db.historyDao().meta()!!.clearedAt
@@ -96,6 +96,30 @@ class HistoryRepositoryTest {
             labels, emptySet(), cutoff + 2000, zone)
         assertEquals(HistoryDailyEntity("app.a", Instant.ofEpochMilli(cutoff).atZone(zone).toLocalDate().toString(), "App A", 1000, 1), db.historyDao().daily().single())
         assertEquals(2, db.historyDao().events().size)
+    }
+    @Test fun dayRows_outliveTheirEvents_forNinetyDays_andYearTotalsForAYear() = runBlocking {
+        val old = now - 60 * day
+        // Built while its events existed; later imports no longer see them (Android and the app keep events ~a week).
+        repository().importEvents(listOf(event(old, "RESUME"), event(old + 4000, "PAUSE")), labels, emptySet(), old + 5000, zone)
+        repository().importEvents(listOf(event(now - 2000, "RESUME"), event(now - 1000, "PAUSE")), labels, emptySet(), now, zone)
+        assertTrue(db.historyDao().events().none { it.at == old })
+        assertEquals(listOf(date(old).toString() to 4000L, date(now).toString() to 1000L),
+            db.historyDao().daily().sortedBy { it.date }.map { it.date to it.usageMillis })
+        repository().refreshYear(now, zone)
+        assertEquals(5000L, db.historyDao().year().sumOf { it.usageMillis })
+        // Past 90 days the per-app row goes; the year table still has the day.
+        repository().importEvents(emptyList(), labels, emptySet(), old + 95 * day, zone)
+        assertTrue(db.historyDao().daily().none { it.date == date(old).toString() })
+        assertTrue(db.historyDao().year().any { it.date == date(old).toString() })
+        repository().refreshYear(old + 400 * day, zone)
+        assertTrue(db.historyDao().year().none { it.date == date(old).toString() })
+    }
+    @Test fun clearHistory_removesYearTotalsToo() = runBlocking {
+        repository().importEvents(listOf(event(now - 2000, "RESUME"), event(now - 1000, "PAUSE")), labels, emptySet(), now, zone)
+        repository().refreshYear(now, zone)
+        assertEquals(1, db.historyDao().year().size)
+        repository().clearHistory(now)
+        assertTrue(db.historyDao().year().isEmpty() && db.historyDao().daily().isEmpty())
     }
     @Test fun retentionAndHomeExclusion_doNotRemoveOtherApps() = runBlocking {
         val old = now - 32 * 86_400_000L
@@ -125,7 +149,7 @@ class HistoryRepositoryTest {
             old.execSQL("INSERT INTO daily_usage_stats VALUES ('app.a', '2026-10-15', 12345, 3, 1)")
             old.version = 2
         }
-        db = Room.databaseBuilder(context, ChronoDatabase::class.java, name).addMigrations(ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
+        db = Room.databaseBuilder(context, ChronoDatabase::class.java, name).addMigrations(ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8).build()
         assertEquals(3600L, db.dao().rules().single().dailyLimitSeconds)
         assertEquals(12345L, db.dao().daily().single().usageMillis)
         assertTrue(db.historyDao().daily().isEmpty())

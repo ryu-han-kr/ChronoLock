@@ -44,7 +44,6 @@ class BackupTest {
         val valid = JSONObject(BackupCodec.encode(Backup(listOf(rule), listOf(group)), 0))
         listOf("", "not json", "{}", JSONObject(valid.toString()).put("version", 99).toString(),
             JSONObject(valid.toString()).apply { getJSONArray("rules").getJSONObject(0).put("dailyLimitSeconds", -5) }.toString(),
-            JSONObject(valid.toString()).apply { getJSONArray("groups").put(getJSONArray("groups").getJSONObject(0)) }.toString(),
             JSONObject(valid.toString()).put("sites", org.json.JSONArray().put(JSONObject().put("domain", "not a site"))).toString(),
         ).forEach { text ->
             assertEquals(text, BackupCodec.INVALID, runCatching { BackupCodec.decode(text) }.exceptionOrNull()?.message)

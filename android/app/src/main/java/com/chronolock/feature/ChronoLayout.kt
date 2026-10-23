@@ -30,6 +30,7 @@ import com.chronolock.blocking.InstalledApp
 import com.chronolock.data.DailyEntity
 import com.chronolock.data.AppTheme
 import com.chronolock.data.RuleEntity
+import com.chronolock.data.toDomain
 import com.chronolock.domain.RuleRecipe
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -74,6 +75,14 @@ internal fun ChronoScreen(
     toggleSite: (com.chronolock.domain.BlockedSite, Boolean) -> Unit = { _, _ -> },
     removeSite: (String) -> Unit = {},
     cancelPendingSite: (String) -> Unit = {},
+    setHistoryPin: (String, String, () -> Unit) -> Unit = { _, _, _ -> },
+    changeHistoryPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
+    lockFor: (Int) -> Unit = {},
+    startGoalLock: (Int, Boolean, String, String, () -> Unit) -> Unit = { _, _, _, _, _ -> },
+    endGoalLock: (String, Int) -> Unit = { _, _ -> },
+    collectPiece: (Int) -> Unit = {},
+    changeGoalPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
+    deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> },
     exportBackup: () -> Unit = {},
     restoreBackup: () -> Unit = {},
 ) {
@@ -194,8 +203,8 @@ internal fun ChronoScreen(
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                        Text(tr("앱 묶음"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                                        TextButton(onClick = { editGroup(0L) }, modifier = Modifier.testTag("group-add")) { Text(tr("묶음 만들기")) }
+                                        Text(tr("앱 그룹"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                                        TextButton(onClick = { editGroup(0L) }, modifier = Modifier.testTag("group-add")) { Text(tr("그룹 만들기")) }
                                     }
                                 }
                                 if (state.groups.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
@@ -261,7 +270,8 @@ internal fun ChronoScreen(
                                 }
                             }
                             2 -> {
-                                historyItems(state, today, historyFilter, historyView, refreshHistory, usagePermission, suggest = { app, recipe -> edit(app, recipe) })
+                                historyItems(state, today, historyFilter, historyView, refreshHistory, usagePermission, suggest = { app, recipe -> edit(app, recipe) },
+                                    setPin = setHistoryPin, deleteHistory = deleteHistory, changePin = changeHistoryPin, nowEpoch = nowEpoch)
                             }
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
@@ -269,6 +279,14 @@ internal fun ChronoScreen(
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { ThemePicker(state.theme, selectTheme, openThemeGallery, state.favoriteThemes) }
                                 item { StrictModeCard(state, nowEpoch, setStrict, cancelStrict) }
+                                item {
+                                    // Goal progress counts the same kept days as the streak on the Today tab.
+                                    val kept = remember(state.daily, state.rules, today) {
+                                        com.chronolock.domain.keptStreak(state.daily.associate { com.chronolock.domain.DailyKey(it.packageName, java.time.LocalDate.parse(it.date)) to
+                                            com.chronolock.domain.DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) }, state.rules.map { it.toDomain() }, today, maxDays = 31)
+                                    }
+                                    LockCard(state, today, nowEpoch, kept, lockFor, startGoalLock, { endGoalLock(it, kept) }, { collectPiece(kept) }, changeGoalPin)
+                                }
                                 item { PermissionCard(state, usagePermission, accessibilityPermission) }
                                 item { CardBox {
                                     Text(tr("나를 위한 제한"), style = MaterialTheme.typography.titleLarge)
@@ -278,7 +296,7 @@ internal fun ChronoScreen(
                                 } }
                                 item { CardBox {
                                     Text(tr("백업과 복원"), style = MaterialTheme.typography.titleLarge)
-                                    Text(tr("제한 규칙, 앱 묶음, 테마·언어·엄격 모드 설정을 파일로 저장하고 새 기기에서 되살릴 수 있습니다. 사용 기록은 포함하지 않습니다."),
+                                    Text(tr("제한 규칙, 앱 그룹, 테마·언어·엄격 모드 설정을 파일로 저장하고 새 기기에서 되살릴 수 있습니다. 사용 기록은 포함하지 않습니다."),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     val strict = state.strict.delayAt(nowEpoch) > 0
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -287,12 +305,13 @@ internal fun ChronoScreen(
                                     }
                                     if (strict) Text(tr("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 } }
+                                item { UnlockHelpCard() }
                                 item { CardBox {
-                                    Text(tr("로컬 기록 관리"), style = MaterialTheme.typography.titleLarge)
-                                    Text(tr("앱 사용 기록을 최대 30일간 보관합니다. 기록은 이 기기에만 저장되며 서버로 전송하지 않습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(tr("규칙 초기화"), style = MaterialTheme.typography.titleLarge)
+                                    Text(tr("앱 제한, 앱 그룹, 웹사이트 차단을 모두 지웁니다. 사용 기록은 남고, 기록 삭제는 히스토리 탭에서 비밀번호로 할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     val strict = state.strict.delayAt(nowEpoch) > 0
-                                    OutlinedButton(onClick = clear, enabled = !strict) { Text(tr("모든 규칙과 사용 기록 삭제")) }
-                                    if (strict) Text(tr("엄격 모드를 끈 뒤에 모든 데이터를 삭제할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    OutlinedButton(onClick = clear, enabled = !strict, modifier = Modifier.testTag("rules-reset")) { Text(tr("모든 규칙 초기화")) }
+                                    if (strict) Text(tr("엄격 모드를 끈 뒤에 모든 규칙을 초기화할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 } }
                             }
                         }

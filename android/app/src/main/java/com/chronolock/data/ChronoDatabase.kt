@@ -143,13 +143,18 @@ interface ChronoDao {
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
     HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class,
-    GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class],
-    version = 7, exportSchema = true)
+    GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class],
+    version = 8, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS history_year (date TEXT NOT NULL, usageMillis INTEGER NOT NULL, estimated INTEGER NOT NULL, PRIMARY KEY(date))")
+            }
+        }
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS blocked_sites (domain TEXT NOT NULL, enabled INTEGER NOT NULL, PRIMARY KEY(domain))")

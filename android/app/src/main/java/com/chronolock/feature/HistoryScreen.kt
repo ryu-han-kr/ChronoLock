@@ -1,6 +1,16 @@
 package com.chronolock.feature
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.chronolock.data.HistoryYearEntity
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -84,22 +94,27 @@ internal class HistoryView(val first: LocalDate, val records: List<HistoryDailyE
  * dozens of apps composes only the cards on screen.
  */
 internal fun LazyGridScope.historyItems(state: MainState, today: LocalDate, filter: HistoryFilter, view: HistoryView,
-    refresh: () -> Unit, permission: () -> Unit, suggest: (String, RuleRecipe) -> Unit) {
+    refresh: () -> Unit, permission: () -> Unit, suggest: (String, RuleRecipe) -> Unit,
+    setPin: (String, String, () -> Unit) -> Unit = { _, _, _ -> }, deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> },
+    changePin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> }, nowEpoch: Long = System.currentTimeMillis()) {
     item(key = "history-summary", span = { GridItemSpan(maxLineSpan) }) { HistorySummary(state, today, filter, view, refresh, permission, suggest) }
     itemsIndexed(view.apps, key = { _, app -> "history-" + app.packageName }, span = { _, _ -> GridItemSpan(maxLineSpan) }) { rank, app ->
         HistoryAppCard(rank, app, view.totalMillis, view.estimatedByApp[app.packageName] ?: 0)
     }
+    item(key = "history-delete", span = { GridItemSpan(maxLineSpan) }) { HistoryDeleteCard(state, nowEpoch, setPin, deleteHistory, changePin) }
 }
 
 /** Standalone history tab (UI tests); the app uses [historyItems] inside its grid. */
 @Composable
 internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Unit, permission: () -> Unit,
-    suggest: (String, RuleRecipe) -> Unit = { _, _ -> }) {
+    suggest: (String, RuleRecipe) -> Unit = { _, _ -> }, setPin: (String, String, () -> Unit) -> Unit = { _, _, _ -> },
+    deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> }) {
     val filter = rememberHistoryFilter()
     val view = rememberHistoryView(state, today, filter)
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         HistorySummary(state, today, filter, view, refresh, permission, suggest)
         view.apps.forEachIndexed { rank, app -> key(app.packageName) { HistoryAppCard(rank, app, view.totalMillis, view.estimatedByApp[app.packageName] ?: 0) } }
+        HistoryDeleteCard(state, System.currentTimeMillis(), setPin, deleteHistory)
     }
 }
 
@@ -111,7 +126,7 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
     val apps = view.apps
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(1 to tr("하루"), 7 to tr("일주일"), 30 to tr("한 달")).forEach { (count, label) ->
+            listOf(1 to tr("하루"), 7 to tr("일주일"), 30 to tr("한 달"), 90 to tr("3개월")).forEach { (count, label) ->
                 FilterChip(selected = filter.days == count, onClick = { filter.days = count }, label = { Text(label) })
             }
         }
@@ -152,11 +167,13 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
             if (state.historyBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (state.historyError) Text(tr("기록을 불러오지 못했습니다. 권한을 확인하고 다시 시도해 주세요."), color = MaterialTheme.colorScheme.error)
         }
-        Text(tr("기록은 이 기기에 최대 30일간 누적됩니다. 첫 실행 전 기록과 수집이 중단된 기간은 누락될 수 있습니다. 홈 화면은 제외하며 분할 화면·화면 속 화면의 수치는 다를 수 있습니다."),
+        Text(tr("기록은 이 기기에 최대 3개월(90일)간 누적됩니다. 첫 실행 전 기록과 수집이 중단된 기간은 누락될 수 있습니다. 홈 화면은 제외하며 분할 화면·화면 속 화면의 수치는 다를 수 있습니다."),
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         if (filter.days > 1 && (records.isNotEmpty() || view.estimates.isNotEmpty())) CardBox {
             TextButton(onClick = { filter.showDays = !filter.showDays }) { Text(tr(if (filter.showDays) "일별 기록 접기" else "일별 기록 보기")) }
             if (filter.showDays) {
+                // Tapping a day lists its apps underneath; tapping it again closes the list.
+                var openDay by rememberSaveable { mutableStateOf<String?>(null) }
                 val totals = records.groupBy { it.date }
                 fun dayMillis(day: String) = totals[day].orEmpty().sumOf { it.usageMillis } + (view.estimatedByDay[day] ?: 0)
                 val maximum = ((0 until filter.days).maxOfOrNull { dayMillis(first.plusDays(it.toLong()).toString()) } ?: 1).coerceAtLeast(1)
@@ -164,13 +181,23 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
                     val day = first.plusDays(offset.toLong())
                     val rows = totals[day.toString()].orEmpty()
                     val estimated = view.estimatedByDay[day.toString()] ?: 0
-                    Text(dateText(day), style = MaterialTheme.typography.bodySmall)
-                    LinearProgressIndicator(progress = { (dayMillis(day.toString()).toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
-                    Text(when {
-                        rows.isNotEmpty() -> tr("%1\$s · %2\$d회 실행", duration(rows.sumOf { it.usageMillis } / 1000), rows.sumOf { it.opens })
-                        estimated > 0 -> tr("추정 %1\$s", duration(estimated / 1000))
-                        else -> tr("기록 없음")
-                    }, style = MaterialTheme.typography.bodySmall)
+                    val key = day.toString()
+                    val open = openDay == key
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable(enabled = dayMillis(key) > 0) {
+                        openDay = if (open) null else key
+                    }.testTag("history-day-$key").padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(dateText(day), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                            if (dayMillis(key) > 0) Text(if (open) "▴" else "▾", color = MaterialTheme.colorScheme.primary)
+                        }
+                        LinearProgressIndicator(progress = { (dayMillis(key).toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                        Text(when {
+                            rows.isNotEmpty() -> tr("%1\$s · %2\$d회 실행", duration(rows.sumOf { it.usageMillis } / 1000), rows.sumOf { it.opens })
+                            estimated > 0 -> tr("추정 %1\$s", duration(estimated / 1000))
+                            else -> tr("기록 없음")
+                        }, style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (open) DayApps(rows, view.estimates.filter { it.date == key })
                 }
             }
         }
@@ -196,6 +223,7 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
                 }
             }
         }
+        YearCalendar(state.historyYear, today)
         Text(tr("앱별 사용 기록"), style = MaterialTheme.typography.titleLarge)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = !filter.byOpens, onClick = { filter.byOpens = false }, label = { Text(tr("시간순")) })
@@ -204,6 +232,107 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
         if (apps.isEmpty() && !state.historyBusy) CardBox {
             Text(tr("이 기간에 저장된 사용 기록이 없습니다."))
             Text(tr("권한을 켠 뒤 다른 앱을 사용하고 새로고침해 보세요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/**
+ * A year of day totals as a week-by-column grid, newest at the right. Shades are relative to the person's own days
+ * (quartiles of the days with use), so a light user and a heavy user both see contrast. Tapping a square shows its total.
+ */
+@Composable
+internal fun YearCalendar(days: List<HistoryYearEntity>, today: LocalDate) {
+    val totals = remember(days) { days.associate { it.date to it.usageMillis } }
+    val first = today.minusDays(364).let { it.minusDays((it.dayOfWeek.value % 7).toLong()) } // weeks start on Sunday
+    val weeks = ((today.toEpochDay() - first.toEpochDay()) / 7 + 1).toInt()
+    val bounds = remember(totals) {
+        val used = totals.values.filter { it > 0 }.sorted()
+        if (used.isEmpty()) emptyList() else listOf(1, 2, 3).map { used[(used.size * it / 4).coerceAtMost(used.size - 1)] }
+    }
+    fun level(millis: Long) = if (millis <= 0) 0 else 1 + bounds.count { millis > it }
+    val shades = listOf(MaterialTheme.colorScheme.onSurface.copy(alpha = .08f)) + listOf(.3f, .5f, .75f, 1f).map { MaterialTheme.colorScheme.primary.copy(alpha = it) }
+    var picked by rememberSaveable { mutableStateOf<String?>(null) }
+    CardBox {
+        Text(tr("1년 기록"), style = MaterialTheme.typography.titleLarge)
+        Text(tr("하루 합계를 색으로 보여 줍니다. 칸을 누르면 그날 사용 시간이 나옵니다."), color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+        val scroll = rememberScrollState()
+        LaunchedEffect(scroll.maxValue) { scroll.scrollTo(scroll.maxValue) }
+        Row(Modifier.horizontalScroll(scroll).testTag("year-calendar"), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            for (week in 0 until weeks) Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                for (weekday in 0..6) {
+                    val day = first.plusDays(week * 7L + weekday)
+                    if (day > today) Spacer(Modifier.size(12.dp))
+                    else Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(shades[level(totals[day.toString()] ?: 0)])
+                        .clickable { picked = day.toString() }.testTag("year-$day"))
+                }
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(tr("적게"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            shades.forEach { Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(it)) }
+            Text(tr("많이"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        picked?.let { date ->
+            Text(dateText(LocalDate.parse(date), "yMd") + " · " + (totals[date]?.takeIf { it > 0 }?.let { duration(it / 1000) } ?: tr("기록 없음")),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+/** Deleting kept history needs a password the person set; the first tap sets it, later ones ask for it. */
+@Composable
+private fun HistoryDeleteCard(state: MainState, nowEpoch: Long, setPin: (String, String, () -> Unit) -> Unit, delete: (String, () -> Unit) -> Unit,
+    changePin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> }) {
+    val pinSet = state.historyPinSet
+    var open by rememberSaveable { mutableStateOf(false) }
+    var changing by rememberSaveable { mutableStateOf(false) }
+    if (changing) ChangePinDialog(state, nowEpoch, { changing = false }, changePin)
+    CardBox {
+        Text(tr("기록 삭제"), style = MaterialTheme.typography.titleLarge)
+        Text(tr("기록은 직접 정한 비밀번호를 입력해야만 지울 수 있어요. 3개월이 지난 기록은 자동으로 지워집니다."),
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { open = true }, modifier = Modifier.testTag("history-delete")) { Text(tr("기록 삭제")) }
+            if (pinSet) TextButton(onClick = { changing = true }, modifier = Modifier.testTag("history-change-pin")) { Text(tr("비밀번호 바꾸기")) }
+        }
+    }
+    if (!open) return
+    var pin by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+    val digits = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)
+    AlertDialog(onDismissRequest = { open = false },
+        title = { Text(if (pinSet) tr("기록 삭제") else tr("기록 삭제 비밀번호 정하기")) },
+        text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(if (pinSet) tr("비밀번호를 입력하면 3개월 기록과 1년 달력이 모두 지워집니다. 되돌릴 수 없습니다.")
+                else tr("기록은 이 비밀번호를 알아야만 지울 수 있어요. 잊어버리면 앱을 삭제해야만 지워지니 꼭 기억해 주세요."))
+            OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(12) }, label = { Text(if (pinSet) tr("비밀번호") else tr("비밀번호 (숫자 4~12자리)")) },
+                visualTransformation = PasswordVisualTransformation(), keyboardOptions = digits, singleLine = true, modifier = Modifier.testTag("history-pin"))
+            PinStatus(state, nowEpoch)
+            if (!pinSet) OutlinedTextField(confirm, { confirm = it.filter(Char::isDigit).take(12) }, label = { Text(tr("비밀번호 확인")) },
+                visualTransformation = PasswordVisualTransformation(), keyboardOptions = digits, singleLine = true, modifier = Modifier.testTag("history-pin-confirm"))
+        } },
+        confirmButton = { TextButton(onClick = { if (pinSet) delete(pin) { open = false } else setPin(pin, confirm) { pin = ""; confirm = "" } },
+            modifier = Modifier.testTag("history-pin-ok")) { Text(if (pinSet) tr("삭제") else tr("저장"), color = if (pinSet) MaterialTheme.colorScheme.error else Color.Unspecified) } },
+        dismissButton = { TextButton(onClick = { open = false }) { Text(tr("취소")) } })
+}
+
+/** One day's apps by time: recorded rows with opens, plus estimated time for apps the records do not cover. */
+@Composable
+private fun DayApps(rows: List<HistoryDailyEntity>, estimates: List<HistoryEstimateEntity>) {
+    val estimated = estimates.groupBy { it.packageName }
+    val apps = (rows.map { Triple(it, it.usageMillis + estimated[it.packageName].orEmpty().sumOf { e -> e.usageMillis }, it.opens) } +
+        estimated.filterKeys { pkg -> rows.none { it.packageName == pkg } }.map { (pkg, list) ->
+            Triple(HistoryDailyEntity(pkg, list.first().date, list.first().appName, 0, 0), list.sumOf { it.usageMillis }, 0)
+        }).sortedByDescending { it.second }
+    Column(Modifier.fillMaxWidth().padding(start = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        apps.forEach { (app, millis, opens) ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                AppIcon(app.packageName, app.appName, 24.dp)
+                Text(app.appName, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(if (opens > 0) tr("%1\$s · %2\$d회 실행", duration(millis / 1000), opens) else tr("추정 %1\$s", duration(millis / 1000)),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

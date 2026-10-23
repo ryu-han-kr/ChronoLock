@@ -27,7 +27,7 @@ class AppTheme(
     /** The words shown on a picker tile: everything after the family word, or the whole label for built-ins. */
     val shortLabel: List<String> get() = if (label.size > 1) label.drop(1) else label
 
-    fun copy(label: List<String> = this.label): AppTheme =
+    fun copy(label: List<String> = this.label, premium: Boolean = this.premium): AppTheme =
         AppTheme(name, label, description, isDark, background, surface, primary, onPrimary, text, muted, gradientEnd, premium)
     override fun equals(other: Any?) = other is AppTheme && other.name == name
     override fun hashCode() = name.hashCode()
@@ -50,6 +50,8 @@ class AppTheme(
         /** Every selectable palette, built-ins first. */
         fun values(): List<AppTheme> = builtIn + ThemeCatalog.all
 
-        fun fromStored(value: String?): AppTheme = values().firstOrNull { it.name == value } ?: DARK
+        /** A stored name: a listed palette, a custom one rebuilt from its colour and effect, or [DARK]. */
+        fun fromStored(value: String?): AppTheme = values().firstOrNull { it.name == value }
+            ?: ThemeCatalog.parseCustom(value)?.let { (rgb, effect) -> ThemeCatalog.custom(rgb, effect) } ?: DARK
     }
 }

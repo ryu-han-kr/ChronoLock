@@ -34,3 +34,37 @@ fun MonitorState.todaySummary(rules: Map<String, AppRule>): TodaySummary {
         .minByOrNull { it.second }
     return TodaySummary(used, tightest?.first?.appName, tightest?.second)
 }
+
+/** What is left of one group's shared limits today. */
+data class GroupLeft(val name: String, val timeLeftMillis: Long?, val opensLeft: Int?)
+
+/** The limits of the app on screen and what is left of each, for the ongoing notification. */
+data class LiveLimit(
+    val packageName: String,
+    val appName: String,
+    val dailyLimitMillis: Long?,
+    val dailyLeftMillis: Long?,
+    val sessionLeftMillis: Long?,
+    val opensLeft: Int?,
+    val groups: List<GroupLeft>,
+) {
+    /** The running allowance that ends first; the notification counts down to it. */
+    val nearestMillis: Long? get() = (listOfNotNull(dailyLeftMillis, sessionLeftMillis) + groups.mapNotNull { it.timeLeftMillis }).minOrNull()
+}
+
+/** The live limits of the observed app, or null when nothing is limiting it right now (no rule, paused or already blocked). */
+fun MonitorState.liveLimit(rules: Map<String, AppRule>): LiveLimit? {
+    val target = observedPackage ?: return null
+    val now = clock ?: return null
+    val rule = rules[target]?.takeIf { it.enabled && !it.pausedAt(now.epochMillis) && !decision.denied } ?: return null
+    val today = daily[DailyKey(target, now.date)] ?: DailyUsage()
+    val session = active?.takeIf { it.packageName == target }?.usageMillis ?: 0
+    val groups = rule.groups.filter { it.enabled }.map { group ->
+        val used = groupUsage(group)
+        GroupLeft(group.name, group.dailyLimitSeconds?.let { (it * 1000 - used.usageMillis).coerceAtLeast(0) },
+            group.maxOpenCount?.let { (it - used.opens).coerceAtLeast(0) })
+    }
+    val live = LiveLimit(target, rule.appName, rule.dailyLimitSeconds?.times(1000), remainingDailyMillis(rule),
+        rule.sessionLimitSeconds?.let { (it * 1000 - session).coerceAtLeast(0) }, rule.maxOpenCount?.let { (it - today.opens).coerceAtLeast(0) }, groups)
+    return live.takeIf { it.dailyLeftMillis != null || it.sessionLeftMillis != null || it.opensLeft != null || groups.isNotEmpty() }
+}

@@ -112,11 +112,11 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
     private fun evaluate(state: MonitorState, target: String, now: ClockReading, rules: Map<String, AppRule>): RuleDecision {
         val daily = state.daily[DailyKey(target, now.date)] ?: DailyUsage()
         val rule = rules[target]
-        val group = rule?.group?.let { state.copy(clock = now).groupUsage(it) } ?: DailyUsage()
+        val groups = rule?.groups.orEmpty().associate { it.id to state.copy(clock = now).groupUsage(it) }
         return engine.evaluate(RuleContext(
             now.epochMillis, now.zone, daily.usageMillis, state.active?.usageMillis ?: state.blockedSession?.usageMillis ?: 0,
             daily.opens, state.active == null, state.lastClosed[target]?.age(now),
-            groupUsageMillis = group.usageMillis, groupOpens = group.opens,
+            groupUsage = groups,
         ), rule)
     }
 

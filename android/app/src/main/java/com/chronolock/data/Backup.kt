@@ -64,8 +64,6 @@ object BackupCodec {
         val sites = root.optJSONArray("sites").objects().map { BlockedSite(it.getString("domain"), it.optBoolean("enabled", true)) }
         require(sites.map { it.domain }.toSet().size == sites.size)
         require(rules.map { it.packageName }.toSet().size == rules.size)
-        val members = groups.flatMap { it.members.keys }
-        require(members.toSet().size == members.size)
         val settings = root.optJSONObject("settings") ?: JSONObject()
         Backup(rules, groups, settings.stringOrNull("theme"), settings.stringOrNull("language"),
             settings.longOrNull("strictMinutes")?.toInt()?.takeIf { it in Strictness.DELAYS }, sites)

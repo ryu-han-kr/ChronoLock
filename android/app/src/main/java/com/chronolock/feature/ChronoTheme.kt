@@ -6,12 +6,22 @@ import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.chronolock.data.ThemeEffect
+import kotlin.math.roundToInt
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -163,6 +173,7 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favori
                 LazyVerticalGrid(columns = GridCells.Adaptive(76.dp), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(14.dp),
                     modifier = Modifier.fillMaxSize().selectableGroup().testTag("theme-gallery-grid")) {
+                    item(key = "custom", span = { GridItemSpan(maxLineSpan) }) { CustomThemeCard(selected, select) }
                     item(key = "favorites-hint", span = { GridItemSpan(maxLineSpan) }) {
                         Text(tr("♡를 누르면 찜한 테마가 설정의 테마 목록 앞쪽에 나옵니다."), style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -181,6 +192,54 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favori
                     }
                 }
             }
+        }
+    }
+}
+
+/** Any colour 000000-FFFFFF, by code or R/G/B sliders, with one of the [ThemeEffect] looks; previews before applying. */
+@Composable
+private fun CustomThemeCard(selected: AppTheme, apply: (AppTheme) -> Unit) {
+    val start = remember { ThemeCatalog.parseCustom(selected.name) }
+    var rgb by rememberSaveable { mutableIntStateOf(start?.first ?: 0x4F7CAC) }
+    var hex by rememberSaveable { mutableStateOf("%06X".format(rgb)) }
+    var effectName by rememberSaveable { mutableStateOf(start?.second?.name ?: ThemeEffect.PASTEL.name) }
+    val effect = ThemeEffect.valueOf(effectName)
+    val preview = remember(rgb, effect) { ThemeCatalog.custom(rgb, effect) }
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(14.dp)
+        .testTag("theme-custom"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(tr("나만의 테마"), style = MaterialTheme.typography.titleSmall)
+        Text(tr("색상 코드나 R·G·B로 색을 고르고 효과를 골라 적용하세요."), style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF000000L or rgb.toLong()))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)))
+            OutlinedTextField(value = hex, onValueChange = { value ->
+                    hex = value.uppercase().filter { it in "0123456789ABCDEF" }.take(6)
+                    if (hex.length == 6) rgb = hex.toInt(16)
+                }, modifier = Modifier.weight(1f).testTag("custom-hex"), label = { Text(tr("색상 코드")) }, prefix = { Text("#") },
+                singleLine = true, isError = hex.length != 6)
+        }
+        listOf("R" to 16, "G" to 8, "B" to 0).forEach { (channel, shift) ->
+            val value = (rgb shr shift) and 255
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(channel, Modifier.width(20.dp), style = MaterialTheme.typography.labelLarge)
+                Slider(value = value.toFloat(), onValueChange = { v ->
+                    rgb = (rgb and (0xFF shl shift).inv()) or (v.roundToInt().coerceIn(0, 255) shl shift)
+                    hex = "%06X".format(rgb)
+                }, valueRange = 0f..255f, modifier = Modifier.weight(1f).testTag("custom-$channel"))
+                Text("$value", Modifier.width(36.dp), style = MaterialTheme.typography.labelMedium)
+            }
+        }
+        Text(tr("효과"), style = MaterialTheme.typography.labelLarge)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ThemeEffect.entries.forEach { option ->
+                FilterChip(selected = option == effect, onClick = { effectName = option.name }, label = { Text(tr(option.word)) },
+                    modifier = Modifier.testTag("effect-${option.name}"))
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ThemeTile(preview, chosen = preview == selected, tag = "custom-preview") { apply(preview) }
+            Button(onClick = { apply(preview) }, modifier = Modifier.testTag("custom-apply")) { Text(tr("적용")) }
         }
     }
 }

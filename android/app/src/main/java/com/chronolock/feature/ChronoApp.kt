@@ -119,6 +119,9 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup,
                 addSite = { input, added -> model.addSite(input, added) }, toggleSite = model::toggleSite,
                 removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite,
+                setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,
+                lockFor = model::lockFor, startGoalLock = model::startGoalLock, endGoalLock = model::endGoalLock,
+                collectPiece = model::collectPiece, changeGoalPin = model::changeGoalPin,
                 exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
                 restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             )
@@ -134,8 +137,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             }
             editGroupId?.let { id ->
                 val saved = state.groups.firstOrNull { it.id == id }
-                val taken = state.groups.filter { it.id != id }.flatMap { it.members.keys }.toSet()
-                key(id) { GroupEditor(saved, state.apps, taken, state.strict.delayAt(nowEpoch), onDismiss = { editGroupId = null },
+                key(id) { GroupEditor(saved, state.apps, state.strict.delayAt(nowEpoch), onDismiss = { editGroupId = null },
                     onSave = { group, finished -> model.saveGroup(group, { editGroupId = null }, finished) },
                     onDelete = { model.removeGroup(id) { editGroupId = null } }) }
             }
@@ -157,7 +159,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 AlertDialog(onDismissRequest = { permissionDialog = null }, title = { Text(if (accessibility) tr("접근성 권한 안내") else tr("사용 정보 접근 안내")) },
                     text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { Text(if (accessibility)
                         tr("ChronoLock은 앱 전환 이벤트로 실행 중인 앱을 확인하고, 직접 설정한 제한에 따라 다른 앱 위에 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인만 확인합니다. 그 밖의 화면 텍스트, 비밀번호, 입력 내용은 읽지 않습니다. 선택한 앱의 패키지 이름, 차단할 사이트 목록과 사용·차단 기록은 이 기기에만 저장되며 전송되지 않고, 방문한 주소는 저장하지 않습니다. Android 설정에서 언제든 해제할 수 있습니다. 동의하면 다음 설정 화면에서 ChronoLock을 직접 활성화해 주세요.")
-                    else tr("사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 30일간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."))
+                    else tr("사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 3개월(90일)간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."))
                         if (accessibility) Text(tr("설정 화면이 열리면 ① '설치된 앱'(또는 '다운로드한 앱')에서 ChronoLock을 누르고 ② 'ChronoLock 사용'을 켠 뒤 ③ '허용'을 누르세요. 기기에 따라 항목 이름과 위치가 다를 수 있습니다."), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
                     } },
                     confirmButton = { TextButton(onClick = { model.acknowledge { permissionDialog = null; openSettings(accessibility) } }) { Text(tr("동의하고 설정 열기")) } },
@@ -169,13 +171,13 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 dismissButton = { TextButton(onClick = { confirmDeleteAccount = false }) { Text(tr("취소")) } })
             restoreFrom?.let { uri ->
                 AlertDialog(onDismissRequest = { restoreFrom = null }, title = { Text(tr("백업으로 바꿀까요?")) },
-                    text = { Text(tr("지금 있는 제한 규칙과 앱 묶음이 모두 백업 내용으로 바뀝니다. 사용 기록은 그대로 남습니다.")) },
+                    text = { Text(tr("지금 있는 제한 규칙과 앱 그룹이 모두 백업 내용으로 바뀝니다. 사용 기록은 그대로 남습니다.")) },
                     confirmButton = { TextButton(onClick = { model.restoreBackup(uri); restoreFrom = null }) { Text(tr("복원")) } },
                     dismissButton = { TextButton(onClick = { restoreFrom = null }) { Text(tr("취소")) } })
             }
-            if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, title = { Text(tr("로컬 데이터를 삭제할까요?")) },
-                text = { Text(tr("모든 제한 규칙과 기록이 삭제되고 차단이 해제됩니다. 되돌릴 수 없습니다.")) },
-                confirmButton = { TextButton(onClick = { model.clear(); confirmClear = false }) { Text(tr("모두 삭제")) } },
+            if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, title = { Text(tr("모든 규칙을 초기화할까요?")) },
+                text = { Text(tr("앱 제한, 앱 그룹, 웹사이트 차단이 모두 지워집니다. 사용 기록은 그대로 남습니다.")) },
+                confirmButton = { TextButton(onClick = { model.resetRules(); confirmClear = false }, modifier = Modifier.testTag("rules-reset-confirm")) { Text(tr("초기화")) } },
                 dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(tr("취소")) } })
         }
     }

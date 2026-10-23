@@ -36,6 +36,13 @@ data class MainState(
     val focusBusy: Boolean = false,
     val theme: AppTheme = AppTheme.DARK,
     val favoriteThemes: Set<String> = emptySet(),
+    /** Day totals for the year calendar, and whether a password for deleting history exists. */
+    val historyYear: List<com.chronolock.data.HistoryYearEntity> = emptyList(),
+    val historyPinSet: Boolean = false,
+    val lock: com.chronolock.domain.LockSetting = com.chronolock.domain.LockSetting(),
+    /** After a wrong password: tries left, or the time it can be entered again. */
+    val pinTriesLeft: Int? = null,
+    val pinBlockedUntil: Long? = null,
     val language: AppLanguage = AppLanguage.KOREAN,
     val history: List<HistoryDailyEntity> = emptyList(),
     /** Usage estimated from OS buckets for days before the first event record. */
@@ -94,6 +101,9 @@ class MainViewModel @Inject constructor(
         .combine(repository.groups) { data, groups -> data.copy(groups = groups.map { it.toDomain() }) }
         .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
         .combine(preferences.favoriteThemes) { data, favorites -> data.copy(favoriteThemes = favorites) }
+        .combine(historyRepository.year) { data, year -> data.copy(historyYear = year) }
+        .combine(preferences.historyPinSet) { data, set -> data.copy(historyPinSet = set) }
+        .combine(preferences.lock) { data, lock -> data.copy(lock = lock) }
         .combine(repository.sites) { data, sites -> data.copy(sites = sites.map { it.toDomain() }) }
         .combine(repository.pendingSites) { data, pending -> data.copy(pendingSites = pending) }
         .onEach { lastLoaded = it }
@@ -107,7 +117,8 @@ class MainViewModel @Inject constructor(
             history = data.history, historyEstimates = data.historyEstimates, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
-            favoriteThemes = data.favoriteThemes)
+            favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
+            lock = data.lock)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -158,7 +169,7 @@ class MainViewModel @Inject constructor(
             if (repository.requestRule(rule, strictDelay(now), now) != null) showError(HELD)
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (error: Exception) { showError("제한을 저장하지 못했습니다. 다시 시도해 주세요.") }
+        catch (error: Exception) { showError(failure(error, "제한을 저장하지 못했습니다. 다시 시도해 주세요.")) }
         finally { onFinished() }
     }
 
@@ -178,6 +189,7 @@ class MainViewModel @Inject constructor(
 
     fun stopFocus() {
         if (local.value.focusBusy) return
+        if (state.value.lock.lockedAt(System.currentTimeMillis())) { showError(LocalRepository.LOCKED); return }
         if (state.value.strict.delayAt(System.currentTimeMillis()) > 0) { showError("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."); return }
         local.update { it.copy(focusBusy = true) }
         viewModelScope.launch {
@@ -194,7 +206,7 @@ class MainViewModel @Inject constructor(
             onSaved()
         }
         catch (cancelled: CancellationException) { throw cancelled }
-        catch (error: Exception) { showError("제한을 삭제하지 못했습니다.") }
+        catch (error: Exception) { showError(failure(error, "제한을 삭제하지 못했습니다.")) }
     }
 
     /** Pauses one rule for [minutes], or for the rest of today when null. */
@@ -203,7 +215,7 @@ class MainViewModel @Inject constructor(
             val clock = environment.clock()
             if (repository.requestPause(packageName, minutes, strictDelay(clock.epochMillis), clock.epochMillis, clock.zone) != null) showError(HELD)
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (error: Exception) { showError("제한을 쉬게 하지 못했습니다. 다시 시도해 주세요.") }
+        catch (error: Exception) { showError(failure(error, "제한을 쉬게 하지 못했습니다. 다시 시도해 주세요.")) }
     }
 
     fun resume(packageName: String) = viewModelScope.launch {
@@ -226,7 +238,7 @@ class MainViewModel @Inject constructor(
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) {
-            showError(if (error.message == LocalRepository.GROUP_TAKEN) LocalRepository.GROUP_TAKEN else "묶음을 저장하지 못했습니다. 다시 시도해 주세요.")
+            showError(failure(error, "그룹을 저장하지 못했습니다. 다시 시도해 주세요."))
         }
         finally { onFinished() }
     }
@@ -237,7 +249,7 @@ class MainViewModel @Inject constructor(
             if (repository.requestDeleteGroup(id, strictDelay(now), now) != null) showError(HELD)
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (error: Exception) { showError("묶음을 삭제하지 못했습니다.") }
+        catch (error: Exception) { showError(failure(error, "그룹을 삭제하지 못했습니다.")) }
     }
 
     fun cancelPendingGroup(id: Long) = viewModelScope.launch {
@@ -264,7 +276,7 @@ class MainViewModel @Inject constructor(
             val now = environment.clock().epochMillis
             if (repository.requestSite(site.copy(enabled = enabled), strictDelay(now), now) != null) showError(HELD)
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (error: Exception) { showError("사이트를 저장하지 못했습니다. 다시 시도해 주세요.") }
+        catch (error: Exception) { showError(failure(error, "사이트를 저장하지 못했습니다. 다시 시도해 주세요.")) }
     }
 
     fun removeSite(domain: String) = viewModelScope.launch {
@@ -272,7 +284,7 @@ class MainViewModel @Inject constructor(
             val now = environment.clock().epochMillis
             if (repository.requestDeleteSite(domain, strictDelay(now), now) != null) showError(HELD)
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (error: Exception) { showError("사이트를 삭제하지 못했습니다.") }
+        catch (error: Exception) { showError(failure(error, "사이트를 삭제하지 못했습니다.")) }
     }
 
     fun cancelPendingSite(domain: String) = viewModelScope.launch {
@@ -282,6 +294,8 @@ class MainViewModel @Inject constructor(
     }
 
     fun setStrict(minutes: Int) = viewModelScope.launch {
+        val now = environment.clock().epochMillis
+        if (locked(now) && minutes < preferences.strict.first().delayAt(now)) { showError(LocalRepository.LOCKED); return@launch }
         try { preferences.updateStrict { it.request(minutes, environment.clock().epochMillis) } }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
@@ -303,6 +317,7 @@ class MainViewModel @Inject constructor(
     fun restoreBackup(uri: android.net.Uri) = viewModelScope.launch {
         try {
             val now = environment.clock().epochMillis
+            if (locked(now)) { showError(LocalRepository.LOCKED); return@launch }
             if (preferences.strict.first().delayAt(now) > 0) { showError("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."); return@launch }
             backups.restore(uri, environment.safetyPackages(), now)
             showError("백업을 복원했습니다.")
@@ -313,16 +328,118 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    /** Read from storage rather than the screen state, which may not have loaded yet. */
-    private suspend fun strictDelay(now: Long) = preferences.strict.first().delayMillisAt(now)
+    /** Read from storage rather than the screen state, which may not have loaded yet. A lock overrides strict mode. */
+    private suspend fun strictDelay(now: Long) =
+        if (locked(now)) LocalRepository.LOCKED_DELAY else preferences.strict.first().delayMillisAt(now)
+    private suspend fun locked(now: Long) = preferences.lock.first().lockedAt(now)
+    /** The lock message when a change was refused by a lock, else [fallback]. */
+    private fun failure(error: Exception, fallback: String) = if (error.message == LocalRepository.LOCKED) LocalRepository.LOCKED else fallback
 
-    fun clear() = viewModelScope.launch {
+    /** Starts or extends a time lock by [hours]. */
+    fun lockFor(hours: Int) = viewModelScope.launch {
+        try { preferences.extendLock(environment.clock().epochMillis + hours * 3_600_000L) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    /** Starts a goal lock of [days] kept days, with the person's password or, when [pieces], an app-made code; [done] closes the form. */
+    fun startGoalLock(days: Int, pieces: Boolean, pin: String, confirm: String, done: () -> Unit) = viewModelScope.launch {
+        when {
+            !pieces && !pin.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
+            !pieces && pin != confirm -> showError("두 비밀번호가 다릅니다.")
+            else -> try { preferences.startGoalLock(days, environment.clock().date, pin.takeUnless { pieces }); done() }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+        }
+    }
+
+    /** Ends a goal lock once its goal is reached and [pin] matches. [keptStreak] comes from the screen's records. */
+    fun endGoalLock(pin: String, keptStreak: Int) = viewModelScope.launch {
         try {
-            if (preferences.strict.first().delayAt(environment.clock().epochMillis) > 0) { showError("엄격 모드를 끈 뒤에 모든 데이터를 삭제할 수 있습니다."); return@launch }
-            repository.clearAll()
+            val lock = preferences.lock.first()
+            if (!lock.goalReached(keptStreak, environment.clock().date)) { showError("아직 목표를 이루지 않았어요."); return@launch }
+            val result = preferences.endGoalLock(pin, environment.clock().epochMillis)
+            if (!result.ok) { refused(result); return@launch }
+            showError("목표 잠금을 풀었어요. 수고했어요!")
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    /** Removes all rules, groups and sites; history stays. Strict mode must be off, as this lifts every limit at once. */
+    fun resetRules() = viewModelScope.launch {
+        try {
+            val now = environment.clock().epochMillis
+            if (locked(now)) { showError(LocalRepository.LOCKED); return@launch }
+            if (preferences.strict.first().delayAt(now) > 0) { showError("엄격 모드를 끈 뒤에 모든 규칙을 초기화할 수 있습니다."); return@launch }
+            repository.resetRules(now)
         }
         catch (cancelled: CancellationException) { throw cancelled }
-        catch (error: Exception) { showError("로컬 데이터를 삭제하지 못했습니다.") }
+        catch (error: Exception) { showError("규칙을 초기화하지 못했습니다.") }
+    }
+
+    /** Sets the history password; [done] closes the form. */
+    fun setHistoryPin(pin: String, confirm: String, done: () -> Unit) = viewModelScope.launch {
+        when {
+            !pin.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
+            pin != confirm -> showError("두 비밀번호가 다릅니다.")
+            else -> try { preferences.setHistoryPin(pin); done() }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+        }
+    }
+
+    /** Explains a refused password: how many tries are left, or until when it is paused. */
+    private fun refused(result: com.chronolock.data.PinResult) {
+        local.update { it.copy(pinBlockedUntil = result.blockedUntil, pinTriesLeft = result.triesLeft.takeIf { result.blockedUntil == null }) }
+        showError(if (result.blockedUntil != null) "비밀번호를 5번 틀려 10분 동안 입력할 수 없습니다." else "비밀번호가 맞지 않습니다.")
+    }
+
+    /** Changes the history password after the current one is confirmed. */
+    fun changeHistoryPin(current: String, next: String, confirm: String, done: () -> Unit) = viewModelScope.launch {
+        when {
+            !next.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
+            next != confirm -> showError("두 비밀번호가 다릅니다.")
+            else -> try {
+                val result = preferences.changeHistoryPin(current, next, environment.clock().epochMillis)
+                if (result.ok) { done(); showError("비밀번호를 바꿨습니다.") } else refused(result)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+        }
+    }
+
+    /** Changes a goal lock's own password after the current one is confirmed. */
+    fun changeGoalPin(current: String, next: String, confirm: String, done: () -> Unit) = viewModelScope.launch {
+        when {
+            !next.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
+            next != confirm -> showError("두 비밀번호가 다릅니다.")
+            else -> try {
+                val result = preferences.changeGoalPin(current, next, environment.clock().epochMillis)
+                if (result.ok) { done(); showError("비밀번호를 바꿨습니다.") } else refused(result)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+        }
+    }
+
+    /** Hands out the next digit of a piece code when another kept day has passed. */
+    fun collectPiece(keptStreak: Int) = viewModelScope.launch {
+        try {
+            if (!preferences.lock.first().canReveal(keptStreak, environment.clock().date)) { showError("오늘의 조각은 이미 받았어요. 내일도 한도를 지켜 보세요."); return@launch }
+            preferences.revealNextPiece()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    /** Deletes kept history after the password matches. Today's counts used by limits are kept. */
+    fun deleteHistory(pin: String, done: () -> Unit) = viewModelScope.launch {
+        try {
+            val check = preferences.checkHistoryPin(pin, environment.clock().epochMillis)
+            if (!check.ok) { refused(check); return@launch }
+            historyRepository.clearHistory(environment.clock().epochMillis)
+            done()
+            showError("기록을 삭제했습니다.")
+        }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("기록을 삭제하지 못했습니다.") }
     }
     fun finishOnboarding() = viewModelScope.launch {
         try { preferences.finishOnboarding() }
