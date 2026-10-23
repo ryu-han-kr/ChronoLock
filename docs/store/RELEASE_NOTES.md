@@ -2,6 +2,24 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.8.3 (versionCode 16) — 미업로드
+
+AAB: `release/chronolock-0.8.3-vc16.aab`. 0.8.2 + 다른 AI 리뷰 반영(안정성·정책 리뷰 수정, 제품 리뷰 상위 3개). 0.8.2를 아직 안 올렸다면 0.8.3만 올리고 0.8.2 노트와 합쳐 쓴다.
+
+### ko
+- 열기 전 멈춤: 앱을 열 때 몇 초 숨 고르는 화면을 보여 줘요.
+- 사용 중 확인: 정한 시간마다 계속 쓸지 물어봐요.
+- 처음 시작할 때 줄이고 싶은 것을 고르면 맞춤 제한을 추천해요.
+- 차단 화면이 더 부드러워지고 오늘 참은 횟수를 보여 줘요.
+- 분할 화면·팝업 창으로 제한을 피하던 문제와 감시가 멈출 수 있던 문제를 고쳤어요.
+
+### en
+- Pause before opening: a short breathing screen when you open an app.
+- Check-in while using: asks at set times whether to keep going.
+- Pick what to cut down on at first run and get suggested limits.
+- A kinder block screen that shows how often you held back today.
+- Fixed bypassing limits with split screen or pop-up windows, and monitoring that could stop.
+
 ## 0.8.2 (versionCode 15) — 미업로드
 
 AAB: `release/chronolock-0.8.2-vc15.aab`. 0.8.1 + 개선(주간 리포트·추천 행동·사이트 묶음·2열 설정·낮/밤 테마·테마 바로가기·랜덤).
