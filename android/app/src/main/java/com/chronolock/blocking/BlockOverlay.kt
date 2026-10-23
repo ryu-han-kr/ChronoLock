@@ -91,6 +91,9 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
             val parameters = WindowManager.LayoutParams(-1, -1, WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.OPAQUE)
             parameters.gravity = Gravity.TOP or Gravity.START
+            // Cover the punch-hole band too, so no strip of the blocked app stays touchable in landscape.
+            parameters.layoutInDisplayCutoutMode = if (android.os.Build.VERSION.SDK_INT >= 30)
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS else WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             manager.addView(content, parameters)
             root = content
             content.requestFocus()

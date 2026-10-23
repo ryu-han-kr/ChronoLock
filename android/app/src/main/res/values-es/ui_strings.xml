@@ -612,4 +612,5 @@
     <string name="theme_day">"Tema de día"</string>
     <string name="theme_night">"Tema de noche"</string>
     <string name="theme_random">"Aleatorio"</string>
+    <string name="restricted_settings_hint">"Si el interruptor está en gris: Información de la app → ⋮ (arriba a la derecha) → \'Permitir ajustes restringidos\' y vuelve a intentarlo."</string>
 </resources>

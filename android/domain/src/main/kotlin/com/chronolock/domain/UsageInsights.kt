@@ -43,13 +43,14 @@ fun weekTotals(dayTotals: Map<java.time.LocalDate, Long>, today: java.time.Local
 }
 
 /**
- * Whether the weekly report is due at [now]: from Sunday 18:00 until Monday noon, once per week. [lastSentWeekStart] is
- * the Monday of the week last reported.
+ * The week (its Monday) whose report is due at [now]: from Sunday 18:00 until the end of Wednesday, once per week, so a
+ * deferred background job still delivers it. [lastSentWeekStart] is the Monday of the week last reported.
  */
 fun weeklyReportDue(now: java.time.LocalDateTime, lastSentWeekStart: java.time.LocalDate?): java.time.LocalDate? {
     val weekStart = when {
         now.dayOfWeek == java.time.DayOfWeek.SUNDAY && now.hour >= 18 -> now.toLocalDate().minusDays(6)
-        now.dayOfWeek == java.time.DayOfWeek.MONDAY && now.hour < 12 -> now.toLocalDate().minusDays(7)
+        now.dayOfWeek in setOf(java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.TUESDAY, java.time.DayOfWeek.WEDNESDAY) ->
+            now.toLocalDate().with(java.time.DayOfWeek.MONDAY).minusDays(7)
         else -> return null
     }
     return weekStart.takeIf { it != lastSentWeekStart }

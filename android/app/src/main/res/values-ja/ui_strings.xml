@@ -590,4 +590,5 @@
     <string name="theme_day">"昼テーマ"</string>
     <string name="theme_night">"夜テーマ"</string>
     <string name="theme_random">"ランダム"</string>
+    <string name="restricted_settings_hint">"スイッチがグレーで有効にできない場合：アプリ情報 → 右上の⋮ → 「制限付き設定を許可」の後、もう一度有効にしてください。"</string>
 </resources>

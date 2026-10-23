@@ -539,6 +539,7 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "낮 테마" to R.string.theme_day,
     "밤 테마" to R.string.theme_night,
     "랜덤" to R.string.theme_random,
+    "스위치가 회색이라 켜지지 않으면: 앱 정보 → 오른쪽 위 ⋮ → '제한된 설정 허용' 후 다시 켜 주세요." to R.string.restricted_settings_hint,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

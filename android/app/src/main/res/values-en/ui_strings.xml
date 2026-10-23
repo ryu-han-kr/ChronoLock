@@ -601,4 +601,5 @@
     <string name="theme_day">"Day theme"</string>
     <string name="theme_night">"Night theme"</string>
     <string name="theme_random">"Random"</string>
+    <string name="restricted_settings_hint">"If the switch is greyed out: App info → ⋮ (top right) → \'Allow restricted settings\', then try again."</string>
 </resources>

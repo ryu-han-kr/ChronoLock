@@ -17,12 +17,13 @@ class WeeklyReportTest {
         assertNull(weekTotals(mapOf(sunday to 5L), sunday).changePercent)
     }
 
-    @Test fun report_isDueSundayEveningUntilMondayNoon_onceAWeek() {
+    @Test fun report_isDueFromSundayEveningUntilWednesday_onceAWeek() {
         val monday = sunday.minusDays(6)
         assertEquals(monday, weeklyReportDue(sunday.atTime(18, 0), null))
         assertNull(weeklyReportDue(sunday.atTime(17, 59), null))
         assertEquals(monday, weeklyReportDue(sunday.plusDays(1).atTime(11, 0), null))
-        assertNull(weeklyReportDue(sunday.plusDays(1).atTime(12, 0), null))
+        assertEquals(monday, weeklyReportDue(sunday.plusDays(3).atTime(23, 0), null))
+        assertNull(weeklyReportDue(sunday.plusDays(4).atTime(9, 0), null))
         assertNull(weeklyReportDue(sunday.atTime(21, 0), monday))
         assertTrue(SitePreset.entries.all { preset -> preset.domains.all { SiteDomains.valid(it) } })
     }

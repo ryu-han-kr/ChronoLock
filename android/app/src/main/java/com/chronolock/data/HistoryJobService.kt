@@ -36,11 +36,13 @@ class HistoryJobService : JobService() {
 
     companion object {
         private const val JOB_ID = 301
+        private const val PERIOD = 6 * 60 * 60 * 1000L
         fun schedule(context: Context) {
             val scheduler = context.getSystemService(JobScheduler::class.java)
-            if (scheduler.getPendingJob(JOB_ID) == null) {
+            // Reschedule when an update changed the period, so existing installs pick up new settings.
+            if (scheduler.getPendingJob(JOB_ID)?.intervalMillis != PERIOD) {
                 scheduler.schedule(JobInfo.Builder(JOB_ID, ComponentName(context, HistoryJobService::class.java))
-                    .setPeriodic(6 * 60 * 60 * 1000L).setPersisted(true).build())
+                    .setPeriodic(PERIOD).setPersisted(true).build())
             }
         }
     }

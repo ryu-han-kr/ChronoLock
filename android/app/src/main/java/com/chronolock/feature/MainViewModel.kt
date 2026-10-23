@@ -145,7 +145,11 @@ class MainViewModel @Inject constructor(
         if (local.value.historyBusy || !environment.hasUsageAccess()) return
         local.update { it.copy(historyBusy = true, historyError = false) }
         viewModelScope.launch {
-            try { historyRepository.collect() }
+            try {
+                historyRepository.collect()
+                // The background job may be deferred for days on battery-saving devices; opening the app sends a due report.
+                runCatching { com.chronolock.data.WeeklyReport.maybeNotify(environment.context, historyRepository, preferences) }
+            }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { local.update { it.copy(historyError = true) } }
             finally { local.update { it.copy(historyBusy = false) } }

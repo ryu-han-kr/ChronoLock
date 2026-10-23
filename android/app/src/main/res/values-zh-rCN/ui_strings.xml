@@ -590,4 +590,5 @@
     <string name="theme_day">"日间主题"</string>
     <string name="theme_night">"夜间主题"</string>
     <string name="theme_random">"随机"</string>
+    <string name="restricted_settings_hint">"如果开关为灰色无法开启：应用信息 → 右上角 ⋮ → “允许受限制的设置”，然后重试。"</string>
 </resources>

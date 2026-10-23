@@ -216,7 +216,11 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             OutlinedButton(onClick = usage, modifier = Modifier.fillMaxWidth()) { Text(tr("사용 정보 권한")) }
             OutlinedButton(onClick = accessibility, modifier = Modifier.fillMaxWidth()) { Text(tr("접근성 권한")) }
-            if (!state.permissions.accessibility) Text(tr("접근성 설정 → 설치된 앱 → ChronoLock → 사용 켜기 → 허용"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            if (!state.permissions.accessibility) {
+                Text(tr("접근성 설정 → 설치된 앱 → ChronoLock → 사용 켜기 → 허용"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                Text(tr("스위치가 회색이라 켜지지 않으면: 앱 정보 → 오른쪽 위 ⋮ → '제한된 설정 허용' 후 다시 켜 주세요."),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
             NotificationPermissionButton()
         }
     }

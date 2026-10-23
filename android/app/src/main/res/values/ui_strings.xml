@@ -590,4 +590,5 @@
     <string name="theme_day">"낮 테마"</string>
     <string name="theme_night">"밤 테마"</string>
     <string name="theme_random">"랜덤"</string>
+    <string name="restricted_settings_hint">"스위치가 회색이라 켜지지 않으면: 앱 정보 → 오른쪽 위 ⋮ → \'제한된 설정 허용\' 후 다시 켜 주세요."</string>
 </resources>
