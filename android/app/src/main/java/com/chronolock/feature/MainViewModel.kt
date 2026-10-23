@@ -192,11 +192,15 @@ class MainViewModel @Inject constructor(
 
     fun stopFocus() {
         if (local.value.focusBusy) return
-        if (state.value.lock.lockedAt(System.currentTimeMillis())) { showError(LocalRepository.LOCKED); return }
-        if (state.value.strict.delayAt(System.currentTimeMillis()) > 0) { showError("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."); return }
         local.update { it.copy(focusBusy = true) }
         viewModelScope.launch {
-            try { repository.stopFocus(environment.clock().epochMillis) }
+            try {
+                val now = environment.clock().epochMillis
+                // Read from storage: the screen state may not have loaded the lock or strict setting yet.
+                if (locked(now)) { showError(LocalRepository.LOCKED); return@launch }
+                if (preferences.strict.first().delayAt(now) > 0) { showError("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."); return@launch }
+                repository.stopFocus(now)
+            }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { showError("집중 모드를 종료하지 못했습니다.") }
             finally { local.update { it.copy(focusBusy = false) } }
@@ -338,13 +342,19 @@ class MainViewModel @Inject constructor(
     /** Read from storage rather than the screen state, which may not have loaded yet. A lock overrides strict mode. */
     private suspend fun strictDelay(now: Long) =
         if (locked(now)) LocalRepository.LOCKED_DELAY else preferences.strict.first().delayMillisAt(now)
-    private suspend fun locked(now: Long) = preferences.lock.first().lockedAt(now)
+    /** Read from storage on the boot clock too, so a changed wall clock does not end a lock. */
+    @Suppress("UNUSED_PARAMETER")
+    private suspend fun locked(now: Long) = preferences.lock.first().lockedAt(environment.clock())
     /** The lock message when a change was refused by a lock, else [fallback]. */
     private fun failure(error: Exception, fallback: String) = if (error.message == LocalRepository.LOCKED) LocalRepository.LOCKED else fallback
 
     /** Starts or extends a time lock by [hours]. */
     fun lockFor(hours: Int) = viewModelScope.launch {
-        try { preferences.extendLock(environment.clock().epochMillis + hours * 3_600_000L) }
+        try {
+            preferences.extendLock(environment.clock(), hours * 3_600_000L)
+            // Relaxations strict mode was still holding would otherwise apply in the middle of the lock.
+            repository.cancelAllPending()
+        }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
@@ -355,7 +365,7 @@ class MainViewModel @Inject constructor(
             !state.value.pro -> showError(PRO_GOAL)
             !pieces && !pin.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
             !pieces && pin != confirm -> showError("두 비밀번호가 다릅니다.")
-            else -> try { preferences.startGoalLock(days, environment.clock().date, pin.takeUnless { pieces }); done() }
+            else -> try { preferences.startGoalLock(days, environment.clock().date, pin.takeUnless { pieces }); repository.cancelAllPending(); done() }
                 catch (cancelled: CancellationException) { throw cancelled }
                 catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
         }
@@ -366,7 +376,7 @@ class MainViewModel @Inject constructor(
         try {
             val lock = preferences.lock.first()
             if (!lock.goalReached(keptStreak, environment.clock().date)) { showError("아직 목표를 이루지 않았어요."); return@launch }
-            val result = preferences.endGoalLock(pin, environment.clock().epochMillis)
+            val result = preferences.endGoalLock(pin, environment.clock())
             if (!result.ok) { refused(result); return@launch }
             showError("목표 잠금을 풀었어요. 수고했어요!")
         } catch (cancelled: CancellationException) { throw cancelled }
@@ -408,7 +418,7 @@ class MainViewModel @Inject constructor(
             !next.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
             next != confirm -> showError("두 비밀번호가 다릅니다.")
             else -> try {
-                val result = preferences.changeHistoryPin(current, next, environment.clock().epochMillis)
+                val result = preferences.changeHistoryPin(current, next, environment.clock())
                 if (result.ok) { done(); showError("비밀번호를 바꿨습니다.") } else refused(result)
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
@@ -421,7 +431,7 @@ class MainViewModel @Inject constructor(
             !next.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
             next != confirm -> showError("두 비밀번호가 다릅니다.")
             else -> try {
-                val result = preferences.changeGoalPin(current, next, environment.clock().epochMillis)
+                val result = preferences.changeGoalPin(current, next, environment.clock())
                 if (result.ok) { done(); showError("비밀번호를 바꿨습니다.") } else refused(result)
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
@@ -440,7 +450,7 @@ class MainViewModel @Inject constructor(
     /** Deletes kept history after the password matches. Today's counts used by limits are kept. */
     fun deleteHistory(pin: String, done: () -> Unit) = viewModelScope.launch {
         try {
-            val check = preferences.checkHistoryPin(pin, environment.clock().epochMillis)
+            val check = preferences.checkHistoryPin(pin, environment.clock())
             if (!check.ok) { refused(check); return@launch }
             historyRepository.clearHistory(environment.clock().epochMillis)
             done()

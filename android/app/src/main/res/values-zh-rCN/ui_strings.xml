@@ -565,4 +565,6 @@
     <string name="pro_limit_goal">"目标锁定是专业版功能。"</string>
     <string name="pro_limit_themes">"基础主题以外的主题和自定义主题需要专业版。"</string>
     <string name="pro_limit_history">"3 个月记录和年度日历需要专业版。"</string>
+    <string name="lock_pill_goal">"目标锁定中"</string>
+    <string name="lock_pill_until">"锁定至 %1$s"</string>
 </resources>

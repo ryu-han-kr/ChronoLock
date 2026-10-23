@@ -2,6 +2,22 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.8.1 (versionCode 14) — 미업로드
+
+AAB: `release/chronolock-0.8.1-vc14.aab`. 0.8.0 기능 + QA 수정(docs/QA_REPORT_2026-10-23.md). 0.8.0을 아직 비공개 테스트에 안 올렸다면 0.8.1을 올리고 아래 0.8.0 노트와 합쳐 쓴다.
+
+### ko
+- 잠금 모드를 더 단단하게 고쳤어요(빠른 설정 타일·시계 변경에도 유지).
+- 목표 잠금에서 앱을 쓰지 않은 날도 성공으로 세요.
+- 오늘 화면에서 잠금 상태를 바로 볼 수 있어요.
+- 백업 복원 오류와 알림이 남던 문제를 고쳤어요.
+
+### en
+- Lock mode is sturdier (quick settings tile, clock changes).
+- Goal locks count days without using the apps as kept.
+- The Today screen shows when a lock is on.
+- Fixed a backup restore error and a notification that could stay.
+
 ## 0.8.0 (versionCode 13) — 2026-10-23 내부 테스트 업로드(사용자)
 
 AAB: `release/chronolock-0.8.0-vc13.aab`. 업로드 전 접근성 API 신고(웹사이트 차단 추가)·시연 영상·개인정보처리방침 갱신 필요.

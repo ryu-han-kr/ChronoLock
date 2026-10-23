@@ -565,4 +565,6 @@
     <string name="pro_limit_goal">"목표 잠금은 프로 기능이에요."</string>
     <string name="pro_limit_themes">"기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요."</string>
     <string name="pro_limit_history">"3개월 기록과 1년 달력은 프로에서 볼 수 있어요."</string>
+    <string name="lock_pill_goal">"목표 잠금 중"</string>
+    <string name="lock_pill_until">"%1$s까지 잠금"</string>
 </resources>

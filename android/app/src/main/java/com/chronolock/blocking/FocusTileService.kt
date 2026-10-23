@@ -59,7 +59,7 @@ class FocusTileService : TileService() {
                 val now = environment.clock().epochMillis
                 val rules = repository.rules.first()
                 when {
-                    focusEnd(rules, now) != null -> if (preferences.strict.first().delayAt(now) > 0) {
+                    focusEnd(rules, now) != null -> if (preferences.strict.first().delayAt(now) > 0 || preferences.lock.first().lockedAt(environment.clock())) {
                         Toast.makeText(this@FocusTileService, localized.getString(R.string.strict_focus_locked), Toast.LENGTH_SHORT).show()
                     } else repository.stopFocus(now)
                     // Without a rule or the permissions a focus cannot start; the app explains what is missing.

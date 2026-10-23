@@ -14,6 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.map
 
 private val Context.preferences by preferencesDataStore("preferences")
@@ -34,6 +35,9 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val favoriteThemesKey = stringSetPreferencesKey("favorite_themes")
     private val historyPinKey = stringPreferencesKey("history_pin")
     private val lockUntilKey = longPreferencesKey("lock_until")
+    private val lockUntilElapsedKey = longPreferencesKey("lock_until_elapsed")
+    private val lockBootKey = intPreferencesKey("lock_boot")
+    private val pinMutex = kotlinx.coroutines.sync.Mutex()
     private val goalDaysKey = intPreferencesKey("lock_goal_days")
     private val goalStartKey = stringPreferencesKey("lock_goal_start")
     private val goalPinKey = stringPreferencesKey("lock_goal_pin")
@@ -64,10 +68,21 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     val lock = context.preferences.data.map { prefs ->
         val code = prefs[goalCodeKey]
         LockSetting(prefs[lockUntilKey], prefs[goalDaysKey], prefs[goalStartKey]?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() },
-            pieceCode = code != null, revealed = code?.take(prefs[goalRevealedKey] ?: 0).orEmpty())
+            pieceCode = code != null, revealed = code?.take(prefs[goalRevealedKey] ?: 0).orEmpty(),
+            untilElapsedMillis = prefs[lockUntilElapsedKey], bootId = prefs[lockBootKey])
     }
-    /** Locks until [until]; a running time lock can only be extended, never shortened. */
-    suspend fun extendLock(until: Long) { context.preferences.edit { if ((it[lockUntilKey] ?: 0) < until) it[lockUntilKey] = until } }
+    /** Locks for [millis] from [clock]; a running time lock can only be extended, never shortened. */
+    suspend fun extendLock(clock: com.chronolock.domain.ClockReading, millis: Long) {
+        context.preferences.edit {
+            val until = clock.epochMillis + millis
+            if ((it[lockUntilKey] ?: 0) < until) it[lockUntilKey] = until
+            // The boot-clock deadline only grows within one boot; a new boot starts from this lock.
+            val elapsedUntil = clock.elapsedMillis + millis
+            if (it[lockBootKey] != clock.bootId || (it[lockUntilElapsedKey] ?: 0) < elapsedUntil) {
+                it[lockUntilElapsedKey] = elapsedUntil; it[lockBootKey] = clock.bootId
+            }
+        }
+    }
     /**
      * Starts a goal lock unless one is running. With [pin] the person's password is stored as a salted hash; without one
      * the app makes up a [days]-digit code and hands it out a digit per kept day ([revealNextPiece]).
@@ -82,7 +97,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     }
     suspend fun revealNextPiece() { context.preferences.edit { it[goalRevealedKey] = (it[goalRevealedKey] ?: 0) + 1 } }
     /** Ends the goal lock when [code] matches its password or piece code; the caller checks that the goal was reached. */
-    suspend fun endGoalLock(code: String, now: Long): PinResult = checkPin(GOAL, code, now) { prefs ->
+    suspend fun endGoalLock(code: String, now: com.chronolock.domain.ClockReading): PinResult = checkPin(GOAL, code, now) { prefs ->
         prefs[goalCodeKey]?.let { java.security.MessageDigest.isEqual(it.toByteArray(), code.toByteArray()) }
             ?: prefs[goalPinKey]?.let { matches(it, code) } ?: false
     }.also { result ->
@@ -94,29 +109,45 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     /** Whether a password for deleting history has been set. Only a salted hash is stored. */
     val historyPinSet = context.preferences.data.map { it[historyPinKey] != null }
     suspend fun setHistoryPin(pin: String) { context.preferences.edit { it[historyPinKey] = saltedHash(pin) } }
-    suspend fun checkHistoryPin(pin: String, now: Long): PinResult = checkPin(HISTORY, pin, now) { prefs -> prefs[historyPinKey]?.let { matches(it, pin) } == true }
+    suspend fun checkHistoryPin(pin: String, now: com.chronolock.domain.ClockReading): PinResult = checkPin(HISTORY, pin, now) { prefs -> prefs[historyPinKey]?.let { matches(it, pin) } == true }
     /** Replaces the history password after the current one is confirmed (counted like any other attempt). */
-    suspend fun changeHistoryPin(current: String, next: String, now: Long): PinResult =
+    suspend fun changeHistoryPin(current: String, next: String, now: com.chronolock.domain.ClockReading): PinResult =
         checkHistoryPin(current, now).also { if (it.ok) setHistoryPin(next) }
     /** Replaces a goal lock's own password after the current one is confirmed; piece codes cannot be changed. */
-    suspend fun changeGoalPin(current: String, next: String, now: Long): PinResult =
+    suspend fun changeGoalPin(current: String, next: String, now: com.chronolock.domain.ClockReading): PinResult =
         checkPin(GOAL, current, now) { prefs -> prefs[goalPinKey]?.let { matches(it, current) } == true }
             .also { result -> if (result.ok) context.preferences.edit { if (it[goalPinKey] != null) it[goalPinKey] = saltedHash(next) } }
 
-    /** Five wrong tries in a row pause that password for ten minutes; a right one resets the count. */
-    private suspend fun checkPin(kind: String, pin: String, now: Long, check: (androidx.datastore.preferences.core.Preferences) -> Boolean): PinResult {
+    /**
+     * Five wrong tries in a row pause that password for ten minutes, measured on both the wall clock and the boot clock so
+     * moving the time forward does not lift it; a right one resets the count. Checks run one at a time.
+     */
+    private suspend fun checkPin(kind: String, pin: String, now: com.chronolock.domain.ClockReading,
+        check: (androidx.datastore.preferences.core.Preferences) -> Boolean): PinResult = pinMutex.withLock {
         val fails = intPreferencesKey("${kind}_pin_fails")
         val blockedUntil = longPreferencesKey("${kind}_pin_blocked_until")
+        val blockedElapsed = longPreferencesKey("${kind}_pin_blocked_elapsed")
+        val blockedBoot = intPreferencesKey("${kind}_pin_blocked_boot")
         val prefs = context.preferences.data.first()
-        prefs[blockedUntil]?.takeIf { now < it }?.let { return PinResult(false, blockedUntil = it) }
-        if (check(prefs)) { context.preferences.edit { it.remove(fails); it.remove(blockedUntil) }; return PinResult(true) }
+        val until = prefs[blockedUntil]
+        val stillBlocked = until != null && (now.epochMillis < until ||
+            (prefs[blockedBoot] == now.bootId && prefs[blockedElapsed]?.let { now.elapsedMillis < it } == true))
+        if (stillBlocked) return@withLock PinResult(false, blockedUntil = maxOf(until!!, now.epochMillis + ((prefs[blockedElapsed] ?: 0) - now.elapsedMillis).coerceAtLeast(0)))
+        if (check(prefs)) {
+            context.preferences.edit { it.remove(fails); it.remove(blockedUntil); it.remove(blockedElapsed); it.remove(blockedBoot) }
+            return@withLock PinResult(true)
+        }
         var result = PinResult(false)
         context.preferences.edit {
             val count = (it[fails] ?: 0) + 1
-            if (count >= MAX_PIN_TRIES) { it.remove(fails); it[blockedUntil] = now + PIN_BLOCK_MILLIS; result = PinResult(false, blockedUntil = now + PIN_BLOCK_MILLIS) }
-            else { it[fails] = count; result = PinResult(false, triesLeft = MAX_PIN_TRIES - count) }
+            if (count >= MAX_PIN_TRIES) {
+                it.remove(fails)
+                it[blockedUntil] = now.epochMillis + PIN_BLOCK_MILLIS
+                it[blockedElapsed] = now.elapsedMillis + PIN_BLOCK_MILLIS; it[blockedBoot] = now.bootId
+                result = PinResult(false, blockedUntil = now.epochMillis + PIN_BLOCK_MILLIS)
+            } else { it[fails] = count; result = PinResult(false, triesLeft = MAX_PIN_TRIES - count) }
         }
-        return result
+        result
     }
     private fun saltedHash(pin: String): String {
         val salt = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }

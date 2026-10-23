@@ -468,7 +468,7 @@ internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Un
             Text(duration(remaining), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineLarge)
             val monitoring = state.permissions.usage && state.permissions.accessibility && state.health.connected
             Text(tr("%1\$d개 앱 · %2\$s · %3\$s", active.size, if (monitoring) tr("차단 중") else tr("제한 예정 · 감지 연결을 확인하세요"), active.joinToString(" · ") { it.appName }), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            val locked = state.strict.delayAt(nowEpoch) > 0
+            val locked = state.strict.delayAt(nowEpoch) > 0 || state.lock.lockedAt(nowEpoch)
             OutlinedButton(onClick = stop, enabled = !state.focusBusy && !locked) { Text(tr("집중 종료")) }
             if (locked) Text(tr("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             Text(tr("집중이 끝나도 기존 시간·횟수·예약 제한은 유지됩니다."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

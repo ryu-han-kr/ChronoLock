@@ -78,7 +78,7 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
     /** Connects on first call and retries after a failure; safe to call on every resume. */
     fun connect() {
         if (client.isReady) {
-            if (product == null) queryProduct()
+            if (product == null || proProduct == null) queryProduct()
             refreshPurchases()
             return
         }

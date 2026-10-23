@@ -587,4 +587,6 @@
     <string name="pro_limit_goal">"El bloqueo por objetivo es de Pro."</string>
     <string name="pro_limit_themes">"Los temas aparte de los básicos y los temas propios son de Pro."</string>
     <string name="pro_limit_history">"El historial de 3 meses y el calendario anual son de Pro."</string>
+    <string name="lock_pill_goal">"Bloqueo por objetivo activo"</string>
+    <string name="lock_pill_until">"Bloqueado hasta %1$s"</string>
 </resources>

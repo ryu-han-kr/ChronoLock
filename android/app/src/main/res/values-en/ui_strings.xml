@@ -576,4 +576,6 @@
     <string name="pro_limit_goal">"Goal lock is a Pro feature."</string>
     <string name="pro_limit_themes">"Themes beyond the basic ones, and custom themes, come with Pro."</string>
     <string name="pro_limit_history">"3 months of history and the yearly calendar come with Pro."</string>
+    <string name="lock_pill_goal">"Goal lock on"</string>
+    <string name="lock_pill_until">"Locked until %1$s"</string>
 </resources>

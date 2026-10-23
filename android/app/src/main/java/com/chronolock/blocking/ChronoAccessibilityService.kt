@@ -142,6 +142,7 @@ class ChronoAccessibilityService : AccessibilityService() {
                 android.util.Log.e("ChronoLock", "Monitoring adapter failed", error)
                 health.error(this@ChronoAccessibilityService)
                 overlay.hide()
+                surfaces.clearLive()
                 commands.close()
                 scope.coroutineContext.cancelChildren()
             }
@@ -240,6 +241,7 @@ class ChronoAccessibilityService : AccessibilityService() {
     }
     override fun onDestroy() {
         if (::overlay.isInitialized) overlay.hide()
+        surfaces.clearLive()
         if (screenReceiverRegistered) unregisterReceiver(screenReceiver)
         commands.close()
         scope.cancel()

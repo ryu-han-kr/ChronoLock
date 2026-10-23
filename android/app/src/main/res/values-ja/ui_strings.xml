@@ -565,4 +565,6 @@
     <string name="pro_limit_goal">"目標ロックはプロの機能です。"</string>
     <string name="pro_limit_themes">"基本以外のテーマとマイテーマはプロで使えます。"</string>
     <string name="pro_limit_history">"3か月の記録と1年カレンダーはプロで見られます。"</string>
+    <string name="lock_pill_goal">"目標ロック中"</string>
+    <string name="lock_pill_until">"%1$sまでロック"</string>
 </resources>

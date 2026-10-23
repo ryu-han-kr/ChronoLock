@@ -40,3 +40,25 @@ class ProProductTest {
         assertEquals(listOf(bought), ProProduct.toAcknowledge(listOf(bought, bought.copy(acknowledged = true, token = "u"))))
     }
 }
+
+class LockClockTest {
+    private val zone = java.time.ZoneId.of("Asia/Seoul")
+    @Test fun timeLock_holdsOnTheBootClock_whenTheWallClockJumps() {
+        val lock = LockSetting(untilEpochMillis = 10_000, untilElapsedMillis = 2_000, bootId = 3)
+        assertTrue(lock.lockedAt(ClockReading(50_000, 1_500, 3, zone)))   // wall clock moved past the end, same boot
+        assertFalse(lock.lockedAt(ClockReading(50_000, 2_000, 3, zone)))  // boot clock reached the end too
+        assertFalse(lock.lockedAt(ClockReading(50_000, 100, 4, zone)))    // after a reboot only the wall clock counts
+        assertTrue(lock.lockedAt(ClockReading(9_000, 100, 4, zone)))
+    }
+
+    @Test fun goalDays_countCompletedDays_andDaysWithoutUse() {
+        val start = java.time.LocalDate.of(2026, 10, 1)
+        val rule = AppRule("a", "A", dailyLimitSeconds = 60)
+        fun use(day: Long, millis: Long) = DailyKey("a", start.plusDays(day)) to DailyUsage(millis, 1)
+        val daily = mapOf(use(0, 10_000), use(2, 10_000), use(3, 90_000), use(4, 10_000))
+        // Day 1 had no use (kept); day 3 went over (stops the run); today (day 5) is not counted yet.
+        assertEquals(1, goalKeptDays(daily, listOf(rule), start, start.plusDays(5)))
+        assertEquals(3, goalKeptDays(daily, listOf(rule), start, start.plusDays(3)))
+        assertEquals(0, goalKeptDays(daily, listOf(rule), start, start))
+    }
+}
