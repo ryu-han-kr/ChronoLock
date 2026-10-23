@@ -95,6 +95,11 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     suspend fun cancelPending(packageName: String) = mutex.withLock { dao.deletePending(packageName) }
 
+    /** Drops every held relaxation (rules, groups, sites); dropping only tightens, so a lock starts with none waiting. */
+    suspend fun cancelAllPending() = mutex.withLock {
+        database.withTransaction { dao.clearPending(); dao.clearPendingGroups(); dao.clearPendingSites() }
+    }
+
     /** Applies held changes whose time has come; the monitor calls this on every evaluation, the screen when it opens. */
     suspend fun applyDuePending(nowEpochMillis: Long) = mutex.withLock { applyDue(nowEpochMillis) }
 

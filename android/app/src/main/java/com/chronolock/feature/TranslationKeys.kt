@@ -519,6 +519,8 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "목표 잠금은 프로 기능이에요." to R.string.pro_limit_goal,
     "기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요." to R.string.pro_limit_themes,
     "3개월 기록과 1년 달력은 프로에서 볼 수 있어요." to R.string.pro_limit_history,
+    "목표 잠금 중" to R.string.lock_pill_goal,
+    "%1\$s까지 잠금" to R.string.lock_pill_until,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

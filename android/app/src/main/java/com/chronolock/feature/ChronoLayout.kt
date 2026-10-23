@@ -149,7 +149,11 @@ internal fun ChronoScreen(
                                     2 -> tr("차단 없이도 내 앱 사용 습관을 확인하세요.")
                                     else -> tr("내 데이터와 권한을 관리하세요.")
                                 }, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                if (tab == 0) StatusPill(ready)
+                                if (tab == 0) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    StatusPill(ready)
+                                    // A running lock is easy to forget; it decides whether anything can be relaxed.
+                                    LockPill(state.lock, nowEpoch)
+                                }
                                 Spacer(Modifier.height(4.dp))
                             }
                         }
@@ -282,10 +286,12 @@ internal fun ChronoScreen(
                                 item { ThemePicker(state.theme, selectTheme, openThemeGallery, state.favoriteThemes) }
                                 item { StrictModeCard(state, nowEpoch, setStrict, cancelStrict) }
                                 item {
-                                    // Goal progress counts the same kept days as the streak on the Today tab.
-                                    val kept = remember(state.daily, state.rules, today) {
-                                        com.chronolock.domain.keptStreak(state.daily.associate { com.chronolock.domain.DailyKey(it.packageName, java.time.LocalDate.parse(it.date)) to
-                                            com.chronolock.domain.DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) }, state.rules.map { it.toDomain() }, today, maxDays = 31)
+                                    // Completed days since the goal lock began; a day without any use of the limited apps counts as kept.
+                                    val kept = remember(state.daily, state.rules, state.lock.goalStart, today) {
+                                        state.lock.goalStart?.let { start ->
+                                            com.chronolock.domain.goalKeptDays(state.daily.associate { com.chronolock.domain.DailyKey(it.packageName, java.time.LocalDate.parse(it.date)) to
+                                                com.chronolock.domain.DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) }, state.rules.map { it.toDomain() }, start, today)
+                                        } ?: 0
                                     }
                                     LockCard(state, today, nowEpoch, kept, lockFor, startGoalLock, { endGoalLock(it, kept) }, { collectPiece(kept) }, changeGoalPin)
                                 }
@@ -395,6 +401,20 @@ private fun StatusPill(ready: Boolean) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(Modifier.size(6.dp).background(tint, CircleShape))
         Text(if (ready) tr("앱 제한 감지 중") else tr("감지 준비가 필요해요"), color = tint, style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+@Composable
+private fun LockPill(lock: com.chronolock.domain.LockSetting, nowEpoch: Long) {
+    val text = when {
+        lock.goalLocked -> tr("목표 잠금 중")
+        lock.timeLockedAt(nowEpoch) -> tr("%1\$s까지 잠금", timeText(lock.untilEpochMillis!!))
+        else -> return
+    }
+    val tint = MaterialTheme.colorScheme.error
+    Row(Modifier.background(tint.copy(alpha = .12f), RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 5.dp).testTag("lock-pill"),
+        verticalAlignment = Alignment.CenterVertically) {
+        Text("🔒 " + text, color = tint, style = MaterialTheme.typography.labelMedium)
     }
 }
 

@@ -49,3 +49,13 @@ fun compareWeeks(daily: Map<DailyKey, DailyUsage>, today: LocalDate): WeekCompar
     return WeekComparison(daily.filterKeys { it.date in current }.values.sumOf { it.usageMillis },
         earlier.values.sumOf { it.usageMillis }, earlier.keys.map { it.date }.distinct().size)
 }
+
+/**
+ * Completed days in a row, from yesterday back to [start], kept for a goal lock. Unlike the streak, a day without any
+ * record counts as kept: not opening the limited apps at all is the goal. Today never counts until it is over.
+ */
+fun goalKeptDays(daily: Map<DailyKey, DailyUsage>, rules: List<AppRule>, start: LocalDate, today: LocalDate): Int {
+    val days = java.time.temporal.ChronoUnit.DAYS.between(start, today).toInt()
+    if (days <= 0) return 0
+    return dayResults(daily, rules, today.minusDays(1), days).reversed().takeWhile { it.second != DayResult.REACHED }.size
+}

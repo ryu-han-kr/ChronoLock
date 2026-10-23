@@ -322,16 +322,17 @@ private fun HistoryDeleteCard(state: MainState, nowEpoch: Long, setPin: (String,
 @Composable
 private fun DayApps(rows: List<HistoryDailyEntity>, estimates: List<HistoryEstimateEntity>) {
     val estimated = estimates.groupBy { it.packageName }
+    // Recorded rows keep their opens even when zero; only apps known solely from estimates are labelled as estimated.
     val apps = (rows.map { Triple(it, it.usageMillis + estimated[it.packageName].orEmpty().sumOf { e -> e.usageMillis }, it.opens) } +
         estimated.filterKeys { pkg -> rows.none { it.packageName == pkg } }.map { (pkg, list) ->
-            Triple(HistoryDailyEntity(pkg, list.first().date, list.first().appName, 0, 0), list.sumOf { it.usageMillis }, 0)
+            Triple(HistoryDailyEntity(pkg, list.first().date, list.first().appName, 0, -1), list.sumOf { it.usageMillis }, -1)
         }).sortedByDescending { it.second }
     Column(Modifier.fillMaxWidth().padding(start = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         apps.forEach { (app, millis, opens) ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 AppIcon(app.packageName, app.appName, 24.dp)
                 Text(app.appName, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(if (opens > 0) tr("%1\$s · %2\$d회 실행", duration(millis / 1000), opens) else tr("추정 %1\$s", duration(millis / 1000)),
+                Text(if (opens >= 0) tr("%1\$s · %2\$d회 실행", duration(millis / 1000), opens) else tr("추정 %1\$s", duration(millis / 1000)),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }

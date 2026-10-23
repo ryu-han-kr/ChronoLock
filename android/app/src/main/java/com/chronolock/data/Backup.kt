@@ -115,7 +115,8 @@ class BackupRepository @Inject constructor(
         }
         val backup = BackupCodec.decode(text)
         val groups = backup.groups.mapNotNull { group ->
-            group.copy(members = group.members.filterKeys { it !in excluded }).takeIf { it.members.size >= 2 }
+            // Filter first: a group left with fewer than two members cannot even be constructed.
+            group.members.filterKeys { it !in excluded }.takeIf { it.size >= 2 }?.let { group.copy(members = it) }
         }
         repository.replaceAll(backup.rules.filter { it.packageName !in excluded }, groups, backup.sites, nowEpochMillis)
         backup.theme?.let { preferences.setTheme(AppTheme.fromStored(it)) }

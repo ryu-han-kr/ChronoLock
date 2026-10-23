@@ -85,8 +85,15 @@ data class LockSetting(
     val pieceCode: Boolean = false,
     /** Digits handed out so far; the code is [goalDays] digits long. */
     val revealed: String = "",
+    /** The same deadline on the boot clock of [bootId], so moving the wall clock forward cannot end a time lock early. */
+    val untilElapsedMillis: Long? = null,
+    val bootId: Int? = null,
 ) {
     fun timeLockedAt(epochMillis: Long) = untilEpochMillis?.let { epochMillis < it } == true
+    /** Locked by the wall clock or, within the boot that set it, by elapsed time; whichever ends later wins. */
+    fun timeLockedAt(clock: ClockReading) = timeLockedAt(clock.epochMillis) ||
+        (bootId == clock.bootId && untilElapsedMillis?.let { clock.elapsedMillis < it } == true)
+    fun lockedAt(clock: ClockReading) = timeLockedAt(clock) || goalLocked
     val goalLocked: Boolean get() = goalDays != null
     fun lockedAt(epochMillis: Long) = timeLockedAt(epochMillis) || goalLocked
     /** Kept days that count toward the goal: the streak, but never more than the days since the lock began. */

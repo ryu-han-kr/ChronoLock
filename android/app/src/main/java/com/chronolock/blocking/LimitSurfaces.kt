@@ -45,6 +45,11 @@ internal class LimitSurfaces(private val context: Context) {
     private var lastSummary: TodaySummary? = null
     private var lastLive: String? = null
 
+    init { clearLive() } // A notification left by a stopped service must not outlive it.
+
+    /** Removes the live notification; the service calls this when it stops. */
+    fun clearLive() { lastLive = null; runCatching { NotificationManagerCompat.from(context).cancel(LIVE_ID) } }
+
     fun update(state: MonitorState, rules: Map<String, AppRule>, localized: Context) {
         showLive(state.liveLimit(rules), state.clock?.epochMillis ?: System.currentTimeMillis(), localized)
         state.clock?.date?.let { today -> warned.removeAll { it.date != today } }
