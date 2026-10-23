@@ -2,6 +2,40 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.7.0 (versionCode 12) — 2026-10-22
+
+AAB: `release/chronolock-0.7.0-vc12.aab` (0.6.3을 올리지 않았다면 0.6.3 변경도 포함됨)
+
+### ko
+- 엄격 모드: 제한을 끄거나 느슨하게 바꾸면 정한 시간(10분~1시간) 뒤에 적용돼요.
+- 잠시 쉬기: 10분·30분·1시간·오늘만 쉬고 자동으로 다시 켜져요.
+- 예약을 앱마다 여러 구간(매일·평일·주말)으로 설정할 수 있어요.
+- 앱 묶음: 여러 앱이 하루 시간과 실행 횟수를 함께 써요.
+- 빠른 설정 타일로 바로 집중을 시작해요.
+- 연속으로 한도를 지킨 날과 지난주 대비 사용량을 보여 줘요.
+- 규칙과 설정을 파일로 백업하고 복원할 수 있어요.
+
+### en
+- Strict mode: turning off or relaxing a limit waits 10 min–1 h.
+- Take a break: pause a limit for 10/30/60 min or today; it turns back on by itself.
+- Multiple schedule windows per app with every day, weekday and weekend presets.
+- App groups: several apps share one daily time and open count.
+- Start a focus right from a Quick Settings tile.
+- See your streak of days within limits and the change from last week.
+- Back up and restore your limits and settings with a file.
+
+## 0.6.3 (versionCode 11) — 2026-10-22
+
+AAB: `release/chronolock-0.6.3-vc11.aab`
+
+### ko
+- 세부 기록이 없는 이전 날짜도 기기 사용 통계로 추정해 한 달 기록을 채워요(추정 시간은 따로 표시돼요).
+- 접근성 서비스가 다시 시작될 때 연결 끊김으로 잘못 표시되던 문제를 고쳤어요.
+
+### en
+- History now fills older days of the month with estimates from your device's usage stats (marked as estimates).
+- Fixed the accessibility service sometimes showing as disconnected after it restarted.
+
 ## 0.6.2 (versionCode 10) — 2026-10-22
 
 AAB: `release/chronolock-0.6.2-vc10.aab`
