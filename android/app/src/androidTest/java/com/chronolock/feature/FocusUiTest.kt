@@ -144,8 +144,9 @@ class FocusUiTest {
                 { theme -> favorites.value = if (theme.name in favorites.value) favorites.value - theme.name else favorites.value + theme.name }) {}
         } }
         ui.onNodeWithTag("custom-hex").performTextReplacement("123456")
-        ui.onNodeWithTag("effect-SOLID").performScrollTo().performClick()
-        ui.onNodeWithTag("custom-apply").performClick()
+        ui.onNodeWithTag("custom-hex").performImeAction()
+        ui.onNodeWithTag("effect-SOLID").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        ui.onNodeWithTag("custom-apply").performScrollTo().performClick()
         ui.runOnIdle { assertEquals("custom_123456_SOLID", selected.value.name) }
         screenshot("theme-custom", ui.onNodeWithTag("theme-gallery"))
         val pastel = ThemeCatalog.pastel.first()
@@ -153,6 +154,46 @@ class FocusUiTest {
         ui.onNodeWithTag("pin-${pastel.name}").performClick()
         ui.runOnIdle { assertEquals(setOf(pastel.name), favorites.value) }
         ui.onNodeWithTag("theme-gallery-grid").performScrollToNode(hasTestTag("theme-pinned-${pastel.name}"))
+    }
+
+    @Test fun customTheme_wheelDragUpdatesPreviewBeforeRelease_andEffectsCombine() {
+        val selected = mutableStateOf(AppTheme.DARK)
+        ui.setContent { ChronoTheme(selected.value) { ThemeGallery(selected.value, { selected.value = it }) {} } }
+        ui.onNodeWithTag("custom-hex").performTextReplacement("4F7CAC")
+        ui.onNodeWithTag("custom-hex").performImeAction()
+        fun picked() = ui.onNodeWithTag("custom-hex").fetchSemanticsNode()
+            .config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text.toInt(16)
+        ui.onNodeWithTag("custom-wheel").performTouchInput { down(centerRight - androidx.compose.ui.geometry.Offset(4f, 0f)) }
+        // Still pressed: the code already follows the finger, right edge = saturated red, top edge = violet.
+        val right = picked()
+        ui.onNodeWithTag("custom-wheel").performTouchInput { moveTo(topCenter + androidx.compose.ui.geometry.Offset(0f, 4f)) }
+        val top = picked()
+        screenshot("theme-wheel-drag", ui.onNodeWithTag("theme-custom"))
+        ui.onNodeWithTag("custom-wheel").performTouchInput { up() }
+        assertTrue("right %06X top %06X".format(right, top), (right shr 16) > 150 && (right shr 8 and 255) < 12 && (right and 255) < 12)
+        assertTrue("right %06X top %06X".format(right, top), (top and 255) > 150 && (top shr 8 and 255) < 12 && (top shr 16) in 60..120)
+        ui.onNodeWithTag("custom-hex").performTextReplacement("FF00FF")
+        ui.onNodeWithTag("custom-hex").performImeAction()
+        ui.onNodeWithTag("effect-MIST").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        ui.onNodeWithTag("effect-RAINBOW").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        ui.onNodeWithTag("effect-DUOTONE").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        ui.onNodeWithTag("effect-FLOW").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        ui.onNodeWithTag("custom-apply").performScrollTo().performClick()
+        ui.runOnIdle {
+            assertEquals("custom_FF00FF_MIST+DUOTONE+RAINBOW+FLOW", selected.value.name)
+            assertTrue(selected.value.live)
+        }
+        screenshot("theme-custom-combined", ui.onNodeWithTag("theme-custom"))
+    }
+
+    @Test fun yearCalendar_namesMonthsAndWeekdays() {
+        val today = java.time.LocalDate.of(2026, 10, 23)
+        ui.setContent { ChronoTheme { YearCalendar(emptyList(), today) } }
+        ui.onNodeWithTag("year-month-2026-10").assertExists()
+        ui.onNodeWithTag("year-month-2026-1").assertExists()
+        ui.onAllNodesWithText("월").assertCountEquals(1)
+        ui.onAllNodesWithText("수").assertCountEquals(1)
+        screenshot("year-calendar", ui.onNodeWithTag("year-calendar"))
     }
 
     @Test fun recipeIsPreviewed_thenSavedWithSessionAndCooldown() {

@@ -24,6 +24,7 @@ object ThemeCatalog {
     const val MIDNIGHT = "미드나잇"
     const val NEUTRAL = "뉴트럴"
     const val CUSTOM = "나만의 테마"
+    const val LIVE = "움직이는 테마"
 
     private const val WHITE = 0xFFFFFFFFL
     private const val BLACK = 0xFF000000L
@@ -34,6 +35,8 @@ object ThemeCatalog {
         255 to "인디고", 270 to "라벤더", 285 to "바이올렛", 300 to "릴락", 330 to "핑크")
 
     private val hues = listOf(0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)
+    /** Hue steps of a rainbow page after its first colour. */
+    private val RAINBOW_STEPS = listOf(60, 120, 180, 240, 300)
     private val coolHues = listOf(150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300)
 
     /** Four-colour seeds sampled from Color Hunt (2026-10). Order within a seed does not matter. */
@@ -94,7 +97,21 @@ object ThemeCatalog {
         else tint("neutral_${solid.id}", listOf(NEUTRAL, solid.word), solid.hue, solid.hue, solid.saturation, solid.lightness, accentSaturation = .40)
     }
 
-    val sections: List<Pair<String, List<AppTheme>>> = listOf(TREND to trend, PASTEL to pastel, COOL to cool, DUOTONE to duotone,
+    /** Pages whose colours slowly flow: rainbows and aurora-like drifts, built like custom palettes with the flow effect. */
+    val live: List<AppTheme> = listOf(
+        Triple("rainbow", listOf("무지개"), 0 to setOf(ThemeEffect.PASTEL, ThemeEffect.RAINBOW)),
+        Triple("rainbow_night", listOf(MIDNIGHT, "무지개"), 0 to setOf(ThemeEffect.MIDNIGHT, ThemeEffect.RAINBOW)),
+        Triple("aurora", listOf("오로라"), 160 to setOf(ThemeEffect.AURORA)),
+        Triple("aurora_violet", listOf("오로라", "바이올렛"), 285 to setOf(ThemeEffect.DEEP, ThemeEffect.AURORA)),
+        Triple("sunset", listOf("노을"), 20 to setOf(ThemeEffect.SUNSET)),
+        Triple("ocean", listOf("아쿠아"), 190 to setOf(ThemeEffect.GRADIENT)),
+        Triple("lavender", listOf("라벤더"), 270 to setOf(ThemeEffect.MIST, ThemeEffect.COMPLEMENT)),
+    ).map { (id, words, look) ->
+        val (hue, effects) = look
+        combined("live_$id", listOf(LIVE) + words, hsl(hue, .7, .5), hue, 1.0, effects + ThemeEffect.FLOW).copy(premium = true)
+    }
+
+    val sections: List<Pair<String, List<AppTheme>>> = listOf(LIVE to live, TREND to trend, PASTEL to pastel, COOL to cool, DUOTONE to duotone,
         GRADIENT to gradient, DUAL to dual, DEEP to deep, MIDNIGHT to midnight, NEUTRAL to neutral)
     val all: List<AppTheme> = sections.flatMap { it.second }
 
@@ -113,27 +130,38 @@ object ThemeCatalog {
         }
     }
 
-    /** Name of a custom palette: "custom_RRGGBB_EFFECT", so the stored theme name alone rebuilds it. */
-    fun customName(rgb: Int, effect: ThemeEffect) = "custom_%06X_%s".format(rgb and 0xFFFFFF, effect.name)
+    /**
+     * Name of a custom palette: "custom_RRGGBB_EFFECT" or "custom_RRGGBB_EFFECT+EFFECT" in [ThemeEffect] order, so the
+     * stored theme name alone rebuilds it. A single effect keeps the name it had before effects could be combined.
+     */
+    fun customName(rgb: Int, effects: Set<ThemeEffect>) =
+        "custom_%06X_%s".format(rgb and 0xFFFFFF, ThemeEffect.entries.filter { it in effects }.joinToString("+") { it.name })
 
-    /** The colour and effect inside a custom palette name, or null for any other name. */
-    fun parseCustom(name: String?): Pair<Int, ThemeEffect>? {
-        val match = Regex("custom_([0-9A-F]{6})_([A-Z]+)").matchEntire(name ?: return null) ?: return null
-        val effect = ThemeEffect.entries.firstOrNull { it.name == match.groupValues[2] } ?: return null
-        return match.groupValues[1].toInt(16) to effect
+    fun customName(rgb: Int, effect: ThemeEffect) = customName(rgb, setOf(effect))
+
+    /** The colour and effects inside a custom palette name, or null for any other name. */
+    fun parseCustom(name: String?): Pair<Int, Set<ThemeEffect>>? {
+        val match = Regex("custom_([0-9A-F]{6})_([A-Z]+(?:\\+[A-Z]+)*)").matchEntire(name ?: return null) ?: return null
+        val effects = match.groupValues[2].split('+').map { word -> ThemeEffect.entries.firstOrNull { it.name == word } ?: return null }
+        return match.groupValues[1].toInt(16) to ThemeEffect.combine(effects)
     }
 
+    fun custom(rgb: Int, effect: ThemeEffect): AppTheme = custom(rgb, setOf(effect))
+
     /**
-     * A palette built from any colour 000000-FFFFFF with one [effect]. Every effect goes through the same contrast
-     * nudging as the catalog, so text stays readable whatever colour is picked. Grey picks stay grey.
+     * A palette built from any colour 000000-FFFFFF with [effects], at most one per [ThemeEffect.group]. Every effect
+     * goes through the same contrast nudging as the catalog, so text stays readable whatever colour is picked. Grey
+     * picks stay grey. One effect alone keeps the exact look it had before effects could be combined.
      */
-    fun custom(rgb: Int, effect: ThemeEffect): AppTheme {
+    fun custom(rgb: Int, effects: Set<ThemeEffect>): AppTheme {
+        val chosen = ThemeEffect.combine(effects).ifEmpty { setOf(ThemeEffect.PASTEL) }
         val base = 0xFF000000L or (rgb and 0xFFFFFF).toLong()
         val hue = hueOf(base)
         val grey = saturation(base) < .08
         val vivid = if (grey) 0.0 else 1.0
-        val id = customName(rgb, effect)
-        val label = listOf(CUSTOM, "#%06X".format(rgb and 0xFFFFFF), effect.word)
+        val id = customName(rgb, chosen)
+        val label = listOf(CUSTOM, "#%06X".format(rgb and 0xFFFFFF)) + ThemeEffect.entries.filter { it in chosen }.map { it.word }
+        val effect = chosen.singleOrNull() ?: return combined(id, label, base, hue, vivid, chosen).copy(premium = false)
         return when (effect) {
             ThemeEffect.SOLID -> solid(id, label, base)
             ThemeEffect.PASTEL -> tint(id, label, hue, hue, .70 * vivid, .90, accentSaturation = .55 * vivid)
@@ -145,7 +173,65 @@ object ThemeCatalog {
             ThemeEffect.DEEP -> deep(id, label, hue, saturation = .50 * vivid)
             ThemeEffect.AURORA -> deep(id, label, hue, (hue + 120) % 360, .55 * vivid)
             ThemeEffect.MIDNIGHT -> darkSolid(id, label, Solid(id, "", hue, .40 * vivid, .11))
+            ThemeEffect.RAINBOW, ThemeEffect.FLOW -> combined(id, label, base, hue, vivid, chosen)
         }.copy(premium = false)
+    }
+
+    /**
+     * Several effects at once: the page effect sets brightness and strength, a gradient effect adds the bottom colour
+     * and a duotone moves the accent to the opposite hue. Without a page effect, aurora is dark and the rest are light.
+     */
+    private fun combined(id: String, label: List<String>, base: Long, hue: Int, vivid: Double, effects: Set<ThemeEffect>): AppTheme {
+        val page = effects.firstOrNull { it.group == ThemeEffect.Group.PAGE }
+        val sweep = effects.firstOrNull { it.group == ThemeEffect.Group.GRADIENT }
+        val live = ThemeEffect.FLOW in effects
+        // A flowing page needs a second colour to move; deep pages bring their own.
+        val offset = sweep?.hueOffset ?: if (page == ThemeEffect.DEEP || live) ThemeEffect.DEEP.hueOffset else null
+        val bandHues = (if (sweep == ThemeEffect.RAINBOW) RAINBOW_STEPS else listOfNotNull(offset)).map { (hue + it) % 360 }
+        val accentHue = if (ThemeEffect.DUOTONE in effects) (hue + 180) % 360 else bandHues.lastOrNull() ?: hue
+        fun build(dark: Boolean, background: Long, surface: Long, bands: List<Long>, primary: Long, text: Long, muted: Long, onPrimary: Long) =
+            AppTheme(id, label, "", dark, background, surface, primary, onPrimary, text, muted, bands.lastOrNull(), stops = bands.dropLast(1), live = live)
+        if (page == ThemeEffect.SOLID) {
+            val light = contrast(base, BLACK) >= contrast(base, WHITE)
+            val target = if (light) BLACK else WHITE
+            // Hues of equal lightness differ in luminance (yellow vs blue), so the other colours are moved off the text colour.
+            val bands = bandHues.map { ensure(hsl(it, saturation(base), lightness(base)), if (light) WHITE else BLACK, 8.0, target) }
+            val surface = if (light) mix(base, WHITE, .45) else mix(base, BLACK, .12)
+            val pages = (listOf(base, surface) + bands).toLongArray()
+            val accentSaturation = if (vivid == 0.0) 0.0 else max(saturation(base), .5)
+            val primary = ensure(hsl(accentHue, accentSaturation, if (light) .30 else .75), target, 4.5, *pages)
+            val text = ensure(mix(base, target, .85), target, 7.0, *pages)
+            val muted = ensure(mix(base, target, .55), target, 4.5, *pages)
+            return build(!light, base, surface, bands, primary, text, muted, onPrimary(primary, base, WHITE, BLACK))
+        }
+        val dark = page == ThemeEffect.DEEP || page == ThemeEffect.MIDNIGHT || (page == null && sweep == ThemeEffect.AURORA)
+        if (dark) {
+            val saturation = (if (page == ThemeEffect.MIDNIGHT) .40 else .55) * vivid
+            val lightness = if (page == ThemeEffect.MIDNIGHT) .11 else .12
+            val background = hsl(hue, saturation, lightness)
+            val bands = bandHues.map { hsl(it, saturation, if (sweep == ThemeEffect.RAINBOW) .20 else .24) }
+            val surface = hsl(hue, saturation * .7, lightness + .08)
+            val pages = (listOf(background, surface) + bands).toLongArray()
+            val primary = ensure(hsl(accentHue, min(max(saturation * 1.4, .45 * vivid), 1.0), .72), WHITE, 4.5, *pages)
+            val text = ensure(hsl(hue, .2, .93), WHITE, 7.0, *pages)
+            val muted = ensure(hsl(hue, .15, .70), WHITE, 4.5, *pages)
+            return build(true, background, surface, bands, primary, text, muted, onPrimary(primary, background, BLACK, WHITE))
+        }
+        val saturation = when (page) { ThemeEffect.MIST -> .25; ThemeEffect.PASTEL -> .70; else -> .75 } * vivid
+        val lightness = when (page) { ThemeEffect.MIST -> .94; ThemeEffect.PASTEL -> .90; else -> .88 }
+        val background = hsl(hue, saturation, lightness)
+        val bands = bandHues.map { hsl(it, saturation, lightness - .04) }
+        val surface = hsl(hue, min(saturation + .05, 1.0), .975)
+        val pages = (listOf(background, surface) + bands).toLongArray()
+        val primary = ensure(hsl(accentHue, max(saturation * .73, .35 * vivid), .40), BLACK, 4.5, *pages)
+        val text = ensure(hsl(hue, .25, .14), BLACK, 7.0, *pages)
+        val muted = ensure(hsl(hue, .12, .40), BLACK, 4.5, *pages)
+        return build(false, background, surface, bands, primary, text, muted, onPrimary(primary, WHITE, surface, BLACK))
+    }
+
+    private fun lightness(color: Long): Double {
+        val (r, g, b) = channels(color).map { it / 255.0 }
+        return (max(r, max(g, b)) + min(r, min(g, b))) / 2
     }
 
     /** The picked colour itself as the page; text and accent go to whichever of black or white reads on it. */
@@ -310,8 +396,26 @@ object ThemeCatalog {
     }
 }
 
-/** Looks a custom palette can take; [word] is the translatable chip label. */
-enum class ThemeEffect(val word: String) {
-    SOLID("단색"), PASTEL("파스텔"), MIST("안개"), GRADIENT("그라데이션"), COMPLEMENT("보색 그라데이션"),
-    SUNSET("노을"), DUOTONE("듀오톤"), DEEP("딥 그라데이션"), AURORA("오로라"), MIDNIGHT("미드나잇"),
+/**
+ * Looks a custom palette can take; [word] is the translatable chip label. Effects of different [group]s combine;
+ * [hueOffset] is where a gradient's bottom colour sits on the colour wheel.
+ */
+enum class ThemeEffect(val word: String, val group: Group, val hueOffset: Int? = null) {
+    SOLID("단색", Group.PAGE), PASTEL("파스텔", Group.PAGE), MIST("안개", Group.PAGE), GRADIENT("그라데이션", Group.GRADIENT, 40),
+    COMPLEMENT("보색 그라데이션", Group.GRADIENT, 180), SUNSET("노을", Group.GRADIENT, 310), DUOTONE("듀오톤", Group.ACCENT),
+    DEEP("딥 그라데이션", Group.PAGE, 60), AURORA("오로라", Group.GRADIENT, 120), MIDNIGHT("미드나잇", Group.PAGE),
+    RAINBOW("무지개", Group.GRADIENT), FLOW("흐름", Group.MOTION);
+
+    /** Page brightness and strength, the other page colours, the accent hue, and whether the page moves. */
+    enum class Group { PAGE, GRADIENT, ACCENT, MOTION }
+
+    companion object {
+        /** [effects] with at most one per group; a later effect replaces an earlier one of its group. */
+        fun combine(effects: Iterable<ThemeEffect>): Set<ThemeEffect> =
+            effects.associateBy { it.group }.values.sortedBy { it.ordinal }.toSet()
+
+        /** [current] with [effect] switched: on replaces the effect of its group, off removes it unless it is the last. */
+        fun toggle(current: Set<ThemeEffect>, effect: ThemeEffect): Set<ThemeEffect> =
+            if (effect in current) (current - effect).ifEmpty { current } else combine(current + effect)
+    }
 }

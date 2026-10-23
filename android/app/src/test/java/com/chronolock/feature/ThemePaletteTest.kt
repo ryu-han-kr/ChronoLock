@@ -8,7 +8,7 @@ import org.junit.Test
 class ThemePaletteTest {
     @Test fun everyTheme_keepsTextReadableOnBothBackgrounds() {
         AppTheme.values().forEach { theme ->
-            listOfNotNull(theme.background, theme.surface, theme.gradientEnd).forEach { background ->
+            (theme.pageColors + theme.surface).forEach { background ->
                 listOf(theme.text, theme.muted, theme.primary).forEach { foreground ->
                     assertTrue("${theme.name}: insufficient text contrast", contrast(foreground, background) >= 4.5)
                 }
@@ -29,6 +29,13 @@ class ThemePaletteTest {
             assertTrue("Missing translation for theme word: $word", word in translationKeys)
         }
     }
+    @Test fun liveThemes_flowOverSeveralColours_andRainbowsCoverTheWheel() {
+        assertTrue(com.chronolock.data.ThemeCatalog.live.isNotEmpty())
+        com.chronolock.data.ThemeCatalog.live.forEach { assertTrue(it.name, it.live && it.pageColors.size >= 2) }
+        assertEquals(6, com.chronolock.data.ThemeCatalog.live.first { it.name == "live_rainbow" }.pageColors.size)
+        assertFalse(com.chronolock.data.ThemeCatalog.custom(0x4F7CAC, com.chronolock.data.ThemeEffect.SUNSET).live)
+        assertTrue(com.chronolock.data.ThemeCatalog.custom(0x4F7CAC, com.chronolock.data.ThemeEffect.FLOW).let { it.live && it.pageColors.size == 2 })
+    }
     @Test fun trendNames_startWithThePageColour() {
         // Seed 14 is a mint page with pink buttons; it used to be called "pink 2".
         assertEquals(listOf("트렌드", "민트", "핑크"), com.chronolock.data.ThemeCatalog.trend[13].label)
@@ -37,18 +44,32 @@ class ThemePaletteTest {
     @Test fun customThemes_stayReadableForAnyColourAndEffect_andRoundTrip() {
         val colours = listOf(0x000000, 0xFFFFFF, 0x808080, 0x777777, 0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0x00FFFF, 0xFF00FF,
             0x4F7CAC, 0x123456, 0xFEDCBA, 0x39FF14, 0x8B4513) + (0 until 40).map { (it * 0x6F1D3B) and 0xFFFFFF }
+        // Every single effect and every mix of one page, one gradient, the accent and the motion effect.
+        val groups = com.chronolock.data.ThemeEffect.Group.entries.map { group -> listOf(null) + com.chronolock.data.ThemeEffect.entries.filter { it.group == group } }
+        val mixes = groups.fold(listOf(emptySet<com.chronolock.data.ThemeEffect>())) { sets, options -> sets.flatMap { set -> options.map { set + listOfNotNull(it) } } }
+            .filter { it.isNotEmpty() }
+        assertEquals(6 * 6 * 2 * 2 - 1, mixes.size)
         colours.forEach { rgb ->
-            com.chronolock.data.ThemeEffect.entries.forEach { effect ->
-                val theme = com.chronolock.data.ThemeCatalog.custom(rgb, effect)
-                listOfNotNull(theme.background, theme.surface, theme.gradientEnd).forEach { background ->
+            mixes.forEach { effects ->
+                val theme = com.chronolock.data.ThemeCatalog.custom(rgb, effects)
+                (theme.pageColors + theme.surface).forEach { background ->
                     listOf(theme.text, theme.muted, theme.primary).forEach { foreground ->
                         assertTrue("${theme.name}: insufficient contrast %X on %X".format(foreground, background), contrast(foreground, background) >= 4.5)
                     }
                 }
                 assertTrue("${theme.name}: insufficient button contrast", contrast(theme.primary, theme.onPrimary) >= 4.5)
                 assertEquals(theme.background, AppTheme.fromStored(theme.name).background)
+                assertEquals(theme.pageColors, AppTheme.fromStored(theme.name).pageColors)
             }
         }
+        // Names saved before effects could be combined still rebuild the same palette.
+        assertEquals("custom_4F7CAC_SUNSET", com.chronolock.data.ThemeCatalog.custom(0x4F7CAC, com.chronolock.data.ThemeEffect.SUNSET).name)
+        assertEquals("custom_4F7CAC_MIST+SUNSET+DUOTONE", com.chronolock.data.ThemeCatalog.custom(0x4F7CAC,
+            setOf(com.chronolock.data.ThemeEffect.DUOTONE, com.chronolock.data.ThemeEffect.SUNSET, com.chronolock.data.ThemeEffect.MIST)).name)
+        assertEquals(setOf(com.chronolock.data.ThemeEffect.MIST),
+            com.chronolock.data.ThemeEffect.toggle(setOf(com.chronolock.data.ThemeEffect.PASTEL), com.chronolock.data.ThemeEffect.MIST))
+        assertEquals(setOf(com.chronolock.data.ThemeEffect.PASTEL),
+            com.chronolock.data.ThemeEffect.toggle(setOf(com.chronolock.data.ThemeEffect.PASTEL), com.chronolock.data.ThemeEffect.PASTEL))
         assertEquals(0xFF123456, com.chronolock.data.ThemeCatalog.custom(0x123456, com.chronolock.data.ThemeEffect.SOLID).background)
         com.chronolock.data.ThemeEffect.entries.forEach { assertTrue("Missing translation: ${it.word}", it.word in translationKeys) }
     }
