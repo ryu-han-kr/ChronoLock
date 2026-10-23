@@ -282,6 +282,22 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /** Adds a preset's sites that are not blocked yet, up to the free tier's room; existing entries are left alone. */
+    fun addSites(domains: List<String>) = viewModelScope.launch {
+        val existing = state.value.sites.map { it.domain }.toSet()
+        val missing = domains.filter { it !in existing }
+        if (missing.isEmpty()) { showError("이미 모두 추가되어 있어요."); return@launch }
+        val room = if (state.value.pro) com.chronolock.domain.SiteDomains.MAX_SITES - existing.size
+            else com.chronolock.domain.FreeTier.SITES - existing.size
+        if (room <= 0) { showError(if (state.value.pro) LocalRepository.SITES_FULL else PRO_SITES); return@launch }
+        try {
+            val now = environment.clock().epochMillis
+            missing.take(room).forEach { repository.requestSite(BlockedSite(it), strictDelay(now), now) }
+            if (missing.size > room) showError(if (state.value.pro) LocalRepository.SITES_FULL else PRO_SITES)
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError(failure(error, "사이트를 저장하지 못했습니다. 다시 시도해 주세요.")) }
+    }
+
     fun toggleSite(site: BlockedSite, enabled: Boolean) = viewModelScope.launch {
         try {
             val now = environment.clock().epochMillis

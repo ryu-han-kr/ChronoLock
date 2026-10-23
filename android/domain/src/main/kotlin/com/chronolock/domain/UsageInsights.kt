@@ -30,3 +30,27 @@ fun suggestedDraft(rule: AppRule, recipe: RuleRecipe): RuleDraft {
         opens = current.opens.ifBlank { recipe.draft.opens },
     )
 }
+
+/** Total use in the 7 days ending [today] and in the 7 days before, from per-day totals. */
+data class WeekTotals(val thisWeekMillis: Long, val lastWeekMillis: Long) {
+    /** Change in percent against last week, or null when last week has nothing to compare with. */
+    val changePercent: Int? get() = if (lastWeekMillis <= 0) null else Math.round((thisWeekMillis - lastWeekMillis) * 100.0 / lastWeekMillis).toInt()
+}
+
+fun weekTotals(dayTotals: Map<java.time.LocalDate, Long>, today: java.time.LocalDate): WeekTotals {
+    fun sum(from: Long, to: Long) = (from..to).sumOf { dayTotals[today.minusDays(it)] ?: 0L }
+    return WeekTotals(sum(0, 6), sum(7, 13))
+}
+
+/**
+ * Whether the weekly report is due at [now]: from Sunday 18:00 until Monday noon, once per week. [lastSentWeekStart] is
+ * the Monday of the week last reported.
+ */
+fun weeklyReportDue(now: java.time.LocalDateTime, lastSentWeekStart: java.time.LocalDate?): java.time.LocalDate? {
+    val weekStart = when {
+        now.dayOfWeek == java.time.DayOfWeek.SUNDAY && now.hour >= 18 -> now.toLocalDate().minusDays(6)
+        now.dayOfWeek == java.time.DayOfWeek.MONDAY && now.hour < 12 -> now.toLocalDate().minusDays(7)
+        else -> return null
+    }
+    return weekStart.takeIf { it != lastSentWeekStart }
+}

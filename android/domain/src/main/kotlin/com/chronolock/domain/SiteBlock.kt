@@ -37,6 +37,14 @@ object SiteDomains {
         sites.firstOrNull { it.enabled && (host == it.domain || host.endsWith("." + it.domain)) }
 }
 
+/** One-tap groups of popular sites; [name] is the translatable chip label. */
+enum class SitePreset(val name_: String, val domains: List<String>) {
+    SOCIAL("SNS", listOf("instagram.com", "facebook.com", "x.com", "tiktok.com", "threads.net")),
+    VIDEO("영상", listOf("youtube.com", "netflix.com", "twitch.tv", "tving.com", "wavve.com")),
+    SHOPPING("쇼핑", listOf("coupang.com", "11st.co.kr", "gmarket.co.kr", "aliexpress.com", "temu.com")),
+    COMMUNITY("커뮤니티", listOf("dcinside.com", "fmkorea.com", "theqoo.net", "reddit.com")),
+}
+
 /** Address bars of supported browsers by package; their text is read only while the browser is on screen. */
 object Browsers {
     val urlBarIds: Map<String, String> = listOf(

@@ -567,4 +567,22 @@
     <string name="pro_limit_history">"3か月の記録と1年カレンダーはプロで見られます。"</string>
     <string name="lock_pill_goal">"目標ロック中"</string>
     <string name="lock_pill_until">"%1$sまでロック"</string>
+    <string name="weekly_report_channel">"週間レポート"</string>
+    <string name="weekly_report_title">"今週の利用レポート"</string>
+    <string name="weekly_report_first">"今週は%1$s使いました。来週は比較してみましょう。"</string>
+    <string name="weekly_report_less">"今週 %1$s・先週より%2$d%%減りました。いい調子です！"</string>
+    <string name="weekly_report_more">"今週 %1$s・先週より%2$d%%増えました。来週は少し減らしてみませんか？"</string>
+    <string name="block_suggestion">"代わりにこれはどう？ %1$s"</string>
+    <string name="suggest_water">"水を一杯飲む"</string>
+    <string name="suggest_stretch">"1分ストレッチ"</string>
+    <string name="suggest_window">"20秒間窓の外を見る"</string>
+    <string name="suggest_todo">"やることを1つ書く"</string>
+    <string name="suggest_breathe">"深呼吸を5回"</string>
+    <string name="suggest_walk">"立ち上がって歩く"</string>
+    <string name="site_preset_title">"まとめて追加"</string>
+    <string name="site_preset_social">"SNS"</string>
+    <string name="site_preset_video">"動画"</string>
+    <string name="site_preset_shopping">"ショッピング"</string>
+    <string name="site_preset_community">"コミュニティ"</string>
+    <string name="site_preset_all_added">"すでにすべて追加されています。"</string>
 </resources>

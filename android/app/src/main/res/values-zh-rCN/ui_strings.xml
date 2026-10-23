@@ -567,4 +567,22 @@
     <string name="pro_limit_history">"3 个月记录和年度日历需要专业版。"</string>
     <string name="lock_pill_goal">"目标锁定中"</string>
     <string name="lock_pill_until">"锁定至 %1$s"</string>
+    <string name="weekly_report_channel">"每周报告"</string>
+    <string name="weekly_report_title">"本周使用报告"</string>
+    <string name="weekly_report_first">"本周使用了 %1$s，下周可以进行对比。"</string>
+    <string name="weekly_report_less">"本周 %1$s，比上周减少 %2$d%%，继续保持！"</string>
+    <string name="weekly_report_more">"本周 %1$s，比上周增加 %2$d%%，下周试着少用一点？"</string>
+    <string name="block_suggestion">"不如试试这个？%1$s"</string>
+    <string name="suggest_water">"喝一杯水"</string>
+    <string name="suggest_stretch">"伸展一分钟"</string>
+    <string name="suggest_window">"看窗外 20 秒"</string>
+    <string name="suggest_todo">"写下一件要做的事"</string>
+    <string name="suggest_breathe">"深呼吸五次"</string>
+    <string name="suggest_walk">"起身走一走"</string>
+    <string name="site_preset_title">"一键添加"</string>
+    <string name="site_preset_social">"社交"</string>
+    <string name="site_preset_video">"视频"</string>
+    <string name="site_preset_shopping">"购物"</string>
+    <string name="site_preset_community">"社区"</string>
+    <string name="site_preset_all_added">"已全部添加。"</string>
 </resources>

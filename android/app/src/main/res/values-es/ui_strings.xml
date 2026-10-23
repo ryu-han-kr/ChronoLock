@@ -589,4 +589,22 @@
     <string name="pro_limit_history">"El historial de 3 meses y el calendario anual son de Pro."</string>
     <string name="lock_pill_goal">"Bloqueo por objetivo activo"</string>
     <string name="lock_pill_until">"Bloqueado hasta %1$s"</string>
+    <string name="weekly_report_channel">"Informe semanal"</string>
+    <string name="weekly_report_title">"Tu uso esta semana"</string>
+    <string name="weekly_report_first">"Usaste el móvil %1$s esta semana. La próxima semana podremos comparar."</string>
+    <string name="weekly_report_less">"Esta semana: %1$s, un %2$d%% menos que la anterior. ¡Bien hecho!"</string>
+    <string name="weekly_report_more">"Esta semana: %1$s, un %2$d%% más que la anterior. ¿Un poco menos la próxima?"</string>
+    <string name="block_suggestion">"¿Y si mejor…? %1$s"</string>
+    <string name="suggest_water">"Bebe un vaso de agua"</string>
+    <string name="suggest_stretch">"Estírate un minuto"</string>
+    <string name="suggest_window">"Mira por la ventana 20 segundos"</string>
+    <string name="suggest_todo">"Apunta una tarea"</string>
+    <string name="suggest_breathe">"Respira hondo cinco veces"</string>
+    <string name="suggest_walk">"Levántate y camina"</string>
+    <string name="site_preset_title">"Añadir un grupo"</string>
+    <string name="site_preset_social">"Redes sociales"</string>
+    <string name="site_preset_video">"Vídeo"</string>
+    <string name="site_preset_shopping">"Compras"</string>
+    <string name="site_preset_community">"Comunidades"</string>
+    <string name="site_preset_all_added">"Ya están todos añadidos."</string>
 </resources>

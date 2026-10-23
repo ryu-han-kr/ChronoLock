@@ -14,11 +14,17 @@ import kotlinx.coroutines.*
 @AndroidEntryPoint
 class HistoryJobService : JobService() {
     @Inject lateinit var history: HistoryRepository
+    @Inject lateinit var preferences: Preferences
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var work: Job? = null
     override fun onStartJob(params: JobParameters): Boolean {
         work = scope.launch {
-            val retry = try { history.collect(); false }
+            val retry = try {
+                history.collect()
+                runCatching { WeeklyReport.maybeNotify(applicationContext, history, preferences) }
+                    .onFailure { android.util.Log.w("ChronoLock", "Weekly report failed", it) }
+                false
+            }
                 catch (cancelled: CancellationException) { throw cancelled }
                 catch (error: Exception) { android.util.Log.w("ChronoLock", "History collection failed; the job will retry", error); true }
             jobFinished(params, retry)

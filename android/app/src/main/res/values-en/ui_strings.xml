@@ -578,4 +578,22 @@
     <string name="pro_limit_history">"3 months of history and the yearly calendar come with Pro."</string>
     <string name="lock_pill_goal">"Goal lock on"</string>
     <string name="lock_pill_until">"Locked until %1$s"</string>
+    <string name="weekly_report_channel">"Weekly report"</string>
+    <string name="weekly_report_title">"This week's use"</string>
+    <string name="weekly_report_first">"You used your phone for %1$s this week. Next week we can compare."</string>
+    <string name="weekly_report_less">"This week: %1$s, %2$d%% less than last week. Nice work!"</string>
+    <string name="weekly_report_more">"This week: %1$s, %2$d%% more than last week. Try a little less next week?"</string>
+    <string name="block_suggestion">"How about this instead? %1$s"</string>
+    <string name="suggest_water">"Drink a glass of water"</string>
+    <string name="suggest_stretch">"Stretch for a minute"</string>
+    <string name="suggest_window">"Look out the window for 20 seconds"</string>
+    <string name="suggest_todo">"Write down one task"</string>
+    <string name="suggest_breathe">"Take five deep breaths"</string>
+    <string name="suggest_walk">"Get up and walk around"</string>
+    <string name="site_preset_title">"Add a set"</string>
+    <string name="site_preset_social">"Social"</string>
+    <string name="site_preset_video">"Video"</string>
+    <string name="site_preset_shopping">"Shopping"</string>
+    <string name="site_preset_community">"Communities"</string>
+    <string name="site_preset_all_added">"They are all added already."</string>
 </resources>

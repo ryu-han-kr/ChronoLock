@@ -521,6 +521,19 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "3개월 기록과 1년 달력은 프로에서 볼 수 있어요." to R.string.pro_limit_history,
     "목표 잠금 중" to R.string.lock_pill_goal,
     "%1\$s까지 잠금" to R.string.lock_pill_until,
+    "대신 이건 어때요? %1\$s" to R.string.block_suggestion,
+    "물 한 잔 마시기" to R.string.suggest_water,
+    "1분 스트레칭" to R.string.suggest_stretch,
+    "창밖을 20초 바라보기" to R.string.suggest_window,
+    "할 일 하나 적기" to R.string.suggest_todo,
+    "심호흡 다섯 번" to R.string.suggest_breathe,
+    "자리에서 일어나 걷기" to R.string.suggest_walk,
+    "한 번에 추가" to R.string.site_preset_title,
+    "SNS" to R.string.site_preset_social,
+    "영상" to R.string.site_preset_video,
+    "쇼핑" to R.string.site_preset_shopping,
+    "커뮤니티" to R.string.site_preset_community,
+    "이미 모두 추가되어 있어요." to R.string.site_preset_all_added,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

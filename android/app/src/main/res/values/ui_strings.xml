@@ -567,4 +567,22 @@
     <string name="pro_limit_history">"3개월 기록과 1년 달력은 프로에서 볼 수 있어요."</string>
     <string name="lock_pill_goal">"목표 잠금 중"</string>
     <string name="lock_pill_until">"%1$s까지 잠금"</string>
+    <string name="weekly_report_channel">"주간 리포트"</string>
+    <string name="weekly_report_title">"이번 주 사용 리포트"</string>
+    <string name="weekly_report_first">"이번 주 %1$s 사용했어요. 다음 주와 비교해 볼게요."</string>
+    <string name="weekly_report_less">"이번 주 %1$s · 지난주보다 %2$d%% 줄었어요. 잘하고 있어요!"</string>
+    <string name="weekly_report_more">"이번 주 %1$s · 지난주보다 %2$d%% 늘었어요. 다음 주엔 조금 줄여 볼까요?"</string>
+    <string name="block_suggestion">"대신 이건 어때요? %1$s"</string>
+    <string name="suggest_water">"물 한 잔 마시기"</string>
+    <string name="suggest_stretch">"1분 스트레칭"</string>
+    <string name="suggest_window">"창밖을 20초 바라보기"</string>
+    <string name="suggest_todo">"할 일 하나 적기"</string>
+    <string name="suggest_breathe">"심호흡 다섯 번"</string>
+    <string name="suggest_walk">"자리에서 일어나 걷기"</string>
+    <string name="site_preset_title">"한 번에 추가"</string>
+    <string name="site_preset_social">"SNS"</string>
+    <string name="site_preset_video">"영상"</string>
+    <string name="site_preset_shopping">"쇼핑"</string>
+    <string name="site_preset_community">"커뮤니티"</string>
+    <string name="site_preset_all_added">"이미 모두 추가되어 있어요."</string>
 </resources>
