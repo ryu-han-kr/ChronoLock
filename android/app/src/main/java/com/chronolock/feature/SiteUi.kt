@@ -1,6 +1,8 @@
 package com.chronolock.feature
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -22,7 +24,7 @@ import com.chronolock.domain.BlockedSite
 /** Blocked websites with an address field; a change strict mode holds back shows under its site. */
 @Composable
 internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity>, add: (String, () -> Unit) -> Unit,
-    toggle: (BlockedSite, Boolean) -> Unit, remove: (String) -> Unit, cancelHeld: (String) -> Unit) {
+    toggle: (BlockedSite, Boolean) -> Unit, remove: (String) -> Unit, cancelHeld: (String) -> Unit, addPreset: (List<String>) -> Unit = {}) {
     var input by rememberSaveable { mutableStateOf("") }
     val submit = { if (input.isNotBlank()) add(input) { input = "" } }
     CardBox {
@@ -34,6 +36,12 @@ internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { submit() }))
             Button(onClick = submit, enabled = input.isNotBlank(), modifier = Modifier.testTag("site-add")) { Text(tr("추가")) }
+        }
+        Text(tr("한 번에 추가"), style = MaterialTheme.typography.labelLarge)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            com.chronolock.domain.SitePreset.entries.forEach { preset ->
+                AssistChip(onClick = { addPreset(preset.domains) }, label = { Text(tr(preset.name_)) }, modifier = Modifier.testTag("site-preset-${preset.name}"))
+            }
         }
         sites.forEach { site ->
             Row(Modifier.fillMaxWidth().toggleable(value = site.enabled, role = Role.Switch, onValueChange = { toggle(site, it) })

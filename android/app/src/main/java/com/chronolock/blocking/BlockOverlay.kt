@@ -83,6 +83,8 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
             heading = label("", 28f, theme.text.toInt(), font = R.font.pretendard_bold)
             detail = label("", 17f, theme.muted.toInt())
             label(text("잠깐 멈추고, 지금 하고 싶은 일을 선택하세요."), 15f, theme.muted.toInt())
+            // A small alternative to reaching for the app again; it changes daily.
+            label(text("대신 이건 어때요? %1\$s", text(SUGGESTIONS[(java.time.LocalDate.now().toEpochDay() % SUGGESTIONS.size).toInt()])), 15f, theme.primary.toInt())
             content.addView(Button(service).apply { text = text("홈 화면으로 돌아가기"); setOnClickListener { onHome() } }, LinearLayout.LayoutParams(-1, dp(56)))
             content.addView(Button(service).apply { text = text("내 제한 설정 보기"); setOnClickListener { onSettings() } }, LinearLayout.LayoutParams(-1, dp(56)))
             applyTheme(content)
@@ -121,6 +123,10 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 Reason.GROUP_OPENS -> text("함께 묶은 앱들의 오늘 실행 횟수를 모두 사용했습니다.")
             }
         } + if (decision.reasons.any { it in setOf(Reason.DAILY_USAGE, Reason.OPEN_COUNT, Reason.GROUP_USAGE, Reason.GROUP_OPENS) }) "\n" + text("일일 한도는 현지 시각 자정에 초기화됩니다.") else ""
+    }
+
+    private companion object {
+        val SUGGESTIONS = listOf("물 한 잔 마시기", "1분 스트레칭", "창밖을 20초 바라보기", "할 일 하나 적기", "심호흡 다섯 번", "자리에서 일어나 걷기")
     }
 
     fun hide() {

@@ -119,7 +119,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
                 editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup,
                 addSite = { input, added -> model.addSite(input, added) }, toggleSite = model::toggleSite,
-                removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite,
+                removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite, addSitePreset = model::addSites,
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,
                 lockFor = model::lockFor, startGoalLock = model::startGoalLock, endGoalLock = model::endGoalLock,
                 collectPiece = model::collectPiece, changeGoalPin = model::changeGoalPin, buyPro = buyPro,

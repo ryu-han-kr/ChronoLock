@@ -75,6 +75,7 @@ internal fun ChronoScreen(
     toggleSite: (com.chronolock.domain.BlockedSite, Boolean) -> Unit = { _, _ -> },
     removeSite: (String) -> Unit = {},
     cancelPendingSite: (String) -> Unit = {},
+    addSitePreset: (List<String>) -> Unit = {},
     setHistoryPin: (String, String, () -> Unit) -> Unit = { _, _, _ -> },
     changeHistoryPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
     lockFor: (Int) -> Unit = {},
@@ -133,7 +134,8 @@ internal fun ChronoScreen(
                     val settingsScroll = rememberLazyGridState()
                     val historyScroll = rememberLazyGridState()
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(if (expanded && tab < 2) 2 else 1),
+                        // History stays one column (wide charts); the other tabs use two on large screens.
+                        columns = GridCells.Fixed(if (expanded && tab != 2) 2 else 1),
                         state = when (tab) { 0 -> todayScroll; 1 -> appsScroll; 2 -> historyScroll; else -> settingsScroll },
                         modifier = Modifier.widthIn(max = 1120.dp).fillMaxSize().testTag("main-list"),
                         contentPadding = PaddingValues(if (expanded) 32.dp else 20.dp),
@@ -224,7 +226,7 @@ internal fun ChronoScreen(
                                     Text(tr("웹사이트 차단"), style = MaterialTheme.typography.titleLarge)
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
-                                    SitesCard(state.sites, state.pendingSites, addSite, toggleSite, removeSite, cancelPendingSite)
+                                    SitesCard(state.sites, state.pendingSites, addSite, toggleSite, removeSite, cancelPendingSite, addSitePreset)
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today) { app, recipe -> edit(app, recipe) } }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
