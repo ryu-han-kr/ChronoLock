@@ -71,3 +71,34 @@ data class StrictSetting(val delayMinutes: Int = 0, val pendingMinutes: Int? = n
     /** Keeps the delay in force and drops a waiting decrease; this only tightens, so it never waits. */
     fun cancel(epochMillis: Long) = StrictSetting(delayAt(epochMillis))
 }
+
+/**
+ * A self-imposed lock that is stronger than strict mode: while it holds, every change that would loosen a limit is
+ * refused instead of delayed. A time lock ends at [untilEpochMillis] by itself; a goal lock ends only when the person
+ * enters the password they chose, and only after [goalDays] days in a row within their limits since [goalStart].
+ */
+data class LockSetting(
+    val untilEpochMillis: Long? = null,
+    val goalDays: Int? = null,
+    val goalStart: java.time.LocalDate? = null,
+    /** True when the app made up the code and hands it out one digit per kept day, instead of the person's own password. */
+    val pieceCode: Boolean = false,
+    /** Digits handed out so far; the code is [goalDays] digits long. */
+    val revealed: String = "",
+) {
+    fun timeLockedAt(epochMillis: Long) = untilEpochMillis?.let { epochMillis < it } == true
+    val goalLocked: Boolean get() = goalDays != null
+    fun lockedAt(epochMillis: Long) = timeLockedAt(epochMillis) || goalLocked
+    /** Kept days that count toward the goal: the streak, but never more than the days since the lock began. */
+    fun goalProgress(keptStreak: Int, today: java.time.LocalDate): Int =
+        goalStart?.let { minOf(keptStreak.toLong(), java.time.temporal.ChronoUnit.DAYS.between(it, today).coerceAtLeast(0)).toInt() } ?: 0
+    fun goalReached(keptStreak: Int, today: java.time.LocalDate) = goalDays?.let { goalProgress(keptStreak, today) >= it } == true
+    /** Whether another digit of a piece code can be handed out: one per kept day. */
+    fun canReveal(keptStreak: Int, today: java.time.LocalDate) = pieceCode && revealed.length < goalProgress(keptStreak, today)
+
+    companion object {
+        /** Time lock lengths in hours, and goal lengths in days. */
+        val HOURS = listOf(1, 6, 24, 72, 168)
+        val GOAL_DAYS = listOf(3, 7, 14, 30)
+    }
+}

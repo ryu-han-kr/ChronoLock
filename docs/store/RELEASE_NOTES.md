@@ -8,15 +8,23 @@ AAB: `release/chronolock-0.8.0-vc13.aab`. 업로드 전 접근성 API 신고(웹
 
 ### ko
 - 웹사이트 차단: Chrome·삼성 인터넷 등에서 정한 사이트를 열면 차단 화면을 띄워요.
-- 테마 화면의 "더보기"를 카드 오른쪽 위로 옮겼어요.
-- 새 버전이 나오면 앱 안에서 바로 업데이트할 수 있어요.
-- 자주 쓰는 테마를 ♡로 찜하고, 트렌드 테마 이름을 실제 색에 맞게 고쳤어요.
+- 잠금 모드: 정한 기간이나 목표를 이룰 때까지 제한을 풀 수 없게 잠가요. 조각 비밀번호도 있어요.
+- 제한한 앱을 쓰는 동안 남은 시간·실행 횟수를 알림으로 보여 줘요.
+- 기록을 3개월 보관하고 1년 달력을 보여 줘요. 날짜를 누르면 그날 앱별 사용이 나와요.
+- 기록 삭제는 직접 정한 비밀번호로만 할 수 있어요.
+- 한 앱을 여러 그룹에 넣고, 앱을 한 번에 선택할 수 있어요.
+- 나만의 테마(색상 코드+효과)와 테마 찜을 추가했어요.
+- 앱 안에서 바로 업데이트할 수 있어요.
 
 ### en
-- Website blocking: chosen sites show a block screen in Chrome, Samsung Internet and more.
-- "More" themes now sits at the top right of the theme card.
-- Update right inside the app when a new version is out.
-- Pin favorite themes with ♡; trend theme names now match their colors.
+- Website blocking in Chrome, Samsung Internet and more.
+- Lock mode: lock limits for a set time or until you reach a goal.
+- A live notification shows time and opens left.
+- 3 months of history and a yearly calendar; tap a day for its apps.
+- Deleting history needs a password you set.
+- Apps can join several groups; select apps all at once.
+- Custom colour themes and favourites.
+- Update right inside the app.
 
 ## 0.7.0 (versionCode 12) — 2026-10-22
 

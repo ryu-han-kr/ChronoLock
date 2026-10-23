@@ -30,7 +30,12 @@ class HistoryRepository @Inject constructor(
     val meta = dao.observeMeta()
     val estimates = dao.observeEstimates()
 
-    /** Import overlapping OS events idempotently, retaining a local rolling 30-day history. */
+    val year = dao.observeYear()
+
+    /**
+     * Import overlapping OS events idempotently. Android keeps detailed events for about a week, so raw events stay
+     * [EVENT_DAYS] days while the per-app daily rows built from them stay [RETAIN_DAYS] days and day totals a year.
+     */
     @Suppress("DEPRECATION")
     suspend fun collect() = mutex.withLock { withContext(Dispatchers.IO) {
         if (!environment.hasUsageAccess()) return@withContext
@@ -38,8 +43,7 @@ class HistoryRepository @Inject constructor(
         val now = System.currentTimeMillis()
         val zone = ZoneId.systemDefault()
         val previous = dao.meta() ?: HistoryMetaEntity()
-        // Keep at most 30 elapsed days; this also gives context before the first displayed midnight.
-        val queryFrom = maxOf(now - 30 * 86_400_000L, previous.clearedAt,
+        val queryFrom = maxOf(now - EVENT_DAYS * DAY, previous.clearedAt,
             if (previous.collectedAt > 0 && previous.collectedAt <= now) previous.collectedAt - 86_400_000L else 0)
         val stream = checkNotNull(context.getSystemService(UsageStatsManager::class.java).queryEvents(queryFrom, now))
         val collected = mutableListOf<HistoryEventEntity>()
@@ -65,13 +69,42 @@ class HistoryRepository @Inject constructor(
         importEvents(collected, names, homes, now, zone)
         // Events only reach back about a week; usage-stats buckets (finest first) estimate the older days of the window.
         val usage = context.getSystemService(UsageStatsManager::class.java)
-        val windowStart = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate().minusDays(29).atStartOfDay(zone).toInstant().toEpochMilli()
+        val windowStart = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate().minusDays(RETAIN_DAYS - 1L).atStartOfDay(zone).toInstant().toEpochMilli()
         val buckets = listOf(UsageStatsManager.INTERVAL_DAILY, UsageStatsManager.INTERVAL_WEEKLY, UsageStatsManager.INTERVAL_MONTHLY).map { interval ->
             usage.queryUsageStats(interval, windowStart, now).orEmpty().filter { it.totalTimeInForeground > 0 }
                 .map { UsageBucket(it.packageName, it.firstTimeStamp, it.lastTimeStamp, it.totalTimeInForeground) }
         }
         importEstimates(buckets, names, homes, now, zone)
+        refreshYear(now, zone)
     } }
+
+    /** Copies each retained day's total into the year table, then drops what is older than a year. */
+    internal suspend fun refreshYear(now: Long, zone: ZoneId) {
+        val today = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+        database.withTransaction {
+            val recorded = dao.daily().groupBy { it.date }.mapValues { (_, rows) -> rows.sumOf { it.usageMillis } }
+            val estimated = dao.estimates().groupBy { it.date }.mapValues { (_, rows) -> rows.sumOf { it.usageMillis } }
+            dao.saveYear((recorded.keys + estimated.keys).map { date ->
+                HistoryYearEntity(date, (recorded[date] ?: 0) + (estimated[date] ?: 0), date !in recorded)
+            })
+            dao.pruneYear(today.minusDays(YEAR_DAYS - 1L).toString())
+        }
+    }
+
+    /** Deletes every kept record and day total; nothing from before now is imported again. Limits are not affected. */
+    suspend fun clearHistory(now: Long) = mutex.withLock {
+        database.withTransaction {
+            dao.clearDaily(); dao.clearEvents(); dao.clearEstimates(); dao.clearYear()
+            dao.saveMeta((dao.meta() ?: HistoryMetaEntity()).copy(clearedAt = now))
+        }
+    }
+
+    companion object {
+        const val RETAIN_DAYS = 90
+        const val EVENT_DAYS = 10
+        const val YEAR_DAYS = 366
+        private const val DAY = 86_400_000L
+    }
 
     /**
      * Stores per-day estimates for the window days before the first event record and after the last reset.
@@ -83,7 +116,7 @@ class HistoryRepository @Inject constructor(
         database.withTransaction {
             val meta = dao.meta() ?: HistoryMetaEntity()
             val daily = dao.daily()
-            val windowStart = today.minusDays(29)
+            val windowStart = today.minusDays(RETAIN_DAYS - 1L)
             val afterReset = if (meta.clearedAt > 0) java.time.Instant.ofEpochMilli(meta.clearedAt).atZone(zone).toLocalDate().plusDays(1) else windowStart
             val gapStart = maxOf(windowStart, afterReset)
             val gapEnd = daily.minOfOrNull { LocalDate.parse(it.date) } ?: today
@@ -100,22 +133,33 @@ class HistoryRepository @Inject constructor(
 
     internal suspend fun importEvents(collected: List<HistoryEventEntity>, names: Map<String, String>,
         homes: Set<String>, now: Long, zone: ZoneId) {
-        val from = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate().minusDays(29)
-            .atStartOfDay(zone).toInstant().toEpochMilli()
+        val today = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+        val from = today.minusDays(RETAIN_DAYS - 1L).atStartOfDay(zone).toInstant().toEpochMilli()
         database.withTransaction {
             // Read again inside the transaction: deletion must never re-import pre-deletion records.
             val meta = dao.meta() ?: HistoryMetaEntity()
             val cutoff = maxOf(from, meta.clearedAt)
             val labels = dao.daily().associate { it.packageName to it.appName } + names
             dao.insertEvents(collected.filter { it.at >= meta.clearedAt })
-            dao.prune(maxOf(now - 30 * 86_400_000L, meta.clearedAt))
+            dao.prune(maxOf(now - EVENT_DAYS * DAY, meta.clearedAt))
             val events = dao.events().map { HistoryEvent(it.at, HistoryEventType.valueOf(it.type), it.app, it.activity) }
             val rows = aggregateHistory(events, cutoff.coerceAtMost(now), now, zone)
                 .filterKeys { it.packageName in labels && it.packageName !in homes }
                 .map { (key, usage) -> HistoryDailyEntity(key.packageName, key.date.toString(),
                     labels.getValue(key.packageName), usage.millis, usage.opens) }
+            // Days the kept events fully cover are rebuilt. Older days keep the rows built while their events existed;
+            // the first, partly covered day is only filled when nothing was kept for it.
+            val oldest = events.minOfOrNull { it.at }
+            val fullFrom = when {
+                oldest == null -> today.plusDays(1)
+                oldest <= cutoff -> java.time.Instant.ofEpochMilli(cutoff).atZone(zone).toLocalDate()
+                else -> java.time.Instant.ofEpochMilli(oldest).atZone(zone).toLocalDate().plusDays(1)
+            }.toString()
+            val firstKept = today.minusDays(RETAIN_DAYS - 1L).toString()
+            val kept = dao.daily().filter { it.date < fullFrom && it.date >= firstKept && it.date >= java.time.Instant.ofEpochMilli(meta.clearedAt).atZone(zone).toLocalDate().toString() }
+            val keptDays = kept.map { it.date }.toSet()
             dao.clearDaily()
-            dao.insertDaily(rows)
+            dao.insertDaily(kept + rows.filter { it.date >= fullFrom || it.date !in keptDays })
             dao.saveMeta(meta.copy(collectedAt = now))
         }
     }

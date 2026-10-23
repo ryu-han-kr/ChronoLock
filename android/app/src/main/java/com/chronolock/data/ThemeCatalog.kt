@@ -23,6 +23,7 @@ object ThemeCatalog {
     const val DEEP = "딥 그라데이션"
     const val MIDNIGHT = "미드나잇"
     const val NEUTRAL = "뉴트럴"
+    const val CUSTOM = "나만의 테마"
 
     private const val WHITE = 0xFFFFFFFFL
     private const val BLACK = 0xFF000000L
@@ -112,6 +113,55 @@ object ThemeCatalog {
         }
     }
 
+    /** Name of a custom palette: "custom_RRGGBB_EFFECT", so the stored theme name alone rebuilds it. */
+    fun customName(rgb: Int, effect: ThemeEffect) = "custom_%06X_%s".format(rgb and 0xFFFFFF, effect.name)
+
+    /** The colour and effect inside a custom palette name, or null for any other name. */
+    fun parseCustom(name: String?): Pair<Int, ThemeEffect>? {
+        val match = Regex("custom_([0-9A-F]{6})_([A-Z]+)").matchEntire(name ?: return null) ?: return null
+        val effect = ThemeEffect.entries.firstOrNull { it.name == match.groupValues[2] } ?: return null
+        return match.groupValues[1].toInt(16) to effect
+    }
+
+    /**
+     * A palette built from any colour 000000-FFFFFF with one [effect]. Every effect goes through the same contrast
+     * nudging as the catalog, so text stays readable whatever colour is picked. Grey picks stay grey.
+     */
+    fun custom(rgb: Int, effect: ThemeEffect): AppTheme {
+        val base = 0xFF000000L or (rgb and 0xFFFFFF).toLong()
+        val hue = hueOf(base)
+        val grey = saturation(base) < .08
+        val vivid = if (grey) 0.0 else 1.0
+        val id = customName(rgb, effect)
+        val label = listOf(CUSTOM, "#%06X".format(rgb and 0xFFFFFF), effect.word)
+        return when (effect) {
+            ThemeEffect.SOLID -> solid(id, label, base)
+            ThemeEffect.PASTEL -> tint(id, label, hue, hue, .70 * vivid, .90, accentSaturation = .55 * vivid)
+            ThemeEffect.MIST -> tint(id, label, hue, hue, .25 * vivid, .94, accentSaturation = .35 * vivid)
+            ThemeEffect.GRADIENT -> gradient(id, label, hue, (hue + 40) % 360, .75 * vivid)
+            ThemeEffect.COMPLEMENT -> gradient(id, label, hue, (hue + 180) % 360, .70 * vivid)
+            ThemeEffect.SUNSET -> gradient(id, label, hue, (hue + 310) % 360, .80 * vivid)
+            ThemeEffect.DUOTONE -> tint(id, label, hue, (hue + 180) % 360, .60 * vivid, .90, accentSaturation = .55 * vivid)
+            ThemeEffect.DEEP -> deep(id, label, hue, saturation = .50 * vivid)
+            ThemeEffect.AURORA -> deep(id, label, hue, (hue + 120) % 360, .55 * vivid)
+            ThemeEffect.MIDNIGHT -> darkSolid(id, label, Solid(id, "", hue, .40 * vivid, .11))
+        }.copy(premium = false)
+    }
+
+    /** The picked colour itself as the page; text and accent go to whichever of black or white reads on it. */
+    private fun solid(id: String, label: List<String>, base: Long): AppTheme {
+        val light = contrast(base, BLACK) >= contrast(base, WHITE)
+        val target = if (light) BLACK else WHITE
+        // Cards move away from the text colour so text keeps at least the contrast it has on the page.
+        val surface = if (light) mix(base, WHITE, .45) else mix(base, BLACK, .12)
+        val hue = hueOf(base)
+        val accentSaturation = if (saturation(base) < .08) 0.0 else max(saturation(base), .5)
+        val primary = ensure(hsl(hue, accentSaturation, if (light) .30 else .75), target, 4.5, base, surface)
+        val text = ensure(mix(base, target, .85), target, 7.0, base, surface)
+        val muted = ensure(mix(base, target, .55), target, 4.5, base, surface)
+        return AppTheme(id, label, "", !light, base, surface, primary, onPrimary(primary, base, WHITE, BLACK), text, muted)
+    }
+
     private fun wordFor(hue: Int): String = hueWords.minByOrNull { (word, _) -> hueDistance(hue, word) }!!.second
 
     private fun fromSeed(id: String, label: List<String>, seed: List<Int>): AppTheme {
@@ -148,21 +198,21 @@ object ThemeCatalog {
         return AppTheme(id, label, "", false, background, surface, primary, onPrimary(primary, WHITE, surface, BLACK), text, muted, premium = true)
     }
 
-    private fun gradient(id: String, label: List<String>, from: Int, to: Int): AppTheme {
-        val background = hsl(from, .75, .88)
-        val end = hsl(to, .75, .84)
-        val surface = hsl(from, .6, .975)
-        val primary = ensure(hsl(to, .55, .38), BLACK, 4.5, background, end, surface)
+    private fun gradient(id: String, label: List<String>, from: Int, to: Int, saturation: Double = .75): AppTheme {
+        val background = hsl(from, saturation, .88)
+        val end = hsl(to, saturation, .84)
+        val surface = hsl(from, saturation * .8, .975)
+        val primary = ensure(hsl(to, saturation * .73, .38), BLACK, 4.5, background, end, surface)
         val text = ensure(hsl(from, .25, .14), BLACK, 7.0, background, end, surface)
         val muted = ensure(hsl(from, .12, .40), BLACK, 4.5, background, end, surface)
         return AppTheme(id, label, "", false, background, surface, primary, onPrimary(primary, WHITE, surface, BLACK), text, muted, end, premium = true)
     }
 
-    private fun deep(id: String, label: List<String>, hue: Int): AppTheme {
-        val background = hsl(hue, .50, .12)
-        val end = hsl((hue + 60) % 360, .50, .24)
-        val surface = hsl(hue, .35, .20)
-        val primary = ensure(hsl(hue, .7, .72), WHITE, 4.5, background, end, surface)
+    private fun deep(id: String, label: List<String>, hue: Int, endHue: Int = (hue + 60) % 360, saturation: Double = .50): AppTheme {
+        val background = hsl(hue, saturation, .12)
+        val end = hsl(endHue, saturation, .24)
+        val surface = hsl(hue, saturation * .7, .20)
+        val primary = ensure(hsl(endHue, saturation * 1.4, .72), WHITE, 4.5, background, end, surface)
         val text = ensure(hsl(hue, .2, .93), WHITE, 7.0, background, end, surface)
         val muted = ensure(hsl(hue, .15, .70), WHITE, 4.5, background, end, surface)
         return AppTheme(id, label, "", true, background, surface, primary, onPrimary(primary, background, BLACK, WHITE), text, muted, end, premium = true)
@@ -258,4 +308,10 @@ object ThemeCatalog {
         val b = luminance(second)
         return (max(a, b) + .05) / (min(a, b) + .05)
     }
+}
+
+/** Looks a custom palette can take; [word] is the translatable chip label. */
+enum class ThemeEffect(val word: String) {
+    SOLID("단색"), PASTEL("파스텔"), MIST("안개"), GRADIENT("그라데이션"), COMPLEMENT("보색 그라데이션"),
+    SUNSET("노을"), DUOTONE("듀오톤"), DEEP("딥 그라데이션"), AURORA("오로라"), MIDNIGHT("미드나잇"),
 }

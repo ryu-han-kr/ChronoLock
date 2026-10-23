@@ -43,7 +43,7 @@ class SiteBlockingDeviceTest {
         shell("input keyevent KEYCODE_HOME")
         db = Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db")
             .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5,
-                ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
+                ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8).build()
         db.clearAllTables()
         runBlocking { db.dao().saveSite(SiteEntity("youtube.com")) }
         val services = (originalServices.split(':').filter { it.isNotBlank() && it != service } + service).joinToString(":")
@@ -81,6 +81,26 @@ class SiteBlockingDeviceTest {
         val file = File(context.getExternalFilesDir(null), "device-verification/$name.png")
         file.parentFile?.mkdirs()
         file.outputStream().use { automation.takeScreenshot().compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    @Test fun limitedApp_showsALiveNotification_untilItIsLeft() {
+        val installed = shell("pm list packages").lines().map { it.removePrefix("package:").trim() }.toSet()
+        assumeTrue("Chrome not installed", "com.android.chrome" in installed)
+        shell("pm grant $app android.permission.POST_NOTIFICATIONS")
+        runBlocking { db.dao().saveRule(RuleEntity("com.android.chrome", "Chrome", dailyLimitSeconds = 3600, maxOpenCount = 50, cooldownSeconds = null)) }
+        // This test writes through its own database connection, which the running service does not observe; reconnect it.
+        val services = shell("settings get secure enabled_accessibility_services").trim()
+        shell("settings put secure enabled_accessibility_services " + services.split(':').filter { it != service }.joinToString(":").ifEmpty { "null" })
+        SystemClock.sleep(1500)
+        shell("settings put secure enabled_accessibility_services $services")
+        SystemClock.sleep(3000)
+        open("com.android.chrome", "https://example.com")
+        fun liveShown() = shell("dumpsys notification --noredact").lines().any { it.contains("pkg=$app") && it.contains("live_limits") }
+        val shown = await(15_000, ::liveShown)
+        capture("live-notification")
+        assertTrue("live notification missing", shown)
+        shell("input keyevent KEYCODE_HOME")
+        assertTrue("live notification stayed after leaving", await(10_000) { !liveShown() })
     }
 
     @Test fun blockedSite_showsOverlay_andOtherSitesDoNot() {

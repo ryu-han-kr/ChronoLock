@@ -14,15 +14,18 @@ import com.google.android.play.core.install.model.UpdateAvailability
  * dialog asks once per app start, the download runs in the background, and [onReady] fires when a restart can install it.
  * Builds not installed from Play (debug, side-loaded) never see an update, so every failure is ignored.
  */
-class InAppUpdates(activity: ComponentActivity, private val onReady: () -> Unit) {
-    private val manager = AppUpdateManagerFactory.create(activity)
+class InAppUpdates(private val activity: ComponentActivity, private val onReady: () -> Unit) {
+    // The activity has no base context while it is being constructed; create the manager on first use (onCreate).
+    private val manager by lazy { AppUpdateManagerFactory.create(activity) }
     // Registered at construction, before the activity starts, as the result API requires.
     private val launcher = activity.registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {}
     private val listener = InstallStateUpdatedListener { if (it.installStatus() == InstallStatus.DOWNLOADED) onReady() }
     private var asked = false
+    private var registered = false
 
     fun check() {
         manager.registerListener(listener)
+        registered = true
         manager.appUpdateInfo.addOnSuccessListener { info ->
             when {
                 info.installStatus() == InstallStatus.DOWNLOADED -> onReady()
@@ -38,5 +41,5 @@ class InAppUpdates(activity: ComponentActivity, private val onReady: () -> Unit)
     /** Restarts the app to install the downloaded build. */
     fun complete() { manager.completeUpdate() }
 
-    fun stop() = manager.unregisterListener(listener)
+    fun stop() { if (asked || registered) manager.unregisterListener(listener) }
 }

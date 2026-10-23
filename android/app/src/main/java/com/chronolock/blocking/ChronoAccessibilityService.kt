@@ -17,6 +17,8 @@ import com.chronolock.domain.AppRule
 import com.chronolock.domain.BlockedSite
 import com.chronolock.domain.Browsers
 import com.chronolock.domain.SiteDomains
+import com.chronolock.domain.withGroups
+import kotlinx.coroutines.flow.combine
 import com.chronolock.domain.MonitorState
 import com.chronolock.feature.forLanguage
 import dagger.hilt.android.AndroidEntryPoint
@@ -84,7 +86,12 @@ class ChronoAccessibilityService : AccessibilityService() {
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay language", error) }
         }
         scope.launch {
-            try { repository.rules.collect { list -> rules = list.associate { it.packageName to it.toDomain() } } }
+            // Groups are attached as the monitor sees them, so the live notification can show shared limits too.
+            try {
+                repository.rules.combine(repository.groups) { list, groups ->
+                    withGroups(list.associate { it.packageName to it.toDomain() }, groups.map { it.toDomain() })
+                }.collect { rules = it }
+            }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe rules", error) }
         }

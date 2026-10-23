@@ -16,6 +16,10 @@ data class HistoryDailyEntity(val packageName: String, val date: String, val app
 @Entity(tableName = "history_estimate", primaryKeys = ["packageName", "date"])
 data class HistoryEstimateEntity(val packageName: String, val date: String, val appName: String, val usageMillis: Long)
 
+/** One day's total use for the year calendar; kept a year, long after the per-app rows are gone. */
+@Entity(tableName = "history_year")
+data class HistoryYearEntity(@PrimaryKey val date: String, val usageMillis: Long, val estimated: Boolean)
+
 @Entity(tableName = "history_meta")
 data class HistoryMetaEntity(@PrimaryKey val id: Int = 1, val clearedAt: Long = 0, val collectedAt: Long = 0)
 
@@ -35,7 +39,12 @@ interface HistoryDao {
     @Query("SELECT * FROM history_estimate ORDER BY date DESC") fun observeEstimates(): Flow<List<HistoryEstimateEntity>>
     @Query("SELECT * FROM history_estimate") suspend fun estimates(): List<HistoryEstimateEntity>
     @Upsert suspend fun saveEstimates(rows: List<HistoryEstimateEntity>)
-    /** Days that now have real records, or that fell out of the 30-day window, lose their estimate. */
+    /** Days that now have real records, or that fell out of the kept window, lose their estimate. */
     @Query("DELETE FROM history_estimate WHERE date >= :from OR date < :before") suspend fun dropEstimates(from: String, before: String)
     @Query("DELETE FROM history_estimate") suspend fun clearEstimates()
+    @Query("SELECT * FROM history_year ORDER BY date") fun observeYear(): Flow<List<HistoryYearEntity>>
+    @Query("SELECT * FROM history_year") suspend fun year(): List<HistoryYearEntity>
+    @Upsert suspend fun saveYear(rows: List<HistoryYearEntity>)
+    @Query("DELETE FROM history_year WHERE date < :before") suspend fun pruneYear(before: String)
+    @Query("DELETE FROM history_year") suspend fun clearYear()
 }

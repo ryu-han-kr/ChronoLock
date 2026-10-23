@@ -34,7 +34,7 @@ private const val TEST_BANNER_ID = "ca-app-pub-3940256099942544/9214589741"
 @Singleton
 class AdsController @Inject constructor() {
     /** Release builds show ads only with a real unit ID from local.properties or -P. */
-    val bannerId: String = BuildConfig.ADMOB_BANNER_ID.ifBlank { if (BuildConfig.DEBUG) TEST_BANNER_ID else "" }
+    val bannerId: String = BuildConfig.ADMOB_BANNER_ID.ifBlank { if (BuildConfig.DEBUG && BuildConfig.TEST_ADS) TEST_BANNER_ID else "" }
     private val started = AtomicBoolean(false)
     private val mutable = MutableStateFlow(AdState(configured = bannerId.isNotBlank()))
     val state: StateFlow<AdState> = mutable.asStateFlow()

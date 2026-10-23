@@ -136,6 +136,25 @@ class FocusUiTest {
         ui.onNodeWithTag("theme-current").assertIsSelected()
     }
 
+    @Test fun customTheme_fromCodeAndEffect_isApplied_andFavoritesCanBePinned() {
+        val selected = mutableStateOf(AppTheme.DARK)
+        val favorites = mutableStateOf(emptySet<String>())
+        ui.setContent { ChronoTheme(selected.value) {
+            ThemeGallery(selected.value, { selected.value = it }, favorites.value,
+                { theme -> favorites.value = if (theme.name in favorites.value) favorites.value - theme.name else favorites.value + theme.name }) {}
+        } }
+        ui.onNodeWithTag("custom-hex").performTextReplacement("123456")
+        ui.onNodeWithTag("effect-SOLID").performScrollTo().performClick()
+        ui.onNodeWithTag("custom-apply").performClick()
+        ui.runOnIdle { assertEquals("custom_123456_SOLID", selected.value.name) }
+        screenshot("theme-custom", ui.onNodeWithTag("theme-gallery"))
+        val pastel = ThemeCatalog.pastel.first()
+        ui.onNodeWithTag("theme-gallery-grid").performScrollToNode(hasTestTag("pin-${pastel.name}"))
+        ui.onNodeWithTag("pin-${pastel.name}").performClick()
+        ui.runOnIdle { assertEquals(setOf(pastel.name), favorites.value) }
+        ui.onNodeWithTag("theme-gallery-grid").performScrollToNode(hasTestTag("theme-pinned-${pastel.name}"))
+    }
+
     @Test fun recipeIsPreviewed_thenSavedWithSessionAndCooldown() {
         var saved: AppRule? = null
         ui.setContent { MaterialTheme(colorScheme = darkColorScheme()) {

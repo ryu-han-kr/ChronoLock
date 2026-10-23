@@ -35,6 +35,8 @@ android {
             "Set both chronolock.admobAppId and chronolock.admobBannerId in local.properties, or neither."
         }
         buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
+        // Debug builds fall back to Google test banners; device verification and demo recordings turn them off.
+        buildConfigField("Boolean", "TEST_ADS", "true")
         manifestPlaceholders["admobAppId"] = admobAppId.ifBlank { "ca-app-pub-3940256099942544~3347511713" }
     }
     buildFeatures { compose = true; buildConfig = true }
@@ -54,7 +56,7 @@ android {
     if (localSetting("chronolock.admobAppId").isBlank()) sourceSets.getByName("release").manifest.srcFile("src/releaseNoAds/AndroidManifest.xml")
     // Opt-in device scenarios change permissions and reboot. Keep their data separate.
     if (providers.gradleProperty("deviceVerification").orNull == "true") {
-        buildTypes.getByName("debug") { applicationIdSuffix = ".verification" }
+        buildTypes.getByName("debug") { applicationIdSuffix = ".verification"; buildConfigField("Boolean", "TEST_ADS", "false") }
     }
     // Every supported language must be available offline after an in-app language change.
     bundle { language { enableSplit = false } }

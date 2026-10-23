@@ -55,6 +55,37 @@ class HistoryUiTest {
         ui.onNodeWithText("9", substring = false).assertExists()
         ui.onNodeWithText("Too old").assertDoesNotExist()
     }
+    @Test fun tappingADay_listsThatDaysApps() {
+        ui.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) { HistoryPanel(state, today, {}, {}) } } }
+        ui.onNodeWithText("일주일").performClick()
+        ui.onNodeWithText("일별 기록 보기").performClick()
+        val day = "history-day-${today.minusDays(3)}"
+        // The app also shows in the suggestions and its own card; the day's list adds one more.
+        val before = ui.onAllNodesWithText("Example B").fetchSemanticsNodes().size
+        ui.onNodeWithTag(day).performScrollTo().performClick()
+        ui.onAllNodesWithText("Example B").assertCountEquals(before + 1)
+        ui.onNodeWithTag(day).performClick()
+        ui.onAllNodesWithText("Example B").assertCountEquals(before)
+    }
+    @Test fun deletingHistory_firstSetsAPassword_thenAsksForIt() {
+        val pinSet = mutableStateOf(false)
+        var deletedWith: String? = null
+        ui.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
+            HistoryPanel(state.copy(historyPinSet = pinSet.value), today, {}, {},
+                setPin = { pin, confirm, done -> if (pin == confirm) { pinSet.value = true; done() } },
+                deleteHistory = { pin, done -> deletedWith = pin; done() })
+        } } }
+        ui.onNodeWithTag("year-calendar").performScrollTo().assertExists()
+        ui.onNodeWithTag("history-delete").performScrollTo().performClick()
+        ui.onNodeWithText("기록 삭제 비밀번호 정하기").assertIsDisplayed()
+        ui.onNodeWithTag("history-pin").performTextInput("2468")
+        ui.onNodeWithTag("history-pin-confirm").performTextInput("2468")
+        ui.onNodeWithTag("history-pin-ok").performClick()
+        ui.onNodeWithText("비밀번호를 입력하면 3개월 기록과 1년 달력이 모두 지워집니다. 되돌릴 수 없습니다.").assertIsDisplayed()
+        ui.onNodeWithTag("history-pin").performTextInput("2468")
+        ui.onNodeWithTag("history-pin-ok").performClick()
+        ui.runOnIdle { assertEquals("2468", deletedWith) }
+    }
     @Test fun historyOnly_needsUsagePermission_andNoAccessibilityPermission() {
         var requested = false
         ui.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) {

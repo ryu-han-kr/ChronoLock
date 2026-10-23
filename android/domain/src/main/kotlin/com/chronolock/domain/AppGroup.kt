@@ -2,7 +2,7 @@ package com.chronolock.domain
 
 /**
  * Apps that share one daily allowance: time and opens of every member count against the same limits.
- * [members] maps package names to display names. An app belongs to at most one group.
+ * [members] maps package names to display names. An app may be in several groups; the limits of each apply.
  */
 data class AppGroup(
     val id: Long,
@@ -19,7 +19,7 @@ data class AppGroup(
         require(dailyLimitSeconds != null || maxOpenCount != null)
     }
 
-    companion object { const val MAX_MEMBERS = 20 }
+    companion object { const val MAX_MEMBERS = 200 }
 }
 
 /** Editor input for a group; [daily] is seconds as text and blank limits mean unrestricted. */
@@ -32,9 +32,9 @@ data class GroupDraft(val name: String = "", val members: Map<String, String> = 
             require(parsed != null && parsed in 1..maximum) { "$label: 1~${maximum} 범위의 정수를 입력해 주세요." }
             return parsed
         }
-        require(name.isNotBlank()) { "묶음 이름을 입력해 주세요." }
+        require(name.isNotBlank()) { "그룹 이름을 입력해 주세요." }
         require(members.size >= 2) { "묶을 앱을 두 개 이상 선택해 주세요." }
-        require(members.size <= AppGroup.MAX_MEMBERS) { "한 묶음에는 앱을 최대 20개까지 넣을 수 있습니다." }
+        require(members.size <= AppGroup.MAX_MEMBERS) { "한 그룹에는 앱을 최대 200개까지 넣을 수 있습니다." }
         val dailySeconds = limit(daily, 86400, "하루 시간(초)")
         val openCount = limit(opens, 10000, "실행 횟수")?.toInt()
         require(dailySeconds != null || openCount != null) { "함께 쓸 하루 시간이나 실행 횟수를 설정해 주세요." }
@@ -55,15 +55,15 @@ fun MonitorState.groupUsage(group: AppGroup): DailyUsage {
 }
 
 /**
- * The rules the monitor evaluates: each app's own rule, plus every member of an enabled group carrying that group.
+ * The rules the monitor evaluates: each app's own rule, plus every member of an enabled group carrying all its groups.
  * A member without an enabled rule of its own gets an empty one so the group still tracks and limits it.
  */
 fun withGroups(rules: Map<String, AppRule>, groups: List<AppGroup>): Map<String, AppRule> {
     val result = rules.toMutableMap()
     groups.filter { it.enabled }.forEach { group ->
         group.members.forEach { (app, name) ->
-            val own = rules[app]?.takeIf { it.enabled } ?: AppRule(app, name)
-            result[app] = own.copy(group = group)
+            val current = result[app]?.takeIf { it.groups.isNotEmpty() } ?: rules[app]?.takeIf { it.enabled } ?: AppRule(app, name)
+            result[app] = current.copy(groups = current.groups + group)
         }
     }
     return result
