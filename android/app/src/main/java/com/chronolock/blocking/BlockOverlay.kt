@@ -104,8 +104,10 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 Reason.SESSION_USAGE -> text("이번 사용시간 제한에 도달했습니다.")
                 Reason.SCHEDULE -> text("사용하지 않기로 정한 시간대입니다.")
                 Reason.FOCUS -> text("집중 시간이 진행 중입니다.")
+                Reason.GROUP_USAGE -> text("함께 묶은 앱들의 오늘 사용시간을 모두 사용했습니다.")
+                Reason.GROUP_OPENS -> text("함께 묶은 앱들의 오늘 실행 횟수를 모두 사용했습니다.")
             }
-        } + if (decision.reasons.any { it == Reason.DAILY_USAGE || it == Reason.OPEN_COUNT }) "\n" + text("일일 한도는 현지 시각 자정에 초기화됩니다.") else ""
+        } + if (decision.reasons.any { it in setOf(Reason.DAILY_USAGE, Reason.OPEN_COUNT, Reason.GROUP_USAGE, Reason.GROUP_OPENS) }) "\n" + text("일일 한도는 현지 시각 자정에 초기화됩니다.") else ""
     }
 
     fun hide() {

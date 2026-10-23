@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.chronolock.domain.AppGroup
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.ClockReading
 import com.chronolock.domain.Reason
@@ -41,7 +42,7 @@ class LocalRepositoryTest {
     }
 
     private fun openDatabase() = Room.databaseBuilder(context, ChronoDatabase::class.java, databaseName)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).build()
 
     @Test fun databaseReopen_restoresRuleCountersAndCooldown() = runBlocking {
         val rule = AppRule("test.app", "Test", dailyLimitSeconds = 60, maxOpenCount = 3, cooldownSeconds = 30)
@@ -279,5 +280,44 @@ class LocalRepositoryTest {
         repository.applyDuePending(origin + 600_000)
         // Until midnight Seoul time after the delay: 2026-10-08 18:10 KST -> 2026-10-09 00:00 KST.
         assertEquals(Instant.parse("2026-10-08T15:00:00Z").toEpochMilli(), database.dao().rules().single().pausedUntilEpochMillis)
+    }
+
+    @Test fun group_sharesItsLimitAcrossMembersAndSurvivesReopen() = runBlocking {
+        val repository = LocalRepository(database)
+        // "b" has no rule of its own; the group alone makes the monitor track and limit it.
+        repository.saveRule(AppRule("a", "A", sessionLimitSeconds = 3600))
+        assertNull(repository.requestGroup(AppGroup(0, "SNS", mapOf("a" to "A", "b" to "B"), dailyLimitSeconds = 60), 0, origin))
+        val group = database.dao().groups().single().toDomain()
+        assertEquals(mapOf("a" to "A", "b" to "B"), group.members)
+        repository.foreground("a", clock(0))
+        repository.foreground("b", clock(40_000))
+        assertFalse(repository.tick(clock(59_000)).decision.denied)
+        assertEquals(listOf(Reason.GROUP_USAGE), repository.tick(clock(60_000)).decision.reasons)
+        database.close()
+        database = openDatabase()
+        val reopened = LocalRepository(database)
+        assertTrue(reopened.foreground("a", clock(61_000)).decision.denied)
+        assertEquals(listOf("a"), database.dao().rules().map { it.packageName })
+    }
+
+    @Test fun group_membersStayUniqueAndStrictModeHoldsRelaxingEdits() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.requestGroup(AppGroup(0, "SNS", mapOf("a" to "A", "b" to "B"), maxOpenCount = 3), 0, origin)
+        val id = database.dao().groups().single().id
+        val taken = runCatching { repository.requestGroup(AppGroup(0, "Video", mapOf("b" to "B", "c" to "C"), maxOpenCount = 3), 0, origin) }
+        assertEquals(LocalRepository.GROUP_TAKEN, taken.exceptionOrNull()?.message)
+        val saved = database.dao().groups().single().toDomain()
+        // Adding a member tightens and applies at once; raising the limit waits.
+        assertNull(repository.requestGroup(saved.copy(members = saved.members + ("c" to "C")), 600_000, origin))
+        assertEquals(3, database.dao().groups().single().toDomain().members.size)
+        assertEquals(origin + 600_000, repository.requestGroup(saved.copy(maxOpenCount = 9), 600_000, origin))
+        assertEquals(3, database.dao().groups().single().maxOpenCount)
+        repository.cancelPendingGroup(id)
+        repository.applyDuePending(origin + 700_000)
+        assertEquals(3, database.dao().groups().single().maxOpenCount)
+        assertNotNull(repository.requestDeleteGroup(id, 600_000, origin))
+        repository.tick(clock(600_000, origin + 600_000))
+        assertTrue(database.dao().groups().isEmpty())
+        repository.clearAll()
     }
 }

@@ -1,0 +1,81 @@
+package com.chronolock.domain
+
+import java.time.Instant
+import java.time.ZoneId
+import org.junit.Assert.*
+import org.junit.Test
+
+class AppGroupTest {
+    private val monitor = UsageMonitor()
+    private val zone = ZoneId.of("Asia/Seoul")
+    private val origin = Instant.parse("2026-10-08T09:00:00Z").toEpochMilli()
+    private fun clock(ms: Long) = ClockReading(origin + ms, ms, 1, zone)
+    private val group = AppGroup(1, "SNS", mapOf("a" to "A", "b" to "B"), dailyLimitSeconds = 60, maxOpenCount = 3)
+
+    @Test fun sharedTime_blocksEveryMemberOnceTheSumIsUsed() {
+        val rules = withGroups(emptyMap(), listOf(group))
+        var state = monitor.foreground(MonitorState(), "a", clock(0), rules).state
+        state = monitor.tick(state, clock(40000), rules).state
+        state = monitor.foreground(state, "b", clock(40000), rules).state
+        state = monitor.tick(state, clock(59999), rules).state
+        assertFalse(state.decision.denied)
+        state = monitor.tick(state, clock(60000), rules).state
+        assertEquals(listOf(Reason.GROUP_USAGE), state.decision.reasons)
+        state = monitor.foreground(state, "a", clock(61000), rules).state
+        assertTrue(state.decision.denied)
+        assertEquals(60000L, state.groupUsage(group).usageMillis)
+    }
+
+    @Test fun sharedOpens_countAcrossMembers() {
+        val rules = withGroups(emptyMap(), listOf(group))
+        var state = MonitorState()
+        listOf("a", "b", "a").forEachIndexed { index, app ->
+            state = monitor.foreground(state, app, clock(index * 2000L), rules).state
+            state = monitor.foreground(state, null, clock(index * 2000L + 1000), rules).state
+        }
+        state = monitor.foreground(state, "b", clock(10000), rules).state
+        assertEquals(listOf(Reason.GROUP_OPENS), state.decision.reasons)
+        assertEquals(3, state.groupUsage(group).opens)
+    }
+
+    @Test fun ownRulesStayInForceAndDisabledGroupsAreIgnored() {
+        val own = AppRule("a", "A", maxOpenCount = 1)
+        val combined = withGroups(mapOf("a" to own, "c" to AppRule("c", "C")), listOf(group, group.copy(id = 2, members = mapOf("c" to "C", "d" to "D"), enabled = false)))
+        assertEquals(1, combined.getValue("a").maxOpenCount)
+        assertEquals(group, combined.getValue("a").group)
+        assertEquals(AppRule("b", "B", group = group), combined.getValue("b"))
+        assertNull(combined.getValue("c").group)
+        assertFalse("d" in combined)
+        // A switched-off own rule drops its own limits but not the group's.
+        val off = withGroups(mapOf("a" to own.copy(enabled = false)), listOf(group)).getValue("a")
+        assertEquals(AppRule("a", "A", group = group), off)
+    }
+
+    @Test fun pausedMember_isNotLimitedByTheGroup() {
+        val paused = AppRule("a", "A", maxOpenCount = 9, pausedUntilEpochMillis = origin + 600_000)
+        val rules = withGroups(mapOf("a" to paused), listOf(group.copy(dailyLimitSeconds = 1)))
+        var state = monitor.foreground(MonitorState(), "a", clock(0), rules).state
+        state = monitor.tick(state, clock(5000), rules).state
+        assertFalse(state.decision.denied)
+    }
+
+    @Test fun draft_validatesNameMembersAndLimits() {
+        val members = mapOf("a" to "A", "b" to "B")
+        assertEquals(AppGroup(0, "SNS", members, 3600), GroupDraft(" SNS ", members).build(0))
+        assertEquals("묶음 이름을 입력해 주세요.", runCatching { GroupDraft("", members).build(0) }.exceptionOrNull()?.message)
+        assertEquals("묶을 앱을 두 개 이상 선택해 주세요.", runCatching { GroupDraft("SNS", mapOf("a" to "A")).build(0) }.exceptionOrNull()?.message)
+        assertEquals("함께 쓸 하루 시간이나 실행 횟수를 설정해 주세요.", runCatching { GroupDraft("SNS", members, daily = "").build(0) }.exceptionOrNull()?.message)
+        val saved = AppGroup(4, "SNS", members, null, 7, enabled = false)
+        assertEquals(saved, GroupDraft.from(saved).build(4))
+    }
+
+    @Test fun strictness_holdsOnlyRelaxingGroupChanges() {
+        assertFalse(Strictness.loosens(null as AppGroup?, group))
+        assertFalse(Strictness.loosens(group, group.copy(dailyLimitSeconds = 30, members = group.members + ("c" to "C"), name = "새 이름")))
+        assertTrue(Strictness.loosens(group, null))
+        assertTrue(Strictness.loosens(group, group.copy(enabled = false)))
+        assertTrue(Strictness.loosens(group, group.copy(dailyLimitSeconds = 120)))
+        assertTrue(Strictness.loosens(group, group.copy(maxOpenCount = null, dailyLimitSeconds = 60)))
+        assertTrue(Strictness.loosens(group, group.copy(members = mapOf("a" to "A", "c" to "C"))))
+    }
+}

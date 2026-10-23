@@ -32,6 +32,26 @@ data class PendingRuleEntity(
     @Embedded(prefix = "rule_") val rule: RuleEntity,
 )
 
+/** A shared-limit group; [members] holds "packageName<TAB>appName" lines. */
+@Entity(tableName = "app_groups")
+data class GroupEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val members: String,
+    val dailyLimitSeconds: Long?,
+    val maxOpenCount: Int?,
+    val enabled: Boolean = true,
+)
+
+/** A relaxing group change held back by strict mode, like [PendingRuleEntity]. */
+@Entity(tableName = "pending_groups")
+data class PendingGroupEntity(
+    @PrimaryKey val groupId: Long,
+    val applyAtEpochMillis: Long,
+    val remove: Boolean,
+    @Embedded(prefix = "group_") val group: GroupEntity,
+)
+
 @Entity(tableName = "daily_usage_stats", primaryKeys = ["packageName", "date"])
 data class DailyEntity(val packageName: String, val date: String, val usageMillis: Long, val opens: Int, val blockedAttempts: Int)
 
@@ -85,16 +105,37 @@ interface ChronoDao {
     @Upsert suspend fun savePending(row: PendingRuleEntity)
     @Query("DELETE FROM pending_rules WHERE packageName = :packageName") suspend fun deletePending(packageName: String)
     @Query("DELETE FROM pending_rules") suspend fun clearPending()
+    @Query("SELECT * FROM app_groups ORDER BY name") fun observeGroups(): Flow<List<GroupEntity>>
+    @Query("SELECT * FROM app_groups") suspend fun groups(): List<GroupEntity>
+    @Insert suspend fun insertGroup(group: GroupEntity): Long
+    @Upsert suspend fun saveGroup(group: GroupEntity)
+    @Query("DELETE FROM app_groups WHERE id = :id") suspend fun deleteGroup(id: Long)
+    @Query("DELETE FROM app_groups") suspend fun clearGroups()
+    @Query("SELECT * FROM pending_groups ORDER BY applyAtEpochMillis") fun observePendingGroups(): Flow<List<PendingGroupEntity>>
+    @Query("SELECT * FROM pending_groups WHERE applyAtEpochMillis <= :now") suspend fun duePendingGroups(now: Long): List<PendingGroupEntity>
+    @Upsert suspend fun savePendingGroup(row: PendingGroupEntity)
+    @Query("DELETE FROM pending_groups WHERE groupId = :id") suspend fun deletePendingGroup(id: Long)
+    @Query("DELETE FROM pending_groups") suspend fun clearPendingGroups()
 }
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
-    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class],
-    version = 5, exportSchema = true)
+    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class,
+    GroupEntity::class, PendingGroupEntity::class],
+    version = 6, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS app_groups (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, " +
+                    "members TEXT NOT NULL, dailyLimitSeconds INTEGER, maxOpenCount INTEGER, enabled INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS pending_groups (groupId INTEGER NOT NULL, applyAtEpochMillis INTEGER NOT NULL, " +
+                    "remove INTEGER NOT NULL, group_id INTEGER NOT NULL, group_name TEXT NOT NULL, group_members TEXT NOT NULL, " +
+                    "group_dailyLimitSeconds INTEGER, group_maxOpenCount INTEGER, group_enabled INTEGER NOT NULL, PRIMARY KEY(groupId))")
+            }
+        }
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE blocking_rules ADD COLUMN schedules TEXT")

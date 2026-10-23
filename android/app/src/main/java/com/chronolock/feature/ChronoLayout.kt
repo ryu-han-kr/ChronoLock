@@ -68,6 +68,8 @@ internal fun ChronoScreen(
     cancelPending: (String) -> Unit = {},
     setStrict: (Int) -> Unit = {},
     cancelStrict: () -> Unit = {},
+    editGroup: (Long) -> Unit = {},
+    cancelPendingGroup: (Long) -> Unit = {},
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -183,6 +185,20 @@ internal fun ChronoScreen(
                                             state.strict.delayAt(nowEpoch), pause = { pause(rule.packageName, it) },
                                             resume = { resume(rule.packageName) }, cancelHeld = { cancelPending(rule.packageName) })
                                     }
+                                }
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                        Text(tr("앱 묶음"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                                        TextButton(onClick = { editGroup(0L) }, modifier = Modifier.testTag("group-add")) { Text(tr("묶음 만들기")) }
+                                    }
+                                }
+                                if (state.groups.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Text(tr("SNS처럼 비슷한 앱을 묶으면 하루 시간과 실행 횟수를 함께 쓰게 할 수 있습니다."),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                }
+                                items(state.groups, key = { "group:${it.id}" }) { group ->
+                                    GroupCard(group, stats, state.pendingGroups.firstOrNull { it.groupId == group.id },
+                                        edit = { editGroup(group.id) }, cancelHeld = { cancelPendingGroup(group.id) })
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today) { app, recipe -> edit(app, recipe) } }
                                 item(span = { GridItemSpan(maxLineSpan) }) {

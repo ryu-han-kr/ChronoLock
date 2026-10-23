@@ -1,0 +1,70 @@
+package com.chronolock.domain
+
+/**
+ * Apps that share one daily allowance: time and opens of every member count against the same limits.
+ * [members] maps package names to display names. An app belongs to at most one group.
+ */
+data class AppGroup(
+    val id: Long,
+    val name: String,
+    val members: Map<String, String>,
+    val dailyLimitSeconds: Long? = null,
+    val maxOpenCount: Int? = null,
+    val enabled: Boolean = true,
+) {
+    init {
+        require(name.isNotBlank() && members.size in 2..MAX_MEMBERS)
+        require(dailyLimitSeconds == null || dailyLimitSeconds in 1..86400)
+        require(maxOpenCount == null || maxOpenCount in 1..10000)
+        require(dailyLimitSeconds != null || maxOpenCount != null)
+    }
+
+    companion object { const val MAX_MEMBERS = 20 }
+}
+
+/** Editor input for a group; [daily] is seconds as text and blank limits mean unrestricted. */
+data class GroupDraft(val name: String = "", val members: Map<String, String> = emptyMap(), val daily: String = "3600", val opens: String = "",
+    val enabled: Boolean = true) {
+    fun build(id: Long): AppGroup {
+        fun limit(value: String, maximum: Long, label: String): Long? {
+            if (value.isBlank()) return null
+            val parsed = value.trim().toLongOrNull()
+            require(parsed != null && parsed in 1..maximum) { "$label: 1~${maximum} 범위의 정수를 입력해 주세요." }
+            return parsed
+        }
+        require(name.isNotBlank()) { "묶음 이름을 입력해 주세요." }
+        require(members.size >= 2) { "묶을 앱을 두 개 이상 선택해 주세요." }
+        require(members.size <= AppGroup.MAX_MEMBERS) { "한 묶음에는 앱을 최대 20개까지 넣을 수 있습니다." }
+        val dailySeconds = limit(daily, 86400, "하루 시간(초)")
+        val openCount = limit(opens, 10000, "실행 횟수")?.toInt()
+        require(dailySeconds != null || openCount != null) { "함께 쓸 하루 시간이나 실행 횟수를 설정해 주세요." }
+        return AppGroup(id, name.trim(), members, dailySeconds, openCount, enabled)
+    }
+
+    companion object {
+        fun from(group: AppGroup) = GroupDraft(group.name, group.members, group.dailyLimitSeconds?.toString().orEmpty(),
+            group.maxOpenCount?.toString().orEmpty(), group.enabled)
+    }
+}
+
+/** Today's combined usage of a group's members. */
+fun MonitorState.groupUsage(group: AppGroup): DailyUsage {
+    val date = clock?.date ?: return DailyUsage()
+    return group.members.keys.map { daily[DailyKey(it, date)] ?: DailyUsage() }
+        .fold(DailyUsage()) { sum, day -> DailyUsage(sum.usageMillis + day.usageMillis, sum.opens + day.opens, sum.blockedAttempts + day.blockedAttempts) }
+}
+
+/**
+ * The rules the monitor evaluates: each app's own rule, plus every member of an enabled group carrying that group.
+ * A member without an enabled rule of its own gets an empty one so the group still tracks and limits it.
+ */
+fun withGroups(rules: Map<String, AppRule>, groups: List<AppGroup>): Map<String, AppRule> {
+    val result = rules.toMutableMap()
+    groups.filter { it.enabled }.forEach { group ->
+        group.members.forEach { (app, name) ->
+            val own = rules[app]?.takeIf { it.enabled } ?: AppRule(app, name)
+            result[app] = own.copy(group = group)
+        }
+    }
+    return result
+}

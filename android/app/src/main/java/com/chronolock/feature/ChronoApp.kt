@@ -59,6 +59,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     val state by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
+    /** 0 creates a new group. */
+    var editGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by rememberSaveable { mutableStateOf<Boolean?>(null) }
     var themeGallery by rememberSaveable { mutableStateOf(false) }
@@ -103,6 +105,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 openThemeGallery = { themeGallery = true },
                 pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
+                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup,
             )
             if (themeGallery) ThemeGallery(state.theme, model::selectTheme) { themeGallery = false }
             }
@@ -113,6 +116,13 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                     onSave = { rule, finished -> model.save(rule, { editPackage = null }, finished) },
                     onDelete = { model.remove(appId) { editPackage = null } },
                     initialRecipe = suggestedRecipe?.let(RuleRecipe::valueOf), strictMinutes = state.strict.delayAt(nowEpoch)) }
+            }
+            editGroupId?.let { id ->
+                val saved = state.groups.firstOrNull { it.id == id }
+                val taken = state.groups.filter { it.id != id }.flatMap { it.members.keys }.toSet()
+                key(id) { GroupEditor(saved, state.apps, taken, state.strict.delayAt(nowEpoch), onDismiss = { editGroupId = null },
+                    onSave = { group, finished -> model.saveGroup(group, { editGroupId = null }, finished) },
+                    onDelete = { model.removeGroup(id) { editGroupId = null } }) }
             }
             confirmFocus?.let { minutes ->
                 val targets = state.rules.filter { it.enabled }
@@ -203,7 +213,7 @@ private val RuleDraftSaver = listSaver<RuleDraft, Any>(
         it.drop(6).chunked(3).map { (start, end, mask) -> ScheduleDraft(start as String, end as String, mask as Int) }, it[5] as Boolean) },
 )
 
-private val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
+internal val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
     save = { listOf(it.hours, it.minutes, it.seconds) },
     restore = { DailyTimeInput(it[0], it[1], it[2]) },
 )
@@ -345,7 +355,7 @@ private fun ScheduleFields(index: Int, value: ScheduleDraft, removable: Boolean,
 
 /** Hours, minutes and seconds for one limit; [tag] prefixes each field's test tag, e.g. "daily-hours". */
 @Composable
-private fun TimeFields(title: String, tag: String, value: DailyTimeInput, enabled: Boolean,
+internal fun TimeFields(title: String, tag: String, value: DailyTimeInput, enabled: Boolean,
     hint: String = "최대 24시간 · 분/초는 0~59\n세 칸을 모두 비우면 이 제한을 사용하지 않습니다.",
     presetMinutes: List<Int> = emptyList(), change: (DailyTimeInput) -> Unit) {
     Text(tr(title), fontWeight = FontWeight.SemiBold)
@@ -373,7 +383,7 @@ private fun TimeFields(title: String, tag: String, value: DailyTimeInput, enable
     Text(tr(hint), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
 }
 private fun DailyTimeInput.toSecondsTextOrNull() = runCatching { toSecondsText() }.getOrNull()
-@Composable private fun NumberField(label: String, value: String, enabled: Boolean = true, changed: (String) -> Unit) {
+@Composable internal fun NumberField(label: String, value: String, enabled: Boolean = true, changed: (String) -> Unit) {
     OutlinedTextField(value = value, onValueChange = { if (it.length <= 10) changed(it) }, label = { Text(label) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, enabled = enabled, modifier = Modifier.fillMaxWidth())
 }
@@ -524,7 +534,7 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
     }
 }
 
-@Composable private fun timeText(epochMillis: Long) =
+@Composable internal fun timeText(epochMillis: Long) =
     dateTimeText(java.time.Instant.ofEpochMilli(epochMillis).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime())
 
 /** Pause state and any change strict mode is holding back for one rule, with the actions that only tighten or pause. */

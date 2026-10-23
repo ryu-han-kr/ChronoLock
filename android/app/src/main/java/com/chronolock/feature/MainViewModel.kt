@@ -11,6 +11,7 @@ import com.chronolock.billing.BillingController
 import com.chronolock.billing.BillingState
 import com.chronolock.blocking.*
 import com.chronolock.data.*
+import com.chronolock.domain.AppGroup
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.StrictSetting
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,6 +47,9 @@ data class MainState(
     val strict: StrictSetting = StrictSetting(),
     /** Relaxing changes strict mode is holding back, one per app. */
     val pending: List<PendingRuleEntity> = emptyList(),
+    /** Apps sharing one limit, and their relaxing changes strict mode is holding back. */
+    val groups: List<AppGroup> = emptyList(),
+    val pendingGroups: List<PendingGroupEntity> = emptyList(),
 ) {
     val adFree get() = billing.adFree
 }
@@ -78,6 +82,8 @@ class MainViewModel @Inject constructor(
         .combine(preferences.onboarded) { data, done -> data.copy(onboarded = done) }
         .combine(preferences.strict) { data, strict -> data.copy(strict = strict) }
         .combine(repository.pending) { data, pending -> data.copy(pending = pending) }
+        .combine(repository.groups) { data, groups -> data.copy(groups = groups.map { it.toDomain() }) }
+        .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -87,7 +93,8 @@ class MainViewModel @Inject constructor(
     val state = combine(local, loaded) { ui, data ->
         ui.copy(rules = data.rules, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
             history = data.history, historyEstimates = data.historyEstimates, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
-            billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending)
+            billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
+            groups = data.groups, pendingGroups = data.pendingGroups)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -143,6 +150,7 @@ class MainViewModel @Inject constructor(
             try {
                 require(environment.hasUsageAccess() && environment.accessibilityEnabled()) { "사용 정보와 접근성 권한을 먼저 켜 주세요." }
                 repository.startFocus(minutes, environment.clock().epochMillis)
+                runCatching { preferences.setFocusMinutes(minutes) }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { showError(if (error is IllegalArgumentException) error.message.orEmpty() else "집중 모드를 시작하지 못했습니다.") }
             finally { local.update { it.copy(focusBusy = false) } }
@@ -187,6 +195,34 @@ class MainViewModel @Inject constructor(
 
     fun cancelPending(packageName: String) = viewModelScope.launch {
         try { repository.cancelPending(packageName) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    fun saveGroup(group: AppGroup, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
+        try {
+            require(group.members.keys.none { it in environment.safetyPackages() })
+            val now = environment.clock().epochMillis
+            if (repository.requestGroup(group, strictDelay(now), now) != null) showError(HELD)
+            onSaved()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) {
+            showError(if (error.message == LocalRepository.GROUP_TAKEN) LocalRepository.GROUP_TAKEN else "묶음을 저장하지 못했습니다. 다시 시도해 주세요.")
+        }
+        finally { onFinished() }
+    }
+
+    fun removeGroup(id: Long, onSaved: () -> Unit) = viewModelScope.launch {
+        try {
+            val now = environment.clock().epochMillis
+            if (repository.requestDeleteGroup(id, strictDelay(now), now) != null) showError(HELD)
+            onSaved()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("묶음을 삭제하지 못했습니다.") }
+    }
+
+    fun cancelPendingGroup(id: Long) = viewModelScope.launch {
+        try { repository.cancelPendingGroup(id) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
