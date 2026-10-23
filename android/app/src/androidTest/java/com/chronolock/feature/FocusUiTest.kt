@@ -120,7 +120,6 @@ class FocusUiTest {
             ui.runOnIdle { assertEquals(theme, selected.value) }
             screenshot("theme-${theme.name.lowercase()}", ui.onRoot())
         }
-        ui.onNodeWithTag("themes-${ThemeCatalog.BASIC}").performScrollToNode(hasTestTag("theme-more"))
         ui.onNodeWithTag("theme-more").performClick()
         ui.onNodeWithTag("theme-gallery").assertIsDisplayed()
         ThemeCatalog.sections.forEach { (_, themes) ->

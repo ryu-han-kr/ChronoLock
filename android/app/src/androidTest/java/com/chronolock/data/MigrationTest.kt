@@ -24,11 +24,11 @@ class MigrationTest {
             db.execSQL("INSERT INTO monitor_checkpoint (id, activePackage, sessionMillis, epochMillis, elapsedMillis, bootId, zone) VALUES (1, 'com.video', 1000, 2000, 3000, 4, 'Asia/Seoul')")
         }
         // Validates every table, column and index against schemas/3.json.
-        helper.runMigrationsAndValidate(name, 6, true, ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4,
-            ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).close()
+        helper.runMigrationsAndValidate(name, 7, true, ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4,
+            ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).close()
 
         val database = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, ChronoDatabase::class.java, name)
-            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).build()
+            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
         try {
             runBlocking {
                 val rule = database.dao().rules().single()
@@ -47,14 +47,14 @@ class MigrationTest {
 
     @Test fun version2_migratesToLatest() {
         helper.createDatabase(name, 2).close()
-        helper.runMigrationsAndValidate(name, 6, true, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).close()
+        helper.runMigrationsAndValidate(name, 7, true, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).close()
     }
 
     @Test fun version3_migratesToLatest_keepingHistory() {
         helper.createDatabase(name, 3).use { db ->
             db.execSQL("INSERT INTO history_daily (packageName, date, appName, usageMillis, opens) VALUES ('com.video', '2026-10-20', 'Video', 1000, 2)")
         }
-        helper.runMigrationsAndValidate(name, 6, true, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).use { db ->
+        helper.runMigrationsAndValidate(name, 7, true, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).use { db ->
             db.query("SELECT usageMillis FROM history_daily").use { assertEquals(true, it.moveToFirst()); assertEquals(1000L, it.getLong(0)) }
         }
     }
@@ -65,9 +65,9 @@ class MigrationTest {
                 "VALUES ('com.video', 'Video', 1, 1380, 420, 127)")
             db.execSQL("INSERT INTO blocking_rules (packageName, appName, dailyLimitSeconds, enabled) VALUES ('com.chat', 'Chat', 600, 1)")
         }
-        helper.runMigrationsAndValidate(name, 6, true, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).close()
+        helper.runMigrationsAndValidate(name, 7, true, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).close()
         val database = Room.databaseBuilder(InstrumentationRegistry.getInstrumentation().targetContext, ChronoDatabase::class.java, name)
-            .addMigrations(ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).build()
+            .addMigrations(ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
         try {
             runBlocking {
                 val rules = database.dao().rules().associateBy { it.packageName }
@@ -87,9 +87,19 @@ class MigrationTest {
         helper.createDatabase(name, 5).use { db ->
             db.execSQL("INSERT INTO blocking_rules (packageName, appName, enabled, schedules) VALUES ('com.video', 'Video', 1, '1380-420-127')")
         }
-        helper.runMigrationsAndValidate(name, 6, true, ChronoDatabase.MIGRATION_5_6).use { db ->
+        helper.runMigrationsAndValidate(name, 7, true, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).use { db ->
             db.query("SELECT schedules FROM blocking_rules").use { assertEquals(true, it.moveToFirst()); assertEquals("1380-420-127", it.getString(0)) }
             db.query("SELECT COUNT(*) FROM app_groups").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
+        }
+    }
+
+    @Test fun version6_migratesToLatest_keepingGroupsAndAddingEmptySites() {
+        helper.createDatabase(name, 6).use { db ->
+            db.execSQL("INSERT INTO app_groups (name, members, enabled) VALUES ('SNS', 'a\tA\nb\tB', 1)")
+        }
+        helper.runMigrationsAndValidate(name, 7, true, ChronoDatabase.MIGRATION_6_7).use { db ->
+            db.query("SELECT name FROM app_groups").use { assertEquals(true, it.moveToFirst()); assertEquals("SNS", it.getString(0)) }
+            db.query("SELECT COUNT(*) FROM blocked_sites").use { it.moveToFirst(); assertEquals(0, it.getInt(0)) }
         }
     }
 }

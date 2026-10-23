@@ -12,6 +12,8 @@ import com.chronolock.billing.BillingState
 import com.chronolock.blocking.*
 import com.chronolock.data.*
 import com.chronolock.domain.AppGroup
+import com.chronolock.domain.BlockedSite
+import com.chronolock.domain.SiteDomains
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.StrictSetting
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,6 +52,9 @@ data class MainState(
     /** Apps sharing one limit, and their relaxing changes strict mode is holding back. */
     val groups: List<AppGroup> = emptyList(),
     val pendingGroups: List<PendingGroupEntity> = emptyList(),
+    /** Websites blocked in browsers, and the unblocking changes strict mode is holding back. */
+    val sites: List<BlockedSite> = emptyList(),
+    val pendingSites: List<com.chronolock.data.PendingSiteEntity> = emptyList(),
 ) {
     val adFree get() = billing.adFree
 }
@@ -85,6 +90,8 @@ class MainViewModel @Inject constructor(
         .combine(repository.pending) { data, pending -> data.copy(pending = pending) }
         .combine(repository.groups) { data, groups -> data.copy(groups = groups.map { it.toDomain() }) }
         .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
+        .combine(repository.sites) { data, sites -> data.copy(sites = sites.map { it.toDomain() }) }
+        .combine(repository.pendingSites) { data, pending -> data.copy(pendingSites = pending) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -95,7 +102,7 @@ class MainViewModel @Inject constructor(
         ui.copy(rules = data.rules, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
             history = data.history, historyEstimates = data.historyEstimates, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
-            groups = data.groups, pendingGroups = data.pendingGroups)
+            groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -224,6 +231,41 @@ class MainViewModel @Inject constructor(
 
     fun cancelPendingGroup(id: Long) = viewModelScope.launch {
         try { repository.cancelPendingGroup(id) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    /** Adds the site typed as [input]; [onAdded] clears the field. */
+    fun addSite(input: String, onAdded: () -> Unit) = viewModelScope.launch {
+        val domain = try { SiteDomains.normalize(input) } catch (invalid: IllegalArgumentException) { showError(SiteDomains.INVALID); return@launch }
+        try {
+            val now = environment.clock().epochMillis
+            repository.requestSite(BlockedSite(domain), strictDelay(now), now)
+            onAdded()
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) {
+            showError(if (error.message == LocalRepository.SITES_FULL) LocalRepository.SITES_FULL else "사이트를 저장하지 못했습니다. 다시 시도해 주세요.")
+        }
+    }
+
+    fun toggleSite(site: BlockedSite, enabled: Boolean) = viewModelScope.launch {
+        try {
+            val now = environment.clock().epochMillis
+            if (repository.requestSite(site.copy(enabled = enabled), strictDelay(now), now) != null) showError(HELD)
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("사이트를 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    fun removeSite(domain: String) = viewModelScope.launch {
+        try {
+            val now = environment.clock().epochMillis
+            if (repository.requestDeleteSite(domain, strictDelay(now), now) != null) showError(HELD)
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("사이트를 삭제하지 못했습니다.") }
+    }
+
+    fun cancelPendingSite(domain: String) = viewModelScope.launch {
+        try { repository.cancelPendingSite(domain) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }

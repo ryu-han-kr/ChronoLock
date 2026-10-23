@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.chronolock.domain.AppGroup
 import com.chronolock.domain.AppRule
+import com.chronolock.domain.BlockedSite
 import com.chronolock.domain.Strictness
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -14,18 +15,20 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Rules, groups and preferences moved between devices. Usage history, focus and pauses stay behind. */
+/** Rules, groups, blocked sites and preferences moved between devices. Usage history, focus and pauses stay behind. */
 data class Backup(
     val rules: List<AppRule>,
     val groups: List<AppGroup>,
     val theme: String? = null,
     val language: String? = null,
     val strictMinutes: Int? = null,
+    val sites: List<BlockedSite> = emptyList(),
 )
 
 object BackupCodec {
     private const val FORMAT = "chronolock-backup"
-    private const val VERSION = 1
+    // Version 2 adds blocked sites; version 1 files restore with none.
+    private const val VERSION = 2
 
     fun encode(backup: Backup, exportedAt: Long): String = JSONObject()
         .put("format", FORMAT).put("version", VERSION).put("exportedAt", exportedAt)
@@ -41,6 +44,7 @@ object BackupCodec {
                 .put("members", JSONArray(group.members.map { (app, name) -> JSONObject().put("packageName", app).put("appName", name) }))
                 .putOpt("dailyLimitSeconds", group.dailyLimitSeconds).putOpt("maxOpenCount", group.maxOpenCount).put("enabled", group.enabled)
         }))
+        .put("sites", JSONArray(backup.sites.map { JSONObject().put("domain", it.domain).put("enabled", it.enabled) }))
         .put("settings", JSONObject().putOpt("theme", backup.theme).putOpt("language", backup.language).putOpt("strictMinutes", backup.strictMinutes))
         .toString(2)
 
@@ -57,12 +61,14 @@ object BackupCodec {
             AppGroup(0, item.getString("name"), item.getJSONArray("members").objects().associate { it.getString("packageName") to it.getString("appName") },
                 item.longOrNull("dailyLimitSeconds"), item.longOrNull("maxOpenCount")?.toInt(), item.optBoolean("enabled", true))
         }
+        val sites = root.optJSONArray("sites").objects().map { BlockedSite(it.getString("domain"), it.optBoolean("enabled", true)) }
+        require(sites.map { it.domain }.toSet().size == sites.size)
         require(rules.map { it.packageName }.toSet().size == rules.size)
         val members = groups.flatMap { it.members.keys }
         require(members.toSet().size == members.size)
         val settings = root.optJSONObject("settings") ?: JSONObject()
         Backup(rules, groups, settings.stringOrNull("theme"), settings.stringOrNull("language"),
-            settings.longOrNull("strictMinutes")?.toInt()?.takeIf { it in Strictness.DELAYS })
+            settings.longOrNull("strictMinutes")?.toInt()?.takeIf { it in Strictness.DELAYS }, sites)
     } catch (invalid: org.json.JSONException) {
         throw IllegalArgumentException(INVALID, invalid)
     } catch (invalid: IllegalArgumentException) {
@@ -85,14 +91,15 @@ class BackupRepository @Inject constructor(
 ) {
     suspend fun export(uri: Uri, nowEpochMillis: Long) {
         val backup = Backup(repository.rules.first().map { it.toDomain() }, repository.groups.first().map { it.toDomain() },
-            preferences.theme.first().name, preferences.language.first().name, preferences.strict.first().delayAt(nowEpochMillis))
+            preferences.theme.first().name, preferences.language.first().name, preferences.strict.first().delayAt(nowEpochMillis),
+            repository.sites.first().map { it.toDomain() })
         val text = BackupCodec.encode(backup, nowEpochMillis)
         withContext(Dispatchers.IO) {
             requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).use { it.write(text.toByteArray()) }
         }
     }
 
-    /** Replaces rules and groups with the backup's; [excluded] apps (safety apps on this device) are left out. */
+    /** Replaces rules, groups and sites with the backup's; [excluded] apps (safety apps on this device) are left out. */
     suspend fun restore(uri: Uri, excluded: Set<String>, nowEpochMillis: Long) {
         val text = withContext(Dispatchers.IO) {
             requireNotNull(context.contentResolver.openInputStream(uri)).use { stream ->
@@ -112,7 +119,7 @@ class BackupRepository @Inject constructor(
         val groups = backup.groups.mapNotNull { group ->
             group.copy(members = group.members.filterKeys { it !in excluded }).takeIf { it.members.size >= 2 }
         }
-        repository.replaceAll(backup.rules.filter { it.packageName !in excluded }, groups, nowEpochMillis)
+        repository.replaceAll(backup.rules.filter { it.packageName !in excluded }, groups, backup.sites, nowEpochMillis)
         backup.theme?.let { preferences.setTheme(AppTheme.fromStored(it)) }
         backup.language?.let { preferences.setLanguage(AppLanguage.fromStored(it)) }
         backup.strictMinutes?.let { minutes -> preferences.updateStrict { it.request(minutes, nowEpochMillis) } }

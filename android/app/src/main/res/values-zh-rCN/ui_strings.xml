@@ -227,7 +227,7 @@
     <string name="last_used">"最后使用 %1$s"</string>
     <string name="accessibility_title">"关于无障碍权限"</string>
     <string name="usage_title">"关于使用情况访问"</string>
-    <string name="accessibility_disclosure">"ChronoLock通过应用切换事件识别当前应用，并根据您设置的限制显示拦截画面。不会读取屏幕文字、密码或输入内容。所选应用的包名及使用和拦截记录仅保存在本机，不会传输。可随时在Android设置中撤销权限。如同意，请在下一设置页面手动启用ChronoLock。"</string>
+    <string name="accessibility_disclosure">"ChronoLock通过应用切换事件识别当前应用，并根据您设置的限制显示拦截画面。使用网站拦截时，仅检查受支持浏览器地址栏中的域名。不会读取其他屏幕文字、密码或输入内容。所选应用的包名、拦截网站列表及使用和拦截记录仅保存在本机，不会传输，也不保存访问过的地址。可随时在Android设置中撤销权限。如同意，请在下一设置页面手动启用ChronoLock。"</string>
     <string name="usage_disclosure">"使用情况访问权限用于读取各应用的使用时长和打开次数。无需限制规则即可记录历史，最多在本机保存30天，不会发送至服务器。仅查看记录不需要无障碍权限。可随时在Android设置中撤销权限。"</string>
     <string name="consent_settings">"同意并打开设置"</string>
     <string name="error_data">"无法读取保存的数据，请重新打开应用。"</string>
@@ -268,7 +268,7 @@
     <string name="overlay_reset">"每日限制会在当地时间午夜重置。"</string>
     <string name="error_settings">"无法打开设置，请在Android设置中手动开启权限。"</string>
     <string name="service_label">"ChronoLock 应用限制"</string>
-    <string name="accessibility_description">"检测所选应用的切换，并在达到设定限制时显示拦截画面。不读取屏幕文字或输入内容，数据仅保存在本机。可随时在Android设置中关闭此服务。"</string>
+    <string name="accessibility_description">"检测所选应用的切换，并在达到设定限制时显示拦截画面。使用网站拦截时，仅检查受支持浏览器地址栏中的域名。不读取其他屏幕文字或输入内容，数据仅保存在本机。可随时在Android设置中关闭此服务。"</string>
     <string name="account_title">"账户"</string>
     <string name="account_signed_in">"已登录：%1$s"</string>
     <string name="account_google">"Google 账户"</string>
@@ -425,4 +425,18 @@
     <plurals name="streak_days">
         <item quantity="other">"已连续 %1$d 天守住限制"</item>
     </plurals>
+    <string name="site_title">"网站拦截"</string>
+    <string name="site_description">"在 Chrome、三星浏览器等浏览器中打开以下网站时显示拦截画面。仅检查地址栏中的域名，不保存浏览记录。"</string>
+    <string name="site_input">"网站地址"</string>
+    <string name="site_add">"添加"</string>
+    <string name="site_remove">"删除"</string>
+    <string name="held_site_delete">"删除网站"</string>
+    <string name="held_site_off">"关闭拦截"</string>
+    <string name="site_browsers">"支持的浏览器：Chrome、三星浏览器、Edge、Firefox、Brave、Opera、Whale、DuckDuckGo、Vivaldi"</string>
+    <string name="site_block_heading">"%1$s\n你决定现在不打开它"</string>
+    <string name="site_block_detail">"此网站在你的拦截列表中。仅检查地址栏中的域名，不保存浏览记录。"</string>
+    <string name="site_invalid">"请输入网站地址，例如 youtube.com。"</string>
+    <string name="sites_full">"最多可拦截 50 个网站。"</string>
+    <string name="site_save_failed">"无法保存网站，请重试。"</string>
+    <string name="site_delete_failed">"无法删除网站。"</string>
 </resources>

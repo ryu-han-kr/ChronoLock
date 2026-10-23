@@ -26,13 +26,14 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     private var theme = AppTheme.DARK
     private var language = AppLanguage.KOREAN
     private var text = UiText(service.forLanguage(language))
-    private var lastShown: Pair<String, RuleDecision>? = null
+    /** Redraws the current message, as a language change needs. */
+    private var lastShown: (() -> Unit)? = null
 
     fun setLanguage(value: AppLanguage) {
         language = value
         text = UiText(service.forLanguage(value))
         val previous = lastShown
-        if (visible && previous != null) { hide(); show(previous.first, previous.second) }
+        if (visible && previous != null) { hide(); previous() }
     }
     val visible get() = root != null
 
@@ -62,10 +63,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         }
     }
 
-    // Each reason is a complete localized resource; only line separators are concatenated.
-    @android.annotation.SuppressLint("SetTextI18n")
-    fun show(appName: String, decision: RuleDecision) {
-        lastShown = appName to decision
+    private fun attach() {
         if (root == null) {
             val content = LinearLayout(service).apply {
                 orientation = LinearLayout.VERTICAL
@@ -95,6 +93,21 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
             root = content
             content.requestFocus()
         }
+    }
+
+    /** A website blocked in a browser; [domain] is the entry the person added, not the page address. */
+    fun showSite(domain: String) {
+        attach()
+        lastShown = { showSite(domain) }
+        heading?.text = text("%1\$s\n지금은 열지 않기로 했어요", domain)
+        detail?.text = text("차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다.")
+    }
+
+    // Each reason is a complete localized resource; only line separators are concatenated.
+    @android.annotation.SuppressLint("SetTextI18n")
+    fun show(appName: String, decision: RuleDecision) {
+        attach()
+        lastShown = { show(appName, decision) }
         heading?.text = text("%1\$s\n지금은 쉬는 시간입니다", appName)
         detail?.text = decision.reasons.joinToString("\n") { reason ->
             when (reason) {

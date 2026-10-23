@@ -19,7 +19,7 @@ class HistoryRepositoryTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val name = "history-test-${UUID.randomUUID()}.db"
     private var db = Room.databaseBuilder(context, ChronoDatabase::class.java, name)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
     private val zone = ZoneId.of("Asia/Seoul")
     private val now = Instant.parse("2026-10-15T03:00:00Z").toEpochMilli()
     private val labels = mapOf("app.a" to "App A", "home" to "Home")
@@ -125,7 +125,7 @@ class HistoryRepositoryTest {
             old.execSQL("INSERT INTO daily_usage_stats VALUES ('app.a', '2026-10-15', 12345, 3, 1)")
             old.version = 2
         }
-        db = Room.databaseBuilder(context, ChronoDatabase::class.java, name).addMigrations(ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6).build()
+        db = Room.databaseBuilder(context, ChronoDatabase::class.java, name).addMigrations(ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7).build()
         assertEquals(3600L, db.dao().rules().single().dailyLimitSeconds)
         assertEquals(12345L, db.dao().daily().single().usageMillis)
         assertTrue(db.historyDao().daily().isEmpty())

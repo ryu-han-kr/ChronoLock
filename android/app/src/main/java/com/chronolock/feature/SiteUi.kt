@@ -1,0 +1,57 @@
+package com.chronolock.feature
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.chronolock.data.PendingSiteEntity
+import com.chronolock.domain.BlockedSite
+
+/** Blocked websites with an address field; a change strict mode holds back shows under its site. */
+@Composable
+internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity>, add: (String, () -> Unit) -> Unit,
+    toggle: (BlockedSite, Boolean) -> Unit, remove: (String) -> Unit, cancelHeld: (String) -> Unit) {
+    var input by rememberSaveable { mutableStateOf("") }
+    val submit = { if (input.isNotBlank()) add(input) { input = "" } }
+    CardBox {
+        Text(tr("Chrome·삼성 인터넷 등 브라우저에서 아래 사이트를 열면 차단 화면을 띄웁니다. 주소창의 도메인만 확인하고 방문 기록은 저장하지 않습니다."),
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.weight(1f).testTag("site-input"),
+                label = { Text(tr("사이트 주소")) }, placeholder = { Text("youtube.com") }, singleLine = true, shape = RoundedCornerShape(16.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { submit() }))
+            Button(onClick = submit, enabled = input.isNotBlank(), modifier = Modifier.testTag("site-add")) { Text(tr("추가")) }
+        }
+        sites.forEach { site ->
+            Row(Modifier.fillMaxWidth().toggleable(value = site.enabled, role = Role.Switch, onValueChange = { toggle(site, it) })
+                .testTag("site-${site.domain}"), verticalAlignment = Alignment.CenterVertically) {
+                Text(site.domain, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = if (site.enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
+                Switch(checked = site.enabled, onCheckedChange = null)
+                TextButton(onClick = { remove(site.domain) }) { Text(tr("삭제")) }
+            }
+            pending.firstOrNull { it.domain == site.domain }?.let { held ->
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(tr("엄격 모드: %1\$s에 %2\$s 적용 예정", timeText(held.applyAtEpochMillis), if (held.remove) tr("사이트 삭제") else tr("차단 끄기")),
+                        Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = { cancelHeld(site.domain) }) { Text(tr("취소")) }
+                }
+            }
+        }
+        Text(tr("지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+    }
+}
