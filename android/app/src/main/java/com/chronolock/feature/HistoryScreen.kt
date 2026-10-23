@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.chronolock.domain.RuleRecipe
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -259,13 +260,36 @@ internal fun YearCalendar(days: List<HistoryYearEntity>, today: LocalDate) {
             style = MaterialTheme.typography.bodySmall)
         val scroll = rememberScrollState()
         LaunchedEffect(scroll.maxValue) { scroll.scrollTo(scroll.maxValue) }
-        Row(Modifier.horizontalScroll(scroll).testTag("year-calendar"), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            for (week in 0 until weeks) Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                for (weekday in 0..6) {
-                    val day = first.plusDays(week * 7L + weekday)
-                    if (day > today) Spacer(Modifier.size(12.dp))
-                    else Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(shades[level(totals[day.toString()] ?: 0)])
-                        .clickable { picked = day.toString() }.testTag("year-$day"))
+        val locale = uiText().locale
+        val tiny = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 12.sp)
+        val faint = MaterialTheme.colorScheme.onSurfaceVariant
+        // A month name over the week its first day falls in (with the year in January); the first column is named too
+        // unless the next month starts within two weeks and the names would overlap.
+        val monthStarts = (0 until weeks).filter { week -> (0..6).any { first.plusDays(week * 7L + it).let { day -> day.dayOfMonth == 1 && day <= today } } }
+        val labelled = monthStarts + listOfNotNull(0.takeIf { (monthStarts.firstOrNull() ?: weeks) >= 3 })
+        Row {
+            // Weekday names stay put while the weeks scroll; every other row keeps them readable at this size.
+            Column(Modifier.padding(top = 15.dp, end = 4.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                for (weekday in 0..6) Box(Modifier.height(12.dp), contentAlignment = Alignment.CenterStart) {
+                    if (weekday % 2 == 1) Text(first.plusDays(weekday.toLong()).dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, locale),
+                        style = tiny, color = faint, maxLines = 1)
+                }
+            }
+            Row(Modifier.horizontalScroll(scroll).testTag("year-calendar"), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                for (week in 0 until weeks) Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Box(Modifier.size(12.dp)) {
+                        if (week in labelled) {
+                            val day = (0..6).map { first.plusDays(week * 7L + it) }.firstOrNull { it.dayOfMonth == 1 } ?: first.plusDays(week * 7L)
+                            Text(dateText(day, if (day.monthValue == 1) "yMMM" else "MMM"), style = tiny, color = faint, maxLines = 1, softWrap = false,
+                                modifier = Modifier.wrapContentWidth(Alignment.Start, unbounded = true).testTag("year-month-${day.year}-${day.monthValue}"))
+                        }
+                    }
+                    for (weekday in 0..6) {
+                        val day = first.plusDays(week * 7L + weekday)
+                        if (day > today) Spacer(Modifier.size(12.dp))
+                        else Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(shades[level(totals[day.toString()] ?: 0)])
+                            .clickable { picked = day.toString() }.testTag("year-$day"))
+                    }
                 }
             }
         }

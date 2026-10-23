@@ -4,12 +4,18 @@
 
 ## 0.8.4 (versionCode 17) — 미업로드
 
-AAB: `release/chronolock-0.8.4-vc17.aab`. 0.8.3 + 홈 이동 이벤트 누락 보정(PR #39). 0.8.3 검토가 끝나기 전에 올리면 0.8.3 노트와 합쳐 쓴다.
+AAB: `release/chronolock-0.8.4-vc17.aab`. 0.8.3 + 홈 이동 이벤트 누락 보정(PR #39) + 나만의 테마 색상환·효과 조합·움직이는 테마·1년 기록 월/요일. 0.8.3 검토가 끝나기 전에 올리면 0.8.3 노트와 합쳐 쓴다.
 
 ### ko
+- 나만의 테마: 색상환을 끌어 색을 고르고, 효과를 여러 개 섞을 수 있어요.
+- 무지개·오로라처럼 천천히 움직이는 테마를 추가했어요.
+- 1년 기록에 월과 요일을 표시해요.
 - 홈으로 나간 뒤에도 앱 사용 시간이 계속 늘어날 수 있던 문제를 고쳤어요.
 
 ### en
+- My theme: drag on a colour wheel and combine several effects.
+- New moving themes such as rainbow and aurora.
+- The year view now shows months and weekdays.
 - Fixed usage time that could keep counting after going back to the home screen.
 
 ## 0.8.3 (versionCode 16) — 2026-10-23 내부·비공개 테스트 업로드(사용자)

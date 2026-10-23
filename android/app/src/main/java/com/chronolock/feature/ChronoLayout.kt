@@ -109,7 +109,7 @@ internal fun ChronoScreen(
                     app.packageName.contains(query.trim(), ignoreCase = true))
         }, sort, usage)
     }
-    BoxWithConstraints(Modifier.fillMaxSize().background(state.theme.backgroundBrush())) {
+    BoxWithConstraints(Modifier.fillMaxSize().themeBackground(state.theme)) {
         val expanded = maxWidth >= 840.dp
         Scaffold(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground, snackbarHost = { SnackbarHost(snackbar) }, bottomBar = { Column {
             banner?.invoke()

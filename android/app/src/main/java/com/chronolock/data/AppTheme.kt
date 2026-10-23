@@ -22,13 +22,19 @@ class AppTheme(
     val gradientEnd: Long? = null,
     /** Catalog palettes are reserved for a future paid tier. Selection is not gated yet. */
     val premium: Boolean = false,
+    /** Colours between [background] and [gradientEnd], top to bottom, for a many-colour page such as a rainbow. */
+    val stops: List<Long> = emptyList(),
+    /** The page gradient slowly flows instead of standing still. */
+    val live: Boolean = false,
 ) {
     val title: String get() = label.joinToString(" ")
     /** The words shown on a picker tile: everything after the family word, or the whole label for built-ins. */
     val shortLabel: List<String> get() = if (label.size > 1) label.drop(1) else label
+    /** Every page colour top to bottom; text is readable on each. */
+    val pageColors: List<Long> get() = listOf(background) + stops + listOfNotNull(gradientEnd)
 
     fun copy(label: List<String> = this.label, premium: Boolean = this.premium): AppTheme =
-        AppTheme(name, label, description, isDark, background, surface, primary, onPrimary, text, muted, gradientEnd, premium)
+        AppTheme(name, label, description, isDark, background, surface, primary, onPrimary, text, muted, gradientEnd, premium, stops, live)
     override fun equals(other: Any?) = other is AppTheme && other.name == name
     override fun hashCode() = name.hashCode()
     override fun toString() = name
@@ -52,6 +58,6 @@ class AppTheme(
 
         /** A stored name: a listed palette, a custom one rebuilt from its colour and effect, or [DARK]. */
         fun fromStored(value: String?): AppTheme = values().firstOrNull { it.name == value }
-            ?: ThemeCatalog.parseCustom(value)?.let { (rgb, effect) -> ThemeCatalog.custom(rgb, effect) } ?: DARK
+            ?: ThemeCatalog.parseCustom(value)?.let { (rgb, effects) -> ThemeCatalog.custom(rgb, effects) } ?: DARK
     }
 }

@@ -61,6 +61,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.chronolock.data.AppTheme
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.gestures.horizontalDrag
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.TileMode
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 
 /** Pretendard Std (OFL): one static file per weight, since resource fonts are cached per resId and cannot carry a weight axis. */
 internal val Pretendard = FontFamily(
@@ -135,7 +162,25 @@ private fun Context.activity(): Activity? = when (this) {
 
 /** Flat colour or the top-to-bottom gradient a palette asks for; drawn behind every screen and the block overlay. */
 internal fun AppTheme.backgroundBrush(): Brush =
-    gradientEnd?.let { Brush.verticalGradient(listOf(Color(background), Color(it))) } ?: SolidColor(Color(background))
+    if (pageColors.size > 1) Brush.verticalGradient(pageColors.map { Color(it) }) else SolidColor(Color(background))
+
+/**
+ * The page behind a screen. A live palette's colours flow down the page, one cycle every 24 seconds; the phase is read
+ * while drawing only, so the screen above is not recomposed. Tests and the system animation setting stop the motion.
+ */
+@Composable
+internal fun Modifier.themeBackground(theme: AppTheme): Modifier {
+    if (!theme.live) return background(theme.backgroundBrush())
+    val colors = remember(theme) { theme.pageColors.map { Color(it) } }
+    val phase by rememberInfiniteTransition(label = "theme-flow")
+        .animateFloat(0f, 1f, infiniteRepeatable(tween(24_000, easing = LinearEasing)), label = "theme-flow-phase")
+    return drawBehind {
+        // A mirrored gradient repeats every two page heights, so moving it by that much loops without a seam.
+        val span = size.height.coerceAtLeast(1f)
+        val shift = phase * 2 * span
+        drawRect(Brush.linearGradient(colors, Offset(0f, shift - span), Offset(0f, shift), TileMode.Mirror))
+    }
+}
 
 /** Settings card: the built-in palettes, the current pick when it comes from the catalog, and a tile that opens the gallery. */
 @Composable
@@ -181,7 +226,7 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favori
     BackHandler(onBack = close)
     Box(Modifier.fillMaxSize()) {
         Surface(Modifier.fillMaxSize(), color = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
-            Column(Modifier.fillMaxSize().background(selected.backgroundBrush()).systemBarsPadding().testTag("theme-gallery")) {
+            Column(Modifier.fillMaxSize().themeBackground(selected).systemBarsPadding().testTag("theme-gallery")) {
                 val pinnedThemes = AppTheme.values().filter { it.name in favorites }
                 val families = listOfNotNull(pinnedThemes.takeIf { it.isNotEmpty() }?.let { "찜한 테마" to it }, ThemeCatalog.BASIC to AppTheme.builtIn) +
                     ThemeCatalog.sections
@@ -233,50 +278,155 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favori
     }
 }
 
-/** Any colour 000000-FFFFFF, by code or R/G/B sliders, with one of the [ThemeEffect] looks; previews before applying. */
+/**
+ * Any colour 000000-FFFFFF, picked on a hue/saturation wheel with a brightness bar or typed as a code or R/G/B,
+ * with effects of different [ThemeEffect.Group]s combined. The preview follows the finger while it drags.
+ */
 @Composable
 private fun CustomThemeCard(selected: AppTheme, apply: (AppTheme) -> Unit) {
     val start = remember { ThemeCatalog.parseCustom(selected.name) }
-    var rgb by rememberSaveable { mutableIntStateOf(start?.first ?: 0x4F7CAC) }
-    var hex by rememberSaveable { mutableStateOf("%06X".format(rgb)) }
-    var effectName by rememberSaveable { mutableStateOf(start?.second?.name ?: ThemeEffect.PASTEL.name) }
-    val effect = ThemeEffect.valueOf(effectName)
-    val preview = remember(rgb, effect) { ThemeCatalog.custom(rgb, effect) }
+    // Hue, saturation and brightness are kept apart so a black or grey pick keeps its place on the wheel.
+    val startHsv = remember { FloatArray(3).also { android.graphics.Color.colorToHSV(start?.first ?: 0x4F7CAC, it) } }
+    var hue by rememberSaveable { mutableFloatStateOf(startHsv[0]) }
+    var saturation by rememberSaveable { mutableFloatStateOf(startHsv[1]) }
+    var brightness by rememberSaveable { mutableFloatStateOf(startHsv[2]) }
+    val rgb = android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation, brightness)) and 0xFFFFFF
+    fun setRgb(value: Int) {
+        val hsv = FloatArray(3).also { android.graphics.Color.colorToHSV(value, it) }
+        // Grey and black have no hue (and black no saturation); keep the wheel where it was.
+        if (hsv[1] > 0f && hsv[2] > 0f) hue = hsv[0]
+        if (hsv[2] > 0f) saturation = hsv[1]
+        brightness = hsv[2]
+    }
+    var effectNames by rememberSaveable { mutableStateOf((start?.second ?: setOf(ThemeEffect.PASTEL)).map { it.name }) }
+    val effects = effectNames.map { ThemeEffect.valueOf(it) }.toSet()
+    val preview = remember(rgb, effects) { ThemeCatalog.custom(rgb, effects) }
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(14.dp)
-        .testTag("theme-custom"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        .testTag("theme-custom"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(tr("나만의 테마"), style = MaterialTheme.typography.titleSmall)
-        Text(tr("색상 코드나 R·G·B로 색을 고르고 효과를 골라 적용하세요."), style = MaterialTheme.typography.bodySmall,
+        Text(tr("색상환을 눌러 끌거나 코드·R·G·B를 넣고, 종류가 다른 효과는 함께 골라 적용하세요."), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF000000L or rgb.toLong()))
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)))
-            OutlinedTextField(value = hex, onValueChange = { value ->
-                    hex = value.uppercase().filter { it in "0123456789ABCDEF" }.take(6)
-                    if (hex.length == 6) rgb = hex.toInt(16)
-                }, modifier = Modifier.weight(1f).testTag("custom-hex"), label = { Text(tr("색상 코드")) }, prefix = { Text("#") },
-                singleLine = true, isError = hex.length != 6)
-        }
-        listOf("R" to 16, "G" to 8, "B" to 0).forEach { (channel, shift) ->
-            val value = (rgb shr shift) and 255
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(channel, Modifier.width(20.dp), style = MaterialTheme.typography.labelLarge)
-                Slider(value = value.toFloat(), onValueChange = { v ->
-                    rgb = (rgb and (0xFF shl shift).inv()) or (v.roundToInt().coerceIn(0, 255) shl shift)
-                    hex = "%06X".format(rgb)
-                }, valueRange = 0f..255f, modifier = Modifier.weight(1f).testTag("custom-$channel"))
-                Text("$value", Modifier.width(36.dp), style = MaterialTheme.typography.labelMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            ColorWheel(hue, saturation, brightness, { h, s -> hue = h; saturation = s; if (brightness < .05f) brightness = 1f },
+                // Not filled: a weighted child's width is a minimum that would override the cap on a tablet.
+                Modifier.weight(1f, fill = false).widthIn(max = 240.dp).testTag("custom-wheel"))
+            // The page preview sits beside the wheel so it stays visible under a dragging finger.
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFF000000L or rgb.toLong()))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)))
+                ThemeTile(preview, chosen = preview == selected, tag = "custom-preview") { apply(preview) }
             }
         }
+        Text(tr("밝기"), style = MaterialTheme.typography.labelLarge)
+        BrightnessBar(hue, saturation, brightness, { brightness = it }, Modifier.fillMaxWidth().testTag("custom-brightness"))
+        ColorFields(rgb, ::setRgb)
         Text(tr("효과"), style = MaterialTheme.typography.labelLarge)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ThemeEffect.entries.forEach { option ->
-                FilterChip(selected = option == effect, onClick = { effectName = option.name }, label = { Text(tr(option.word)) },
-                    modifier = Modifier.testTag("effect-${option.name}"))
+        listOf("바탕" to ThemeEffect.Group.PAGE, "그라데이션" to ThemeEffect.Group.GRADIENT, "포인트" to ThemeEffect.Group.ACCENT,
+            "움직임" to ThemeEffect.Group.MOTION).forEach { (title, group) ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(tr(title), Modifier.width(76.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ThemeEffect.entries.filter { it.group == group }.forEach { option ->
+                        FilterChip(selected = option in effects, onClick = { effectNames = ThemeEffect.toggle(effects, option).map { it.name } },
+                            label = { Text(tr(option.word)) }, modifier = Modifier.testTag("effect-${option.name}"))
+                    }
+                }
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ThemeTile(preview, chosen = preview == selected, tag = "custom-preview") { apply(preview) }
-            Button(onClick = { apply(preview) }, modifier = Modifier.testTag("custom-apply")) { Text(tr("적용")) }
+        Button(onClick = { apply(preview) }, modifier = Modifier.align(Alignment.End).testTag("custom-apply")) { Text(tr("적용")) }
+    }
+}
+
+/** Hue around the circle, saturation from the centre out; touching or dragging anywhere moves the picker there at once. */
+@Composable
+private fun ColorWheel(hue: Float, saturation: Float, brightness: Float, pick: (Float, Float) -> Unit, modifier: Modifier) {
+    val onPick by rememberUpdatedState(pick)
+    var touch by remember { mutableStateOf<Offset?>(null) }
+    val rainbow = remember { listOf(0f, 60f, 120f, 180f, 240f, 300f, 0f).map { Color.hsv(it, 1f, 1f) } }
+    val current = Color.hsv(hue, saturation, brightness)
+    Canvas(modifier.aspectRatio(1f).pointerInput(Unit) {
+        fun at(position: Offset) {
+            val radius = size.width.coerceAtMost(size.height) / 2f
+            val delta = position - Offset(size.width / 2f, size.height / 2f)
+            val angle = (Math.toDegrees(atan2(delta.y, delta.x).toDouble()).toFloat() + 360f) % 360f
+            onPick(angle, (delta.getDistance() / radius).coerceIn(0f, 1f))
+        }
+        awaitEachGesture {
+            val down = awaitFirstDown()
+            down.consume()
+            touch = down.position
+            at(down.position)
+            drag(down.id) { change -> change.consume(); touch = change.position; at(change.position) }
+            touch = null
+        }
+    }) {
+        val radius = size.minDimension / 2f
+        drawCircle(Brush.sweepGradient(rainbow, center), radius)
+        drawCircle(Brush.radialGradient(listOf(Color.White, Color.White.copy(alpha = 0f)), center, radius), radius)
+        if (brightness < 1f) drawCircle(Color.Black.copy(alpha = 1f - brightness), radius)
+        val angle = Math.toRadians(hue.toDouble())
+        val marker = center + Offset((cos(angle) * saturation * radius).toFloat(), (sin(angle) * saturation * radius).toFloat())
+        drawCircle(Color.Black.copy(alpha = .35f), 12.dp.toPx(), marker, style = Stroke(1.dp.toPx()))
+        drawCircle(Color.White, 11.dp.toPx(), marker, style = Stroke(3.dp.toPx()))
+        drawCircle(current, 9.5f.dp.toPx(), marker)
+        // A loupe above the finger shows the colour the finger itself covers.
+        if (touch != null) {
+            val loupe = Offset(marker.x, (marker.y - 44.dp.toPx()).coerceAtLeast(-radius * .2f))
+            drawCircle(Color.Black.copy(alpha = .35f), 23.dp.toPx(), loupe, style = Stroke(1.dp.toPx()))
+            drawCircle(Color.White, 22.dp.toPx(), loupe)
+            drawCircle(current, 19.dp.toPx(), loupe)
+        }
+    }
+}
+
+/** Black to the wheel's colour; touching or dragging sets the brightness at once. */
+@Composable
+private fun BrightnessBar(hue: Float, saturation: Float, brightness: Float, change: (Float) -> Unit, modifier: Modifier) {
+    val onChange by rememberUpdatedState(change)
+    val full = Color.hsv(hue, saturation, 1f)
+    Canvas(modifier.height(28.dp).pointerInput(Unit) {
+        fun at(x: Float) = onChange((x / size.width).coerceIn(0f, 1f))
+        awaitEachGesture {
+            val down = awaitFirstDown()
+            down.consume()
+            at(down.position.x)
+            horizontalDrag(down.id) { change -> change.consume(); at(change.position.x) }
+        }
+    }) {
+        val bar = size.height * .5f
+        val top = (size.height - bar) / 2f
+        drawRoundRect(Brush.horizontalGradient(listOf(Color.Black, full)), Offset(0f, top), Size(size.width, bar), CornerRadius(bar / 2f))
+        val x = (brightness * size.width).coerceIn(size.height / 2f, size.width - size.height / 2f)
+        val thumb = Offset(x, size.height / 2f)
+        drawCircle(Color.Black.copy(alpha = .35f), size.height / 2f, thumb, style = Stroke(1.dp.toPx()))
+        drawCircle(Color.White, size.height / 2f - 1.dp.toPx(), thumb)
+        drawCircle(Color.hsv(hue, saturation, brightness), size.height / 2f - 4.dp.toPx(), thumb)
+    }
+}
+
+/** The colour as a code and as R, G and B numbers; typing a complete value moves the wheel. */
+@Composable
+private fun ColorFields(rgb: Int, set: (Int) -> Unit) {
+    // Done closes the keyboard so the wheel and preview above are not pushed out of view.
+    val focus = LocalFocusManager.current
+    val done = KeyboardActions(onDone = { focus.clearFocus() })
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Keyed on the colour so dragging the wheel rewrites the text, while a half-typed value stays as typed.
+        var hex by remember(rgb) { mutableStateOf("%06X".format(rgb)) }
+        OutlinedTextField(value = hex, onValueChange = { value ->
+                hex = value.uppercase().filter { it in "0123456789ABCDEF" }.take(6)
+                if (hex.length == 6) set(hex.toInt(16))
+            }, modifier = Modifier.weight(1.6f).testTag("custom-hex"), label = { Text(tr("색상 코드")) }, prefix = { Text("#") },
+            singleLine = true, isError = hex.length != 6, textStyle = MaterialTheme.typography.bodyMedium,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = done)
+        listOf("R" to 16, "G" to 8, "B" to 0).forEach { (channel, shift) ->
+            var text by remember(rgb) { mutableStateOf("${(rgb shr shift) and 255}") }
+            OutlinedTextField(value = text, onValueChange = { value ->
+                    text = value.filter { it.isDigit() }.take(3)
+                    text.toIntOrNull()?.takeIf { it <= 255 }?.let { set((rgb and (0xFF shl shift).inv()) or (it shl shift)) }
+                }, modifier = Modifier.weight(1f).testTag("custom-$channel"), label = { Text(channel) }, singleLine = true,
+                isError = text.toIntOrNull()?.let { it > 255 } ?: true, textStyle = MaterialTheme.typography.bodyMedium,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done), keyboardActions = done)
         }
     }
 }
@@ -288,7 +438,7 @@ private fun ThemeTile(theme: AppTheme, chosen: Boolean, tag: String = "theme-${t
     val shape = RoundedCornerShape(16.dp)
     Column(Modifier.width(76.dp).clip(RoundedCornerShape(12.dp)).testTag(tag).selectable(selected = chosen, role = Role.RadioButton, onClick = onClick).padding(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(Modifier.size(64.dp).clip(shape).background(theme.backgroundBrush())
+        Box(Modifier.size(64.dp).clip(shape).themeBackground(theme)
             .border(if (chosen) 2.5.dp else 1.dp, if (chosen) MaterialTheme.colorScheme.primary else Color(theme.muted).copy(alpha = .35f), shape)
             .padding(12.dp)) {
             Box(Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)).background(Color(theme.surface)).padding(6.dp)) {

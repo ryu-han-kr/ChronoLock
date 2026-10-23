@@ -51,7 +51,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
 
     private fun themeBackground() = android.graphics.drawable.GradientDrawable(
         android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-        intArrayOf(theme.background.toInt(), (theme.gradientEnd ?: theme.background).toInt()))
+        (theme.pageColors.takeIf { it.size > 1 } ?: listOf(theme.background, theme.background)).map { it.toInt() }.toIntArray())
 
     private fun applyTheme(content: LinearLayout) {
         content.background = themeBackground()
