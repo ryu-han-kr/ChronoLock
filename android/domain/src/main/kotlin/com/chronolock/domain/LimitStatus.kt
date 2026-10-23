@@ -14,7 +14,8 @@ fun MonitorState.remainingDailyMillis(rule: AppRule): Long? {
  */
 fun MonitorState.limitWarning(rules: Map<String, AppRule>, warned: Set<DailyKey>, thresholdMillis: Long = 5 * 60_000L): DailyKey? {
     val target = observedPackage ?: return null
-    val rule = rules[target]?.takeIf { it.enabled && !decision.denied } ?: return null
+    val now = clock?.epochMillis ?: return null
+    val rule = rules[target]?.takeIf { it.enabled && !it.pausedAt(now) && !decision.denied } ?: return null
     val limitMillis = (rule.dailyLimitSeconds ?: return null) * 1000
     if (limitMillis <= thresholdMillis) return null
     val remaining = remainingDailyMillis(rule) ?: return null

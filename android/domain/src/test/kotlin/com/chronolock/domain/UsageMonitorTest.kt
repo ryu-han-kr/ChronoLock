@@ -298,7 +298,7 @@ class UsageMonitorTest {
 
     @Test fun scheduleStartsAndEnds_whileAppRemainsForeground() {
         val start = Instant.ofEpochMilli(origin + 2000).atZone(zone)
-        val rules = mapOf(app to AppRule(app, "Test", schedule = Schedule(start.toLocalTime(), start.toLocalTime().plusSeconds(2), setOf(start.dayOfWeek))))
+        val rules = mapOf(app to AppRule(app, "Test", schedules = listOf(Schedule(start.toLocalTime(), start.toLocalTime().plusSeconds(2), setOf(start.dayOfWeek)))))
         var state = monitor.foreground(MonitorState(), app, clock(), rules).state
         assertFalse(state.decision.denied)
         state = monitor.tick(state, clock(2000), rules).state

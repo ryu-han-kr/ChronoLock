@@ -41,7 +41,7 @@ class LocalRepositoryTest {
     }
 
     private fun openDatabase() = Room.databaseBuilder(context, ChronoDatabase::class.java, databaseName)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5).build()
 
     @Test fun databaseReopen_restoresRuleCountersAndCooldown() = runBlocking {
         val rule = AppRule("test.app", "Test", dailyLimitSeconds = 60, maxOpenCount = 3, cooldownSeconds = 30)
@@ -134,7 +134,8 @@ class LocalRepositoryTest {
 
     @Test fun advancedRule_roundTripsAcrossDatabaseReopen() = runBlocking {
         val rule = AppRule("test.app", "Test", dailyLimitSeconds = 1200, maxOpenCount = 5, cooldownSeconds = 600,
-            sessionLimitSeconds = 300, schedule = Schedule(LocalTime.of(23, 0), LocalTime.of(7, 0), setOf(DayOfWeek.FRIDAY)), enabled = false)
+            sessionLimitSeconds = 300, schedules = listOf(Schedule(LocalTime.of(23, 0), LocalTime.of(7, 0), setOf(DayOfWeek.FRIDAY)),
+                Schedule(LocalTime.of(9, 30), LocalTime.of(18, 0), setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY))), enabled = false)
         LocalRepository(database).saveRule(rule)
         database.close()
         database = openDatabase()
@@ -220,5 +221,63 @@ class LocalRepositoryTest {
         assertFalse(database.dao().checkpoint()!!.wasBlocked)
         LocalRepository(database).saveRule(restoredRule.copy(sessionLimitSeconds = 5))
         assertEquals(5L, database.dao().rules().single().sessionLimitSeconds)
+    }
+
+    @Test fun strictMode_holdsRelaxingChangesUntilTheDelayThenAppliesThemOnTick() = runBlocking {
+        val repository = LocalRepository(database)
+        val rule = AppRule("test.app", "Test", maxOpenCount = 1)
+        repository.saveRule(rule)
+        val now = origin
+        // Tightening applies at once even in strict mode.
+        assertNull(repository.requestRule(rule.copy(maxOpenCount = 1, dailyLimitSeconds = 60), 600_000, now))
+        assertEquals(60L, database.dao().rules().single().dailyLimitSeconds)
+        // Turning the rule off waits.
+        assertEquals(now + 600_000, repository.requestRule(rule.copy(enabled = false), 600_000, now))
+        assertTrue(database.dao().rules().single().enabled)
+        repository.foreground("test.app", clock(0, now + 1000))
+        assertTrue(database.dao().rules().single().enabled)
+        repository.tick(clock(600_000, now + 600_000))
+        assertFalse(database.dao().rules().single().enabled)
+        assertTrue(database.dao().duePending(Long.MAX_VALUE).isEmpty())
+    }
+
+    @Test fun strictMode_deleteWaits_andCancelKeepsTheRule() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", maxOpenCount = 1))
+        assertNotNull(repository.requestDelete("test.app", 600_000, origin))
+        repository.cancelPending("test.app")
+        repository.applyDuePending(origin + 700_000)
+        assertEquals(1, database.dao().rules().size)
+        assertNotNull(repository.requestDelete("test.app", 600_000, origin))
+        repository.applyDuePending(origin + 600_000)
+        assertTrue(database.dao().rules().isEmpty())
+    }
+
+    @Test fun pause_allowsTheAppUntilItEnds_andEditsKeepThePause() = runBlocking {
+        val repository = LocalRepository(database)
+        val zone = ZoneId.of("Asia/Seoul")
+        repository.saveRule(AppRule("test.app", "Test", maxOpenCount = 1))
+        repository.foreground("test.app", clock(0))
+        repository.foreground(null, clock(1000))
+        assertTrue(repository.foreground("test.app", clock(2000)).decision.denied)
+        assertNull(repository.requestPause("test.app", 10, 0, origin + 2500, zone))
+        repository.foreground(null, clock(2600))
+        assertFalse(repository.foreground("test.app", clock(3000)).decision.denied)
+        // Saving from the editor keeps the running pause.
+        repository.saveRule(AppRule("test.app", "Test", maxOpenCount = 2))
+        assertEquals(origin + 2500 + 600_000, database.dao().rules().single().pausedUntilEpochMillis)
+        repository.resume("test.app", origin + 4000)
+        assertNull(database.dao().rules().single().pausedUntilEpochMillis)
+    }
+
+    @Test fun strictPause_startsAfterTheDelay() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", maxOpenCount = 1))
+        val applyAt = repository.requestPause("test.app", null, 600_000, origin, ZoneId.of("Asia/Seoul"))
+        assertEquals(origin + 600_000, applyAt)
+        assertNull(database.dao().rules().single().pausedUntilEpochMillis)
+        repository.applyDuePending(origin + 600_000)
+        // Until midnight Seoul time after the delay: 2026-10-08 18:10 KST -> 2026-10-09 00:00 KST.
+        assertEquals(Instant.parse("2026-10-08T15:00:00Z").toEpochMilli(), database.dao().rules().single().pausedUntilEpochMillis)
     }
 }

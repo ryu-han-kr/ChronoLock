@@ -100,7 +100,7 @@ class FocusUiTest {
         ui.onNodeWithText("예약할 요일을 하나 이상 선택해 주세요.").assertExists()
         ui.onNodeWithText("수").performScrollTo().performClick()
         ui.onNodeWithText("저장").performClick()
-        ui.runOnIdle { assertEquals(setOf(java.time.DayOfWeek.WEDNESDAY), saved?.schedule?.days) }
+        ui.runOnIdle { assertEquals(setOf(java.time.DayOfWeek.WEDNESDAY), saved?.schedules?.single()?.days) }
     }
 
     @Test fun themePicker_switchesEveryTheme() {
@@ -173,9 +173,9 @@ class FocusUiTest {
         ui.onNodeWithText("취침 시간 지키기").performScrollTo().performClick()
         ui.onNodeWithText("저장").performClick()
         ui.runOnIdle {
-            assertEquals("23:00", saved?.schedule?.start.toString())
-            assertEquals("07:00", saved?.schedule?.end.toString())
-            assertEquals(7, saved?.schedule?.days?.size)
+            assertEquals("23:00", saved?.schedules?.single()?.start.toString())
+            assertEquals("07:00", saved?.schedules?.single()?.end.toString())
+            assertEquals(7, saved?.schedules?.single()?.days?.size)
             assertNull(saved?.dailyLimitSeconds)
         }
     }

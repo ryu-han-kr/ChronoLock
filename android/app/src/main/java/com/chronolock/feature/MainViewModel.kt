@@ -12,7 +12,7 @@ import com.chronolock.billing.BillingState
 import com.chronolock.blocking.*
 import com.chronolock.data.*
 import com.chronolock.domain.AppRule
-import com.chronolock.domain.RuleRepository
+import com.chronolock.domain.StrictSetting
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.*
@@ -43,6 +43,9 @@ data class MainState(
     val billing: BillingState = BillingState(),
     /** Null until the stored flag is read, so the welcome screen never flashes for returning users. */
     val onboarded: Boolean? = null,
+    val strict: StrictSetting = StrictSetting(),
+    /** Relaxing changes strict mode is holding back, one per app. */
+    val pending: List<PendingRuleEntity> = emptyList(),
 ) {
     val adFree get() = billing.adFree
 }
@@ -50,7 +53,6 @@ data class MainState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: LocalRepository,
-    private val ruleRepository: RuleRepository,
     private val environment: AndroidEnvironment,
     private val preferences: Preferences,
     private val historyRepository: HistoryRepository,
@@ -74,6 +76,8 @@ class MainViewModel @Inject constructor(
         .combine(ads.state) { data, ad -> data.copy(ads = ad) }
         .combine(billing.state) { data, store -> data.copy(billing = store) }
         .combine(preferences.onboarded) { data, done -> data.copy(onboarded = done) }
+        .combine(preferences.strict) { data, strict -> data.copy(strict = strict) }
+        .combine(repository.pending) { data, pending -> data.copy(pending = pending) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -83,13 +87,15 @@ class MainViewModel @Inject constructor(
     val state = combine(local, loaded) { ui, data ->
         ui.copy(rules = data.rules, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
             history = data.history, historyEstimates = data.historyEstimates, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
-            billing = data.billing, onboarded = data.onboarded)
+            billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
         local.update { it.copy(permissions = PermissionState(environment.hasUsageAccess(), environment.accessibilityEnabled())) }
         refreshHistory()
         viewModelScope.launch {
+            runCatching { repository.applyDuePending(environment.clock().epochMillis) }
+                .onFailure { android.util.Log.w("ChronoLock", "Held changes could not be applied", it) }
             runCatching { environment.installedApps() }
                 .onSuccess { apps -> local.update { it.copy(apps = apps, loading = false) } }
                 .onFailure { local.update { it.copy(error = "앱 목록을 읽지 못했습니다.", loading = false) } }
@@ -122,7 +128,8 @@ class MainViewModel @Inject constructor(
     fun save(rule: AppRule, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
         try {
             require(rule.packageName !in environment.safetyPackages())
-            ruleRepository.saveRule(rule)
+            val now = environment.clock().epochMillis
+            if (repository.requestRule(rule, strictDelay(now), now) != null) showError(HELD)
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("제한을 저장하지 못했습니다. 다시 시도해 주세요.") }
@@ -144,6 +151,7 @@ class MainViewModel @Inject constructor(
 
     fun stopFocus() {
         if (local.value.focusBusy) return
+        if (state.value.strict.delayAt(System.currentTimeMillis()) > 0) { showError("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."); return }
         local.update { it.copy(focusBusy = true) }
         viewModelScope.launch {
             try { repository.stopFocus(environment.clock().epochMillis) }
@@ -153,12 +161,56 @@ class MainViewModel @Inject constructor(
         }
     }
     fun remove(packageName: String, onSaved: () -> Unit) = viewModelScope.launch {
-        try { ruleRepository.deleteRule(packageName); onSaved() }
+        try {
+            val now = environment.clock().epochMillis
+            if (repository.requestDelete(packageName, strictDelay(now), now) != null) showError(HELD)
+            onSaved()
+        }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("제한을 삭제하지 못했습니다.") }
     }
+
+    /** Pauses one rule for [minutes], or for the rest of today when null. */
+    fun pause(packageName: String, minutes: Int?) = viewModelScope.launch {
+        try {
+            val clock = environment.clock()
+            if (repository.requestPause(packageName, minutes, strictDelay(clock.epochMillis), clock.epochMillis, clock.zone) != null) showError(HELD)
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("제한을 쉬게 하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    fun resume(packageName: String) = viewModelScope.launch {
+        try { repository.resume(packageName, environment.clock().epochMillis) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("제한을 다시 켜지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    fun cancelPending(packageName: String) = viewModelScope.launch {
+        try { repository.cancelPending(packageName) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    fun setStrict(minutes: Int) = viewModelScope.launch {
+        try { preferences.updateStrict { it.request(minutes, environment.clock().epochMillis) } }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    fun cancelStrictChange() = viewModelScope.launch {
+        try { preferences.updateStrict { it.cancel(environment.clock().epochMillis) } }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
+
+    /** Read from storage rather than the screen state, which may not have loaded yet. */
+    private suspend fun strictDelay(now: Long) = preferences.strict.first().delayMillisAt(now)
+
     fun clear() = viewModelScope.launch {
-        try { repository.clearAll() }
+        try {
+            if (preferences.strict.first().delayAt(environment.clock().epochMillis) > 0) { showError("엄격 모드를 끈 뒤에 모든 데이터를 삭제할 수 있습니다."); return@launch }
+            repository.clearAll()
+        }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("로컬 데이터를 삭제하지 못했습니다.") }
     }
@@ -189,6 +241,7 @@ class MainViewModel @Inject constructor(
             finally { local.update { it.copy(accountBusy = false) } }
         }
     }
+    private companion object { const val HELD = "엄격 모드라 완화한 설정은 대기 시간이 지난 뒤 적용됩니다." }
     fun showError(message: String) { local.update { it.copy(error = message) } }
     fun dismissError() { local.update { it.copy(error = null) } }
 }

@@ -63,6 +63,11 @@ internal fun ChronoScreen(
     manageSubscription: () -> Unit = {},
     retryBilling: () -> Unit = {},
     openThemeGallery: () -> Unit = {},
+    pause: (String, Int?) -> Unit = { _, _ -> },
+    resume: (String) -> Unit = {},
+    cancelPending: (String) -> Unit = {},
+    setStrict: (Int) -> Unit = {},
+    cancelStrict: () -> Unit = {},
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -174,6 +179,9 @@ internal fun ChronoScreen(
                                             Spacer(Modifier.width(8.dp))
                                             Switch(checked = rule.enabled, onCheckedChange = null)
                                         }
+                                        RuleStatus(rule, state.pending.firstOrNull { it.packageName == rule.packageName }, nowEpoch,
+                                            state.strict.delayAt(nowEpoch), pause = { pause(rule.packageName, it) },
+                                            resume = { resume(rule.packageName) }, cancelHeld = { cancelPending(rule.packageName) })
                                     }
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today) { app, recipe -> edit(app, recipe) } }
@@ -232,16 +240,20 @@ internal fun ChronoScreen(
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { ThemePicker(state.theme, selectTheme, openThemeGallery) }
+                                item { StrictModeCard(state, nowEpoch, setStrict, cancelStrict) }
                                 item { PermissionCard(state, usagePermission, accessibilityPermission) }
                                 item { CardBox {
                                     Text(tr("나를 위한 제한"), style = MaterialTheme.typography.titleLarge)
-                                    Text(tr("현재는 일반 모드입니다. 언제든 규칙을 수정하거나 삭제할 수 있습니다. Android 설정에서 권한 해제와 앱 삭제도 가능합니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(if (state.strict.delayAt(nowEpoch) > 0) tr("엄격 모드가 켜져 있습니다. 느슨하게 바꾸는 변경은 대기 시간이 지난 뒤 적용됩니다.")
+                                        else tr("현재는 일반 모드입니다. 언제든 규칙을 수정하거나 삭제할 수 있습니다. Android 설정에서 권한 해제와 앱 삭제도 가능합니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Text(tr("기기·배터리 설정에 따라 감지와 차단이 늦어질 수 있습니다. 분할 화면과 화면 속 화면은 아직 지원하지 않습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 } }
                                 item { CardBox {
                                     Text(tr("로컬 기록 관리"), style = MaterialTheme.typography.titleLarge)
                                     Text(tr("앱 사용 기록을 최대 30일간 보관합니다. 기록은 이 기기에만 저장되며 서버로 전송하지 않습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    OutlinedButton(onClick = clear) { Text(tr("모든 규칙과 사용 기록 삭제")) }
+                                    val strict = state.strict.delayAt(nowEpoch) > 0
+                                    OutlinedButton(onClick = clear, enabled = !strict) { Text(tr("모든 규칙과 사용 기록 삭제")) }
+                                    if (strict) Text(tr("엄격 모드를 끈 뒤에 모든 데이터를 삭제할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 } }
                             }
                         }
