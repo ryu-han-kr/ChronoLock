@@ -37,6 +37,8 @@ android {
         buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
         // Debug builds fall back to Google test banners; device verification and demo recordings turn them off.
         buildConfigField("Boolean", "TEST_ADS", "true")
+        // Free/Pro split. Off until the Pro product exists in Play Console; while off everyone has every feature.
+        buildConfigField("Boolean", "PRO_GATING", (setting("chronolock.proGating") == "true").toString())
         manifestPlaceholders["admobAppId"] = admobAppId.ifBlank { "ca-app-pub-3940256099942544~3347511713" }
     }
     buildFeatures { compose = true; buildConfig = true }

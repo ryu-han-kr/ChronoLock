@@ -82,6 +82,7 @@ internal fun ChronoScreen(
     endGoalLock: (String, Int) -> Unit = { _, _ -> },
     collectPiece: (Int) -> Unit = {},
     changeGoalPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
+    buyPro: () -> Unit = {},
     deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> },
     exportBackup: () -> Unit = {},
     restoreBackup: () -> Unit = {},
@@ -275,6 +276,7 @@ internal fun ChronoScreen(
                             }
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
+                                if (com.chronolock.BuildConfig.PRO_GATING) item { ProCard(state, buyPro) }
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { ThemePicker(state.theme, selectTheme, openThemeGallery, state.favoriteThemes) }

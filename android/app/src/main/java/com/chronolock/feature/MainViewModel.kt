@@ -67,6 +67,8 @@ data class MainState(
     val pendingSites: List<com.chronolock.data.PendingSiteEntity> = emptyList(),
 ) {
     val adFree get() = billing.adFree
+    /** Every feature is open while the Pro split is switched off ([com.chronolock.BuildConfig.PRO_GATING]). */
+    val pro get() = !com.chronolock.BuildConfig.PRO_GATING || billing.pro
 }
 
 @HiltViewModel
@@ -157,6 +159,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun selectTheme(theme: AppTheme) = viewModelScope.launch {
+        if (!state.value.pro && theme !in AppTheme.builtIn) { showError(PRO_THEMES); return@launch }
         try { preferences.setTheme(theme) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("테마를 저장하지 못했습니다. 다시 선택해 주세요.") }
@@ -231,6 +234,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun saveGroup(group: AppGroup, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
+        if (group.id == 0L && !state.value.pro && state.value.groups.size >= com.chronolock.domain.FreeTier.GROUPS) {
+            showError(PRO_GROUPS); onFinished(); return@launch
+        }
         try {
             require(group.members.keys.none { it in environment.safetyPackages() })
             val now = environment.clock().epochMillis
@@ -260,6 +266,7 @@ class MainViewModel @Inject constructor(
 
     /** Adds the site typed as [input]; [onAdded] clears the field. */
     fun addSite(input: String, onAdded: () -> Unit) = viewModelScope.launch {
+        if (!state.value.pro && state.value.sites.size >= com.chronolock.domain.FreeTier.SITES) { showError(PRO_SITES); return@launch }
         val domain = try { SiteDomains.normalize(input) } catch (invalid: IllegalArgumentException) { showError(SiteDomains.INVALID); return@launch }
         try {
             val now = environment.clock().epochMillis
@@ -345,6 +352,7 @@ class MainViewModel @Inject constructor(
     /** Starts a goal lock of [days] kept days, with the person's password or, when [pieces], an app-made code; [done] closes the form. */
     fun startGoalLock(days: Int, pieces: Boolean, pin: String, confirm: String, done: () -> Unit) = viewModelScope.launch {
         when {
+            !state.value.pro -> showError(PRO_GOAL)
             !pieces && !pin.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
             !pieces && pin != confirm -> showError("두 비밀번호가 다릅니다.")
             else -> try { preferences.startGoalLock(days, environment.clock().date, pin.takeUnless { pieces }); done() }
@@ -468,7 +476,13 @@ class MainViewModel @Inject constructor(
             finally { local.update { it.copy(accountBusy = false) } }
         }
     }
-    private companion object { const val HELD = "엄격 모드라 완화한 설정은 대기 시간이 지난 뒤 적용됩니다." }
+    private companion object {
+        const val HELD = "엄격 모드라 완화한 설정은 대기 시간이 지난 뒤 적용됩니다."
+        const val PRO_SITES = "무료 버전은 사이트를 3개까지 차단할 수 있어요. 프로에서 50개까지 늘어나요."
+        const val PRO_GROUPS = "무료 버전은 앱 그룹을 1개까지 만들 수 있어요. 프로에서는 제한이 없어요."
+        const val PRO_GOAL = "목표 잠금은 프로 기능이에요."
+        const val PRO_THEMES = "기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요."
+    }
     fun showError(message: String) { local.update { it.copy(error = message) } }
     fun dismissError() { local.update { it.copy(error = null) } }
     fun updateDownloaded() { local.update { it.copy(updateReady = true) } }

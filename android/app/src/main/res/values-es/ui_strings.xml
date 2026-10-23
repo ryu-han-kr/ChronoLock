@@ -571,4 +571,20 @@
         <item quantity="other">"%1$d días"</item>
     </plurals>
     <string name="unlock_step_lock">"Si el modo bloqueo está activo: el bloqueo por tiempo termina al acabar el plazo; el de objetivo necesita cumplirlo y luego su contraseña. Antes solo queda detenerlo fuera de la app (abajo)."</string>
+    <string name="pro_title">"ChronoLock Pro"</string>
+    <string name="pro_groups">"Grupos ilimitados"</string>
+    <string name="pro_sites">"Bloquea hasta 50 sitios"</string>
+    <string name="pro_goal">"Bloqueo por objetivo y contraseña por piezas"</string>
+    <string name="pro_history">"3 meses de historial y calendario anual"</string>
+    <string name="pro_themes">"Todos los temas y temas propios"</string>
+    <string name="pro_owned">"Tienes Pro. ¡Gracias!"</string>
+    <string name="pro_pending">"Esperando la confirmación del pago. Pro se abrirá al completarse."</string>
+    <string name="pro_buy">"Pro de por vida · %1$s"</string>
+    <string name="pro_loading">"Cargando Pro"</string>
+    <string name="pro_note">"Paga una vez y úsalo en los dispositivos con la misma cuenta de Google."</string>
+    <string name="pro_limit_sites">"La versión gratis bloquea hasta 3 sitios. Pro sube a 50."</string>
+    <string name="pro_limit_groups">"La versión gratis permite 1 grupo. Pro no tiene límite."</string>
+    <string name="pro_limit_goal">"El bloqueo por objetivo es de Pro."</string>
+    <string name="pro_limit_themes">"Los temas aparte de los básicos y los temas propios son de Pro."</string>
+    <string name="pro_limit_history">"El historial de 3 meses y el calendario anual son de Pro."</string>
 </resources>

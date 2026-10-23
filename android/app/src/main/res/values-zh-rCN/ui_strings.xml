@@ -549,4 +549,20 @@
         <item quantity="other">"%1$d 天"</item>
     </plurals>
     <string name="unlock_step_lock">"如果开启了锁定模式：定时锁定在时间结束后解除，目标锁定需达成目标后输入密码。在此之前只能用下面的“在应用外停止”。"</string>
+    <string name="pro_title">"ChronoLock 专业版"</string>
+    <string name="pro_groups">"应用组不限数量"</string>
+    <string name="pro_sites">"最多拦截 50 个网站"</string>
+    <string name="pro_goal">"目标锁定与碎片密码"</string>
+    <string name="pro_history">"3 个月记录与年度日历"</string>
+    <string name="pro_themes">"全部主题与自定义主题"</string>
+    <string name="pro_owned">"你已拥有专业版，谢谢！"</string>
+    <string name="pro_pending">"正在等待付款确认，完成后即可使用专业版。"</string>
+    <string name="pro_buy">"专业版终身 · %1$s"</string>
+    <string name="pro_loading">"正在加载专业版"</string>
+    <string name="pro_note">"一次付款，同一 Google 账号的设备都能使用。"</string>
+    <string name="pro_limit_sites">"免费版最多拦截 3 个网站，专业版可增至 50 个。"</string>
+    <string name="pro_limit_groups">"免费版只能创建 1 个应用组，专业版不限。"</string>
+    <string name="pro_limit_goal">"目标锁定是专业版功能。"</string>
+    <string name="pro_limit_themes">"基础主题以外的主题和自定义主题需要专业版。"</string>
+    <string name="pro_limit_history">"3 个月记录和年度日历需要专业版。"</string>
 </resources>

@@ -57,7 +57,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}, privacyOptions: () -> Unit = {},
-    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}, retryBilling: () -> Unit = {}, installUpdate: () -> Unit = {}) {
+    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}, retryBilling: () -> Unit = {}, installUpdate: () -> Unit = {},
+    buyPro: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -121,7 +122,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite,
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,
                 lockFor = model::lockFor, startGoalLock = model::startGoalLock, endGoalLock = model::endGoalLock,
-                collectPiece = model::collectPiece, changeGoalPin = model::changeGoalPin,
+                collectPiece = model::collectPiece, changeGoalPin = model::changeGoalPin, buyPro = buyPro,
                 exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
                 restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
             )

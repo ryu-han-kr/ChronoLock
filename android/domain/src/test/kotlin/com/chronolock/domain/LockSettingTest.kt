@@ -30,3 +30,13 @@ class LockSettingTest {
         assertFalse(lock.copy(pieceCode = false).canReveal(2, start.plusDays(2)))
     }
 }
+
+class ProProductTest {
+    @Test fun proPass_entitlesOnlyWhenPurchased_andIsAcknowledgedOnce() {
+        val bought = StorePurchase(listOf(ProProduct.ID), purchased = true, acknowledged = false, token = "t")
+        assertTrue(ProProduct.entitled(listOf(bought)))
+        assertFalse(ProProduct.entitled(listOf(bought.copy(purchased = false))))
+        assertFalse(ProProduct.entitled(listOf(bought.copy(products = listOf(AdFreeProduct.ID)))))
+        assertEquals(listOf(bought), ProProduct.toAcknowledge(listOf(bought, bought.copy(acknowledged = true, token = "u"))))
+    }
+}

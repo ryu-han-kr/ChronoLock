@@ -14,3 +14,18 @@ object AdFreeProduct {
     fun toAcknowledge(purchases: List<StorePurchase>): List<StorePurchase> =
         purchases.filter { ID in it.products && it.purchased && !it.acknowledged }
 }
+
+/** The one-time Pro pass (an in-app product, not a subscription). */
+object ProProduct {
+    const val ID = "chronolock_pro_lifetime"
+    fun entitled(purchases: List<StorePurchase>): Boolean = purchases.any { ID in it.products && it.purchased }
+    /** Play refunds one-time purchases that stay unacknowledged for three days. */
+    fun toAcknowledge(purchases: List<StorePurchase>): List<StorePurchase> = purchases.filter { ID in it.products && it.purchased && !it.acknowledged }
+}
+
+/** What the free tier allows; with Pro, or while the app does not gate features yet, none of these apply. */
+object FreeTier {
+    const val GROUPS = 1
+    const val SITES = 3
+    const val HISTORY_DAYS = 30
+}
