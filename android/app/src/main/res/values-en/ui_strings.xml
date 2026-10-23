@@ -205,7 +205,6 @@
     <string name="theme_word_gallery_title">"Themes"</string>
     <string name="theme_word_back">"Back"</string>
     <string name="theme_word_selected">"Selected: %1$s"</string>
-    <string name="theme_word_count">"%1$d themes"</string>
     <string name="history_partial_range">"Records start on %1$s. The device does not keep usage events from before then, so period totals may be lower than actual."</string>
     <string name="mascot_sleepy">"No records yet. Zzz…"</string>
     <string name="mascot_relaxed">"A relaxed day. Keep it up!"</string>
@@ -224,7 +223,6 @@
     <string name="sort_name">"By name"</string>
     <string name="sort_usage">"By usage"</string>
     <string name="sort_recent">"Most recent"</string>
-    <string name="usage_week">"Last 7 days %1$s · %2$d opens"</string>
     <string name="usage_week_none">"No use in the last 7 days"</string>
     <string name="last_used">"Last used %1$s"</string>
     <string name="accessibility_title">"About accessibility access"</string>
@@ -365,11 +363,8 @@
     <string name="group_section">"App groups"</string>
     <string name="group_add">"Create group"</string>
     <string name="group_empty">"Group similar apps, like social media, to share one daily time and open limit."</string>
-    <string name="group_used">"Together today %1$s · %2$d opens"</string>
     <string name="held_group_delete">"Delete group"</string>
-    <string name="group_apps">"%1$d apps"</string>
     <string name="group_daily">"%1$s a day together"</string>
-    <string name="group_opens">"%1$d opens together"</string>
     <string name="group_new">"New app group"</string>
     <string name="group_intro">"Grouped apps share one daily time and open count. Each app's own limits still apply."</string>
     <string name="group_strict_note">"Strict mode: turning off or relaxing a group takes effect in %1$d min."</string>
@@ -377,7 +372,6 @@
     <string name="group_name_hint">"e.g. Social"</string>
     <string name="group_daily_title">"Shared daily time"</string>
     <string name="group_opens_title">"Shared daily opens"</string>
-    <string name="group_selected">"Apps in group · %1$d selected"</string>
     <string name="group_taken_app">"In another group"</string>
     <string name="group_delete">"Delete this group"</string>
     <string name="group_error_name">"Enter a group name."</string>
@@ -393,7 +387,6 @@
     <string name="tile_focus_until">"Until %1$s"</string>
     <string name="tile_focus_minutes">"%1$d-min focus"</string>
     <string name="tile_focus_failed">"Couldn't change focus. Please try again in the app."</string>
-    <string name="streak_days">"%1$d days in a row within your limits"</string>
     <string name="week_less">"%1$d%% less than last week"</string>
     <string name="week_more">"%1$d%% more than last week"</string>
     <string name="week_same">"About the same as last week"</string>
@@ -411,4 +404,32 @@
     <string name="backup_restored">"Backup restored."</string>
     <string name="backup_restore_failed">"Couldn't restore the backup."</string>
     <string name="backup_invalid">"This isn't a ChronoLock backup, or it is damaged."</string>
+    <plurals name="theme_word_count">
+        <item quantity="one">"%1$d theme"</item>
+        <item quantity="other">"%1$d themes"</item>
+    </plurals>
+    <plurals name="usage_week">
+        <item quantity="one">"Last 7 days %1$s · %2$d open"</item>
+        <item quantity="other">"Last 7 days %1$s · %2$d opens"</item>
+    </plurals>
+    <plurals name="group_used">
+        <item quantity="one">"Together today %1$s · %2$d open"</item>
+        <item quantity="other">"Together today %1$s · %2$d opens"</item>
+    </plurals>
+    <plurals name="group_apps">
+        <item quantity="one">"%1$d app"</item>
+        <item quantity="other">"%1$d apps"</item>
+    </plurals>
+    <plurals name="group_opens">
+        <item quantity="one">"%1$d open together"</item>
+        <item quantity="other">"%1$d opens together"</item>
+    </plurals>
+    <plurals name="group_selected">
+        <item quantity="one">"Apps in group · %1$d selected"</item>
+        <item quantity="other">"Apps in group · %1$d selected"</item>
+    </plurals>
+    <plurals name="streak_days">
+        <item quantity="one">"%1$d day in a row within your limits"</item>
+        <item quantity="other">"%1$d days in a row within your limits"</item>
+    </plurals>
 </resources>

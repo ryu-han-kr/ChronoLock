@@ -51,6 +51,10 @@ class RuleDraftTest {
         assertEquals(setOf(DayOfWeek.WEDNESDAY), draft.copy(schedules = listOf(ScheduleDraft(daysMask = 4))).build("test.app", "Test").schedules.single().days)
     }
 
+    @Test fun newRule_defaultsToOneHourDaily() {
+        assertEquals(3600L, RuleDraft().build("test.app", "Test").dailyLimitSeconds)
+    }
+
     @Test fun editingRuleWithoutSchedule_startsWithNoDaysSelected() {
         val rule = RuleDraft().build("test.app", "Test")
         assertEquals(0, RuleDraft.from(rule).schedules.single().daysMask)

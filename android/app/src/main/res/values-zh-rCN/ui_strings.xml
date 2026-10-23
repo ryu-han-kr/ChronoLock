@@ -205,7 +205,6 @@
     <string name="theme_word_gallery_title">"主题"</string>
     <string name="theme_word_back">"返回"</string>
     <string name="theme_word_selected">"已选择：%1$s"</string>
-    <string name="theme_word_count">"%1$d 个主题"</string>
     <string name="history_partial_range">"记录从 %1$s 开始。设备不会保留此前的使用事件，因此时段合计可能低于实际值。"</string>
     <string name="mascot_sleepy">"还没有记录。呼呼……"</string>
     <string name="mascot_relaxed">"轻松的一天，继续保持！"</string>
@@ -224,7 +223,6 @@
     <string name="sort_name">"按名称"</string>
     <string name="sort_usage">"按使用量"</string>
     <string name="sort_recent">"按最近使用"</string>
-    <string name="usage_week">"近 7 天 %1$s · 打开 %2$d 次"</string>
     <string name="usage_week_none">"近 7 天无使用记录"</string>
     <string name="last_used">"最后使用 %1$s"</string>
     <string name="accessibility_title">"关于无障碍权限"</string>
@@ -365,11 +363,8 @@
     <string name="group_section">"应用组"</string>
     <string name="group_add">"创建组"</string>
     <string name="group_empty">"将社交媒体等相似应用分组后，可共用每日时长和打开次数。"</string>
-    <string name="group_used">"今日合计 %1$s · 打开 %2$d 次"</string>
     <string name="held_group_delete">"删除组"</string>
-    <string name="group_apps">"%1$d 个应用"</string>
     <string name="group_daily">"合计每天 %1$s"</string>
-    <string name="group_opens">"合计打开 %1$d 次"</string>
     <string name="group_new">"新应用组"</string>
     <string name="group_intro">"组内应用共用每日时长和打开次数。各应用自己的限制仍然有效。"</string>
     <string name="group_strict_note">"严格模式：关闭或放宽组将在 %1$d 分钟后生效。"</string>
@@ -377,7 +372,6 @@
     <string name="group_name_hint">"例如：社交"</string>
     <string name="group_daily_title">"共用每日时长"</string>
     <string name="group_opens_title">"共用每日打开次数"</string>
-    <string name="group_selected">"组内应用 · 已选 %1$d 个"</string>
     <string name="group_taken_app">"已在其他组中"</string>
     <string name="group_delete">"删除此组"</string>
     <string name="group_error_name">"请输入组名称。"</string>
@@ -393,7 +387,6 @@
     <string name="tile_focus_until">"至 %1$s"</string>
     <string name="tile_focus_minutes">"专注 %1$d 分钟"</string>
     <string name="tile_focus_failed">"无法切换专注，请在应用中重试。"</string>
-    <string name="streak_days">"已连续 %1$d 天守住限制"</string>
     <string name="week_less">"比上周少用了 %1$d%%"</string>
     <string name="week_more">"比上周多用了 %1$d%%"</string>
     <string name="week_same">"与上周差不多"</string>
@@ -411,4 +404,25 @@
     <string name="backup_restored">"备份已恢复。"</string>
     <string name="backup_restore_failed">"无法恢复备份。"</string>
     <string name="backup_invalid">"这不是 ChronoLock 备份文件，或文件已损坏。"</string>
+    <plurals name="theme_word_count">
+        <item quantity="other">"%1$d 个主题"</item>
+    </plurals>
+    <plurals name="usage_week">
+        <item quantity="other">"近 7 天 %1$s · 打开 %2$d 次"</item>
+    </plurals>
+    <plurals name="group_used">
+        <item quantity="other">"今日合计 %1$s · 打开 %2$d 次"</item>
+    </plurals>
+    <plurals name="group_apps">
+        <item quantity="other">"%1$d 个应用"</item>
+    </plurals>
+    <plurals name="group_opens">
+        <item quantity="other">"合计打开 %1$d 次"</item>
+    </plurals>
+    <plurals name="group_selected">
+        <item quantity="other">"组内应用 · 已选 %1$d 个"</item>
+    </plurals>
+    <plurals name="streak_days">
+        <item quantity="other">"已连续 %1$d 天守住限制"</item>
+    </plurals>
 </resources>

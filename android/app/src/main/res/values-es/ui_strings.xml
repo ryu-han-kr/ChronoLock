@@ -205,7 +205,6 @@
     <string name="theme_word_gallery_title">"Temas"</string>
     <string name="theme_word_back">"Atrás"</string>
     <string name="theme_word_selected">"Seleccionado: %1$s"</string>
-    <string name="theme_word_count">"%1$d temas"</string>
     <string name="history_partial_range">"Los registros comienzan el %1$s. El dispositivo no conserva eventos de uso anteriores, así que los totales del periodo pueden ser menores que los reales."</string>
     <string name="mascot_sleepy">"Aún no hay registros. Zzz…"</string>
     <string name="mascot_relaxed">"Un día tranquilo. ¡Sigue así!"</string>
@@ -224,7 +223,6 @@
     <string name="sort_name">"Por nombre"</string>
     <string name="sort_usage">"Por uso"</string>
     <string name="sort_recent">"Más recientes"</string>
-    <string name="usage_week">"Últimos 7 días %1$s · %2$d aperturas"</string>
     <string name="usage_week_none">"Sin uso en los últimos 7 días"</string>
     <string name="last_used">"Último uso %1$s"</string>
     <string name="accessibility_title">"Sobre la accesibilidad"</string>
@@ -365,11 +363,8 @@
     <string name="group_section">"Grupos de apps"</string>
     <string name="group_add">"Crear grupo"</string>
     <string name="group_empty">"Agrupa apps parecidas, como redes sociales, para que compartan el tiempo y las aperturas diarias."</string>
-    <string name="group_used">"Juntas hoy %1$s · %2$d aperturas"</string>
     <string name="held_group_delete">"Eliminar grupo"</string>
-    <string name="group_apps">"%1$d apps"</string>
     <string name="group_daily">"%1$s al día en total"</string>
-    <string name="group_opens">"%1$d aperturas en total"</string>
     <string name="group_new">"Nuevo grupo de apps"</string>
     <string name="group_intro">"Las apps del grupo comparten el tiempo y las aperturas diarias. Los límites propios de cada app siguen vigentes."</string>
     <string name="group_strict_note">"Modo estricto: desactivar o suavizar un grupo se aplica en %1$d min."</string>
@@ -377,7 +372,6 @@
     <string name="group_name_hint">"p. ej., Redes"</string>
     <string name="group_daily_title">"Tiempo diario compartido"</string>
     <string name="group_opens_title">"Aperturas diarias compartidas"</string>
-    <string name="group_selected">"Apps del grupo · %1$d elegidas"</string>
     <string name="group_taken_app">"En otro grupo"</string>
     <string name="group_delete">"Eliminar este grupo"</string>
     <string name="group_error_name">"Escribe un nombre para el grupo."</string>
@@ -393,7 +387,6 @@
     <string name="tile_focus_until">"Hasta %1$s"</string>
     <string name="tile_focus_minutes">"Enfoque de %1$d min"</string>
     <string name="tile_focus_failed">"No se pudo cambiar el enfoque. Inténtalo de nuevo en la app."</string>
-    <string name="streak_days">"%1$d días seguidos dentro de tus límites"</string>
     <string name="week_less">"%1$d%% menos que la semana pasada"</string>
     <string name="week_more">"%1$d%% más que la semana pasada"</string>
     <string name="week_same">"Más o menos igual que la semana pasada"</string>
@@ -411,4 +404,39 @@
     <string name="backup_restored">"Copia restaurada."</string>
     <string name="backup_restore_failed">"No se pudo restaurar la copia."</string>
     <string name="backup_invalid">"No es una copia de ChronoLock o está dañada."</string>
+    <plurals name="theme_word_count">
+        <item quantity="one">"%1$d tema"</item>
+        <item quantity="many">"%1$d temas"</item>
+        <item quantity="other">"%1$d temas"</item>
+    </plurals>
+    <plurals name="usage_week">
+        <item quantity="one">"Últimos 7 días %1$s · %2$d apertura"</item>
+        <item quantity="many">"Últimos 7 días %1$s · %2$d aperturas"</item>
+        <item quantity="other">"Últimos 7 días %1$s · %2$d aperturas"</item>
+    </plurals>
+    <plurals name="group_used">
+        <item quantity="one">"Juntas hoy %1$s · %2$d apertura"</item>
+        <item quantity="many">"Juntas hoy %1$s · %2$d aperturas"</item>
+        <item quantity="other">"Juntas hoy %1$s · %2$d aperturas"</item>
+    </plurals>
+    <plurals name="group_apps">
+        <item quantity="one">"%1$d app"</item>
+        <item quantity="many">"%1$d apps"</item>
+        <item quantity="other">"%1$d apps"</item>
+    </plurals>
+    <plurals name="group_opens">
+        <item quantity="one">"%1$d apertura en total"</item>
+        <item quantity="many">"%1$d aperturas en total"</item>
+        <item quantity="other">"%1$d aperturas en total"</item>
+    </plurals>
+    <plurals name="group_selected">
+        <item quantity="one">"Apps del grupo · %1$d elegida"</item>
+        <item quantity="many">"Apps del grupo · %1$d elegidas"</item>
+        <item quantity="other">"Apps del grupo · %1$d elegidas"</item>
+    </plurals>
+    <plurals name="streak_days">
+        <item quantity="one">"%1$d día seguido dentro de tus límites"</item>
+        <item quantity="many">"%1$d días seguidos dentro de tus límites"</item>
+        <item quantity="other">"%1$d días seguidos dentro de tus límites"</item>
+    </plurals>
 </resources>

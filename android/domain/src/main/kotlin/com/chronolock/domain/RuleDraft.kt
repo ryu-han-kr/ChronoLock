@@ -29,7 +29,7 @@ data class ScheduleDraft(val start: String = "23:00", val end: String = "07:00",
 
 /** Editor input validated before a rule can be saved. Empty limits mean unrestricted. */
 data class RuleDraft(
-    val daily: String = "60",
+    val daily: String = "3600",
     val opens: String = "",
     val cooldown: String = "",
     val session: String = "",
