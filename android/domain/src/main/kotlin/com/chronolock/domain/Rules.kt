@@ -19,6 +19,10 @@ data class AppRule(
     val pausedUntilEpochMillis: Long? = null,
     /** The shared-limit groups this app belongs to; attached for evaluation, never stored with the rule. */
     val groups: List<AppGroup> = emptyList(),
+    /** A breathing pause before the app opens, in seconds; it grows with each open of the day (see [pauseDelaySeconds]). */
+    val pauseSeconds: Int? = null,
+    /** While the app stays open, ask every this many minutes whether to keep going. */
+    val checkInMinutes: Int? = null,
 ) {
     init {
         require(packageName.isNotBlank() && appName.isNotBlank())
@@ -27,12 +31,17 @@ data class AppRule(
         require(maxOpenCount == null || maxOpenCount in 1..10000)
         require(cooldownSeconds == null || cooldownSeconds in 1..86400)
         require(schedules.size <= MAX_SCHEDULES)
+        require(pauseSeconds == null || pauseSeconds in 1..30)
+        require(checkInMinutes == null || checkInMinutes in 1..120)
     }
 
     fun pausedAt(epochMillis: Long) = pausedUntilEpochMillis?.let { epochMillis < it } == true
 
     companion object { const val MAX_SCHEDULES = 5 }
 }
+
+/** The pause before opening: [base] seconds, two more for every earlier open today, at most 30. */
+fun pauseDelaySeconds(base: Int, opensToday: Int): Int = (base + 2 * opensToday.coerceAtLeast(0)).coerceAtMost(30)
 
 /** Overnight schedules belong to the day on which the window starts. */
 data class Schedule(val start: LocalTime, val end: LocalTime, val days: Set<DayOfWeek>) {

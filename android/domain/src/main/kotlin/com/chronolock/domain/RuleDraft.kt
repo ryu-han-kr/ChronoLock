@@ -36,6 +36,9 @@ data class RuleDraft(
     val scheduleEnabled: Boolean = false,
     val schedules: List<ScheduleDraft> = listOf(ScheduleDraft()),
     val enabled: Boolean = true,
+    /** 0 means off. */
+    val pauseSeconds: Int = 0,
+    val checkInMinutes: Int = 0,
 ) {
     fun build(packageName: String, appName: String): AppRule {
         fun limit(value: String, maximum: Long, label: String): Long? {
@@ -53,10 +56,12 @@ data class RuleDraft(
             require(schedules.size <= AppRule.MAX_SCHEDULES) { "예약 구간은 최대 5개까지 설정할 수 있습니다." }
             schedules.map { it.build() }.distinct()
         } else emptyList()
-        require(dailySeconds != null || openCount != null || cooldownSeconds != null || sessionSeconds != null || built.isNotEmpty()) {
+        require(dailySeconds != null || openCount != null || cooldownSeconds != null || sessionSeconds != null || built.isNotEmpty() ||
+            pauseSeconds > 0 || checkInMinutes > 0) {
             "한 가지 이상의 제한을 설정해 주세요."
         }
-        return AppRule(packageName, appName, dailySeconds, openCount, cooldownSeconds, sessionSeconds, built, enabled = enabled)
+        return AppRule(packageName, appName, dailySeconds, openCount, cooldownSeconds, sessionSeconds, built, enabled = enabled,
+            pauseSeconds = pauseSeconds.takeIf { it > 0 }, checkInMinutes = checkInMinutes.takeIf { it > 0 })
     }
 
     companion object {
@@ -64,6 +69,7 @@ data class RuleDraft(
             rule.dailyLimitSeconds?.toString().orEmpty(), rule.maxOpenCount?.toString().orEmpty(),
             rule.cooldownSeconds?.toString().orEmpty(), rule.sessionLimitSeconds?.toString().orEmpty(),
             rule.schedules.isNotEmpty(), rule.schedules.map(ScheduleDraft::from).ifEmpty { listOf(ScheduleDraft()) }, rule.enabled,
+            rule.pauseSeconds ?: 0, rule.checkInMinutes ?: 0,
         )
     }
 }

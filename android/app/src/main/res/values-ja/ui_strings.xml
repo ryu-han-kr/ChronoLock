@@ -591,4 +591,19 @@
     <string name="theme_night">"夜テーマ"</string>
     <string name="theme_random">"ランダム"</string>
     <string name="restricted_settings_hint">"スイッチがグレーで有効にできない場合：アプリ情報 → 右上の⋮ → 「制限付き設定を許可」の後、もう一度有効にしてください。"</string>
+    <string name="fr_pause_title">"開く前に一呼吸"</string>
+    <string name="fr_pause_hint">"開くたびに一呼吸おく画面を表示します。その日に何度も開くほど少し長くなります。"</string>
+    <string name="fr_checkin_title">"使用中の確認"</string>
+    <string name="fr_checkin_hint">"使い続けていると、決めた時間ごとに続けるか尋ねます。"</string>
+    <string name="fr_pause_seconds">"%1$d秒"</string>
+    <string name="fr_pause_summary">"開く前に%1$d秒"</string>
+    <string name="fr_checkin_summary">"%1$d分ごとに確認"</string>
+    <string name="fr_pause_heading">"一呼吸おきましょう"</string>
+    <string name="fr_pause_detail">"%1$s・今日%2$d回目の起動です。今どうしても必要ですか？"</string>
+    <string name="fr_pause_open_count">"それでも開く（%1$d）"</string>
+    <string name="fr_pause_open">"それでも開く"</string>
+    <string name="fr_checkin_heading">"%1$d分たちました"</string>
+    <string name="fr_checkin_detail">"%1$sを使い続けますか？"</string>
+    <string name="fr_checkin_continue">"続ける"</string>
+    <string name="fr_block_resisted">"今日は%1$d回がまんしました。いい調子です！"</string>
 </resources>

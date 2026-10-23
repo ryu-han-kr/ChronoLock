@@ -38,6 +38,7 @@ object BackupCodec {
                 .putOpt("dailyLimitSeconds", entity.dailyLimitSeconds).putOpt("maxOpenCount", entity.maxOpenCount)
                 .putOpt("cooldownSeconds", entity.cooldownSeconds).putOpt("sessionLimitSeconds", entity.sessionLimitSeconds)
                 .putOpt("schedules", entity.schedules).put("enabled", entity.enabled)
+                .putOpt("pauseSeconds", entity.pauseSeconds).putOpt("checkInMinutes", entity.checkInMinutes)
         }))
         .put("groups", JSONArray(backup.groups.map { group ->
             JSONObject().put("name", group.name)
@@ -55,7 +56,8 @@ object BackupCodec {
         val rules = root.optJSONArray("rules").objects().map { item ->
             RuleEntity(item.getString("packageName"), item.getString("appName"), item.longOrNull("dailyLimitSeconds"),
                 item.longOrNull("maxOpenCount")?.toInt(), item.longOrNull("cooldownSeconds"), item.optBoolean("enabled", true),
-                item.longOrNull("sessionLimitSeconds"), schedules = item.stringOrNull("schedules")).toDomain()
+                item.longOrNull("sessionLimitSeconds"), schedules = item.stringOrNull("schedules"),
+                pauseSeconds = item.longOrNull("pauseSeconds")?.toInt(), checkInMinutes = item.longOrNull("checkInMinutes")?.toInt()).toDomain()
         }
         val groups = root.optJSONArray("groups").objects().map { item ->
             AppGroup(0, item.getString("name"), item.getJSONArray("members").objects().associate { it.getString("packageName") to it.getString("appName") },

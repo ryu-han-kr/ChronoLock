@@ -613,4 +613,19 @@
     <string name="theme_night">"Tema de noche"</string>
     <string name="theme_random">"Aleatorio"</string>
     <string name="restricted_settings_hint">"Si el interruptor está en gris: Información de la app → ⋮ (arriba a la derecha) → \'Permitir ajustes restringidos\' y vuelve a intentarlo."</string>
+    <string name="fr_pause_title">"Pausa antes de abrir"</string>
+    <string name="fr_pause_hint">"Muestra una breve pantalla para respirar cada vez que abres la app. Se alarga un poco con cada apertura del día."</string>
+    <string name="fr_checkin_title">"Aviso durante el uso"</string>
+    <string name="fr_checkin_hint">"Mientras sigas usándola, pregunta cada cierto tiempo si quieres continuar."</string>
+    <string name="fr_pause_seconds">"%1$d s"</string>
+    <string name="fr_pause_summary">"Pausa de %1$d s al abrir"</string>
+    <string name="fr_checkin_summary">"Aviso cada %1$d min"</string>
+    <string name="fr_pause_heading">"Respira un momento"</string>
+    <string name="fr_pause_detail">"%1$s · apertura número %2$d de hoy. ¿De verdad lo necesitas ahora?"</string>
+    <string name="fr_pause_open_count">"Abrir igualmente (%1$d)"</string>
+    <string name="fr_pause_open">"Abrir igualmente"</string>
+    <string name="fr_checkin_heading">"Han pasado %1$d minutos"</string>
+    <string name="fr_checkin_detail">"¿Sigues usando %1$s?"</string>
+    <string name="fr_checkin_continue">"Seguir"</string>
+    <string name="fr_block_resisted">"Hoy te has contenido %1$d veces. ¡Bien hecho!"</string>
 </resources>

@@ -602,4 +602,19 @@
     <string name="theme_night">"Night theme"</string>
     <string name="theme_random">"Random"</string>
     <string name="restricted_settings_hint">"If the switch is greyed out: App info → ⋮ (top right) → \'Allow restricted settings\', then try again."</string>
+    <string name="fr_pause_title">"Pause before opening"</string>
+    <string name="fr_pause_hint">"Shows a short breathing screen each time you open the app. It gets a little longer with each open that day."</string>
+    <string name="fr_checkin_title">"Check-in while using"</string>
+    <string name="fr_checkin_hint">"While you keep using it, asks every set time whether to go on."</string>
+    <string name="fr_pause_seconds">"%1$d s"</string>
+    <string name="fr_pause_summary">"%1$d s pause before opening"</string>
+    <string name="fr_checkin_summary">"Check-in every %1$d min"</string>
+    <string name="fr_pause_heading">"Take a breath"</string>
+    <string name="fr_pause_detail">"%1$s · open number %2$d today. Do you really need it now?"</string>
+    <string name="fr_pause_open_count">"Open anyway (%1$d)"</string>
+    <string name="fr_pause_open">"Open anyway"</string>
+    <string name="fr_checkin_heading">"%1$d minutes have passed"</string>
+    <string name="fr_checkin_detail">"Keep using %1$s?"</string>
+    <string name="fr_checkin_continue">"Keep going"</string>
+    <string name="fr_block_resisted">"You held back %1$d× today. Nice work!"</string>
 </resources>

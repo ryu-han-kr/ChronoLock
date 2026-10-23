@@ -50,6 +50,13 @@ class ChronoAccessibilityService : AccessibilityService() {
     private var siteBrowser: String? = null
     private var siteCheckScheduled = false
     private var lastState: MonitorState? = null
+    /** The app of the current visit; a passed pause and the next check-in belong to it and reset when it changes. */
+    private var visitApp: String? = null
+    private var passedApp: String? = null
+    private var nextCheckInMillis = 0L
+    /** Strict delay and lock as last read; the block screen hides its settings shortcut while either holds. */
+    @Volatile private var strict = com.chronolock.domain.StrictSetting()
+    @Volatile private var lock = com.chronolock.domain.LockSetting()
     /** App labels for the block screen; looked up once per app instead of every second while blocked. */
     private val labels = mutableMapOf<String, String>()
     private sealed interface Command {
@@ -99,6 +106,11 @@ class ChronoAccessibilityService : AccessibilityService() {
             }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe rules", error) }
+        }
+        scope.launch {
+            try { combine(preferences.strict, preferences.lock) { s, l -> s to l }.collect { (s, l) -> strict = s; lock = l } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe strict mode", error) }
         }
         scope.launch {
             try {
@@ -256,15 +268,45 @@ class ChronoAccessibilityService : AccessibilityService() {
         runCatching { surfaces.update(state, rules, localized) }
             .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
         val target = state.observedPackage
+        if (target != visitApp) { visitApp = target; passedApp = null; nextCheckInMillis = 0 }
         if (target != null && state.decision.denied) {
-            val label = labels.getOrPut(target) {
-                runCatching { packageManager.getApplicationLabel(packageManager.getApplicationInfo(target, 0)).toString() }.getOrDefault(target)
-            }
-            overlay.show(label, state.decision)
-        } else {
-            val site = blockedSite
-            if (site != null && target != null && target == siteBrowser) overlay.showSite(site) else overlay.hide()
+            val now = environment.clock()
+            val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
+            overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now.epochMillis) == 0 && !lock.lockedAt(now))
+            return
         }
+        val site = blockedSite
+        if (site != null && target != null && target == siteBrowser) { overlay.showSite(site); return }
+        if (target != null && intervene(target, state)) return
+        overlay.hide()
+    }
+
+    private fun label(target: String) = labels.getOrPut(target) {
+        runCatching { packageManager.getApplicationLabel(packageManager.getApplicationInfo(target, 0)).toString() }.getOrDefault(target)
+    }
+
+    /**
+     * Gentle friction for an allowed app: a breathing pause before it opens, then a check-in every few minutes of use.
+     * Returns true while one of them is on screen.
+     */
+    private fun intervene(target: String, state: MonitorState): Boolean {
+        val rule = rules[target]?.takeIf { it.enabled && !it.pausedAt(state.clock?.epochMillis ?: 0) } ?: return false
+        val opens = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.opens } ?: 0
+        val session = state.active?.takeIf { it.packageName == target }?.usageMillis ?: 0
+        val pause = rule.pauseSeconds
+        if (pause != null && passedApp != target) {
+            if (overlay.mode != "pause:$target") overlay.showPause(target, label(target), com.chronolock.domain.pauseDelaySeconds(pause, (opens - 1).coerceAtLeast(0)), (opens - 1).coerceAtLeast(0)) {
+                passedApp = target; nextCheckInMillis = 0; lastState?.let(::render)
+            }
+            return true
+        }
+        val checkIn = rule.checkInMinutes ?: return false
+        if (nextCheckInMillis == 0L) nextCheckInMillis = session + checkIn * 60_000L
+        if (session < nextCheckInMillis) return false
+        if (overlay.mode != "checkin:$target") overlay.showCheckIn(target, label(target), checkIn) {
+            nextCheckInMillis = (lastState?.active?.usageMillis ?: session) + checkIn * 60_000L; overlay.hide()
+        }
+        return true
     }
 
     // Called when feedback should stop (e.g. another service speaks); this service gives no feedback and keeps running.

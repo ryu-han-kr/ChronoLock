@@ -23,6 +23,13 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     private var root: View? = null
     private var heading: TextView? = null
     private var detail: TextView? = null
+    private var settingsButton: Button? = null
+    private var continueButton: Button? = null
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var countdown: Runnable? = null
+    /** What is on screen: "block", "site", "pause:<package>" or "checkin:<package>"; lets the service avoid restarting a countdown. */
+    var mode: String? = null
+        private set
     private var theme = AppTheme.DARK
     private var language = AppLanguage.KOREAN
     private var text = UiText(service.forLanguage(language))
@@ -82,11 +89,14 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
             label("ChronoLock", 14f, theme.primary.toInt(), font = R.font.pretendard_medium)
             heading = label("", 28f, theme.text.toInt(), font = R.font.pretendard_bold)
             detail = label("", 17f, theme.muted.toInt())
-            label(text("잠깐 멈추고, 지금 하고 싶은 일을 선택하세요."), 15f, theme.muted.toInt())
+            label(text("잠깐 멈추고, 지금 하고 싶은 일을 골라 보세요."), 15f, theme.muted.toInt())
             // A small alternative to reaching for the app again; it changes daily.
             label(text("대신 이건 어때요? %1\$s", text(SUGGESTIONS[(java.time.LocalDate.now().toEpochDay() % SUGGESTIONS.size).toInt()])), 15f, theme.primary.toInt())
             content.addView(Button(service).apply { text = text("홈 화면으로 돌아가기"); setOnClickListener { onHome() } }, LinearLayout.LayoutParams(-1, dp(56)))
-            content.addView(Button(service).apply { text = text("내 제한 설정 보기"); setOnClickListener { onSettings() } }, LinearLayout.LayoutParams(-1, dp(56)))
+            settingsButton = Button(service).apply { text = text("내 제한 설정 보기"); setOnClickListener { onSettings() } }
+            content.addView(settingsButton, LinearLayout.LayoutParams(-1, dp(56)))
+            continueButton = Button(service).apply { visibility = View.GONE }
+            content.addView(continueButton, LinearLayout.LayoutParams(-1, dp(56)))
             applyTheme(content)
             val parameters = WindowManager.LayoutParams(-1, -1, WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.OPAQUE)
@@ -103,6 +113,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     /** A website blocked in a browser; [domain] is the entry the person added, not the page address. */
     fun showSite(domain: String) {
         attach()
+        mode = "site"; stopCountdown(); continueButton?.visibility = View.GONE
         lastShown = { showSite(domain) }
         heading?.text = text("%1\$s\n지금은 열지 않기로 했어요", domain)
         detail?.text = text("차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다.")
@@ -110,31 +121,77 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
 
     // Each reason is a complete localized resource; only line separators are concatenated.
     @android.annotation.SuppressLint("SetTextI18n")
-    fun show(appName: String, decision: RuleDecision) {
+    fun show(appName: String, decision: RuleDecision, resistedToday: Int = 0, allowSettings: Boolean = true) {
         attach()
-        lastShown = { show(appName, decision) }
-        heading?.text = text("%1\$s\n지금은 쉬는 시간입니다", appName)
+        lastShown = { show(appName, decision, resistedToday, allowSettings) }
+        mode = "block"; stopCountdown(); continueButton?.visibility = View.GONE
+        // Under strict mode or a lock the settings shortcut would only lead to changes that cannot be made now.
+        settingsButton?.visibility = if (allowSettings) View.VISIBLE else View.GONE
+        heading?.text = text("%1\$s\n지금은 쉬는 시간이에요", appName)
         detail?.text = decision.reasons.joinToString("\n") { reason ->
             when (reason) {
-                Reason.DAILY_USAGE -> text("오늘 설정한 사용시간을 모두 사용했습니다.")
-                Reason.OPEN_COUNT -> text("오늘 허용한 실행 횟수를 모두 사용했습니다.")
-                Reason.COOLDOWN -> decision.retryAfterSeconds?.let { text("재실행까지 %1\$d초 남았습니다.", it) } ?: text("재실행 대기 시간이 적용 중입니다.")
-                Reason.SESSION_USAGE -> text("이번 사용시간 제한에 도달했습니다.")
-                Reason.SCHEDULE -> text("사용하지 않기로 정한 시간대입니다.")
-                Reason.FOCUS -> text("집중 시간이 진행 중입니다.")
-                Reason.GROUP_USAGE -> text("함께 묶은 앱들의 오늘 사용시간을 모두 사용했습니다.")
-                Reason.GROUP_OPENS -> text("함께 묶은 앱들의 오늘 실행 횟수를 모두 사용했습니다.")
+                Reason.DAILY_USAGE -> text("오늘 정한 사용 시간을 다 썼어요.")
+                Reason.OPEN_COUNT -> text("오늘 허용한 실행 횟수를 다 썼어요.")
+                Reason.COOLDOWN -> decision.retryAfterSeconds?.let { text("다시 열기까지 %1\$d초 남았어요.", it) } ?: text("다시 열기 전 대기 시간이에요.")
+                Reason.SESSION_USAGE -> text("이번에 쓸 수 있는 시간을 다 썼어요.")
+                Reason.SCHEDULE -> text("쓰지 않기로 정한 시간대예요.")
+                Reason.FOCUS -> text("집중 시간이에요.")
+                Reason.GROUP_USAGE -> text("그룹의 오늘 사용 시간을 다 썼어요.")
+                Reason.GROUP_OPENS -> text("그룹의 오늘 실행 횟수를 다 썼어요.")
             }
-        } + if (decision.reasons.any { it in setOf(Reason.DAILY_USAGE, Reason.OPEN_COUNT, Reason.GROUP_USAGE, Reason.GROUP_OPENS) }) "\n" + text("일일 한도는 현지 시각 자정에 초기화됩니다.") else ""
+        } + (if (decision.reasons.any { it in setOf(Reason.DAILY_USAGE, Reason.OPEN_COUNT, Reason.GROUP_USAGE, Reason.GROUP_OPENS) }) "\n" + text("하루 한도는 자정에 다시 채워져요.") else "") +
+            (if (resistedToday > 0) "\n\n" + text("오늘 %1\$d번 참았어요. 잘하고 있어요!", resistedToday) else "")
     }
+
+    /**
+     * The breathing pause before [packageName] opens: [seconds] to wait, then "open anyway" calls [proceed].
+     * Home stays available the whole time.
+     */
+    fun showPause(packageName: String, appName: String, seconds: Int, opensToday: Int, proceed: () -> Unit) {
+        attach()
+        lastShown = { showPause(packageName, appName, seconds, opensToday, proceed) }
+        mode = "pause:$packageName"
+        settingsButton?.visibility = View.GONE
+        heading?.text = text("숨 한 번 쉬어요")
+        detail?.text = text("%1\$s · 오늘 %2\$d번째 열기예요. 지금 꼭 필요한가요?", appName, opensToday + 1)
+        val button = continueButton ?: return
+        button.visibility = View.VISIBLE
+        button.setOnClickListener { proceed() }
+        stopCountdown()
+        var left = seconds
+        val tick = object : Runnable {
+            override fun run() {
+                button.isEnabled = left <= 0
+                button.text = if (left > 0) text("그래도 열기 (%1\$d)", left) else text("그래도 열기")
+                if (left-- > 0) handler.postDelayed(this, 1000)
+            }
+        }
+        countdown = tick
+        tick.run()
+    }
+
+    /** After [minutes] of continuous use: keep going (calls [proceed]) or go home. */
+    fun showCheckIn(packageName: String, appName: String, minutes: Int, proceed: () -> Unit) {
+        attach()
+        lastShown = { showCheckIn(packageName, appName, minutes, proceed) }
+        mode = "checkin:$packageName"
+        stopCountdown()
+        settingsButton?.visibility = View.GONE
+        heading?.text = text("%1\$d분 지났어요", minutes)
+        detail?.text = text("%1\$s, 계속 쓸까요?", appName)
+        continueButton?.apply { visibility = View.VISIBLE; isEnabled = true; text = text("계속 쓰기"); setOnClickListener { proceed() } }
+    }
+
+    private fun stopCountdown() { countdown?.let(handler::removeCallbacks); countdown = null }
 
     private companion object {
         val SUGGESTIONS = listOf("물 한 잔 마시기", "1분 스트레칭", "창밖을 20초 바라보기", "할 일 하나 적기", "심호흡 다섯 번", "자리에서 일어나 걷기")
     }
 
     fun hide() {
+        stopCountdown()
         root?.let { manager.removeView(it) }
-        root = null; heading = null; detail = null; lastShown = null
+        root = null; heading = null; detail = null; lastShown = null; settingsButton = null; continueButton = null; mode = null
     }
     private fun dp(value: Int) = (value * service.resources.displayMetrics.density).toInt()
 }

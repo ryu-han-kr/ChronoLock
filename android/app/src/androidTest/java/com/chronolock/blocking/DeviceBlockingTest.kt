@@ -51,7 +51,7 @@ class DeviceBlockingTest {
         shell("input keyevent KEYCODE_HOME")
         shell("appops set $app GET_USAGE_STATS allow")
         db = Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db")
-            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8).build()
+            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9).build()
         if (rebootStage != "verify") {
             db.clearAllTables()
             // Without a checkpoint the service recovers usage since midnight, including earlier scenarios.
@@ -152,10 +152,10 @@ class DeviceBlockingTest {
         assertTrue("daily usage reaches 60s", daily()!!.usageMillis >= 60_000)
         assertTrue("must not block early: $elapsed", elapsed >= 58_000)
         assertTrue("blocking latency: $elapsed", elapsed <= 65_000)
-        blocked("오늘 설정한 사용시간을 모두 사용했습니다.")
+        blocked("오늘 정한 사용 시간을 다 썼어요.")
         android.util.Log.i("ChronoDeviceTest", "daily60 observed elapsedMs=$elapsed usageMs=${daily()!!.usageMillis}")
         capture("daily60-offline")
-        home(); launch(); blocked("오늘 설정한 사용시간을 모두 사용했습니다.")
+        home(); launch(); blocked("오늘 정한 사용 시간을 다 썼어요.")
     }
 
     @Test fun fourthOpen_blocks_butSameAppActivityDoesNotCountAgain() {
@@ -171,7 +171,7 @@ class DeviceBlockingTest {
         assertEquals(3, daily()!!.opens)
         assertFalse(checkpoint()!!.wasBlocked)
         home(); launch()
-        blocked("오늘 허용한 실행 횟수를 모두 사용했습니다.")
+        blocked("오늘 허용한 실행 횟수를 다 썼어요.")
         assertEquals(3, daily()!!.opens)
         capture("fourth-open")
     }
@@ -191,11 +191,11 @@ class DeviceBlockingTest {
 
     @Test fun sessionLimit_survivesAccessibilityReconnect_andSettingsRemainReachable() {
         rule(session = 3)
-        launch(); blocked("이번 사용시간 제한에 도달했습니다.")
+        launch(); blocked("이번에 쓸 수 있는 시간을 다 썼어요.")
         disconnect()
         await("overlay removed on disconnect") { !textVisible("지금은 쉬는 시간입니다") }
         connect()
-        blocked("이번 사용시간 제한에 도달했습니다.")
+        blocked("이번에 쓸 수 있는 시간을 다 썼어요.")
         val button = nodes().flatMap { it.findAccessibilityNodeInfosByText("내 제한 설정 보기") }.first { it.isClickable }
         assertTrue(button.performAction(AccessibilityNodeInfo.ACTION_CLICK))
         await("settings action leaves blocked target") { checkpoint()?.observedPackage == null }
@@ -233,7 +233,7 @@ class DeviceBlockingTest {
 
     @Test fun deletingRule_removesActiveOverlay() {
         rule(session = 2)
-        launch(); blocked("이번 사용시간 제한에 도달했습니다.")
+        launch(); blocked("이번에 쓸 수 있는 시간을 다 썼어요.")
         runBlocking { db.dao().deleteRule(target) }
         await("rule removal unblocks") { checkpoint()?.wasBlocked == false }
         await("overlay hidden") { !textVisible("지금은 쉬는 시간입니다") }
@@ -245,7 +245,7 @@ class DeviceBlockingTest {
         if (rebootStage == "seed") {
             runBlocking { db.dao().saveDaily(listOf(DailyEntity(target, clock.date.toString(), 60_000, 3, 0))) }
             rule(daily = 60, opens = 3, cooldown = 30)
-            launch(); blocked("오늘 설정한 사용시간을 모두 사용했습니다.")
+            launch(); blocked("오늘 정한 사용 시간을 다 썼어요.")
             assertTrue(preferences.edit().putInt("bootId", clock.bootId).putString("date", clock.date.toString()).commit())
             capture("before-reboot")
         } else {
@@ -256,7 +256,7 @@ class DeviceBlockingTest {
             assertEquals(3, saved.maxOpenCount)
             assertTrue(daily()!!.usageMillis >= 60_000)
             assertEquals(3, daily()!!.opens)
-            connect(); launch(); blocked("오늘 설정한 사용시간을 모두 사용했습니다.")
+            connect(); launch(); blocked("오늘 정한 사용 시간을 다 썼어요.")
             assertEquals(clock.bootId, checkpoint()!!.bootId)
             capture("after-reboot")
             preferences.edit().clear().commit()
