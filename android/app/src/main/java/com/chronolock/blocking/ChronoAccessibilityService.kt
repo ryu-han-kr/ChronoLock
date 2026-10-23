@@ -137,11 +137,13 @@ class ChronoAccessibilityService : AccessibilityService() {
         }
         scope.launch {
             var wasInteractive = true
+            var ticks = 0
             while (isActive) {
                 delay(1000)
                 val interactive = environment.interactive()
                 // One tick closes the session when the screen locks; none while it stays off, so no per-second writes.
                 if (interactive || wasInteractive) commands.send(Command.Tick)
+                if (interactive && ++ticks % RECONCILE_TICKS == 0) reconcileForeground()
                 wasInteractive = interactive
             }
         }
@@ -203,6 +205,22 @@ class ChronoAccessibilityService : AccessibilityService() {
                 if (app in Browsers.urlBarIds) requestSiteCheck(app)
                 commands.trySend(Command.Foreground(limitedWindowApp() ?: app))
             }
+        }
+    }
+
+    /**
+     * Android occasionally drops the window-state event of an app switch (seen right after the service reconnects), which
+     * would leave the previous app observed until the next switch. Compares the active application window with what is
+     * observed and sends the switch that was missed.
+     */
+    private fun reconcileForeground() {
+        val top = runCatching {
+            windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.isActive }?.root?.packageName?.toString()
+        }.getOrNull() ?: return
+        if (top == observed || top == packageName || (::overlay.isInitialized && overlay.visible)) return
+        // Only a missed switch into an app; the launcher or taskbar can hold the active window while an app is still on screen.
+        if (environment.windowKind(top) == WindowKind.APP) {
+            commands.trySend(Command.Foreground(limitedWindowApp() ?: top))
         }
     }
 
@@ -330,6 +348,8 @@ class ChronoAccessibilityService : AccessibilityService() {
         const val SITE_CHECK_MS = 300L
         const val RESTART_MIN_MS = 5_000L
         const val RESTART_MAX_MS = 300_000L
+        /** Seconds between checks for a missed app switch. */
+        const val RECONCILE_TICKS = 3
         /** Marker for an address bar being edited. */
         val FOCUSED = String(charArrayOf('\u0000'))
     }

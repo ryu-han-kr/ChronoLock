@@ -181,8 +181,8 @@ class DeviceBlockingTest {
         launch(); home()
         val mark = closed()
         SystemClock.sleep(10_000)
-        launch(); blocked("재실행까지")
-        home(); launch(); blocked("재실행까지")
+        launch(); blocked("다시 열기까지")
+        home(); launch(); blocked("다시 열기까지")
         assertEquals(mark.epochMillis, closed().epochMillis)
         capture("cooldown")
         await("cooldown expires", 32_000) { checkpoint()?.wasBlocked == false }
@@ -193,13 +193,13 @@ class DeviceBlockingTest {
         rule(session = 3)
         launch(); blocked("이번에 쓸 수 있는 시간을 다 썼어요.")
         disconnect()
-        await("overlay removed on disconnect") { !textVisible("지금은 쉬는 시간입니다") }
+        await("overlay removed on disconnect") { !textVisible("지금은 쉬는 시간이에요") }
         connect()
         blocked("이번에 쓸 수 있는 시간을 다 썼어요.")
         val button = nodes().flatMap { it.findAccessibilityNodeInfosByText("내 제한 설정 보기") }.first { it.isClickable }
         assertTrue(button.performAction(AccessibilityNodeInfo.ACTION_CLICK))
         await("settings action leaves blocked target") { checkpoint()?.observedPackage == null }
-        assertFalse(textVisible("지금은 쉬는 시간입니다"))
+        assertFalse(textVisible("지금은 쉬는 시간이에요"))
     }
 
     @Test fun screenLock_doesNotAccumulateUsage() {
@@ -231,12 +231,27 @@ class DeviceBlockingTest {
         await("usage after permission restored") { (daily()?.usageMillis ?: 0) > 0 }
     }
 
+    @Test fun pauseBeforeOpening_countsDown_thenOpensWithoutBlocking() {
+        runBlocking { db.dao().saveRule(RuleEntity(target, "Device verification", null, null, null, pauseSeconds = 3)) }
+        connect()
+        launch()
+        await("pause shown") { textVisible("숨 한 번 쉬어요") }
+        capture("pause-before-opening")
+        assertFalse(checkpoint()!!.wasBlocked)
+        assertTrue(textVisible("그래도 열기 ("))
+        await("countdown ends", 8_000) { !textVisible("그래도 열기 (") }
+        val button = nodes().flatMap { it.findAccessibilityNodeInfosByText("그래도 열기") }.first { it.isClickable && it.isEnabled }
+        assertTrue(button.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+        await("pause dismissed") { !textVisible("숨 한 번 쉬어요") }
+        await("usage counted after opening") { (daily()?.usageMillis ?: 0) > 1000 }
+    }
+
     @Test fun deletingRule_removesActiveOverlay() {
         rule(session = 2)
         launch(); blocked("이번에 쓸 수 있는 시간을 다 썼어요.")
         runBlocking { db.dao().deleteRule(target) }
         await("rule removal unblocks") { checkpoint()?.wasBlocked == false }
-        await("overlay hidden") { !textVisible("지금은 쉬는 시간입니다") }
+        await("overlay hidden") { !textVisible("지금은 쉬는 시간이에요") }
     }
 
     @Test fun rebootCheckpoint() {
