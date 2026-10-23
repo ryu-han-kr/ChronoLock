@@ -126,7 +126,7 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
     val apps = view.apps
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(1 to tr("하루"), 7 to tr("일주일"), 30 to tr("한 달"), 90 to tr("3개월")).forEach { (count, label) ->
+            (listOf(1 to tr("하루"), 7 to tr("일주일"), 30 to tr("한 달")) + listOfNotNull((90 to tr("3개월")).takeIf { state.pro })).forEach { (count, label) ->
                 FilterChip(selected = filter.days == count, onClick = { filter.days = count }, label = { Text(label) })
             }
         }
@@ -223,7 +223,8 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
                 }
             }
         }
-        YearCalendar(state.historyYear, today)
+        if (state.pro) YearCalendar(state.historyYear, today)
+        else Text(tr("3개월 기록과 1년 달력은 프로에서 볼 수 있어요."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Text(tr("앱별 사용 기록"), style = MaterialTheme.typography.titleLarge)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = !filter.byOpens, onClick = { filter.byOpens = false }, label = { Text(tr("시간순")) })

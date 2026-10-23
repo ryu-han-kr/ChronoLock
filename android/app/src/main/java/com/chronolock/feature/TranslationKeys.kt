@@ -503,6 +503,22 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "목표 잠금을 풀었어요. 수고했어요!" to R.string.lock_goal_done,
     "오늘의 조각은 이미 받았어요. 내일도 한도를 지켜 보세요." to R.string.lock_piece_taken,
     "잠금 모드가 켜져 있다면: 기간 잠금은 정한 시간이 끝나야, 목표 잠금은 목표를 이룬 뒤 비밀번호를 넣어야 풀려요. 그 전에는 아래 '앱 밖에서 멈추기'만 남습니다." to R.string.unlock_step_lock,
+    "ChronoLock 프로" to R.string.pro_title,
+    "앱 그룹 무제한" to R.string.pro_groups,
+    "웹사이트 차단 50개" to R.string.pro_sites,
+    "목표 잠금과 조각 비밀번호" to R.string.pro_goal,
+    "3개월 기록과 1년 달력" to R.string.pro_history,
+    "모든 테마와 나만의 테마" to R.string.pro_themes,
+    "프로를 사용하고 있어요. 고마워요!" to R.string.pro_owned,
+    "결제 확인을 기다리고 있습니다. 완료되면 프로가 열립니다." to R.string.pro_pending,
+    "프로 평생 이용권 · %1\$s" to R.string.pro_buy,
+    "프로 상품을 불러오는 중" to R.string.pro_loading,
+    "한 번 결제하면 같은 Google 계정의 기기에서 계속 쓸 수 있어요." to R.string.pro_note,
+    "무료 버전은 사이트를 3개까지 차단할 수 있어요. 프로에서 50개까지 늘어나요." to R.string.pro_limit_sites,
+    "무료 버전은 앱 그룹을 1개까지 만들 수 있어요. 프로에서는 제한이 없어요." to R.string.pro_limit_groups,
+    "목표 잠금은 프로 기능이에요." to R.string.pro_limit_goal,
+    "기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요." to R.string.pro_limit_themes,
+    "3개월 기록과 1년 달력은 프로에서 볼 수 있어요." to R.string.pro_limit_history,
 )
 
 /** Messages whose wording follows a count; the pair holds the plurals resource and the index of the count argument. */

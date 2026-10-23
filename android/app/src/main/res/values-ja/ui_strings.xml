@@ -549,4 +549,20 @@
         <item quantity="other">"%1$d日"</item>
     </plurals>
     <string name="unlock_step_lock">"ロックモードがオンの場合：期間ロックは時間が終わると、目標ロックは目標達成後にパスワードを入力すると解除されます。それまでは下の「アプリの外で止める」だけです。"</string>
+    <string name="pro_title">"ChronoLock プロ"</string>
+    <string name="pro_groups">"アプリグループ無制限"</string>
+    <string name="pro_sites">"ウェブサイトを50件までブロック"</string>
+    <string name="pro_goal">"目標ロックとピースパスワード"</string>
+    <string name="pro_history">"3か月の記録と1年カレンダー"</string>
+    <string name="pro_themes">"すべてのテーマとマイテーマ"</string>
+    <string name="pro_owned">"プロをご利用中です。ありがとうございます！"</string>
+    <string name="pro_pending">"決済の確認を待っています。完了するとプロが使えます。"</string>
+    <string name="pro_buy">"プロ買い切り · %1$s"</string>
+    <string name="pro_loading">"プロを読み込み中"</string>
+    <string name="pro_note">"一度購入すれば同じGoogleアカウントの端末で使い続けられます。"</string>
+    <string name="pro_limit_sites">"無料版でブロックできるサイトは3件までです。プロでは50件まで増えます。"</string>
+    <string name="pro_limit_groups">"無料版で作れるアプリグループは1つです。プロでは無制限です。"</string>
+    <string name="pro_limit_goal">"目標ロックはプロの機能です。"</string>
+    <string name="pro_limit_themes">"基本以外のテーマとマイテーマはプロで使えます。"</string>
+    <string name="pro_limit_history">"3か月の記録と1年カレンダーはプロで見られます。"</string>
 </resources>
