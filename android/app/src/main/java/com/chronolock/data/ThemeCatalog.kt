@@ -87,7 +87,7 @@ object ThemeCatalog {
     val trend: List<AppTheme> = trendSeeds.mapIndexed { index, seed -> fromSeed("trend_${index + 1}", listOf(TREND), seed) }
         .filter { it.name !in trendAliases }.let { themes ->
         val words = themes.map { theme ->
-            listOfNotNull(pageWord(theme.background), wordFor(hueOf(theme.primary)).takeIf { saturation(theme.primary) >= .2 }).distinct()
+            listOfNotNull(pageWord(theme.background), colorWord(theme.primary).takeIf { saturation(theme.primary) >= .2 }).distinct()
         }
         themes.mapIndexed { index, theme ->
             val word = words[index]
@@ -98,12 +98,26 @@ object ThemeCatalog {
     }
     val pastel: List<AppTheme> = hues.map { hue -> tint("pastel_$hue", listOf(PASTEL, wordFor(hue)), hue, hue, .70, .90) }
     val cool: List<AppTheme> = coolHues.map { hue -> tint("cool_$hue", listOf(COOL, wordFor(hue)), hue, hue, .30, .84) }
+    /** The accent is named by what it shows: a yellow accent darkened for contrast is "올리브" or "골드", not "레몬". */
     val duotone: List<AppTheme> = duotonePairs.map { (page, accent) ->
-        tint("duo_${page}_$accent", listOf(DUOTONE, wordFor(page), wordFor(accent)), page, accent, .60, .90)
+        tint("duo_${page}_$accent", emptyList(), page, accent, .60, .90).let { theme ->
+            theme.copy(label = listOf(DUOTONE, wordFor(page), shadeWord(theme.primary) ?: wordFor(accent)))
+        }
     }
-    val gradient: List<AppTheme> = hues.map { hue -> gradient("gradient_$hue", listOf(GRADIENT, wordFor(hue)), hue, (hue + 60) % 360) }
+    /**
+     * Named by the top colour. The accent follows the bottom colour and usually reads as a deeper shade of it; when
+     * contrast nudging turns it brown, gold or olive (a rose page with an olive button) that word is added.
+     */
+    val gradient: List<AppTheme> = hues.map { hue ->
+        gradient("gradient_$hue", emptyList(), hue, (hue + 60) % 360).let { theme ->
+            theme.copy(label = listOf(GRADIENT, wordFor(hue)) + listOfNotNull(shadeWord(theme.primary)))
+        }
+    }
     val dual: List<AppTheme> = dualPairs.map { (from, to) -> gradient("dual_${from}_$to", listOf(DUAL, wordFor(from), wordFor(to)), from, to) }
-    val deep: List<AppTheme> = hues.map { hue -> deep("deep_$hue", listOf(DEEP, wordFor(hue)), hue) }
+    /** Deep pages are dark, so warm hues read as brown or olive there rather than peach or lemon. */
+    val deep: List<AppTheme> = hues.map { hue ->
+        deep("deep_$hue", emptyList(), hue).let { theme -> theme.copy(label = listOf(DEEP, shadeWord(theme.background) ?: wordFor(hue))) }
+    }
     val midnight: List<AppTheme> = midnightSolids.map { solid -> darkSolid("midnight_${solid.id}", listOf(MIDNIGHT, solid.word), solid) }
     val neutral: List<AppTheme> = neutralSolids.map { solid ->
         if (solid.lightness < .5) darkSolid("neutral_${solid.id}", listOf(NEUTRAL, solid.word), solid)
@@ -115,7 +129,8 @@ object ThemeCatalog {
         Triple("rainbow", listOf("무지개"), 0 to setOf(ThemeEffect.PASTEL, ThemeEffect.RAINBOW)),
         Triple("rainbow_night", listOf(MIDNIGHT, "무지개"), 0 to setOf(ThemeEffect.MIDNIGHT, ThemeEffect.RAINBOW)),
         Triple("aurora", listOf("오로라"), 160 to setOf(ThemeEffect.AURORA)),
-        Triple("aurora_violet", listOf("오로라", "바이올렛"), 285 to setOf(ThemeEffect.DEEP, ThemeEffect.AURORA)),
+        // Violet flowing into gold, with a gold button; the name says both (stored id unchanged).
+        Triple("aurora_violet", listOf("오로라", "바이올렛", "골드"), 285 to setOf(ThemeEffect.DEEP, ThemeEffect.AURORA)),
         Triple("sunset", listOf("노을"), 20 to setOf(ThemeEffect.SUNSET)),
         Triple("ocean", listOf("아쿠아"), 190 to setOf(ThemeEffect.GRADIENT)),
         // A soft lavender-to-orchid drift; the complementary sweep it used to have ended in green with a green button.
@@ -263,6 +278,23 @@ object ThemeCatalog {
     }
 
     private fun wordFor(hue: Int): String = hueWords.minByOrNull { (word, _) -> hueDistance(hue, word) }!!.second
+
+    /**
+     * A word for a warm colour that is too dark to look like its hue word: contrast nudging turns peach, amber and
+     * lemon into brown, gold and olive, and a deep page in those hues is brown or olive too. Null for other colours.
+     */
+    private fun shadeWord(color: Long): String? {
+        if (lightness(color) >= .36 || saturation(color) < .2) return null
+        return when (hueOf(color)) {
+            in 20 until 35 -> "브라운"
+            in 35 until 50 -> "골드"
+            in 50..70 -> "올리브"
+            else -> null
+        }
+    }
+
+    /** The word for a colour shown as is: a dark warm shade first, else the nearest hue word. */
+    private fun colorWord(color: Long): String = shadeWord(color) ?: wordFor(hueOf(color))
 
     private fun fromSeed(id: String, label: List<String>, seed: List<Int>): AppTheme {
         val colors = seed.map { 0xFF000000L or it.toLong() }

@@ -193,6 +193,9 @@
     <string name="theme_word_pink">"ピンク"</string>
     <string name="theme_word_coral">"コーラル"</string>
     <string name="theme_word_amber">"アンバー"</string>
+    <string name="theme_word_brown">"ブラウン"</string>
+    <string name="theme_word_gold">"ゴールド"</string>
+    <string name="theme_word_olive">"オリーブ"</string>
     <string name="theme_word_teal">"ティール"</string>
     <string name="theme_word_cerulean">"セルリアン"</string>
     <string name="theme_word_blue">"ブルー"</string>

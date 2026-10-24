@@ -171,9 +171,9 @@ Bloquea las apps elegidas durante un tiempo, también desde un icono de Ajustes 
 ■ Historial
 Consulta el tiempo y las aperturas por día, semana o mes, tu racha y el cambio respecto a la semana pasada.
 
-■ Modo bloqueo
-• Bloqueo por tiempo: durante un plazo (de 1 hora a 7 días) no se pueden quitar ni suavizar los límites.
-• Bloqueo por objetivo: cumple tus límites N días seguidos y desbloquea con una contraseña. Con la "contraseña por piezas" recibes un dígito al día.
+■ Modo candado
+• Candado por tiempo: durante un plazo (de 1 hora a 7 días) no se pueden quitar ni suavizar los límites.
+• Candado por objetivo: cumple tus límites N días seguidos y ábrelo con una contraseña. Con la "contraseña por piezas" recibes un dígito al día.
 
 ■ Notificación en vivo
 Mientras usas una app limitada, consulta en una notificación el tiempo y las aperturas que te quedan.
