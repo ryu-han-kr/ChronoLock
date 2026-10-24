@@ -97,7 +97,7 @@ class HistoryRepositoryTest {
         assertEquals(HistoryDailyEntity("app.a", Instant.ofEpochMilli(cutoff).atZone(zone).toLocalDate().toString(), "App A", 1000, 1), db.historyDao().daily().single())
         assertEquals(2, db.historyDao().events().size)
     }
-    @Test fun dayRows_outliveTheirEvents_forNinetyDays_andYearTotalsForAYear() = runBlocking {
+    @Test fun dayRows_outliveTheirEvents_forAYear_thenGoOldestFirst() = runBlocking {
         val old = now - 60 * day
         // Built while its events existed; later imports no longer see them (Android and the app keep events ~a week).
         repository().importEvents(listOf(event(old, "RESUME"), event(old + 4000, "PAUSE")), labels, emptySet(), old + 5000, zone)
@@ -107,10 +107,12 @@ class HistoryRepositoryTest {
             db.historyDao().daily().sortedBy { it.date }.map { it.date to it.usageMillis })
         repository().refreshYear(now, zone)
         assertEquals(5000L, db.historyDao().year().sumOf { it.usageMillis })
-        // Past 90 days the per-app row goes; the year table still has the day.
+        // Three months on, the per-app row is still there; once it is a year old it goes while the newer day stays.
         repository().importEvents(emptyList(), labels, emptySet(), old + 95 * day, zone)
+        assertTrue(db.historyDao().daily().any { it.date == date(old).toString() })
+        repository().importEvents(emptyList(), labels, emptySet(), old + 366 * day, zone)
         assertTrue(db.historyDao().daily().none { it.date == date(old).toString() })
-        assertTrue(db.historyDao().year().any { it.date == date(old).toString() })
+        assertTrue(db.historyDao().daily().any { it.date == date(now).toString() })
         repository().refreshYear(old + 400 * day, zone)
         assertTrue(db.historyDao().year().none { it.date == date(old).toString() })
     }

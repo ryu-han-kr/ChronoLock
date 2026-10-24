@@ -291,6 +291,7 @@ internal fun ChronoScreen(
                             }
                             2 -> {
                                 historyItems(state, today, historyFilter, historyView, refreshHistory, usagePermission, suggest = { app, recipe -> edit(app, recipe) },
+                                    limit = { app -> edit(app, null) },
                                     setPin = setHistoryPin, deleteHistory = deleteHistory, changePin = changeHistoryPin, nowEpoch = nowEpoch)
                             }
                             3 -> {

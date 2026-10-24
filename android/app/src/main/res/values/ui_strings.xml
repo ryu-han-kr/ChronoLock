@@ -21,7 +21,7 @@
     <string name="refreshing">"갱신 중…"</string>
     <string name="refresh">"새로고침"</string>
     <string name="history_error">"기록을 불러오지 못했습니다. 권한을 확인하고 다시 시도해 주세요."</string>
-    <string name="history_retention">"기록은 이 기기에 최대 3개월(90일)간 누적됩니다. 첫 실행 전 기록과 수집이 중단된 기간은 누락될 수 있습니다. 홈 화면은 제외하며 분할 화면·화면 속 화면의 수치는 다를 수 있습니다."</string>
+    <string name="history_retention">"기록은 이 기기에 최대 1년(365일)간 누적되고, 1년이 지난 날부터 차례로 지워집니다. 첫 실행 전 기록과 수집이 중단된 기간은 누락될 수 있습니다. 홈 화면은 제외하며 분할 화면·화면 속 화면의 수치는 다를 수 있습니다."</string>
     <string name="collapse_days">"일별 기록 접기"</string>
     <string name="expand_days">"일별 기록 보기"</string>
     <string name="no_records">"기록 없음"</string>
@@ -64,7 +64,7 @@
     <string name="normal_mode_hint">"현재는 일반 모드입니다. 언제든 규칙을 수정하거나 삭제할 수 있습니다. Android 설정에서 권한 해제와 앱 삭제도 가능합니다."</string>
     <string name="blocking_limits_hint">"기기·배터리 설정에 따라 감지와 차단이 늦어질 수 있습니다. 분할 화면과 화면 속 화면은 아직 지원하지 않습니다."</string>
     <string name="local_data">"로컬 기록 관리"</string>
-    <string name="local_data_hint">"앱 사용 기록을 최대 30일간 보관합니다. 기록은 이 기기에만 저장되며 서버로 전송하지 않습니다."</string>
+    <string name="local_data_hint">"앱 사용 기록을 최대 1년간 보관합니다. 기록은 이 기기에만 저장되며 서버로 전송하지 않습니다."</string>
     <string name="delete_all">"모든 규칙과 사용 기록 삭제"</string>
     <string name="today_selected">"오늘 선택한 앱 사용"</string>
     <string name="enabled_count">"%1$d개 앱 제한 켜짐"</string>
@@ -228,7 +228,7 @@
     <string name="accessibility_title">"접근성 권한 안내"</string>
     <string name="usage_title">"사용 정보 접근 안내"</string>
     <string name="accessibility_disclosure">"ChronoLock은 앱 전환 이벤트로 실행 중인 앱을 확인하고, 직접 설정한 제한에 따라 다른 앱 위에 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인만 확인합니다. 그 밖의 화면 텍스트, 비밀번호, 입력 내용은 읽지 않습니다. 선택한 앱의 패키지 이름, 차단할 사이트 목록과 사용·차단 기록은 이 기기에만 저장되며 전송되지 않고, 방문한 주소는 저장하지 않습니다. Android 설정에서 언제든 해제할 수 있습니다. 동의하면 다음 설정 화면에서 ChronoLock을 직접 활성화해 주세요."</string>
-    <string name="usage_disclosure">"사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 3개월(90일)간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."</string>
+    <string name="usage_disclosure">"사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 1년간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."</string>
     <string name="consent_settings">"동의하고 설정 열기"</string>
     <string name="error_data">"저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요."</string>
     <string name="error_apps">"앱 목록을 읽지 못했습니다."</string>
@@ -472,13 +472,13 @@
     <string name="history_year_less">"적게"</string>
     <string name="history_year_more">"많이"</string>
     <string name="history_delete">"기록 삭제"</string>
-    <string name="history_delete_hint">"기록은 직접 정한 비밀번호를 입력해야만 지울 수 있어요. 3개월이 지난 기록은 자동으로 지워집니다."</string>
+    <string name="history_delete_hint">"기록은 직접 정한 비밀번호를 입력해야만 지울 수 있어요. 1년이 지난 기록은 오래된 날부터 자동으로 지워집니다."</string>
     <string name="history_pin_set_title">"기록 삭제 비밀번호 정하기"</string>
     <string name="history_pin_set_body">"기록은 이 비밀번호를 알아야만 지울 수 있어요. 잊어버리면 앱을 삭제해야만 지워지니 꼭 기억해 주세요."</string>
     <string name="history_pin_field">"비밀번호 (숫자 4~12자리)"</string>
     <string name="history_pin_confirm">"비밀번호 확인"</string>
     <string name="history_pin_enter">"비밀번호"</string>
-    <string name="history_delete_body">"비밀번호를 입력하면 3개월 기록과 1년 달력이 모두 지워집니다. 되돌릴 수 없습니다."</string>
+    <string name="history_delete_body">"비밀번호를 입력하면 1년 기록과 달력이 모두 지워집니다. 되돌릴 수 없습니다."</string>
     <string name="history_pin_invalid">"비밀번호는 숫자 4~12자리로 정해 주세요."</string>
     <string name="history_pin_mismatch">"두 비밀번호가 다릅니다."</string>
     <string name="history_pin_wrong">"비밀번호가 맞지 않습니다."</string>
@@ -560,7 +560,7 @@
     <string name="pro_groups">"앱 그룹 무제한"</string>
     <string name="pro_sites">"웹사이트 차단 50개"</string>
     <string name="pro_goal">"목표 잠금과 조각 비밀번호"</string>
-    <string name="pro_history">"3개월 기록과 1년 달력"</string>
+    <string name="pro_history">"3개월·1년 기록과 1년 달력"</string>
     <string name="pro_themes">"모든 테마와 나만의 테마"</string>
     <string name="pro_owned">"프로를 사용하고 있어요. 고마워요!"</string>
     <string name="pro_pending">"결제 확인을 기다리고 있습니다. 완료되면 프로가 열립니다."</string>
@@ -571,7 +571,7 @@
     <string name="pro_limit_groups">"무료 버전은 앱 그룹을 1개까지 만들 수 있어요. 프로에서는 제한이 없어요."</string>
     <string name="pro_limit_goal">"목표 잠금은 프로 기능이에요."</string>
     <string name="pro_limit_themes">"기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요."</string>
-    <string name="pro_limit_history">"3개월 기록과 1년 달력은 프로에서 볼 수 있어요."</string>
+    <string name="pro_limit_history">"3개월·1년 기록과 1년 달력은 프로에서 볼 수 있어요."</string>
     <string name="lock_pill_goal">"목표 잠금 중"</string>
     <string name="lock_pill_until">"%1$s까지 잠금"</string>
     <string name="weekly_report_channel">"주간 리포트"</string>
@@ -654,4 +654,5 @@
     <plurals name="group_schedules">
         <item quantity="other">"차단 시간대 %1$d개"</item>
     </plurals>
+    <string name="history_one_year">"1년"</string>
 </resources>

@@ -100,7 +100,8 @@ class HistoryRepository @Inject constructor(
     }
 
     companion object {
-        const val RETAIN_DAYS = 90
+        /** Per-app day rows are kept a year; each refresh drops the days that fell out of it, oldest first. */
+        const val RETAIN_DAYS = 365
         const val EVENT_DAYS = 10
         const val YEAR_DAYS = 366
         private const val DAY = 86_400_000L
