@@ -23,12 +23,18 @@ data class Backup(
     val language: String? = null,
     val strictMinutes: Int? = null,
     val sites: List<BlockedSite> = emptyList(),
+    /** Look and feel beyond the day theme (version 3); null in older files, which leaves the current setting. */
+    val nightTheme: String? = null,
+    val followSystem: Boolean? = null,
+    val favoriteThemes: Set<String>? = null,
+    val mascot: String? = null,
+    val reduceMotion: Boolean? = null,
 )
 
 object BackupCodec {
     private const val FORMAT = "chronolock-backup"
-    // Version 2 adds blocked sites; version 1 files restore with none.
-    private const val VERSION = 2
+    // Version 2 adds blocked sites; version 3 the night theme, favourites, character and motion. Older files restore without them.
+    private const val VERSION = 3
 
     fun encode(backup: Backup, exportedAt: Long): String = JSONObject()
         .put("format", FORMAT).put("version", VERSION).put("exportedAt", exportedAt)
@@ -47,7 +53,10 @@ object BackupCodec {
                 .putOpt("schedules", group.toEntity().schedules)
         }))
         .put("sites", JSONArray(backup.sites.map { JSONObject().put("domain", it.domain).put("enabled", it.enabled) }))
-        .put("settings", JSONObject().putOpt("theme", backup.theme).putOpt("language", backup.language).putOpt("strictMinutes", backup.strictMinutes))
+        .put("settings", JSONObject().putOpt("theme", backup.theme).putOpt("language", backup.language).putOpt("strictMinutes", backup.strictMinutes)
+            .putOpt("nightTheme", backup.nightTheme).putOpt("followSystem", backup.followSystem)
+            .putOpt("favoriteThemes", backup.favoriteThemes?.let { JSONArray(it.sorted()) })
+            .putOpt("mascot", backup.mascot).putOpt("reduceMotion", backup.reduceMotion))
         .toString(2)
 
     /** Throws IllegalArgumentException for anything that is not a valid backup of a known version. */
@@ -70,7 +79,10 @@ object BackupCodec {
         require(rules.map { it.packageName }.toSet().size == rules.size)
         val settings = root.optJSONObject("settings") ?: JSONObject()
         Backup(rules, groups, settings.stringOrNull("theme"), settings.stringOrNull("language"),
-            settings.longOrNull("strictMinutes")?.toInt()?.takeIf { it in Strictness.DELAYS }, sites)
+            settings.longOrNull("strictMinutes")?.toInt()?.takeIf { it in Strictness.DELAYS }, sites,
+            nightTheme = settings.stringOrNull("nightTheme"), followSystem = settings.booleanOrNull("followSystem"),
+            favoriteThemes = settings.optJSONArray("favoriteThemes")?.let { list -> (0 until list.length()).map { list.getString(it) }.toSet() },
+            mascot = settings.stringOrNull("mascot"), reduceMotion = settings.booleanOrNull("reduceMotion"))
     } catch (invalid: org.json.JSONException) {
         throw IllegalArgumentException(INVALID, invalid)
     } catch (invalid: IllegalArgumentException) {
@@ -82,6 +94,7 @@ object BackupCodec {
     private fun JSONArray?.objects(): List<JSONObject> = if (this == null) emptyList() else (0 until length()).map { getJSONObject(it) }
     private fun JSONObject.longOrNull(key: String): Long? = if (has(key) && !isNull(key)) getLong(key) else null
     private fun JSONObject.stringOrNull(key: String): String? = if (has(key) && !isNull(key)) getString(key) else null
+    private fun JSONObject.booleanOrNull(key: String): Boolean? = if (has(key) && !isNull(key)) getBoolean(key) else null
 }
 
 /** Writes and restores backups through files the person picks with the system file picker. */
@@ -94,7 +107,9 @@ class BackupRepository @Inject constructor(
     suspend fun export(uri: Uri, nowEpochMillis: Long) {
         val backup = Backup(repository.rules.first().map { it.toDomain() }, repository.groups.first().map { it.toDomain() },
             preferences.theme.first().name, preferences.language.first().name, preferences.strict.first().delayAt(nowEpochMillis),
-            repository.sites.first().map { it.toDomain() })
+            repository.sites.first().map { it.toDomain() }, nightTheme = preferences.nightTheme.first().name,
+            followSystem = preferences.followSystem.first(), favoriteThemes = preferences.favoriteThemes.first(),
+            mascot = preferences.mascot.first().name, reduceMotion = preferences.reduceMotion.first())
         val text = BackupCodec.encode(backup, nowEpochMillis)
         withContext(Dispatchers.IO) {
             requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).use { it.write(text.toByteArray()) }
@@ -126,6 +141,11 @@ class BackupRepository @Inject constructor(
         backup.theme?.let { preferences.setTheme(AppTheme.fromStored(it)) }
         backup.language?.let { preferences.setLanguage(AppLanguage.fromStored(it)) }
         backup.strictMinutes?.let { minutes -> preferences.updateStrict { it.request(minutes, nowEpochMillis) } }
+        backup.nightTheme?.let { preferences.setNightTheme(AppTheme.fromStored(it)) }
+        backup.followSystem?.let { preferences.setFollowSystem(it) }
+        backup.favoriteThemes?.let { preferences.setFavoriteThemes(it) }
+        backup.mascot?.let { preferences.setMascot(MascotKind.fromStored(it)) }
+        backup.reduceMotion?.let { preferences.setReduceMotion(it) }
     }
 
     private companion object { const val MAX_BYTES = 1_000_000 }
