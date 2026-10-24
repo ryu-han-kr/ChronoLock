@@ -309,7 +309,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                 Text(tr("제한 사용"))
                 Switch(checked = draft.enabled, onCheckedChange = null, enabled = !saving)
             }
-            if (strictMinutes > 0) Text(tr("엄격 모드: 제한을 끄거나 느슨하게 바꾸면 %1\$d분 뒤에 적용됩니다.", strictMinutes),
+            if (strictMinutes > 0) Text(tr("엄격 모드: 제한을 끄거나 느슨하게 바꾸면 %1\$s 뒤에 적용됩니다.", waitText(strictMinutes)),
                 color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             Text(tr("집중 레시피"), fontWeight = FontWeight.Bold)
             if (initialRecipe != null) Text(tr("기록 기반 제안이 준비됐습니다. 기존 제한은 유지하고 비어 있는 항목만 채웠습니다. 확인 후 저장하세요."), style = MaterialTheme.typography.bodySmall)
@@ -640,7 +640,7 @@ internal fun RuleStatus(rule: RuleEntity, held: PendingRuleEntity?, nowEpoch: Lo
     if (choosing) AlertDialog(onDismissRequest = { choosing = false }, title = { Text(tr("얼마 동안 쉴까요?")) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(tr("선택한 시간이 지나면 제한이 자동으로 다시 켜집니다."), style = MaterialTheme.typography.bodySmall)
-            if (strictMinutes > 0) Text(tr("엄격 모드라 %1\$d분 뒤부터 쉬기가 시작됩니다.", strictMinutes),
+            if (strictMinutes > 0) Text(tr("엄격 모드라 %1\$s 뒤부터 쉬기가 시작됩니다.", waitText(strictMinutes)),
                 color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             listOf<Pair<Int?, String>>(10 to tr("%1\$d분", 10), 30 to tr("%1\$d분", 30), 60 to tr("1시간"), null to tr("오늘만")).forEach { (minutes, label) ->
                 OutlinedButton(onClick = { choosing = false; pause(minutes) }, modifier = Modifier.fillMaxWidth()
@@ -650,6 +650,10 @@ internal fun RuleStatus(rule: RuleEntity, held: PendingRuleEntity?, nowEpoch: Lo
     }, confirmButton = {}, dismissButton = { TextButton(onClick = { choosing = false }) { Text(tr("취소")) } })
 }
 
+/** A strict-mode wait in whole hours when it is one (1 h, 24 h), otherwise in minutes. */
+@Composable internal fun waitText(minutes: Int): String =
+    if (minutes >= 60 && minutes % 60 == 0) tr("%1\$d시간", minutes / 60) else tr("%1\$d분", minutes)
+
 @Composable
 internal fun StrictModeCard(state: MainState, nowEpoch: Long, select: (Int) -> Unit, cancel: () -> Unit) {
     val current = state.strict.delayAt(nowEpoch)
@@ -657,16 +661,19 @@ internal fun StrictModeCard(state: MainState, nowEpoch: Long, select: (Int) -> U
         Text(tr("엄격 모드"), style = MaterialTheme.typography.titleLarge)
         Text(tr("제한을 끄거나 느슨하게 바꾸면 정한 시간이 지난 뒤에 적용됩니다. 더 엄격하게 바꾸는 것은 바로 적용되고, 집중 중에는 집중을 끝낼 수 없습니다."),
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Six choices do not fit one row on a phone; they wrap.
+        @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             com.chronolock.domain.Strictness.DELAYS.forEach { minutes ->
+                val locked = !state.pro && minutes > com.chronolock.domain.FreeTier.STRICT_MINUTES
                 FilterChip(selected = current == minutes, onClick = { select(minutes) }, modifier = Modifier.testTag("strict-$minutes"),
-                    label = { Text(when (minutes) { 0 -> tr("끄기"); 60 -> tr("1시간"); else -> tr("%1\$d분", minutes) }) })
+                    label = { Text(if (minutes == 0) tr("끄기") else waitText(minutes) + if (locked) " · PRO" else "") })
             }
         }
         state.strict.waitingAt(nowEpoch)?.let { minutes ->
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(if (minutes == 0) tr("%1\$s에 엄격 모드가 꺼집니다.", timeText(state.strict.pendingAtEpochMillis!!))
-                    else tr("%1\$s에 대기 시간이 %2\$d분으로 바뀝니다.", timeText(state.strict.pendingAtEpochMillis!!), minutes),
+                    else tr("%1\$s에 대기 시간이 %2\$s(으)로 바뀝니다.", timeText(state.strict.pendingAtEpochMillis!!), waitText(minutes)),
                     Modifier.weight(1f), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
                 TextButton(onClick = cancel) { Text(tr("취소")) }
             }

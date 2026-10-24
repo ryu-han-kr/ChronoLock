@@ -8,8 +8,8 @@ import java.time.ZoneId
  * Tightening still applies immediately.
  */
 object Strictness {
-    /** Delay choices in minutes; 0 turns strict mode off. */
-    val DELAYS = listOf(0, 10, 30, 60)
+    /** Delay choices in minutes; 0 turns strict mode off. Beyond [FreeTier.STRICT_MINUTES] they are Pro. */
+    val DELAYS = listOf(0, 10, 30, 60, 360, 1440)
 
     /** Whether replacing [current] with [next] (null deletes the rule) relaxes any restriction at [nowEpochMillis]. */
     fun loosens(current: AppRule?, next: AppRule?, nowEpochMillis: Long): Boolean {

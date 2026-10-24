@@ -344,7 +344,7 @@
     <string name="onboarding_control_body">"Turn off or delete rules whenever you want, and revoke permissions in Android settings."</string>
     <string name="onboarding_start">"Get started"</string>
     <string name="error_save_setting">"Couldn't save the setting. Please try again."</string>
-    <string name="strict_editor_note">"Strict mode: turning off or relaxing a limit takes effect in %1$d min."</string>
+    <string name="strict_editor_note">"Strict mode: turning off or relaxing a limit takes effect in %1$s."</string>
     <string name="schedule_add">"Add time window"</string>
     <string name="schedule_number">"Window %1$d"</string>
     <string name="schedule_remove">"Remove window"</string>
@@ -361,14 +361,14 @@
     <string name="held_at">"Strict mode: %2$s applies at %1$s"</string>
     <string name="pause_title">"How long is the break?"</string>
     <string name="pause_body">"The limit turns back on by itself when the time is up."</string>
-    <string name="pause_strict_delay">"Strict mode is on, so the break starts in %1$d min."</string>
+    <string name="pause_strict_delay">"Strict mode is on, so the break starts in %1$s."</string>
     <string name="one_hour">"1 hour"</string>
     <string name="today_only">"Rest of today"</string>
     <string name="strict_mode">"Strict mode"</string>
     <string name="strict_body">"Turning off or relaxing a limit waits for the time you choose. Making limits stricter applies right away, and focus sessions can't be ended early."</string>
     <string name="strict_off">"Off"</string>
     <string name="strict_turns_off_at">"Strict mode turns off at %1$s."</string>
-    <string name="strict_delay_changes_at">"The wait changes to %2$d min at %1$s."</string>
+    <string name="strict_delay_changes_at">"The wait changes to %2$s at %1$s."</string>
     <string name="strict_limits_note">"It can't stop you from turning off accessibility access in Android settings or uninstalling the app."</string>
     <string name="strict_on_summary">"Strict mode is on. Changes that relax limits apply after the wait."</string>
     <string name="strict_clear_locked">"Turn off strict mode before deleting all data."</string>
@@ -384,7 +384,7 @@
     <string name="group_daily">"%1$s a day together"</string>
     <string name="group_new">"New app group"</string>
     <string name="group_intro">"Grouped apps share one daily time and open count. Each app's own limits still apply."</string>
-    <string name="group_strict_note">"Strict mode: turning off or relaxing a group takes effect in %1$d min."</string>
+    <string name="group_strict_note">"Strict mode: turning off or relaxing a group takes effect in %1$s."</string>
     <string name="group_name">"Group name"</string>
     <string name="group_name_hint">"e.g. Social"</string>
     <string name="group_daily_title">"Shared daily time"</string>
@@ -693,4 +693,5 @@
     <string name="ads_pro_none">"No ads with Pro."</string>
     <string name="ads_where">"A single small banner appears only at the very end of Settings. Never on Today, History, the block screen or during focus."</string>
     <string name="ads_no_longer_sold">"The ad-free subscription is no longer sold. Yours stays active until you cancel it."</string>
+    <string name="pro_limit_strict">"6- and 24-hour waits come with Pro."</string>
 </resources>
