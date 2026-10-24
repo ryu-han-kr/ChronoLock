@@ -626,8 +626,8 @@
     <string name="pro_buy">"Pro de por vida · %1$s"</string>
     <string name="pro_loading">"Cargando Pro"</string>
     <string name="pro_note">"Paga una vez y úsalo en los dispositivos con la misma cuenta de Google."</string>
-    <string name="pro_limit_sites">"La versión gratis bloquea hasta 3 sitios. Pro sube a 50."</string>
-    <string name="pro_limit_groups">"La versión gratis permite 1 grupo. Pro no tiene límite."</string>
+    <string name="pro_limit_sites">"La versión gratis bloquea hasta 5 sitios. Pro sube a 50."</string>
+    <string name="pro_limit_groups">"La versión gratis permite 2 grupos. Pro no tiene límite."</string>
     <string name="pro_limit_goal">"El bloqueo por objetivo es de Pro."</string>
     <string name="pro_limit_themes">"Los temas aparte de los básicos y los temas propios son de Pro."</string>
     <string name="pro_limit_history">"El historial de 3 meses y 1 año y el calendario anual son de Pro."</string>
@@ -720,4 +720,7 @@
     <string name="history_wait_body">"Días recogidos: %1$d · faltan: %2$d. El total aparece cuando el periodo esté completo; nunca inventamos registros."</string>
     <string name="history_show_collected">"Ver días recogidos (%1$d)"</string>
     <string name="history_guide">"¡Ya están los %1$d días! Media diaria: %2$s · más usada: %3$s."</string>
+    <string name="pro_limit_mascot">"Los personajes además del hámster son de Pro."</string>
+    <string name="pro_mascots">"Los 5 personajes"</string>
+    <string name="pro_no_ads">"Sin anuncios"</string>
 </resources>

@@ -586,8 +586,8 @@
     <string name="pro_buy">"专业版终身 · %1$s"</string>
     <string name="pro_loading">"正在加载专业版"</string>
     <string name="pro_note">"一次付款，同一 Google 账户的设备都能使用。"</string>
-    <string name="pro_limit_sites">"免费版最多拦截 3 个网站，专业版可增至 50 个。"</string>
-    <string name="pro_limit_groups">"免费版只能创建 1 个应用组，专业版不限。"</string>
+    <string name="pro_limit_sites">"免费版最多拦截 5 个网站，专业版可增至 50 个。"</string>
+    <string name="pro_limit_groups">"免费版最多创建 2 个应用组，专业版不限。"</string>
     <string name="pro_limit_goal">"目标锁定是专业版功能。"</string>
     <string name="pro_limit_themes">"基础主题以外的主题和自定义主题需要专业版。"</string>
     <string name="pro_limit_history">"3 个月和 1 年记录及年度日历需要专业版。"</string>
@@ -678,4 +678,7 @@
     <string name="history_wait_body">"目前已收集%1$d天的记录，再过%2$d天就会显示统计。不会凭空编造缺失的记录。"</string>
     <string name="history_show_collected">"查看已收集的%1$d天"</string>
     <string name="history_guide">"%1$d天的记录已全部收集！日均%2$s，用得最多的是%3$s。"</string>
+    <string name="pro_limit_mascot">"仓鼠以外的角色需要专业版。"</string>
+    <string name="pro_mascots">"全部 5 个角色"</string>
+    <string name="pro_no_ads">"无广告"</string>
 </resources>

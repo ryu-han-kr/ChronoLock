@@ -13,16 +13,16 @@ class AccountTest {
     }
 
     @Test fun banner_onlyOnTodayAndHistory() {
-        assertTrue(AdPolicy.showBanner(0, configured = true, adFree = false, canRequestAds = true, focusActive = false))
-        assertTrue(AdPolicy.showBanner(2, configured = true, adFree = false, canRequestAds = true, focusActive = false))
+        assertFalse(AdPolicy.showBanner(0, configured = true, adFree = false, canRequestAds = true, focusActive = false))
+        assertFalse(AdPolicy.showBanner(2, configured = true, adFree = false, canRequestAds = true, focusActive = false))
         assertFalse(AdPolicy.showBanner(1, configured = true, adFree = false, canRequestAds = true, focusActive = false))
-        assertFalse(AdPolicy.showBanner(3, configured = true, adFree = false, canRequestAds = true, focusActive = false))
+        assertTrue(AdPolicy.showBanner(3, configured = true, adFree = false, canRequestAds = true, focusActive = false))
     }
 
     @Test fun banner_hiddenForAdFreeFocusMissingConsentOrConfig() {
-        assertFalse(AdPolicy.showBanner(0, configured = true, adFree = true, canRequestAds = true, focusActive = false))
-        assertFalse(AdPolicy.showBanner(0, configured = true, adFree = false, canRequestAds = true, focusActive = true))
-        assertFalse(AdPolicy.showBanner(0, configured = true, adFree = false, canRequestAds = false, focusActive = false))
-        assertFalse(AdPolicy.showBanner(0, configured = false, adFree = false, canRequestAds = true, focusActive = false))
+        assertFalse(AdPolicy.showBanner(3, configured = true, adFree = true, canRequestAds = true, focusActive = false))
+        assertFalse(AdPolicy.showBanner(3, configured = true, adFree = false, canRequestAds = true, focusActive = true))
+        assertFalse(AdPolicy.showBanner(3, configured = true, adFree = false, canRequestAds = false, focusActive = false))
+        assertFalse(AdPolicy.showBanner(3, configured = false, adFree = false, canRequestAds = true, focusActive = false))
     }
 }

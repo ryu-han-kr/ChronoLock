@@ -271,7 +271,11 @@ class MainViewModel @Inject constructor(
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
 
-    fun selectMascot(kind: com.chronolock.data.MascotKind) = viewModelScope.launch { preferences.setMascot(kind) }
+    fun selectMascot(kind: com.chronolock.data.MascotKind) = viewModelScope.launch {
+        // A character already chosen stays; only switching to a locked one needs Pro.
+        if (!state.value.pro && kind != com.chronolock.data.MascotKind.FREE && kind != state.value.mascot) { showError(PRO_MASCOT); return@launch }
+        preferences.setMascot(kind)
+    }
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
 
     fun saveGroup(group: AppGroup, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
@@ -542,9 +546,10 @@ class MainViewModel @Inject constructor(
     }
     private companion object {
         const val HELD = "엄격 모드라 완화한 설정은 대기 시간이 지난 뒤 적용됩니다."
-        const val PRO_SITES = "무료 버전은 사이트를 3개까지 차단할 수 있어요. 프로에서 50개까지 늘어나요."
-        const val PRO_GROUPS = "무료 버전은 앱 그룹을 1개까지 만들 수 있어요. 프로에서는 제한이 없어요."
+        const val PRO_SITES = "무료 버전은 사이트를 5개까지 차단할 수 있어요. 프로에서 50개까지 늘어나요."
+        const val PRO_GROUPS = "무료 버전은 앱 그룹을 2개까지 만들 수 있어요. 프로에서는 제한이 없어요."
         const val PRO_GOAL = "목표 잠금은 프로 기능이에요."
+        const val PRO_MASCOT = "햄스터 외의 캐릭터는 프로에서 쓸 수 있어요."
         const val PRO_THEMES = "기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요."
     }
     fun showError(message: String) { local.update { it.copy(error = message) } }

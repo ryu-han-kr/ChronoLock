@@ -114,7 +114,6 @@ internal fun ChronoScreen(
     BoxWithConstraints(Modifier.fillMaxSize().themeBackground(state.theme)) {
         val expanded = maxWidth >= 840.dp
         Scaffold(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground, snackbarHost = { SnackbarHost(snackbar) }, bottomBar = { Column {
-            banner?.invoke()
             if (!expanded) NavigationBar(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
                 destinations.forEachIndexed { index, title ->
                     NavigationBarItem(selected = tab == index, onClick = { selectTab(index) },
@@ -300,7 +299,7 @@ internal fun ChronoScreen(
                                 if (com.chronolock.BuildConfig.PRO_GATING) item { ProCard(state, buyPro) }
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
-                                item { CardBox { MascotPicker(state.mascot, selectMascot); MotionToggle(state.reduceMotion, setReduceMotion) } }
+                                item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }
                                 item {
                                     ThemePicker(if (state.followSystem && state.editingNight) state.nightTheme else state.theme, selectTheme, openThemeGallery,
                                         state.favoriteThemes, state.followSystem, state.editingNight, setFollowSystem, editNightTheme)
@@ -342,6 +341,8 @@ internal fun ChronoScreen(
                                     OutlinedButton(onClick = clear, enabled = !strict, modifier = Modifier.testTag("rules-reset")) { Text(tr("모든 규칙 초기화")) }
                                     if (strict) Text(tr("엄격 모드를 끈 뒤에 모든 규칙을 초기화할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 } }
+                                // The one ad: last in Settings, scrolling with the list.
+                                banner?.let { ad -> item(span = { GridItemSpan(maxLineSpan) }) { Box(Modifier.fillMaxWidth().testTag("settings-ad"), contentAlignment = Alignment.Center) { ad() } } }
                             }
                         }
                     }

@@ -14,9 +14,9 @@ data class AuthSession(
 
 /** Banner ads stay out of blocking, focus and editing moments; only Today and History carry one. */
 object AdPolicy {
-    const val TODAY_TAB = 0
-    const val HISTORY_TAB = 2
+    /** The only place with an ad: the end of Settings, inside the list, so it never covers or crowds a screen. */
+    const val SETTINGS_TAB = 3
 
     fun showBanner(tab: Int, configured: Boolean, adFree: Boolean, canRequestAds: Boolean, focusActive: Boolean): Boolean =
-        configured && !adFree && canRequestAds && !focusActive && (tab == TODAY_TAB || tab == HISTORY_TAB)
+        configured && !adFree && canRequestAds && !focusActive && tab == SETTINGS_TAB
 }
