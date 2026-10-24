@@ -40,9 +40,10 @@ class GroupEditorUiTest {
         ui.onNodeWithTag("group-select-all").performScrollTo().performClick()
         ui.onNodeWithTag("group-select-all-confirm").performClick()
         ui.onNodeWithText("묶을 앱 · 79개 선택").assertExists()
-        ui.onNodeWithTag("group-name").performScrollTo().performTextInput("밤")
         ui.onNodeWithTag("group-schedule").performScrollTo().performClick()
         ui.onNodeWithTag("schedule-0-127").performScrollTo().performClick()
+        // Typed last: the keyboard it raises would cover the fields below.
+        ui.onNodeWithTag("group-name").performScrollTo().performTextInput("밤")
         ui.onNodeWithTag("group-save").performClick()
         ui.runOnIdle {
             org.junit.Assert.assertEquals(1, saved?.schedules?.size)

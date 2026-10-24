@@ -11,13 +11,16 @@ enum class DayResult { KEPT, REACHED, NO_RECORD }
  */
 fun dayResults(daily: Map<DailyKey, DailyUsage>, rules: List<AppRule>, today: LocalDate, days: Int = 7): List<Pair<LocalDate, DayResult>> {
     val byApp = rules.associateBy { it.packageName }
+    val groups = rules.flatMap { it.groups }.distinctBy { it.id }.filter { it.enabled }
     return (days - 1 downTo 0).map { offset ->
         val date = today.minusDays(offset.toLong())
         val rows = byApp.values.mapNotNull { rule -> daily[DailyKey(rule.packageName, date)]?.let { rule to it } }
         val result = when {
             rows.isEmpty() -> DayResult.NO_RECORD
             rows.any { (rule, usage) -> usage.blockedAttempts > 0 ||
-                rule.dailyLimitSeconds?.let { usage.usageMillis >= it * 1000 } == true } -> DayResult.REACHED
+                rule.dailyLimitSeconds?.let { usage.usageMillis >= it * 1000 } == true } ||
+                groups.any { group -> group.dailyLimitSeconds?.let { limit ->
+                    group.members.keys.sumOf { daily[DailyKey(it, date)]?.usageMillis ?: 0 } >= limit * 1000 } == true } -> DayResult.REACHED
             else -> DayResult.KEPT
         }
         date to result

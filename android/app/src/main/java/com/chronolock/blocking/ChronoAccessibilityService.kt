@@ -304,20 +304,23 @@ class ChronoAccessibilityService : AccessibilityService() {
     private fun render(state: MonitorState) {
         lastState = state
         observed = state.observedPackage
-        runCatching { surfaces.update(state, rules, localized) }
-            .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
         val target = state.observedPackage
         if (target != visitApp) { visitApp = target; passedApp = null; nextCheckInMillis = 0 }
-        if (target != null && state.decision.denied) {
-            val now = environment.clock()
-            val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
-            overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now.epochMillis) == 0 && !lock.lockedAt(now))
-            return
-        }
         val site = blockedSite
-        if (site != null && target != null && target == siteBrowser) { overlay.showSite(site); return }
-        if (target != null && intervene(target, state)) return
-        overlay.hide()
+        val covered = when {
+            target != null && state.decision.denied -> {
+                val now = environment.clock()
+                val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
+                overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now.epochMillis) == 0 && !lock.lockedAt(now))
+                true
+            }
+            site != null && target != null && target == siteBrowser -> { overlay.showSite(site); true }
+            target != null && intervene(target, state) -> true
+            else -> { overlay.hide(); false }
+        }
+        // "In use" only while the app itself is on screen, not under a block, site or pause screen.
+        runCatching { surfaces.update(state, rules, localized, inUse = !covered) }
+            .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
     }
 
     private fun label(target: String) = labels.getOrPut(target) {

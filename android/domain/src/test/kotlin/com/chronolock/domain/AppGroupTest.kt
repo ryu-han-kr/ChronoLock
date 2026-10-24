@@ -110,4 +110,14 @@ class AppGroupTest {
         assertTrue(Strictness.loosens(group, group.copy(maxOpenCount = null, dailyLimitSeconds = 60)))
         assertTrue(Strictness.loosens(group, group.copy(members = mapOf("a" to "A", "c" to "C"))))
     }
+
+    @Test fun dayResults_countAGroupsSharedLimit() {
+        val day = java.time.LocalDate.of(2026, 10, 20)
+        val sns = AppGroup(3, "SNS", mapOf("a" to "A", "b" to "B"), dailyLimitSeconds = 60)
+        val rules = withGroups(emptyMap(), listOf(sns)).values.toList()
+        val over = mapOf(DailyKey("a", day) to DailyUsage(40_000, 1, 0), DailyKey("b", day) to DailyUsage(30_000, 1, 0))
+        assertEquals(DayResult.REACHED, dayResults(over, rules, day, 1).single().second)
+        val under = mapOf(DailyKey("a", day) to DailyUsage(20_000, 1, 0))
+        assertEquals(DayResult.KEPT, dayResults(under, rules, day, 1).single().second)
+    }
 }

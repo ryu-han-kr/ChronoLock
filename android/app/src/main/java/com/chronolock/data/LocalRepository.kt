@@ -216,7 +216,13 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
                 due.forEach { held ->
                     // A group deleted meanwhile stays deleted; the held edit has nothing left to relax.
                     if (held.remove) writeGroup(held.groupId, null, held.applyAtEpochMillis)
-                    else if (dao.groups().any { it.id == held.groupId }) writeGroup(held.groupId, held.group.toDomain(), held.applyAtEpochMillis)
+                    else dao.groups().firstOrNull { it.id == held.groupId }?.toDomain()?.let { current ->
+                        // Apps that joined another group while this edit waited stay there: one group per app.
+                        val taken = dao.groups().map { it.toDomain() }.takenBy(held.groupId).keys - current.members.keys
+                        val next = held.group.toDomain().let { it.copy(members = it.members - taken) }
+                            .let { if (it.members.size >= 2) it else it.copy(members = current.members) }
+                        writeGroup(held.groupId, next, held.applyAtEpochMillis)
+                    }
                     dao.deletePendingGroup(held.groupId)
                 }
             }

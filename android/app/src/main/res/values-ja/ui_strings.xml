@@ -672,4 +672,8 @@
     <string name="history_one_year">"1年"</string>
     <string name="reduce_motion">"動きを減らす"</string>
     <string name="reduce_motion_hint">"動くテーマとキャラクターの動きを止めて、バッテリーを節約します。"</string>
+    <string name="history_wait_title">"まだ%1$d日分の記録がそろっていません"</string>
+    <string name="history_wait_body">"これまでに%1$d日分の記録が集まりました。あと%2$d日で集計します。ない記録を作り出すことはしません。"</string>
+    <string name="history_show_collected">"集まった%1$d日分を見る"</string>
+    <string name="history_guide">"%1$d日分の記録がそろいました！1日平均%2$s、一番使ったアプリは%3$sです。"</string>
 </resources>

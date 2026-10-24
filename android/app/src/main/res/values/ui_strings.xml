@@ -672,4 +672,8 @@
     <string name="history_one_year">"1년"</string>
     <string name="reduce_motion">"움직이는 효과 줄이기"</string>
     <string name="reduce_motion_hint">"움직이는 테마와 캐릭터 움직임을 멈춰 배터리를 아껴요."</string>
+    <string name="history_wait_title">"아직 %1$d일 치 기록이 다 모이지 않았어요"</string>
+    <string name="history_wait_body">"지금까지 %1$d일 기록이 모였어요. %2$d일 더 모이면 집계해 드릴게요. 없는 기록은 지어내지 않아요."</string>
+    <string name="history_show_collected">"모인 %1$d일만 보기"</string>
+    <string name="history_guide">"%1$d일 기록이 모두 모였어요! 하루 평균 %2$s, 가장 많이 쓴 앱은 %3$s예요."</string>
 </resources>

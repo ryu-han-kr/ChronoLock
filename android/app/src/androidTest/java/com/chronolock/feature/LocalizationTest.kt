@@ -35,7 +35,10 @@ class LocalizationTest {
             val text = UiText(context.forLanguage(language))
             pluralKeys.keys.forEach { source ->
                 listOf(1, 12).forEach { count ->
-                    val args: Array<Any> = if (source.contains("%2")) arrayOf("Example", count) else arrayOf(count)
+                    // Text in every slot but the counted one, which pluralKeys names.
+                    val at = pluralKeys.getValue(source).second
+                    val slots = Regex("%([0-9]+)\\$").findAll(source).maxOf { it.groupValues[1].toInt() }
+                    val args = Array<Any>(slots) { if (it == at) count else "Example" }
                     val translated = text(source, *args)
                     assertTrue("${language.name}: $translated", translated.contains(count.toString()))
                     if (language != AppLanguage.KOREAN) assertFalse("${language.name}: $translated", Regex("[가-힣]").containsMatchIn(translated))
