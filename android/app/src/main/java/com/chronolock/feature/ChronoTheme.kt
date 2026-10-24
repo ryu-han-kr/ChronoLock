@@ -170,7 +170,7 @@ internal fun AppTheme.backgroundBrush(): Brush =
  */
 @Composable
 internal fun Modifier.themeBackground(theme: AppTheme): Modifier {
-    if (!theme.live) return background(theme.backgroundBrush())
+    if (!theme.live || LocalReduceMotion.current) return background(theme.backgroundBrush())
     val colors = remember(theme) { theme.pageColors.map { Color(it) } }
     val phase by rememberInfiniteTransition(label = "theme-flow")
         .animateFloat(0f, 1f, infiniteRepeatable(tween(24_000, easing = LinearEasing)), label = "theme-flow-phase")

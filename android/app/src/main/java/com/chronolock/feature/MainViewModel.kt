@@ -38,6 +38,7 @@ data class MainState(
     val favoriteThemes: Set<String> = emptySet(),
     /** The companion character drawn across the app. */
     val mascot: com.chronolock.data.MascotKind = com.chronolock.data.MascotKind.DEFAULT,
+    val reduceMotion: Boolean = false,
     /** Day/night themes that follow the device's dark mode, and which of the two the picker is editing. */
     val followSystem: Boolean = false,
     /** First-run goals, as [com.chronolock.domain.OnboardingGoal] names. */
@@ -112,6 +113,7 @@ class MainViewModel @Inject constructor(
         .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
         .combine(preferences.favoriteThemes) { data, favorites -> data.copy(favoriteThemes = favorites) }
         .combine(preferences.mascot) { data, kind -> data.copy(mascot = kind) }
+        .combine(preferences.reduceMotion) { data, still -> data.copy(reduceMotion = still) }
         .combine(preferences.followSystem) { data, follow -> data.copy(followSystem = follow) }
         .combine(preferences.goals) { data, goals -> data.copy(goals = goals) }
         .combine(preferences.nightTheme) { data, night -> data.copy(nightTheme = night) }
@@ -132,7 +134,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot)
+            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -267,6 +269,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun selectMascot(kind: com.chronolock.data.MascotKind) = viewModelScope.launch { preferences.setMascot(kind) }
+    fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
 
     fun saveGroup(group: AppGroup, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
         if (group.id == 0L && !state.value.pro && state.value.groups.size >= com.chronolock.domain.FreeTier.GROUPS) {

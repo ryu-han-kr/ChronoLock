@@ -25,7 +25,9 @@
     <string name="collapse_days">"收起每日记录"</string>
     <string name="expand_days">"查看每日记录"</string>
     <string name="no_records">"暂无记录"</string>
-    <string name="usage_opens">"%1$s · 打开%2$d次"</string>
+    <plurals name="usage_opens">
+        <item quantity="other">"%1$s · 打开%2$d次"</item>
+    </plurals>
     <string name="usage_by_app">"各应用使用记录"</string>
     <string name="sort_time">"按时长"</string>
     <string name="sort_opens">"按次数"</string>
@@ -54,7 +56,9 @@
     <string name="clear_search">"清除"</string>
     <string name="all_apps">"全部应用"</string>
     <string name="configured_apps">"已设置"</string>
-    <string name="app_count">"%1$d个应用 · 不包含设置、主屏幕、电话等必要应用。"</string>
+    <plurals name="app_count">
+        <item quantity="other">"%1$d个应用 · 不包含设置、主屏幕、电话等必要应用。"</item>
+    </plurals>
     <string name="no_search">"没有搜索结果。"</string>
     <string name="no_configured">"尚未设置任何应用。"</string>
     <string name="no_apps">"没有可选择的应用。"</string>
@@ -67,11 +71,15 @@
     <string name="local_data_hint">"使用记录最多保存1年，仅保存在本机，不会发送至服务器。"</string>
     <string name="delete_all">"删除全部规则和使用记录"</string>
     <string name="today_selected">"今天所选应用的使用"</string>
-    <string name="enabled_count">"已开启%1$d个应用的限制"</string>
+    <plurals name="enabled_count">
+        <item quantity="other">"已开启%1$d个应用的限制"</item>
+    </plurals>
     <string name="allowed_opens">"允许的打开"</string>
     <string name="blocked_attempts">"达到限制／已拦截"</string>
     <string name="count_times">"%1$d次"</string>
-    <string name="today_usage">"今天 %1$s · 打开%2$d次"</string>
+    <plurals name="today_usage">
+        <item quantity="other">"今天 %1$s · 打开%2$d次"</item>
+    </plurals>
     <string name="cancel">"取消"</string>
     <string name="save">"保存"</string>
     <string name="saving">"保存中"</string>
@@ -83,15 +91,21 @@
     <string name="focus_start">"开始专注"</string>
     <string name="focus_stop">"结束专注"</string>
     <string name="focus_confirm">"专注%1$d分钟？"</string>
-    <string name="focus_targets">"当前已开启限制的%1$d个应用将被拦截至专注结束，之后添加的应用不包含在本次专注中。"</string>
+    <plurals name="focus_targets">
+        <item quantity="other">"当前已开启限制的%1$d个应用将被拦截至专注结束，之后添加的应用不包含在本次专注中。"</item>
+    </plurals>
     <string name="focus_keep_rules">"现有规则保持不变，可随时结束专注。"</string>
     <string name="focus_after">"专注结束后，原有时长、次数和预约限制仍然有效。"</string>
     <string name="focus_setup">"请先在应用限制中设置专注时要拦截的应用。"</string>
-    <string name="focus_invite">"暂时放下%1$d个已设限应用，专注于当下的事。"</string>
+    <plurals name="focus_invite">
+        <item quantity="other">"暂时放下%1$d个已设限应用，专注于当下的事。"</item>
+    </plurals>
     <string name="focus_ready_hint">"开启权限并确认监测连接后即可开始。"</string>
     <string name="blocking">"拦截中"</string>
     <string name="pending_block">"等待限制 · 请检查监测连接"</string>
-    <string name="focus_active">"%1$d个应用 · %2$s · %3$s"</string>
+    <plurals name="focus_active">
+        <item quantity="other">"%1$d个应用 · %2$s · %3$s"</item>
+    </plurals>
     <string name="use_limits">"启用限制"</string>
     <string name="recipes">"专注预设"</string>
     <string name="suggested_draft">"已根据记录生成建议，保留现有限制，仅填写空白项，请确认后保存。"</string>
@@ -128,12 +142,16 @@
     <string name="paused">"已暂停"</string>
     <string name="limit_daily">"每天 %1$s"</string>
     <string name="limit_session">"每次 %1$s"</string>
-    <string name="limit_opens">"打开%1$d次"</string>
+    <plurals name="limit_opens">
+        <item quantity="other">"打开%1$d次"</item>
+    </plurals>
     <string name="limit_wait">"等待 %1$s"</string>
     <string name="next_day">"次日 "</string>
     <string name="limit_schedule">"%1$s %2$s～%3$s 拦截"</string>
     <string name="weekly_review">"回顾最近7天"</string>
-    <string name="weekly_total">"已记录 %1$s · 打开%2$d次"</string>
+    <plurals name="weekly_total">
+        <item quantity="other">"已记录 %1$s · 打开%2$d次"</item>
+    </plurals>
     <string name="suggestion_stats">"%1$d天记录中打开%2$d次，每次平均使用%3$s。"</string>
     <string name="review_suggestion">"查看建议"</string>
     <string name="suggestion_wait">"积累至少3天记录后，将结合使用习惯及现有限制提出建议。"</string>
@@ -372,7 +390,6 @@
     <string name="group_name_hint">"例如：社交"</string>
     <string name="group_daily_title">"共用每日时长"</string>
     <string name="group_opens_title">"共用每日打开次数"</string>
-    <string name="group_taken_app">"已在其他组中"</string>
     <string name="group_delete">"删除此组"</string>
     <string name="group_error_name">"请输入组名称。"</string>
     <string name="group_error_members">"请至少选择两个应用。"</string>
@@ -602,7 +619,6 @@
     <string name="fr_pause_hint">"每次打开都会显示短暂的呼吸画面，当天打开次数越多，时间越长。"</string>
     <string name="fr_checkin_title">"使用中确认"</string>
     <string name="fr_checkin_hint">"持续使用时，每隔设定时间询问是否继续。"</string>
-    <string name="fr_pause_seconds">"%1$d 秒"</string>
     <string name="fr_pause_summary">"打开前暂停 %1$d 秒"</string>
     <string name="fr_checkin_summary">"每 %1$d 分钟确认"</string>
     <string name="fr_pause_heading">"先深呼吸一下"</string>
@@ -624,7 +640,6 @@
     <string name="onb_perm_a11y">"无障碍服务"</string>
     <string name="onb_perm_a11y_body">"打开达到上限的应用时显示拦截画面，不读取屏幕内容或输入。"</string>
     <string name="onb_perm_next">"可在下一个画面的“今天”标签中按提示立即开启。"</string>
-    <string name="onb_next">"下一步"</string>
     <string name="goal_start_title">"为你推荐"</string>
     <string name="goal_start_body">"根据你最初选择的目标推荐。选择应用后会预先填好推荐设置。"</string>
     <string name="goal_start_default">"先从每天 1 小时开始吧。"</string>
@@ -655,4 +670,6 @@
         <item quantity="other">"%1$d 个屏蔽时段"</item>
     </plurals>
     <string name="history_one_year">"1年"</string>
+    <string name="reduce_motion">"减少动态效果"</string>
+    <string name="reduce_motion_hint">"停止动态主题和角色动画，节省电量。"</string>
 </resources>

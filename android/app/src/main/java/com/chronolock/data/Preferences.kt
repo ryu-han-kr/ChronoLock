@@ -47,10 +47,14 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val goalCodeKey = stringPreferencesKey("lock_goal_code")
     private val goalRevealedKey = intPreferencesKey("lock_goal_revealed")
     private val mascotKey = stringPreferencesKey("mascot")
+    private val reduceMotionKey = booleanPreferencesKey("reduce_motion")
     val language = context.preferences.data.map { AppLanguage.fromStored(it[languageKey]) }
     val theme = context.preferences.data.map { AppTheme.fromStored(it[themeKey]) }
     val mascot = context.preferences.data.map { MascotKind.fromStored(it[mascotKey]) }
     suspend fun setMascot(kind: MascotKind) { context.preferences.edit { it[mascotKey] = kind.name } }
+    /** Stops moving theme backgrounds and the breathing character, to save battery or for comfort. */
+    val reduceMotion = context.preferences.data.map { it[reduceMotionKey] ?: false }
+    suspend fun setReduceMotion(on: Boolean) { context.preferences.edit { it[reduceMotionKey] = on } }
     val acknowledged = context.preferences.data.map { it[disclosure] ?: false }
     // People who already accepted the permission disclosure predate the welcome screen and skip it.
     val onboarded = context.preferences.data.map { it[onboardedKey] ?: it[disclosure] ?: false }

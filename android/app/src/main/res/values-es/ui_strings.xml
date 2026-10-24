@@ -25,7 +25,11 @@
     <string name="collapse_days">"Ocultar días"</string>
     <string name="expand_days">"Ver por día"</string>
     <string name="no_records">"Sin registros"</string>
-    <string name="usage_opens">"%1$s · %2$d aperturas"</string>
+    <plurals name="usage_opens">
+        <item quantity="one">"%1$s · %2$d apertura"</item>
+        <item quantity="many">"%1$s · %2$d aperturas"</item>
+        <item quantity="other">"%1$s · %2$d aperturas"</item>
+    </plurals>
     <string name="usage_by_app">"Uso por app"</string>
     <string name="sort_time">"Por tiempo"</string>
     <string name="sort_opens">"Por aperturas"</string>
@@ -54,7 +58,11 @@
     <string name="clear_search">"Borrar"</string>
     <string name="all_apps">"Todas"</string>
     <string name="configured_apps">"Configuradas"</string>
-    <string name="app_count">"%1$d apps · Se excluyen apps esenciales como Ajustes, Inicio y Teléfono."</string>
+    <plurals name="app_count">
+        <item quantity="one">"%1$d app · Se excluyen apps esenciales como Ajustes, Inicio y Teléfono."</item>
+        <item quantity="many">"%1$d apps · Se excluyen apps esenciales como Ajustes, Inicio y Teléfono."</item>
+        <item quantity="other">"%1$d apps · Se excluyen apps esenciales como Ajustes, Inicio y Teléfono."</item>
+    </plurals>
     <string name="no_search">"Sin resultados."</string>
     <string name="no_configured">"Aún no hay apps configuradas."</string>
     <string name="no_apps">"No hay apps disponibles."</string>
@@ -67,11 +75,19 @@
     <string name="local_data_hint">"Los registros se guardan hasta 1 año solo en este dispositivo. No se envían a ningún servidor."</string>
     <string name="delete_all">"Borrar reglas y registros"</string>
     <string name="today_selected">"Apps elegidas hoy"</string>
-    <string name="enabled_count">"Límites activos en %1$d apps"</string>
+    <plurals name="enabled_count">
+        <item quantity="one">"Límites activos en %1$d app"</item>
+        <item quantity="many">"Límites activos en %1$d apps"</item>
+        <item quantity="other">"Límites activos en %1$d apps"</item>
+    </plurals>
     <string name="allowed_opens">"Aperturas permitidas"</string>
     <string name="blocked_attempts">"Límites / bloqueos"</string>
     <string name="count_times">"%1$d×"</string>
-    <string name="today_usage">"Hoy %1$s · %2$d aperturas"</string>
+    <plurals name="today_usage">
+        <item quantity="one">"Hoy %1$s · %2$d apertura"</item>
+        <item quantity="many">"Hoy %1$s · %2$d aperturas"</item>
+        <item quantity="other">"Hoy %1$s · %2$d aperturas"</item>
+    </plurals>
     <string name="cancel">"Cancelar"</string>
     <string name="save">"Guardar"</string>
     <string name="saving">"Guardando"</string>
@@ -83,15 +99,27 @@
     <string name="focus_start">"Iniciar concentración"</string>
     <string name="focus_stop">"Terminar concentración"</string>
     <string name="focus_confirm">"¿Concentrarte durante %1$d min?"</string>
-    <string name="focus_targets">"Se bloquearán las %1$d apps con límites hasta que termine la concentración. Las añadidas después no se incluyen."</string>
+    <plurals name="focus_targets">
+        <item quantity="one">"Se bloqueará %1$d app con límites hasta que termine la concentración. Las añadidas después no se incluyen."</item>
+        <item quantity="many">"Se bloquearán las %1$d apps con límites hasta que termine la concentración. Las añadidas después no se incluyen."</item>
+        <item quantity="other">"Se bloquearán las %1$d apps con límites hasta que termine la concentración. Las añadidas después no se incluyen."</item>
+    </plurals>
     <string name="focus_keep_rules">"Se mantienen las reglas existentes. Puedes terminar cuando quieras."</string>
     <string name="focus_after">"Los límites de tiempo, aperturas y horarios se mantienen al terminar."</string>
     <string name="focus_setup">"Primero elige qué apps bloquear en la pestaña Límites."</string>
-    <string name="focus_invite">"Descansa de %1$d apps y concéntrate en tu tarea."</string>
+    <plurals name="focus_invite">
+        <item quantity="one">"Descansa de %1$d app y concéntrate en tu tarea."</item>
+        <item quantity="many">"Descansa de %1$d apps y concéntrate en tu tarea."</item>
+        <item quantity="other">"Descansa de %1$d apps y concéntrate en tu tarea."</item>
+    </plurals>
     <string name="focus_ready_hint">"Activa los permisos y revisa la supervisión para empezar."</string>
     <string name="blocking">"Bloqueado"</string>
     <string name="pending_block">"Pendiente · Revisa la supervisión"</string>
-    <string name="focus_active">"%1$d apps · %2$s · %3$s"</string>
+    <plurals name="focus_active">
+        <item quantity="one">"%1$d app · %2$s · %3$s"</item>
+        <item quantity="many">"%1$d apps · %2$s · %3$s"</item>
+        <item quantity="other">"%1$d apps · %2$s · %3$s"</item>
+    </plurals>
     <string name="use_limits">"Activar límites"</string>
     <string name="recipes">"Preajustes"</string>
     <string name="suggested_draft">"Hay una sugerencia basada en tu historial. Se mantienen tus límites y solo se rellenan campos vacíos. Revísala antes de guardar."</string>
@@ -128,12 +156,20 @@
     <string name="paused">"En pausa"</string>
     <string name="limit_daily">"Diario %1$s"</string>
     <string name="limit_session">"Por sesión %1$s"</string>
-    <string name="limit_opens">"%1$d aperturas"</string>
+    <plurals name="limit_opens">
+        <item quantity="one">"%1$d apertura"</item>
+        <item quantity="many">"%1$d aperturas"</item>
+        <item quantity="other">"%1$d aperturas"</item>
+    </plurals>
     <string name="limit_wait">"Espera %1$s"</string>
     <string name="next_day">"día siguiente "</string>
     <string name="limit_schedule">"Bloquear %1$s %2$s–%3$s"</string>
     <string name="weekly_review">"Últimos 7 días"</string>
-    <string name="weekly_total">"Registrado %1$s · %2$d aperturas"</string>
+    <plurals name="weekly_total">
+        <item quantity="one">"Registrado %1$s · %2$d apertura"</item>
+        <item quantity="many">"Registrado %1$s · %2$d aperturas"</item>
+        <item quantity="other">"Registrado %1$s · %2$d aperturas"</item>
+    </plurals>
     <string name="suggestion_stats">"En %1$d días: %2$d aperturas, con una media de %3$s."</string>
     <string name="review_suggestion">"Ver sugerencia"</string>
     <string name="suggestion_wait">"Con al menos 3 días, las sugerencias tendrán en cuenta tus hábitos y límites."</string>
@@ -372,7 +408,6 @@
     <string name="group_name_hint">"p. ej., Redes"</string>
     <string name="group_daily_title">"Tiempo diario compartido"</string>
     <string name="group_opens_title">"Aperturas diarias compartidas"</string>
-    <string name="group_taken_app">"En otro grupo"</string>
     <string name="group_delete">"Eliminar este grupo"</string>
     <string name="group_error_name">"Escribe un nombre para el grupo."</string>
     <string name="group_error_members">"Elige al menos dos apps."</string>
@@ -624,7 +659,6 @@
     <string name="fr_pause_hint">"Muestra una breve pantalla para respirar cada vez que abres la app. Se alarga un poco con cada apertura del día."</string>
     <string name="fr_checkin_title">"Aviso durante el uso"</string>
     <string name="fr_checkin_hint">"Mientras sigas usándola, pregunta cada cierto tiempo si quieres continuar."</string>
-    <string name="fr_pause_seconds">"%1$d s"</string>
     <string name="fr_pause_summary">"Pausa de %1$d s al abrir"</string>
     <string name="fr_checkin_summary">"Aviso cada %1$d min"</string>
     <string name="fr_pause_heading">"Respira un momento"</string>
@@ -646,7 +680,6 @@
     <string name="onb_perm_a11y">"Servicio de accesibilidad"</string>
     <string name="onb_perm_a11y_body">"Muestra el bloqueo al abrir una app que llegó a su límite. No lee el contenido ni lo que escribes."</string>
     <string name="onb_perm_next">"Podrás activarlos desde la pestaña Hoy en la siguiente pantalla."</string>
-    <string name="onb_next">"Siguiente"</string>
     <string name="goal_start_title">"Tu inicio"</string>
     <string name="goal_start_body">"Sugerencias según tus objetivos. Elige una app y se rellenan los ajustes sugeridos."</string>
     <string name="goal_start_default">"Empieza con una hora al día."</string>
@@ -679,4 +712,6 @@
         <item quantity="other">"%1$d franjas de bloqueo"</item>
     </plurals>
     <string name="history_one_year">"1 año"</string>
+    <string name="reduce_motion">"Reducir movimiento"</string>
+    <string name="reduce_motion_hint">"Detiene los temas en movimiento y la animación del personaje para ahorrar batería."</string>
 </resources>

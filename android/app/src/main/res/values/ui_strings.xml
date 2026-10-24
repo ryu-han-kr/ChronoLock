@@ -25,7 +25,9 @@
     <string name="collapse_days">"일별 기록 접기"</string>
     <string name="expand_days">"일별 기록 보기"</string>
     <string name="no_records">"기록 없음"</string>
-    <string name="usage_opens">"%1$s · %2$d회 실행"</string>
+    <plurals name="usage_opens">
+        <item quantity="other">"%1$s · %2$d회 실행"</item>
+    </plurals>
     <string name="usage_by_app">"앱별 사용 기록"</string>
     <string name="sort_time">"시간순"</string>
     <string name="sort_opens">"횟수순"</string>
@@ -54,7 +56,9 @@
     <string name="clear_search">"지우기"</string>
     <string name="all_apps">"전체 앱"</string>
     <string name="configured_apps">"설정한 앱"</string>
-    <string name="app_count">"%1$d개 앱 · 설정·홈·전화 등 필수 앱은 제외합니다."</string>
+    <plurals name="app_count">
+        <item quantity="other">"%1$d개 앱 · 설정·홈·전화 등 필수 앱은 제외합니다."</item>
+    </plurals>
     <string name="no_search">"검색 결과가 없습니다."</string>
     <string name="no_configured">"아직 설정한 앱이 없습니다."</string>
     <string name="no_apps">"선택 가능한 앱이 없습니다."</string>
@@ -67,11 +71,15 @@
     <string name="local_data_hint">"앱 사용 기록을 최대 1년간 보관합니다. 기록은 이 기기에만 저장되며 서버로 전송하지 않습니다."</string>
     <string name="delete_all">"모든 규칙과 사용 기록 삭제"</string>
     <string name="today_selected">"오늘 선택한 앱 사용"</string>
-    <string name="enabled_count">"%1$d개 앱 제한 켜짐"</string>
+    <plurals name="enabled_count">
+        <item quantity="other">"%1$d개 앱 제한 켜짐"</item>
+    </plurals>
     <string name="allowed_opens">"허용한 실행"</string>
     <string name="blocked_attempts">"제한 도달·차단"</string>
     <string name="count_times">"%1$d회"</string>
-    <string name="today_usage">"오늘 %1$s · %2$d회 실행"</string>
+    <plurals name="today_usage">
+        <item quantity="other">"오늘 %1$s · %2$d회 실행"</item>
+    </plurals>
     <string name="cancel">"취소"</string>
     <string name="save">"저장"</string>
     <string name="saving">"저장 중"</string>
@@ -83,15 +91,21 @@
     <string name="focus_start">"집중 시작"</string>
     <string name="focus_stop">"집중 종료"</string>
     <string name="focus_confirm">"%1$d분 동안 집중할까요?"</string>
-    <string name="focus_targets">"지금 제한이 켜진 %1$d개 앱을 집중 종료까지 차단합니다. 나중에 추가한 앱은 이번 집중에 포함되지 않습니다."</string>
+    <plurals name="focus_targets">
+        <item quantity="other">"지금 제한이 켜진 %1$d개 앱을 집중 종료까지 차단합니다. 나중에 추가한 앱은 이번 집중에 포함되지 않습니다."</item>
+    </plurals>
     <string name="focus_keep_rules">"기존 규칙은 유지되며 언제든 집중을 종료할 수 있습니다."</string>
     <string name="focus_after">"집중이 끝나도 기존 시간·횟수·예약 제한은 유지됩니다."</string>
     <string name="focus_setup">"앱 제한 탭에서 집중할 때 차단할 앱을 먼저 설정하세요."</string>
-    <string name="focus_invite">"제한이 켜진 %1$d개 앱을 잠시 쉬고, 지금 할 일에 집중하세요."</string>
+    <plurals name="focus_invite">
+        <item quantity="other">"제한이 켜진 %1$d개 앱을 잠시 쉬고, 지금 할 일에 집중하세요."</item>
+    </plurals>
     <string name="focus_ready_hint">"권한을 켜고 감지 연결을 확인하면 시작할 수 있습니다."</string>
     <string name="blocking">"차단 중"</string>
     <string name="pending_block">"제한 예정 · 감지 연결을 확인하세요"</string>
-    <string name="focus_active">"%1$d개 앱 · %2$s · %3$s"</string>
+    <plurals name="focus_active">
+        <item quantity="other">"%1$d개 앱 · %2$s · %3$s"</item>
+    </plurals>
     <string name="use_limits">"제한 사용"</string>
     <string name="recipes">"집중 레시피"</string>
     <string name="suggested_draft">"기록 기반 제안이 준비됐습니다. 기존 제한은 유지하고 비어 있는 항목만 채웠습니다. 확인 후 저장하세요."</string>
@@ -128,12 +142,16 @@
     <string name="paused">"일시 중지"</string>
     <string name="limit_daily">"하루 %1$s"</string>
     <string name="limit_session">"한 번에 %1$s"</string>
-    <string name="limit_opens">"%1$d회 실행"</string>
+    <plurals name="limit_opens">
+        <item quantity="other">"%1$d회 실행"</item>
+    </plurals>
     <string name="limit_wait">"%1$s 대기"</string>
     <string name="next_day">"다음 날 "</string>
     <string name="limit_schedule">"%1$s %2$s~%3$s 차단"</string>
     <string name="weekly_review">"최근 7일 돌아보기"</string>
-    <string name="weekly_total">"기록된 사용 %1$s · %2$d회 실행"</string>
+    <plurals name="weekly_total">
+        <item quantity="other">"기록된 사용 %1$s · %2$d회 실행"</item>
+    </plurals>
     <string name="suggestion_stats">"%1$d일 기록에서 %2$d회 실행, 실행당 기록 사용시간은 평균 %3$s입니다."</string>
     <string name="review_suggestion">"제안 살펴보기"</string>
     <string name="suggestion_wait">"3일 이상 기록을 모으면 사용 패턴에 맞는 제한을 제안합니다. 이미 설정한 제한도 고려합니다."</string>
@@ -372,7 +390,6 @@
     <string name="group_name_hint">"예: SNS"</string>
     <string name="group_daily_title">"함께 쓰는 하루 시간"</string>
     <string name="group_opens_title">"함께 쓰는 하루 실행 횟수"</string>
-    <string name="group_taken_app">"다른 그룹에 들어 있음"</string>
     <string name="group_delete">"이 그룹 삭제"</string>
     <string name="group_error_name">"그룹 이름을 입력해 주세요."</string>
     <string name="group_error_members">"묶을 앱을 두 개 이상 선택해 주세요."</string>
@@ -602,7 +619,6 @@
     <string name="fr_pause_hint">"열 때마다 숨 한 번 쉬는 화면을 보여 줘요. 그날 여러 번 열수록 조금씩 길어져요."</string>
     <string name="fr_checkin_title">"사용 중 확인"</string>
     <string name="fr_checkin_hint">"계속 쓰고 있으면 정한 시간마다 계속할지 물어봐요."</string>
-    <string name="fr_pause_seconds">"%1$d초"</string>
     <string name="fr_pause_summary">"열기 전 %1$d초 멈춤"</string>
     <string name="fr_checkin_summary">"%1$d분마다 확인"</string>
     <string name="fr_pause_heading">"숨 한 번 쉬어요"</string>
@@ -624,7 +640,6 @@
     <string name="onb_perm_a11y">"접근성 서비스"</string>
     <string name="onb_perm_a11y_body">"한도에 닿은 앱을 열 때 차단 화면을 띄워요. 화면 내용이나 입력은 읽지 않아요."</string>
     <string name="onb_perm_next">"다음 화면의 \'오늘\' 탭에서 안내를 보고 바로 켤 수 있어요."</string>
-    <string name="onb_next">"다음"</string>
     <string name="goal_start_title">"맞춤 시작"</string>
     <string name="goal_start_body">"처음에 고른 목표에 맞춰 추천해요. 앱을 고르면 추천 설정이 미리 채워져요."</string>
     <string name="goal_start_default">"하루 1시간부터 시작해 보세요."</string>
@@ -655,4 +670,6 @@
         <item quantity="other">"차단 시간대 %1$d개"</item>
     </plurals>
     <string name="history_one_year">"1년"</string>
+    <string name="reduce_motion">"움직이는 효과 줄이기"</string>
+    <string name="reduce_motion_hint">"움직이는 테마와 캐릭터 움직임을 멈춰 배터리를 아껴요."</string>
 </resources>

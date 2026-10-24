@@ -87,7 +87,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     // The theme on screen: the night one while the device is dark and the person asked to follow it.
     val shown = if (state.followSystem && androidx.compose.foundation.isSystemInDarkTheme()) state.nightTheme else state.theme
     val editing = if (state.followSystem && state.editingNight) state.nightTheme else state.theme
-    androidx.compose.runtime.CompositionLocalProvider(LocalMascot provides state.mascot) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalMascot provides state.mascot, LocalReduceMotion provides state.reduceMotion) {
     LocalizedApp(state.language) {
         val text = uiText()
         LaunchedEffect(state.error, state.language) { state.error?.let { snackbar.showSnackbar(text(it)); model.dismissError() } }
@@ -125,7 +125,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 openThemeGallery = { themeGallery = true },
                 pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
-                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) },
+                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) }, setReduceMotion = { model.setReduceMotion(it) },
                 addSite = { input, added -> model.addSite(input, added) }, toggleSite = model::toggleSite,
                 removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite, addSitePreset = model::addSites,
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,

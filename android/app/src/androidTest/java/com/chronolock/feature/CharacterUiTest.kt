@@ -62,6 +62,18 @@ class CharacterUiTest {
         screenshot("character-picker", ui.onNodeWithTag("picker-sheet"))
     }
 
+    @Test fun reduceMotion_switchFlips_andStillArtStillRenders() {
+        val still = mutableStateOf(false)
+        ui.setContent {
+            CompositionLocalProvider(LocalReduceMotion provides still.value) {
+                ChronoTheme(AppTheme.LIGHT) { Column { MotionToggle(still.value) { still.value = it }; MascotArt(Pose.REST, Modifier.testTag("still-art")) } }
+            }
+        }
+        ui.onNodeWithTag("reduce-motion").performClick()
+        ui.runOnIdle { org.junit.Assert.assertTrue(still.value) }
+        ui.onNodeWithTag("still-art").assertExists()
+    }
+
     @Test fun everyCharacter_hasEveryPose() {
         ui.setContent {
             ChronoTheme(AppTheme.DARK) {
