@@ -223,7 +223,6 @@
     <string name="theme_word_gallery_title">"테마"</string>
     <string name="theme_word_back">"뒤로"</string>
     <string name="theme_word_selected">"선택: %1$s"</string>
-    <string name="history_partial_range">"%1$s부터 모은 기록입니다. 기기는 그 이전 사용 이벤트를 보관하지 않아 기간 합계가 실제보다 적을 수 있습니다."</string>
     <string name="mascot_sleepy">"아직 기록이 없어요. 쿨쿨…"</string>
     <string name="mascot_relaxed">"여유로운 하루네요. 이대로만!"</string>
     <string name="mascot_happy">"딱 좋은 페이스예요."</string>
@@ -336,9 +335,6 @@
     <string name="onboarding_control_body">"규칙은 언제든 끄거나 지울 수 있고, 권한도 Android 설정에서 해제할 수 있어요."</string>
     <string name="onboarding_start">"시작하기"</string>
     <string name="error_save_setting">"설정을 저장하지 못했습니다. 다시 시도해 주세요."</string>
-    <string name="history_estimate_note">"%1$s 이전은 기기 사용 통계로 추정한 시간입니다. 추정 기간의 실행 횟수는 포함되지 않습니다."</string>
-    <string name="history_estimate_day">"추정 %1$s"</string>
-    <string name="history_estimate_included">"추정 %1$s 포함"</string>
     <string name="strict_editor_note">"엄격 모드: 제한을 끄거나 느슨하게 바꾸면 %1$d분 뒤에 적용됩니다."</string>
     <string name="schedule_add">"예약 구간 추가"</string>
     <string name="schedule_number">"예약 %1$d"</string>

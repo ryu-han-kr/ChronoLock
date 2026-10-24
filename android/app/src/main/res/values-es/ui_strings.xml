@@ -241,7 +241,6 @@
     <string name="theme_word_gallery_title">"Temas"</string>
     <string name="theme_word_back">"Atrás"</string>
     <string name="theme_word_selected">"Seleccionado: %1$s"</string>
-    <string name="history_partial_range">"Los registros comienzan el %1$s. El dispositivo no conserva eventos de uso anteriores, así que los totales del periodo pueden ser menores que los reales."</string>
     <string name="mascot_sleepy">"Aún no hay registros. Zzz…"</string>
     <string name="mascot_relaxed">"Un día tranquilo. ¡Sigue así!"</string>
     <string name="mascot_happy">"Un ritmo perfecto."</string>
@@ -354,9 +353,6 @@
     <string name="onboarding_control_body">"Desactiva o elimina reglas cuando quieras y retira permisos en los ajustes de Android."</string>
     <string name="onboarding_start">"Empezar"</string>
     <string name="error_save_setting">"No se pudo guardar el ajuste. Inténtalo de nuevo."</string>
-    <string name="history_estimate_note">"El tiempo anterior al %1$s se estima con las estadísticas de uso del dispositivo. No incluye aperturas en los días estimados."</string>
-    <string name="history_estimate_day">"Estimado %1$s"</string>
-    <string name="history_estimate_included">"Incluye %1$s estimado"</string>
     <string name="strict_editor_note">"Modo estricto: desactivar o suavizar un límite se aplica en %1$d min."</string>
     <string name="schedule_add">"Añadir franja"</string>
     <string name="schedule_number">"Franja %1$d"</string>

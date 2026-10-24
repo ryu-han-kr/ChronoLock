@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.saveable.listSaver
 import com.chronolock.data.HistoryDailyEntity
-import com.chronolock.data.HistoryEstimateEntity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,41 +58,28 @@ internal class HistoryFilter(days: Int = 1, byOpens: Boolean = false, showDays: 
 
 @Composable internal fun rememberHistoryFilter(): HistoryFilter = rememberSaveable(saver = HistoryFilter.Saver) { HistoryFilter() }
 
-/**
- * Records in the selected period and one summed row per app, in the selected order. Days before the first event record
- * may carry [estimates] from OS usage buckets; they add time but no opens, and the screen labels them.
- */
+/** Records in the selected period and one summed row per app, in the selected order. Only recorded days count. */
 internal class HistoryView(val first: LocalDate, val records: List<HistoryDailyEntity>, val apps: List<HistoryDailyEntity>,
-    val estimates: List<HistoryEstimateEntity> = emptyList(),
     /** Whether records reach back to [first]; a shorter span is not totalled, only reported ([collectedDays] so far). */
     val complete: Boolean = true, val collectedDays: Int = 0) {
-    val estimatedByApp: Map<String, Long> = estimates.groupBy { it.packageName }.mapValues { (_, rows) -> rows.sumOf { it.usageMillis } }
-    val estimatedByDay: Map<String, Long> = estimates.groupBy { it.date }.mapValues { (_, rows) -> rows.sumOf { it.usageMillis } }
-    val totalMillis = records.sumOf { it.usageMillis } + estimates.sumOf { it.usageMillis }
-    /** Days with either records or estimates, for per-day averages. */
-    val coveredDays = (records.map { it.date } + estimates.map { it.date }).distinct().size
+    val totalMillis = records.sumOf { it.usageMillis }
+    /** Days with records, for per-day averages. */
+    val coveredDays = records.map { it.date }.distinct().size
 }
 
 @Composable internal fun rememberHistoryView(state: MainState, today: LocalDate, filter: HistoryFilter): HistoryView =
     remember(state.history, state.historyYear, today, filter.days, filter.byOpens) {
         val first = today.minusDays(filter.days - 1L)
-        // Only recorded days count. Time spread from the OS's coarse buckets is not shown: it would be made-up detail.
+        // Only recorded days count; nothing is filled in for days before the records start.
         val earliest = (state.history.map { it.date } + state.historyYear.filter { !it.estimated }.map { it.date }).minOrNull()?.let(LocalDate::parse)
         val complete = filter.days == 1 || (earliest != null && !earliest.isAfter(first))
         val collected = earliest?.let { (today.toEpochDay() - maxOf(it, first).toEpochDay() + 1).toInt().coerceIn(0, filter.days) } ?: 0
         val records = if (!complete) emptyList() else state.history.filter { it.date >= first.toString() && it.date <= today.toString() }
-        val estimates = emptyList<HistoryEstimateEntity>()
-        val recordedApps = records.groupBy { it.packageName }.mapValues { (_, rows) -> rows.first().copy(
+        val apps = records.groupBy { it.packageName }.map { (_, rows) -> rows.first().copy(
             usageMillis = rows.sumOf { it.usageMillis }, opens = rows.sumOf { it.opens }) }
-        val estimatedApps = estimates.groupBy { it.packageName }
-        val apps = (recordedApps.keys + estimatedApps.keys).map { pkg ->
-            val extra = estimatedApps[pkg].orEmpty().sumOf { it.usageMillis }
-            recordedApps[pkg]?.let { it.copy(usageMillis = it.usageMillis + extra) }
-                ?: estimatedApps.getValue(pkg).first().let { HistoryDailyEntity(pkg, it.date, it.appName, extra, 0) }
-        }
             .sortedWith(if (filter.byOpens) compareByDescending<HistoryDailyEntity> { it.opens }.thenByDescending { it.usageMillis }
                 else compareByDescending<HistoryDailyEntity> { it.usageMillis }.thenByDescending { it.opens })
-        HistoryView(first, records, apps, estimates, complete, collected)
+        HistoryView(first, records, apps, complete, collected)
     }
 
 /**
@@ -107,7 +93,7 @@ internal fun LazyGridScope.historyItems(state: MainState, today: LocalDate, filt
     limit: (String) -> Unit = {}) {
     item(key = "history-summary", span = { GridItemSpan(maxLineSpan) }) { HistorySummary(state, today, filter, view, refresh, permission, suggest, limit) }
     itemsIndexed(if (view.complete) view.apps else emptyList(), key = { _, app -> "history-" + app.packageName }, span = { _, _ -> GridItemSpan(maxLineSpan) }) { rank, app ->
-        HistoryAppCard(rank, app, view.totalMillis, view.estimatedByApp[app.packageName] ?: 0, limitedApps(state), limit, limitableApps(state))
+        HistoryAppCard(rank, app, view.totalMillis, limitedApps(state), limit, limitableApps(state))
     }
     item(key = "history-delete", span = { GridItemSpan(maxLineSpan) }) { HistoryDeleteCard(state, nowEpoch, setPin, deleteHistory, changePin) }
 }
@@ -122,7 +108,7 @@ internal fun HistoryPanel(state: MainState, today: LocalDate, refresh: () -> Uni
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         HistorySummary(state, today, filter, view, refresh, permission, suggest, limit)
         view.apps.forEachIndexed { rank, app -> key(app.packageName) {
-            HistoryAppCard(rank, app, view.totalMillis, view.estimatedByApp[app.packageName] ?: 0, limitedApps(state), limit, limitableApps(state))
+            HistoryAppCard(rank, app, view.totalMillis, limitedApps(state), limit, limitableApps(state))
         } }
         HistoryDeleteCard(state, System.currentTimeMillis(), setPin, deleteHistory)
     }
@@ -182,18 +168,17 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
         }
         Text(tr("기록은 이 기기에 최대 1년(365일)간 누적되고, 1년이 지난 날부터 차례로 지워집니다. 첫 실행 전 기록과 수집이 중단된 기간은 누락될 수 있습니다. 홈 화면은 제외하며 분할 화면·화면 속 화면의 수치는 다를 수 있습니다."),
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        if (filter.days > 1 && (records.isNotEmpty() || view.estimates.isNotEmpty())) CardBox {
+        if (filter.days > 1 && records.isNotEmpty()) CardBox {
             TextButton(onClick = { filter.showDays = !filter.showDays }) { Text(tr(if (filter.showDays) "일별 기록 접기" else "일별 기록 보기")) }
             if (filter.showDays) {
                 // Tapping a day lists its apps underneath; tapping it again closes the list.
                 var openDay by rememberSaveable { mutableStateOf<String?>(null) }
                 val totals = records.groupBy { it.date }
-                fun dayMillis(day: String) = totals[day].orEmpty().sumOf { it.usageMillis } + (view.estimatedByDay[day] ?: 0)
+                fun dayMillis(day: String) = totals[day].orEmpty().sumOf { it.usageMillis }
                 val maximum = ((0 until filter.days).maxOfOrNull { dayMillis(first.plusDays(it.toLong()).toString()) } ?: 1).coerceAtLeast(1)
                 (0 until filter.days).forEach { offset ->
                     val day = first.plusDays(offset.toLong())
                     val rows = totals[day.toString()].orEmpty()
-                    val estimated = view.estimatedByDay[day.toString()] ?: 0
                     val key = day.toString()
                     val open = openDay == key
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable(enabled = dayMillis(key) > 0) {
@@ -206,11 +191,10 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
                         LinearProgressIndicator(progress = { (dayMillis(key).toFloat() / maximum).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                         Text(when {
                             rows.isNotEmpty() -> tr("%1\$s · %2\$d회 실행", duration(rows.sumOf { it.usageMillis } / 1000), rows.sumOf { it.opens })
-                            estimated > 0 -> tr("추정 %1\$s", duration(estimated / 1000))
                             else -> tr("기록 없음")
                         }, style = MaterialTheme.typography.bodySmall)
                     }
-                    if (open) DayApps(rows, view.estimates.filter { it.date == key }, limitedApps(state), limit, limitableApps(state))
+                    if (open) DayApps(rows, limitedApps(state), limit, limitableApps(state))
                 }
             }
         }
@@ -355,23 +339,17 @@ private fun HistoryDeleteCard(state: MainState, nowEpoch: Long, setPin: (String,
         dismissButton = { TextButton(onClick = { open = false }) { Text(tr("취소")) } })
 }
 
-/** One day's apps by time: recorded rows with opens, plus estimated time for apps the records do not cover. */
+/** One day's apps by time, with their opens. */
 @Composable
-private fun DayApps(rows: List<HistoryDailyEntity>, estimates: List<HistoryEstimateEntity>, limited: Set<String> = emptySet(),
+private fun DayApps(rows: List<HistoryDailyEntity>, limited: Set<String> = emptySet(),
     limit: (String) -> Unit = {}, limitable: Set<String> = emptySet()) {
     val ownPackage = LocalContext.current.packageName
-    val estimated = estimates.groupBy { it.packageName }
-    // Recorded rows keep their opens even when zero; only apps known solely from estimates are labelled as estimated.
-    val apps = (rows.map { Triple(it, it.usageMillis + estimated[it.packageName].orEmpty().sumOf { e -> e.usageMillis }, it.opens) } +
-        estimated.filterKeys { pkg -> rows.none { it.packageName == pkg } }.map { (pkg, list) ->
-            Triple(HistoryDailyEntity(pkg, list.first().date, list.first().appName, 0, -1), list.sumOf { it.usageMillis }, -1)
-        }).sortedByDescending { it.second }
     Column(Modifier.fillMaxWidth().padding(start = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        apps.forEach { (app, millis, opens) ->
+        rows.sortedByDescending { it.usageMillis }.forEach { app ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 AppIcon(app.packageName, app.appName, 24.dp)
                 Text(app.appName, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(if (opens >= 0) tr("%1\$s · %2\$d회 실행", duration(millis / 1000), opens) else tr("추정 %1\$s", duration(millis / 1000)),
+                Text(tr("%1\$s · %2\$d회 실행", duration(app.usageMillis / 1000), app.opens),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 if (app.packageName != ownPackage && app.packageName in limitable) LimitButton(app.packageName, app.packageName in limited, limit, compact = true)
             }
@@ -380,7 +358,7 @@ private fun DayApps(rows: List<HistoryDailyEntity>, estimates: List<HistoryEstim
 }
 
 @Composable
-private fun HistoryAppCard(rank: Int, app: HistoryDailyEntity, totalMillis: Long, estimatedMillis: Long = 0,
+private fun HistoryAppCard(rank: Int, app: HistoryDailyEntity, totalMillis: Long,
     limited: Set<String> = emptySet(), limit: (String) -> Unit = {}, limitable: Set<String> = emptySet()) {
     val ownPackage = LocalContext.current.packageName
     CardBox {
@@ -395,8 +373,6 @@ private fun HistoryAppCard(rank: Int, app: HistoryDailyEntity, totalMillis: Long
                 if (app.packageName != ownPackage && app.packageName in limitable) LimitButton(app.packageName, app.packageName in limited, limit)
             }
             Text(tr("%1\$s · %2\$d회 실행", duration(app.usageMillis / 1000), app.opens), color = MaterialTheme.colorScheme.primary)
-            if (estimatedMillis > 0) Text(tr("추정 %1\$s 포함", duration(estimatedMillis / 1000)),
-                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             LinearProgressIndicator(progress = { (app.usageMillis.toFloat() / totalMillis.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
     }
 }

@@ -54,8 +54,6 @@ data class MainState(
     val pinBlockedUntil: Long? = null,
     val language: AppLanguage = AppLanguage.KOREAN,
     val history: List<HistoryDailyEntity> = emptyList(),
-    /** Usage estimated from OS buckets for days before the first event record. */
-    val historyEstimates: List<com.chronolock.data.HistoryEstimateEntity> = emptyList(),
     val historyUpdatedAt: Long = 0,
     val historyBusy: Boolean = false,
     val historyError: Boolean = false,
@@ -104,7 +102,6 @@ class MainViewModel @Inject constructor(
         MainState(rules = rules, daily = daily, health = monitor, theme = theme)
     }.combine(preferences.language) { data, language -> data.copy(language = language) }
         .combine(historyRepository.daily) { data, history -> data.copy(history = history) }
-        .combine(historyRepository.estimates) { data, estimates -> data.copy(historyEstimates = estimates) }
         .combine(historyRepository.meta) { data, meta -> data.copy(historyUpdatedAt = meta?.collectedAt ?: 0) }
         .combine(accounts.state) { data, account -> data.copy(account = account) }
         .combine(ads.state) { data, ad -> data.copy(ads = ad) }
@@ -133,7 +130,7 @@ class MainViewModel @Inject constructor(
         }
     val state = combine(local, loaded) { ui, data ->
         ui.copy(rules = data.rules, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
-            history = data.history, historyEstimates = data.historyEstimates, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
+            history = data.history, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,

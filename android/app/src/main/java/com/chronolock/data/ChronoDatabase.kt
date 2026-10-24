@@ -146,14 +146,21 @@ interface ChronoDao {
 }
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
-    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class,
+    HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, PendingRuleEntity::class,
     GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class],
-    version = 10, exportSchema = true)
+    version = 11, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        /** Estimates from OS usage buckets are gone: history shows recorded days only. */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS history_estimate")
+                db.execSQL("DELETE FROM history_year WHERE estimated = 1")
+            }
+        }
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE app_groups ADD COLUMN schedules TEXT")

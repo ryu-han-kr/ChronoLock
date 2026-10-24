@@ -232,7 +232,6 @@
     <string name="theme_word_gallery_title">"Themes"</string>
     <string name="theme_word_back">"Back"</string>
     <string name="theme_word_selected">"Selected: %1$s"</string>
-    <string name="history_partial_range">"Records start on %1$s. The device does not keep usage events from before then, so period totals may be lower than actual."</string>
     <string name="mascot_sleepy">"No records yet. Zzz…"</string>
     <string name="mascot_relaxed">"A relaxed day. Keep it up!"</string>
     <string name="mascot_happy">"Just the right pace."</string>
@@ -345,9 +344,6 @@
     <string name="onboarding_control_body">"Turn off or delete rules whenever you want, and revoke permissions in Android settings."</string>
     <string name="onboarding_start">"Get started"</string>
     <string name="error_save_setting">"Couldn't save the setting. Please try again."</string>
-    <string name="history_estimate_note">"Time before %1$s is estimated from device usage stats. Opens are not counted for estimated days."</string>
-    <string name="history_estimate_day">"Estimated %1$s"</string>
-    <string name="history_estimate_included">"Includes %1$s estimated"</string>
     <string name="strict_editor_note">"Strict mode: turning off or relaxing a limit takes effect in %1$d min."</string>
     <string name="schedule_add">"Add time window"</string>
     <string name="schedule_number">"Window %1$d"</string>

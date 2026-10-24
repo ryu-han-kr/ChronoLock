@@ -223,7 +223,6 @@
     <string name="theme_word_gallery_title">"主题"</string>
     <string name="theme_word_back">"返回"</string>
     <string name="theme_word_selected">"已选择：%1$s"</string>
-    <string name="history_partial_range">"记录从 %1$s 开始。设备不会保留此前的使用事件，因此时段合计可能低于实际值。"</string>
     <string name="mascot_sleepy">"还没有记录。呼呼……"</string>
     <string name="mascot_relaxed">"轻松的一天，继续保持！"</string>
     <string name="mascot_happy">"节奏刚刚好。"</string>
@@ -336,9 +335,6 @@
     <string name="onboarding_control_body">"规则可随时关闭或删除，也可在 Android 设置中撤销权限。"</string>
     <string name="onboarding_start">"开始使用"</string>
     <string name="error_save_setting">"无法保存设置，请重试。"</string>
-    <string name="history_estimate_note">"%1$s 之前的时间根据设备使用统计估算，估算期间不含打开次数。"</string>
-    <string name="history_estimate_day">"估算 %1$s"</string>
-    <string name="history_estimate_included">"含估算 %1$s"</string>
     <string name="strict_editor_note">"严格模式：关闭或放宽限制将在 %1$d 分钟后生效。"</string>
     <string name="schedule_add">"添加时段"</string>
     <string name="schedule_number">"时段 %1$d"</string>
