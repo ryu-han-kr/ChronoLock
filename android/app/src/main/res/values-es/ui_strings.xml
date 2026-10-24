@@ -377,7 +377,7 @@
     <string name="group_error_name">"Escribe un nombre para el grupo."</string>
     <string name="group_error_members">"Elige al menos dos apps."</string>
     <string name="group_error_max">"Un grupo puede tener hasta 200 apps."</string>
-    <string name="group_error_limit">"Define un tiempo o un número de aperturas diarias compartidos."</string>
+    <string name="group_error_limit">"Define un tiempo diario, un número de aperturas o unas horas de bloqueo compartidos."</string>
     <string name="group_error_taken">"No se puede añadir una app que ya está en otro grupo."</string>
     <string name="group_error_save">"No se pudo guardar el grupo. Inténtalo de nuevo."</string>
     <string name="group_error_delete">"No se pudo eliminar el grupo."</string>
@@ -523,7 +523,7 @@
     <string name="unlock_step_6">"Borrarlo todo: con el modo estricto desactivado, toca \'Restablecer todos los límites\' en Ajustes para quitar límites, grupos y sitios bloqueados. El historial se conserva."</string>
     <string name="unlock_step_7">"Detenerlo fuera de la app: Ajustes de Android → Accesibilidad → Apps instaladas → desactiva \'Límites de ChronoLock\' y todo bloqueo se detiene. También puedes desinstalarla, pero se borran reglas e historial."</string>
     <string name="live_channel">"Estado de límites en vivo"</string>
-    <string name="live_title">"%1$s tiene límite"</string>
+    <string name="live_title">"Usando %1$s"</string>
     <string name="live_daily">"Hoy: quedan %2$s de %1$s"</string>
     <string name="live_session">"Este uso: quedan %1$s"</string>
     <string name="live_group_time">"Grupo %1$s: quedan %2$s"</string>
@@ -653,4 +653,29 @@
     <string name="goal_pick_app">"Elegir app"</string>
     <string name="goal_block_sites">"Bloquear también los sitios"</string>
     <string name="goal_pick_hint">"Toca la app a la que aplicar \'%1$s\'."</string>
+    <string name="group_one_only">"Cada app puede estar en un solo grupo."</string>
+    <string name="group_taken_by">"Ya está en %1$s"</string>
+    <string name="group_schedule">"Horas de bloqueo del grupo"</string>
+    <string name="group_schedule_hint">"Durante estas horas se bloquean todas las apps del grupo. Si el final es anterior al inicio, sigue hasta el día siguiente."</string>
+    <string name="mascot_section">"Personaje"</string>
+    <string name="mascot_section_hint">"Elige un compañero que te acompañe en Hoy, la pantalla de bloqueo, las notificaciones y el historial."</string>
+    <string name="mascot_otter">"Nutria"</string>
+    <string name="mascot_raccoon">"Mapache blanco"</string>
+    <string name="mascot_hamster">"Hámster"</string>
+    <string name="mascot_rabbit">"Conejo"</string>
+    <string name="mascot_fox">"Zorro ártico"</string>
+    <string name="today_lock">"Bloqueado. Yo vigilo por ti."</string>
+    <string name="today_focus">"¡Concentración! Te animo en silencio."</string>
+    <string name="today_limit">"Una app ya agotó su límite de hoy."</string>
+    <string name="today_near">"Casi en el límite. ¡Con calma!"</string>
+    <string name="today_rest">"Un pequeño descanso. Vuelvo enseguida a vigilar."</string>
+    <string name="today_sleep">"Es tarde. Deja el teléfono y descansa."</string>
+    <string name="today_hello">"¡Hola! Empieza eligiendo una app para usar menos."</string>
+    <string name="today_good">"Sigues dentro de tus límites. ¡Bien hecho!"</string>
+    <string name="live_used">"Hoy: %1$s de uso"</string>
+    <plurals name="group_schedules">
+        <item quantity="one">"%1$d franja de bloqueo"</item>
+        <item quantity="many">"%1$d franjas de bloqueo"</item>
+        <item quantity="other">"%1$d franjas de bloqueo"</item>
+    </plurals>
 </resources>

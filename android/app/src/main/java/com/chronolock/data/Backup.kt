@@ -44,6 +44,7 @@ object BackupCodec {
             JSONObject().put("name", group.name)
                 .put("members", JSONArray(group.members.map { (app, name) -> JSONObject().put("packageName", app).put("appName", name) }))
                 .putOpt("dailyLimitSeconds", group.dailyLimitSeconds).putOpt("maxOpenCount", group.maxOpenCount).put("enabled", group.enabled)
+                .putOpt("schedules", group.toEntity().schedules)
         }))
         .put("sites", JSONArray(backup.sites.map { JSONObject().put("domain", it.domain).put("enabled", it.enabled) }))
         .put("settings", JSONObject().putOpt("theme", backup.theme).putOpt("language", backup.language).putOpt("strictMinutes", backup.strictMinutes))
@@ -61,7 +62,8 @@ object BackupCodec {
         }
         val groups = root.optJSONArray("groups").objects().map { item ->
             AppGroup(0, item.getString("name"), item.getJSONArray("members").objects().associate { it.getString("packageName") to it.getString("appName") },
-                item.longOrNull("dailyLimitSeconds"), item.longOrNull("maxOpenCount")?.toInt(), item.optBoolean("enabled", true))
+                item.longOrNull("dailyLimitSeconds"), item.longOrNull("maxOpenCount")?.toInt(), item.optBoolean("enabled", true),
+                item.stringOrNull("schedules")?.let(::decodeSchedules).orEmpty())
         }
         val sites = root.optJSONArray("sites").objects().map { BlockedSite(it.getString("domain"), it.optBoolean("enabled", true)) }
         require(sites.map { it.domain }.toSet().size == sites.size)

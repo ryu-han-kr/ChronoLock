@@ -14,10 +14,12 @@ import kotlinx.coroutines.sync.withLock
 private fun Set<DayOfWeek>.mask() = fold(0) { mask, day -> mask or (1 shl (day.value - 1)) }
 private fun daysOf(mask: Int) = DayOfWeek.values().filter { mask and (1 shl (it.value - 1)) != 0 }.toSet()
 
-private fun decodeSchedules(text: String): List<Schedule> = text.split(';').mapNotNull { part ->
+internal fun decodeSchedules(text: String): List<Schedule> = text.split(';').mapNotNull { part ->
     val (start, end, mask) = part.split('-').mapNotNull(String::toIntOrNull).takeIf { it.size == 3 } ?: return@mapNotNull null
     runCatching { Schedule(LocalTime.ofSecondOfDay(start * 60L), LocalTime.ofSecondOfDay(end * 60L), daysOf(mask)) }.getOrNull()
 }
+
+private fun List<Schedule>.encode() = takeIf { it.isNotEmpty() }?.joinToString(";") { "${it.start.toSecondOfDay() / 60}-${it.end.toSecondOfDay() / 60}-${it.days.mask()}" }
 
 fun RuleEntity.toDomain() = AppRule(
     packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, sessionLimitSeconds,
@@ -31,18 +33,18 @@ fun RuleEntity.toDomain() = AppRule(
 
 fun AppRule.toEntity() = RuleEntity(packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, enabled,
     sessionLimitSeconds, focusUntilEpochMillis = focusUntilEpochMillis,
-    schedules = schedules.takeIf { it.isNotEmpty() }?.joinToString(";") { "${it.start.toSecondOfDay() / 60}-${it.end.toSecondOfDay() / 60}-${it.days.mask()}" },
+    schedules = schedules.encode(),
     pausedUntilEpochMillis = pausedUntilEpochMillis, pauseSeconds = pauseSeconds, checkInMinutes = checkInMinutes)
 
 fun GroupEntity.toDomain() = AppGroup(id, name, members.split('\n').mapNotNull { line ->
     line.split('\t', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }
-}.toMap(), dailyLimitSeconds, maxOpenCount, enabled)
+}.toMap(), dailyLimitSeconds, maxOpenCount, enabled, schedules?.let(::decodeSchedules).orEmpty())
 
 fun SiteEntity.toDomain() = BlockedSite(domain, enabled)
 fun BlockedSite.toEntity() = SiteEntity(domain, enabled)
 
 fun AppGroup.toEntity() = GroupEntity(id, name, members.entries.joinToString("\n") { "${it.key}\t${it.value.replace('\n', ' ').replace('\t', ' ')}" },
-    dailyLimitSeconds, maxOpenCount, enabled)
+    dailyLimitSeconds, maxOpenCount, enabled, schedules.encode())
 
 @Singleton
 class LocalRepository @Inject constructor(private val database: ChronoDatabase) : RuleRepository {
@@ -114,16 +116,21 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     suspend fun requestGroup(group: AppGroup, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
         database.withTransaction {
             val all = dao.groups()
+            val current = all.firstOrNull { it.id == group.id }?.toDomain()
+            // One group per app; overlaps saved before that rule may stay, but no new app may join a second group.
+            val taken = all.map { it.toDomain() }.takenBy(group.id).keys - current?.members?.keys.orEmpty()
+            require(group.members.keys.none { it in taken }) { GROUP_TAKEN }
             if (group.id == 0L) {
                 dao.insertGroup(group.toEntity())
                 dao.insertEvents(listOf(EventEntity(type = "GROUP_UPDATED", packageName = null, epochMillis = nowEpochMillis)))
                 return@withTransaction null
             }
-            changeGroup(group.id, all.firstOrNull { it.id == group.id }?.toDomain(), group, delayMillis, nowEpochMillis)
+            changeGroup(group.id, current, group, delayMillis, nowEpochMillis)
         }
     }
 
     companion object {
+        const val GROUP_TAKEN = "다른 그룹에 들어 있는 앱은 함께 넣을 수 없습니다."
         const val SITES_FULL = "차단할 사이트는 최대 50개까지 추가할 수 있습니다."
         /** Passed as the delay while a lock holds: loosening changes are refused, tightening ones apply at once. */
         const val LOCKED_DELAY = -1L

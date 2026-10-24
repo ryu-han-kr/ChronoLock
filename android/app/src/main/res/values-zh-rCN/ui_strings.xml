@@ -377,7 +377,7 @@
     <string name="group_error_name">"请输入组名称。"</string>
     <string name="group_error_members">"请至少选择两个应用。"</string>
     <string name="group_error_max">"每个组最多可包含 200 个应用。"</string>
-    <string name="group_error_limit">"请设置共用的每日时长或打开次数。"</string>
+    <string name="group_error_limit">"请设置共用的每日时长、打开次数或屏蔽时段。"</string>
     <string name="group_error_taken">"已在其他组中的应用无法加入。"</string>
     <string name="group_error_save">"无法保存组，请重试。"</string>
     <string name="group_error_delete">"无法删除组。"</string>
@@ -509,7 +509,7 @@
     <string name="unlock_step_6">"一次全部清除：关闭严格模式后，在“设置”中点“重置所有规则”，即可删除所有应用限制、应用组和网站拦截。使用记录会保留。"</string>
     <string name="unlock_step_7">"在应用外停止：Android 设置 → 无障碍 → 已安装的应用 → 关闭“ChronoLock 应用限制”，所有拦截会立即停止。也可以卸载应用，但规则和记录会一并删除。"</string>
     <string name="live_channel">"实时限制状态"</string>
-    <string name="live_title">"%1$s 限制中"</string>
+    <string name="live_title">"正在使用 %1$s"</string>
     <string name="live_daily">"今日 %1$s，剩余 %2$s"</string>
     <string name="live_session">"本次使用剩余 %1$s"</string>
     <string name="live_group_time">"%1$s 组剩余 %2$s"</string>
@@ -631,4 +631,27 @@
     <string name="goal_pick_app">"选择应用"</string>
     <string name="goal_block_sites">"同时拦截网站"</string>
     <string name="goal_pick_hint">"点按要应用“%1$s”的应用。"</string>
+    <string name="group_one_only">"每个应用只能加入一个组。"</string>
+    <string name="group_taken_by">"已在“%1$s”组中"</string>
+    <string name="group_schedule">"组屏蔽时段"</string>
+    <string name="group_schedule_hint">"在设定时段内，组内所有应用会一起被屏蔽。结束时间早于开始时间时，会持续到第二天。"</string>
+    <string name="mascot_section">"角色"</string>
+    <string name="mascot_section_hint">"选一个伙伴，在今日、屏蔽画面、通知和记录里陪着你。"</string>
+    <string name="mascot_otter">"水獭"</string>
+    <string name="mascot_raccoon">"白浣熊"</string>
+    <string name="mascot_hamster">"仓鼠"</string>
+    <string name="mascot_rabbit">"兔子"</string>
+    <string name="mascot_fox">"北极狐"</string>
+    <string name="today_lock">"锁定中，我会好好守着。"</string>
+    <string name="today_focus">"专注中！我在默默为你加油。"</string>
+    <string name="today_limit">"有应用已用完今天的上限。"</string>
+    <string name="today_near">"快到上限了，省着点用！"</string>
+    <string name="today_rest">"正在小憩，很快回来守着你。"</string>
+    <string name="today_sleep">"很晚了，放下手机好好睡吧。"</string>
+    <string name="today_hello">"你好！先选一个想少用的应用吧。"</string>
+    <string name="today_good">"还在上限以内，做得很好！"</string>
+    <string name="live_used">"今日已用 %1$s"</string>
+    <plurals name="group_schedules">
+        <item quantity="other">"%1$d 个屏蔽时段"</item>
+    </plurals>
 </resources>

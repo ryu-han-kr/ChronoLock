@@ -43,7 +43,7 @@ class SiteBlockingDeviceTest {
         shell("input keyevent KEYCODE_HOME")
         db = Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db")
             .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5,
-                ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9).build()
+                ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10).build()
         db.clearAllTables()
         runBlocking { db.dao().saveSite(SiteEntity("youtube.com")) }
         val services = (originalServices.split(':').filter { it.isNotBlank() && it != service } + service).joinToString(":")
@@ -118,7 +118,7 @@ class SiteBlockingDeviceTest {
         shell("settings put secure enabled_accessibility_services $services")
         SystemClock.sleep(3000)
         open("com.android.chrome", "https://example.com")
-        fun liveShown() = shell("dumpsys notification --noredact").lines().any { it.contains("pkg=$app") && it.contains("live_limits") }
+        fun liveShown() = shell("dumpsys notification --noredact").lines().any { it.contains("pkg=$app") && it.contains("live_usage") }
         val shown = await(15_000, ::liveShown)
         capture("live-notification")
         assertTrue("live notification missing", shown)

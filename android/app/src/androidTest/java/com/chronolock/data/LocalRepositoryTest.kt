@@ -42,7 +42,7 @@ class LocalRepositoryTest {
     }
 
     private fun openDatabase() = Room.databaseBuilder(context, ChronoDatabase::class.java, databaseName)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10).build()
 
     @Test fun databaseReopen_restoresRuleCountersAndCooldown() = runBlocking {
         val rule = AppRule("test.app", "Test", dailyLimitSeconds = 60, maxOpenCount = 3, cooldownSeconds = 30)
@@ -325,11 +325,13 @@ class LocalRepositoryTest {
         assertEquals(listOf("a"), database.dao().rules().map { it.packageName })
     }
 
-    @Test fun group_appsMayJoinSeveralGroupsAndStrictModeHoldsRelaxingEdits() = runBlocking {
+    @Test fun group_eachAppJoinsOneGroupAndStrictModeHoldsRelaxingEdits() = runBlocking {
         val repository = LocalRepository(database)
         repository.requestGroup(AppGroup(0, "SNS", mapOf("a" to "A", "b" to "B"), maxOpenCount = 3), 0, origin)
         val id = database.dao().groups().single().id
-        repository.requestGroup(AppGroup(0, "Video", mapOf("b" to "B", "c" to "C"), maxOpenCount = 3), 0, origin)
+        val taken = runCatching { repository.requestGroup(AppGroup(0, "Video", mapOf("b" to "B", "c" to "C"), maxOpenCount = 3), 0, origin) }
+        assertEquals(LocalRepository.GROUP_TAKEN, taken.exceptionOrNull()?.message)
+        repository.requestGroup(AppGroup(0, "Video", mapOf("c" to "C", "d" to "D"), maxOpenCount = 3), 0, origin)
         assertEquals(2, database.dao().groups().size)
         repository.requestDeleteGroup(database.dao().groups().first { it.name == "Video" }.id, 0, origin)
         val saved = database.dao().groups().single().toDomain()
@@ -344,5 +346,13 @@ class LocalRepositoryTest {
         assertNotNull(repository.requestDeleteGroup(id, 600_000, origin))
         repository.tick(clock(600_000, origin + 600_000))
         assertTrue(database.dao().groups().isEmpty())
+    }
+
+    @Test fun group_schedulesSurviveStorageAndBlockEveryMember() = runBlocking {
+        val repository = LocalRepository(database)
+        val night = com.chronolock.domain.Schedule(java.time.LocalTime.of(0, 0), java.time.LocalTime.of(23, 59), java.time.DayOfWeek.values().toSet())
+        repository.requestGroup(AppGroup(0, "Night", mapOf("a" to "A", "b" to "B"), schedules = listOf(night)), 0, origin)
+        assertEquals(listOf(night), database.dao().groups().single().toDomain().schedules)
+        assertTrue(repository.foreground("b", clock(1_000)).decision.denied)
     }
 }

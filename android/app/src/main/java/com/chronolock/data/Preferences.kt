@@ -46,8 +46,11 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val goalPinKey = stringPreferencesKey("lock_goal_pin")
     private val goalCodeKey = stringPreferencesKey("lock_goal_code")
     private val goalRevealedKey = intPreferencesKey("lock_goal_revealed")
+    private val mascotKey = stringPreferencesKey("mascot")
     val language = context.preferences.data.map { AppLanguage.fromStored(it[languageKey]) }
     val theme = context.preferences.data.map { AppTheme.fromStored(it[themeKey]) }
+    val mascot = context.preferences.data.map { MascotKind.fromStored(it[mascotKey]) }
+    suspend fun setMascot(kind: MascotKind) { context.preferences.edit { it[mascotKey] = kind.name } }
     val acknowledged = context.preferences.data.map { it[disclosure] ?: false }
     // People who already accepted the permission disclosure predate the welcome screen and skip it.
     val onboarded = context.preferences.data.map { it[onboardedKey] ?: it[disclosure] ?: false }

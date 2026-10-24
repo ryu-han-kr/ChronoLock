@@ -273,7 +273,7 @@ class FocusUiTest {
         var started: Set<String>? = null
         val language = mutableStateOf(com.chronolock.data.AppLanguage.KOREAN)
         ui.setContent { LocalizedApp(language.value) { ChronoTheme(AppTheme.DARK) {
-            OnboardingScreen(language.value, { language.value = it }) { started = it }
+            OnboardingScreen(language.value, { language.value = it }, start = { started = it })
         } } }
         ui.onNodeWithText("기록은 이 기기에만").assertExists()
         screenshot("onboarding", ui.onRoot())

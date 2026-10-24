@@ -377,7 +377,7 @@
     <string name="group_error_name">"グループ名を入力してください。"</string>
     <string name="group_error_members">"アプリを2つ以上選んでください。"</string>
     <string name="group_error_max">"1つのグループに入れられるアプリは最大200個です。"</string>
-    <string name="group_error_limit">"共有する1日の時間か起動回数を設定してください。"</string>
+    <string name="group_error_limit">"共有する1日の時間、起動回数、ブロック時間帯のいずれかを設定してください。"</string>
     <string name="group_error_taken">"別のグループにあるアプリは追加できません。"</string>
     <string name="group_error_save">"グループを保存できませんでした。もう一度お試しください。"</string>
     <string name="group_error_delete">"グループを削除できませんでした。"</string>
@@ -509,7 +509,7 @@
     <string name="unlock_step_6">"まとめて削除：厳格モードをオフにしてから設定の「すべてのルールを初期化」を押すと、アプリの制限・グループ・ウェブサイトのブロックがすべて消えます。利用記録は残ります。"</string>
     <string name="unlock_step_7">"アプリの外で止める：Androidの設定 → ユーザー補助 → インストール済みアプリ → 「ChronoLock アプリ制限」をオフにすると、すべてのブロックがすぐ止まります。アプリを削除してもよいですが、ルールと記録も消えます。"</string>
     <string name="live_channel">"リアルタイムの制限状況"</string>
-    <string name="live_title">"%1$s を制限中"</string>
+    <string name="live_title">"%1$s を使用中"</string>
     <string name="live_daily">"1日 %1$s のうち残り %2$s"</string>
     <string name="live_session">"今回の利用 残り %1$s"</string>
     <string name="live_group_time">"%1$s グループ 残り %2$s"</string>
@@ -631,4 +631,27 @@
     <string name="goal_pick_app">"アプリを選ぶ"</string>
     <string name="goal_block_sites">"サイトもブロック"</string>
     <string name="goal_pick_hint">"「%1$s」を適用するアプリをタップしてください。"</string>
+    <string name="group_one_only">"1つのアプリは1つのグループにだけ入れられます。"</string>
+    <string name="group_taken_by">"「%1$s」に登録済み"</string>
+    <string name="group_schedule">"グループのブロック時間帯"</string>
+    <string name="group_schedule_hint">"この時間帯はグループのすべてのアプリがまとめてブロックされます。終了が開始より早いと翌日まで続きます。"</string>
+    <string name="mascot_section">"キャラクター"</string>
+    <string name="mascot_section_hint">"今日の画面、ブロック画面、通知、記録で一緒にいる仲間を選んでください。"</string>
+    <string name="mascot_otter">"カワウソ"</string>
+    <string name="mascot_raccoon">"白いタヌキ"</string>
+    <string name="mascot_hamster">"ハムスター"</string>
+    <string name="mascot_rabbit">"ウサギ"</string>
+    <string name="mascot_fox">"ホッキョクギツネ"</string>
+    <string name="today_lock">"ロック中です。しっかり見張っていますね。"</string>
+    <string name="today_focus">"集中中！静かに応援しています。"</string>
+    <string name="today_limit">"今日の上限を使い切ったアプリがあります。"</string>
+    <string name="today_near">"もうすぐ上限です。少し控えめに！"</string>
+    <string name="today_rest">"ちょっと休憩中。すぐにまた見守りますね。"</string>
+    <string name="today_sleep">"もう遅いですよ。スマホを置いてぐっすり眠りましょう。"</string>
+    <string name="today_hello">"こんにちは！まず減らしたいアプリを選びましょう。"</string>
+    <string name="today_good">"まだ上限内です。いい調子！"</string>
+    <string name="live_used">"今日 %1$s 使用"</string>
+    <plurals name="group_schedules">
+        <item quantity="other">"ブロック時間帯 %1$d件"</item>
+    </plurals>
 </resources>

@@ -36,6 +36,8 @@ data class MainState(
     val focusBusy: Boolean = false,
     val theme: AppTheme = AppTheme.DARK,
     val favoriteThemes: Set<String> = emptySet(),
+    /** The companion character drawn across the app. */
+    val mascot: com.chronolock.data.MascotKind = com.chronolock.data.MascotKind.DEFAULT,
     /** Day/night themes that follow the device's dark mode, and which of the two the picker is editing. */
     val followSystem: Boolean = false,
     /** First-run goals, as [com.chronolock.domain.OnboardingGoal] names. */
@@ -109,6 +111,7 @@ class MainViewModel @Inject constructor(
         .combine(repository.groups) { data, groups -> data.copy(groups = groups.map { it.toDomain() }) }
         .combine(repository.pendingGroups) { data, pending -> data.copy(pendingGroups = pending) }
         .combine(preferences.favoriteThemes) { data, favorites -> data.copy(favoriteThemes = favorites) }
+        .combine(preferences.mascot) { data, kind -> data.copy(mascot = kind) }
         .combine(preferences.followSystem) { data, follow -> data.copy(followSystem = follow) }
         .combine(preferences.goals) { data, goals -> data.copy(goals = goals) }
         .combine(preferences.nightTheme) { data, night -> data.copy(nightTheme = night) }
@@ -129,7 +132,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals)
+            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -263,6 +266,8 @@ class MainViewModel @Inject constructor(
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
 
+    fun selectMascot(kind: com.chronolock.data.MascotKind) = viewModelScope.launch { preferences.setMascot(kind) }
+
     fun saveGroup(group: AppGroup, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
         if (group.id == 0L && !state.value.pro && state.value.groups.size >= com.chronolock.domain.FreeTier.GROUPS) {
             showError(PRO_GROUPS); onFinished(); return@launch
@@ -388,7 +393,8 @@ class MainViewModel @Inject constructor(
     @Suppress("UNUSED_PARAMETER")
     private suspend fun locked(now: Long) = preferences.lock.first().lockedAt(environment.clock())
     /** The lock message when a change was refused by a lock, else [fallback]. */
-    private fun failure(error: Exception, fallback: String) = if (error.message == LocalRepository.LOCKED) LocalRepository.LOCKED else fallback
+    private fun failure(error: Exception, fallback: String) =
+        error.message?.takeIf { it == LocalRepository.LOCKED || it == LocalRepository.GROUP_TAKEN } ?: fallback
 
     /** Starts or extends a time lock by [hours]. */
     fun lockFor(hours: Int) = viewModelScope.launch {

@@ -23,6 +23,8 @@ import com.chronolock.data.PendingGroupEntity
 import com.chronolock.domain.AppGroup
 import com.chronolock.domain.DailyTimeInput
 import com.chronolock.domain.GroupDraft
+import com.chronolock.domain.AppRule
+import com.chronolock.domain.ScheduleDraft
 
 /** Today's shared usage of one group against its limits, with a change strict mode may be holding back. */
 @Composable
@@ -72,18 +74,29 @@ internal fun GroupCard(group: AppGroup, today: List<DailyEntity>, held: PendingG
         add(text("%1\$d개 앱", group.members.size))
         group.dailyLimitSeconds?.let { add(text("함께 하루 %1\$s", formatDuration(it, text))) }
         group.maxOpenCount?.let { add(text("함께 %1\$d회 실행", it)) }
+        if (group.schedules.isNotEmpty()) add(text("차단 시간대 %1\$d개", group.schedules.size))
     }.joinToString(" · ")
 }
 
+// Name, limits, flags, the schedule count and windows (3 each), then member pairs.
 private val GroupDraftSaver = listSaver<GroupDraft, String>(
-    save = { listOf(it.name, it.daily, it.opens, it.enabled.toString()) + it.members.flatMap { (app, name) -> listOf(app, name) } },
-    restore = { GroupDraft(it[0], it.drop(4).chunked(2).associate { (app, name) -> app to name }, it[1], it[2], it[3].toBoolean()) },
+    save = { listOf(it.name, it.daily, it.opens, it.enabled.toString(), it.scheduleEnabled.toString(), it.schedules.size.toString()) +
+        it.schedules.flatMap { window -> listOf(window.start, window.end, window.daysMask.toString()) } +
+        it.members.flatMap { (app, name) -> listOf(app, name) } },
+    restore = {
+        val windows = it[5].toInt()
+        GroupDraft(it[0], it.drop(6 + windows * 3).chunked(2).associate { (app, name) -> app to name }, it[1], it[2], it[3].toBoolean(),
+            it[4].toBoolean(), it.drop(6).take(windows * 3).chunked(3).map { (start, end, mask) -> ScheduleDraft(start, end, mask.toInt()) })
+    },
 )
 
-/** Creates or edits a group: its name, shared limits and member apps. Apps already in another group cannot be chosen. */
+/**
+ * Creates or edits a group: its name, shared limits, block windows and member apps. Apps in [taken] (another group's,
+ * mapped to its name) cannot be chosen, so each app belongs to one group.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, strictMinutes: Int, onDismiss: () -> Unit,
+internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, taken: Map<String, String>, strictMinutes: Int, onDismiss: () -> Unit,
     onSave: (AppGroup, () -> Unit) -> Unit, onDelete: () -> Unit) {
     var draft by rememberSaveable(stateSaver = GroupDraftSaver) { mutableStateOf(saved?.let(GroupDraft::from) ?: GroupDraft()) }
     var dailyTime by rememberSaveable(stateSaver = DailyTimeInputSaver) { mutableStateOf(DailyTimeInput.fromSeconds(draft.daily)) }
@@ -108,8 +121,10 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, strictMinut
     val choices = remember(apps, query) {
         (savedMembers + apps.associate { it.packageName to it.label }.filterKeys { it !in savedMembers }).entries
             .filter { (app, label) -> query.isBlank() || label.contains(query.trim(), true) || app.contains(query.trim(), true) }
-            .sortedWith(compareBy({ it.key !in savedMembers }, { it.value.lowercase() }))
+            .sortedWith(compareBy({ it.key !in savedMembers }, { it.key in taken && it.key !in savedMembers }, { it.value.lowercase() }))
     }
+    // Apps of another group stay listed (greyed, with that group's name) so it is clear why they cannot be ticked.
+    fun free(app: String) = app !in taken || app in savedMembers
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { it != SheetValue.Hidden || !saving })
     ModalBottomSheet(onDismissRequest = { if (!saving) onDismiss() }, sheetState = sheet) {
         Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
@@ -122,6 +137,7 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, strictMinut
         Column(Modifier.verticalScroll(scroll).padding(horizontal = 24.dp, vertical = 16.dp).navigationBarsPadding().imePadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(tr("묶은 앱들은 하루 시간과 실행 횟수를 함께 씁니다. 앱마다 정한 제한도 그대로 적용됩니다."), style = MaterialTheme.typography.bodySmall)
+            Text(tr("한 앱은 그룹 하나에만 넣을 수 있어요."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth().toggleable(value = draft.enabled, enabled = !saving, role = Role.Switch) { draft = draft.copy(enabled = it) },
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(tr("제한 사용"))
@@ -136,26 +152,48 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, strictMinut
                 modifier = Modifier.fillMaxWidth().testTag("group-name"))
             TimeFields("함께 쓰는 하루 시간", "group-daily", dailyTime, !saving, presetMinutes = listOf(30, 60, 120)) { dailyTime = it; error = null }
             NumberField(tr("함께 쓰는 하루 실행 횟수"), draft.opens, !saving) { draft = draft.copy(opens = it); error = null }
+            Row(Modifier.fillMaxWidth().toggleable(value = draft.scheduleEnabled, enabled = !saving, role = Role.Switch,
+                onValueChange = { draft = draft.copy(scheduleEnabled = it); error = null }).testTag("group-schedule"),
+                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(tr("그룹 차단 시간대"))
+                Switch(checked = draft.scheduleEnabled, onCheckedChange = null, enabled = !saving)
+            }
+            if (draft.scheduleEnabled) {
+                Text(tr("정한 시간에는 그룹의 모든 앱이 함께 막혀요. 종료가 시작보다 이르면 다음 날까지 이어집니다."), style = MaterialTheme.typography.bodySmall)
+                draft.schedules.forEachIndexed { index, window ->
+                    ScheduleFields(index, window, removable = draft.schedules.size > 1, enabled = !saving,
+                        change = { next -> draft = draft.copy(schedules = draft.schedules.toMutableList().also { it[index] = next }); error = null },
+                        remove = { draft = draft.copy(schedules = draft.schedules.filterIndexed { at, _ -> at != index }) })
+                }
+                if (draft.schedules.size < AppRule.MAX_SCHEDULES) OutlinedButton(onClick = { draft = draft.copy(schedules = draft.schedules + ScheduleDraft()) },
+                    enabled = !saving, modifier = Modifier.fillMaxWidth().testTag("group-schedule-add")) { Text(tr("예약 구간 추가")) }
+            }
             HorizontalDivider()
             Text(tr("묶을 앱 · %1\$d개 선택", draft.members.size), fontWeight = FontWeight.SemiBold)
             OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text(tr("앱 검색")) }, singleLine = true,
                 shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth())
             // Bulk selection for limiting many apps at once; it asks first, as essential apps could end up limited too.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = { confirmAll = true }, enabled = !saving && choices.any { it.key !in draft.members },
+                TextButton(onClick = { confirmAll = true }, enabled = !saving && choices.any { it.key !in draft.members && free(it.key) },
                     modifier = Modifier.testTag("group-select-all")) { Text(tr("검색 결과 모두 선택")) }
                 TextButton(onClick = { draft = draft.copy(members = emptyMap()); error = null }, enabled = !saving && draft.members.isNotEmpty(),
                     modifier = Modifier.testTag("group-select-none")) { Text(tr("모두 해제")) }
             }
             choices.forEach { (app, label) ->
                 val chosen = app in draft.members
-                Row(Modifier.fillMaxWidth().toggleable(value = chosen, enabled = !saving, role = Role.Checkbox) { on ->
+                val open = free(app)
+                Row(Modifier.fillMaxWidth().toggleable(value = chosen, enabled = !saving && (open || chosen), role = Role.Checkbox) { on ->
                     draft = draft.copy(members = if (on) draft.members + (app to label) else draft.members - app); error = null
                 }.testTag("group-app-$app").padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Checkbox(checked = chosen, onCheckedChange = null, enabled = !saving)
+                    Checkbox(checked = chosen, onCheckedChange = null, enabled = !saving && (open || chosen))
                     AppIcon(app, label, 28.dp)
-                    Text(label, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Column(Modifier.weight(1f)) {
+                        Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            color = if (open) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (!open) Text(tr("%1\$s 그룹에 들어 있음", taken.getValue(app)), style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
             }
             if (saved != null) TextButton(onClick = onDelete, enabled = !saving) { Text(tr("이 그룹 삭제"), color = MaterialTheme.colorScheme.error) }
@@ -165,7 +203,7 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, strictMinut
         text = { Text(tr("선택한 앱은 모두 이 그룹의 하루 시간과 실행 횟수를 함께 쓰게 됩니다. 메신저·지도·인증 앱처럼 꼭 필요한 앱까지 막힐 수 있으니 목록을 꼭 확인해 주세요. 전화·설정 등 필수 앱은 목록에서 빠져 있어요.")) },
         confirmButton = { TextButton(onClick = {
             val room = AppGroup.MAX_MEMBERS - draft.members.size
-            draft = draft.copy(members = draft.members + choices.filter { it.key !in draft.members }.take(room).associate { it.key to it.value })
+            draft = draft.copy(members = draft.members + choices.filter { it.key !in draft.members && free(it.key) }.take(room).associate { it.key to it.value })
             error = null; confirmAll = false
         }, modifier = Modifier.testTag("group-select-all-confirm")) { Text(tr("모두 선택")) } },
         dismissButton = { TextButton(onClick = { confirmAll = false }) { Text(tr("취소")) } })

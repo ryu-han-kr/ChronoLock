@@ -37,6 +37,7 @@ import com.chronolock.data.toDomain
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.RuleDraft
 import com.chronolock.domain.ScheduleDraft
+import com.chronolock.domain.takenBy
 import com.chronolock.domain.AppRule.Companion.MAX_SCHEDULES
 import com.chronolock.data.PendingRuleEntity
 import com.chronolock.ads.BannerAd
@@ -86,6 +87,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     // The theme on screen: the night one while the device is dark and the person asked to follow it.
     val shown = if (state.followSystem && androidx.compose.foundation.isSystemInDarkTheme()) state.nightTheme else state.theme
     val editing = if (state.followSystem && state.editingNight) state.nightTheme else state.theme
+    androidx.compose.runtime.CompositionLocalProvider(LocalMascot provides state.mascot) {
     LocalizedApp(state.language) {
         val text = uiText()
         LaunchedEffect(state.error, state.language) { state.error?.let { snackbar.showSnackbar(text(it)); model.dismissError() } }
@@ -95,7 +97,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         }
         if (state.onboarded != true) {
             ChronoTheme(shown) {
-                if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding)
+                if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding, state.mascot, { model.selectMascot(it) })
                 else Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             }
             return@LocalizedApp
@@ -123,7 +125,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 openThemeGallery = { themeGallery = true },
                 pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
-                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup,
+                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) },
                 addSite = { input, added -> model.addSite(input, added) }, toggleSite = model::toggleSite,
                 removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite, addSitePreset = model::addSites,
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,
@@ -145,7 +147,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             }
             editGroupId?.let { id ->
                 val saved = state.groups.firstOrNull { it.id == id }
-                key(id) { GroupEditor(saved, state.apps, state.strict.delayAt(nowEpoch), onDismiss = { editGroupId = null },
+                key(id) { GroupEditor(saved, state.apps, state.groups.takenBy(id), state.strict.delayAt(nowEpoch), onDismiss = { editGroupId = null },
                     onSave = { group, finished -> model.saveGroup(group, { editGroupId = null }, finished) },
                     onDelete = { model.removeGroup(id) { editGroupId = null } }) }
             }
@@ -188,6 +190,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 confirmButton = { TextButton(onClick = { model.resetRules(); confirmClear = false }, modifier = Modifier.testTag("rules-reset-confirm")) { Text(tr("초기화")) } },
                 dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(tr("취소")) } })
         }
+    }
     }
 }
 
@@ -378,7 +381,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
 }
 /** One schedule window: quick day sets, single days and the block's start and end. */
 @Composable
-private fun ScheduleFields(index: Int, value: ScheduleDraft, removable: Boolean, enabled: Boolean,
+internal fun ScheduleFields(index: Int, value: ScheduleDraft, removable: Boolean, enabled: Boolean,
     change: (ScheduleDraft) -> Unit, remove: () -> Unit) {
     HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .15f))
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -495,7 +498,7 @@ internal fun QuickFocusCard(state: MainState, nowEpoch: Long, start: (Int) -> Un
     val enabled = state.rules.filter { it.enabled }
     val active = enabled.filter { (it.focusUntilEpochMillis ?: 0) > nowEpoch }
     CardBox {
-        Text(tr("지금부터 집중"), style = MaterialTheme.typography.titleLarge)
+        MascotTitle(tr("지금부터 집중"), if (active.isNotEmpty()) com.chronolock.data.Pose.FOCUS else com.chronolock.data.Pose.TIMER)
         if (active.isNotEmpty()) {
             val remaining = ((active.maxOf { it.focusUntilEpochMillis!! } - nowEpoch + 999) / 1000).coerceAtLeast(0)
             Text(duration(remaining), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineLarge)

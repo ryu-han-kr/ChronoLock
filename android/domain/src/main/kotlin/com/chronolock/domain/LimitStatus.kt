@@ -47,12 +47,17 @@ data class LiveLimit(
     val sessionLeftMillis: Long?,
     val opensLeft: Int?,
     val groups: List<GroupLeft>,
+    /** Time spent in the app today, shown while it is in use. */
+    val usedTodayMillis: Long = 0,
 ) {
     /** The running allowance that ends first; the notification counts down to it. */
     val nearestMillis: Long? get() = (listOfNotNull(dailyLeftMillis, sessionLeftMillis) + groups.mapNotNull { it.timeLeftMillis }).minOrNull()
 }
 
-/** The live limits of the observed app, or null when nothing is limiting it right now (no rule, paused or already blocked). */
+/**
+ * The live limits of the observed app while it is in use, or null when it has no rule, is paused or is already blocked.
+ * An app limited only by schedules or a cooldown still gets one, with nothing left to count down.
+ */
 fun MonitorState.liveLimit(rules: Map<String, AppRule>): LiveLimit? {
     val target = observedPackage ?: return null
     val now = clock ?: return null
@@ -65,6 +70,7 @@ fun MonitorState.liveLimit(rules: Map<String, AppRule>): LiveLimit? {
             group.maxOpenCount?.let { (it - used.opens).coerceAtLeast(0) })
     }
     val live = LiveLimit(target, rule.appName, rule.dailyLimitSeconds?.times(1000), remainingDailyMillis(rule),
-        rule.sessionLimitSeconds?.let { (it * 1000 - session).coerceAtLeast(0) }, rule.maxOpenCount?.let { (it - today.opens).coerceAtLeast(0) }, groups)
-    return live.takeIf { it.dailyLeftMillis != null || it.sessionLeftMillis != null || it.opensLeft != null || groups.isNotEmpty() }
+        rule.sessionLimitSeconds?.let { (it * 1000 - session).coerceAtLeast(0) }, rule.maxOpenCount?.let { (it - today.opens).coerceAtLeast(0) },
+        groups.filter { it.timeLeftMillis != null || it.opensLeft != null }, today.usageMillis)
+    return live
 }

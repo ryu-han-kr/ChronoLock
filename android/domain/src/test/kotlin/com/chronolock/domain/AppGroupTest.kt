@@ -75,9 +75,30 @@ class AppGroupTest {
         assertEquals(AppGroup(0, "SNS", members, 3600), GroupDraft(" SNS ", members).build(0))
         assertEquals("그룹 이름을 입력해 주세요.", runCatching { GroupDraft("", members).build(0) }.exceptionOrNull()?.message)
         assertEquals("묶을 앱을 두 개 이상 선택해 주세요.", runCatching { GroupDraft("SNS", mapOf("a" to "A")).build(0) }.exceptionOrNull()?.message)
-        assertEquals("함께 쓸 하루 시간이나 실행 횟수를 설정해 주세요.", runCatching { GroupDraft("SNS", members, daily = "").build(0) }.exceptionOrNull()?.message)
+        assertEquals("함께 쓸 하루 시간, 실행 횟수나 차단 시간대를 설정해 주세요.", runCatching { GroupDraft("SNS", members, daily = "").build(0) }.exceptionOrNull()?.message)
         val saved = AppGroup(4, "SNS", members, null, 7, enabled = false)
         assertEquals(saved, GroupDraft.from(saved).build(4))
+        // Block hours alone are enough of a limit, and survive a round trip through the editor.
+        val night = GroupDraft("SNS", members, daily = "", scheduleEnabled = true, schedules = listOf(ScheduleDraft("23:00", "07:00", ScheduleDraft.EVERY_DAY))).build(5)
+        assertEquals(1, night.schedules.size)
+        assertEquals(night, GroupDraft.from(night).build(5))
+    }
+
+    @Test fun groupSchedule_blocksEveryMemberAndRemovingItLoosens() {
+        val always = Schedule(java.time.LocalTime.MIDNIGHT, java.time.LocalTime.of(23, 59), java.time.DayOfWeek.values().toSet())
+        val night = AppGroup(9, "Night", mapOf("a" to "A", "b" to "B"), schedules = listOf(always))
+        val rule = withGroups(emptyMap(), listOf(night)).getValue("b")
+        val decision = RuleEngine().evaluate(RuleContext(java.time.Instant.parse("2026-10-24T03:00:00Z").toEpochMilli(), java.time.ZoneOffset.UTC), rule)
+        assertEquals(listOf(Reason.SCHEDULE), decision.reasons)
+        assertTrue(Strictness.loosens(night, night.copy(schedules = emptyList(), dailyLimitSeconds = 60)))
+        assertFalse(Strictness.loosens(night.copy(schedules = emptyList(), dailyLimitSeconds = 60), night.copy(dailyLimitSeconds = 60)))
+    }
+
+    @Test fun takenBy_namesTheOtherGroupOfEachApp() {
+        val sns = AppGroup(1, "SNS", mapOf("a" to "A", "b" to "B"), 60)
+        val video = AppGroup(2, "Video", mapOf("c" to "C", "d" to "D"), 60)
+        assertEquals(mapOf("c" to "Video", "d" to "Video"), listOf(sns, video).takenBy(1))
+        assertEquals(mapOf("a" to "SNS", "b" to "SNS", "c" to "Video", "d" to "Video"), listOf(sns, video).takenBy(0))
     }
 
     @Test fun strictness_holdsOnlyRelaxingGroupChanges() {

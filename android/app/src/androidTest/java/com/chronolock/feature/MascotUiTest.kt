@@ -49,7 +49,7 @@ class MascotUiTest {
                 }
             }
         }
-        Mood.values().forEach { mood -> ui.onNodeWithTag("hamster-${mood.name.lowercase()}", useUnmergedTree = true) }
+        Mood.values().forEach { mood -> ui.onNodeWithTag("mascot-${mood.name.lowercase()}", useUnmergedTree = true) }
         screenshot("hamster-light", ui.onNodeWithTag("sheet-LIGHT"))
         screenshot("hamster-dark", ui.onNodeWithTag("sheet-DARK"))
     }

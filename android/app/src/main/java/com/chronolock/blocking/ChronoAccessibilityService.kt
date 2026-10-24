@@ -95,6 +95,11 @@ class ChronoAccessibilityService : AccessibilityService() {
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay theme", error) }
         }
         scope.launch {
+            try { preferences.mascot.collect { overlay.setMascot(it); surfaces.mascot = it } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load the character", error) }
+        }
+        scope.launch {
             try { preferences.language.collect { overlay.setLanguage(it); localized = forLanguage(it) } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load overlay language", error) }
