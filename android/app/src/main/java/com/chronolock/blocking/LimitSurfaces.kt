@@ -50,6 +50,7 @@ internal class LimitSurfaces(private val context: Context) {
     var mascot = MascotKind.DEFAULT
     private val icons = mutableMapOf<Int, android.graphics.Bitmap?>()
     private var oldChannelGone = false
+    private var lastWidgetMascot: MascotKind? = null
 
     init { clearLive() } // A notification left by a stopped service must not outlive it.
 
@@ -69,9 +70,10 @@ internal class LimitSurfaces(private val context: Context) {
         val summary = state.todaySummary(rules).let {
             it.copy(usedMillis = it.usedMillis / 60_000 * 60_000, tightestRemainingMillis = it.tightestRemainingMillis?.let { ms -> (ms + 59_999) / 60_000 * 60_000 })
         }
-        if (summary != lastSummary) {
+        if (summary != lastSummary || mascot != lastWidgetMascot) {
             lastSummary = summary
-            TodayWidget.store(context, summary, localized)
+            lastWidgetMascot = mascot
+            TodayWidget.store(context, summary, localized, mascot)
         }
     }
 
@@ -161,7 +163,15 @@ class TodayWidget : AppWidgetProvider() {
     companion object {
         private const val PREFS = "today_widget"
 
-        internal fun store(context: Context, summary: TodaySummary, localized: Context) {
+        /** The widget character's pose: limit reached, nearly reached (10 minutes), nothing limited, or within limits. */
+        internal fun pose(summary: TodaySummary): Pose = when {
+            summary.tightestApp == null -> Pose.DEFAULT
+            summary.tightestRemainingMillis == 0L -> Pose.LIMIT
+            (summary.tightestRemainingMillis ?: Long.MAX_VALUE) <= 10 * 60_000L -> Pose.WARNING
+            else -> Pose.SUCCESS
+        }
+
+        internal fun store(context: Context, summary: TodaySummary, localized: Context, mascot: MascotKind = MascotKind.DEFAULT) {
             val text = UiText(localized)
             val detail = when {
                 summary.tightestApp == null -> localized.getString(R.string.widget_empty)
@@ -172,7 +182,9 @@ class TodayWidget : AppWidgetProvider() {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putString("label", localized.getString(R.string.widget_label))
                 .putString("used", formatDuration(summary.usedMillis / 1000, text))
-                .putString("detail", detail).apply()
+                .putString("detail", detail)
+                // Names, not resource ids: ids can change between builds while the stored values outlive an update.
+                .putString("mascot", mascot.name).putString("pose", pose(summary).name).apply()
             val manager = AppWidgetManager.getInstance(context)
             render(context, manager, manager.getAppWidgetIds(ComponentName(context, TodayWidget::class.java)))
         }
@@ -184,6 +196,8 @@ class TodayWidget : AppWidgetProvider() {
                 setTextViewText(R.id.widget_label, saved.getString("label", null) ?: context.getString(R.string.widget_label))
                 setTextViewText(R.id.widget_used, saved.getString("used", null) ?: "—")
                 setTextViewText(R.id.widget_detail, saved.getString("detail", null) ?: context.getString(R.string.widget_empty))
+                setImageViewResource(R.id.widget_mascot, MascotKind.fromStored(saved.getString("mascot", null))
+                    .art(Pose.entries.firstOrNull { it.name == saved.getString("pose", null) } ?: Pose.DEFAULT))
                 setOnClickPendingIntent(R.id.widget_root, openApp(context))
             }
             manager.updateAppWidget(ids, views)

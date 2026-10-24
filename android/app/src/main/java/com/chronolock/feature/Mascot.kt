@@ -20,6 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
@@ -88,6 +90,9 @@ internal val Mood.pose: Pose get() = when (this) {
     Mood.DIZZY -> Pose.LIMIT
 }
 
+/** "Reduce motion" from settings: moving themes and the breathing character hold still. */
+internal val LocalReduceMotion = staticCompositionLocalOf { false }
+
 /** The character chosen in settings; screens draw it through [MascotArt]. */
 internal val LocalMascot = staticCompositionLocalOf { MascotKind.DEFAULT }
 
@@ -105,6 +110,10 @@ internal fun Mascot(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp)
  */
 @Composable
 internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.dp, kind: MascotKind = LocalMascot.current, wobble: Boolean = false) {
+    if (LocalReduceMotion.current) {
+        Image(painterResource(kind.art(pose)), contentDescription = null, modifier = modifier.size(size))
+        return
+    }
     val transition = rememberInfiniteTransition(label = "mascot")
     val breath by transition.animateFloat(1f, 1.035f,
         infiniteRepeatable(tween(1600, easing = EaseInOutSine), RepeatMode.Reverse), label = "breath")
@@ -167,5 +176,19 @@ internal fun MascotPicker(selected: MascotKind, select: (MascotKind) -> Unit) {
                 Image(painterResource(selected.art(pose)), contentDescription = null, modifier = Modifier.size(44.dp))
             }
         }
+    }
+}
+
+/** Settings switch for [LocalReduceMotion]. */
+@Composable
+internal fun MotionToggle(on: Boolean, set: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().toggleable(value = on, role = Role.Switch, onValueChange = set).padding(top = 8.dp).testTag("reduce-motion"),
+        verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(tr("움직이는 효과 줄이기"), style = MaterialTheme.typography.titleSmall)
+            Text(tr("움직이는 테마와 캐릭터 움직임을 멈춰 배터리를 아껴요."), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall)
+        }
+        Switch(checked = on, onCheckedChange = null)
     }
 }

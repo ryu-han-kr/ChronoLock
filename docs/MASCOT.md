@@ -26,8 +26,10 @@
 | 차단 화면 | 집중 → 집중, 예약 시간대 → 취침, 대기(쿨다운) → 타이머, 그 밖 → 사용 제한, 사이트 → 사용 제한, 숨 고르기 → 휴식, 사용 중 확인 → 경고 |
 | 사용 중 알림 (큰 아이콘) | 남은 시간 5분 미만 → 경고, 아니면 타이머 |
 | 설정 › 캐릭터 | 5종 고르기 + 고른 캐릭터의 포즈 10개 미리보기 |
+| 홈 화면 위젯 | 제한 없음 → 기본, 한도 다 씀 → 사용 제한, 10분 이내 → 경고, 그 밖 → 성공 |
 
 선택은 `Preferences.mascot`(DataStore `mascot`)에 저장되고, 화면에는 `LocalMascot`으로 전달된다.
+설정의 "움직이는 효과 줄이기"(`Preferences.reduceMotion`, `LocalReduceMotion`)를 켜면 캐릭터 숨쉬기와 움직이는 테마가 멈춘다.
 
 ## 3. 이미지 다시 자르기 / 교체
 - 원본 시트를 바꾸면 `python -I scripts/cut_mascots.py photo/chronolock android/app/src/main/res/drawable-nodpi`로 다시 자른다:
