@@ -256,6 +256,8 @@
     <string name="recommend_title">"Límites sugeridos"</string>
     <string name="recommend_hint">"Apps que más usaste en este periodo y aún no tienen límite. Elige un preajuste y guarda para aplicarla."</string>
     <string name="recommend_add">"Añadir límite"</string>
+    <string name="history_limit_edit">"Editar límite"</string>
+    <string name="history_limit_set">"Poner límite"</string>
     <string name="sort_name">"Por nombre"</string>
     <string name="sort_usage">"Por uso"</string>
     <string name="sort_recent">"Más recientes"</string>
@@ -691,14 +693,14 @@
     <string name="group_schedule">"Horas de bloqueo del grupo"</string>
     <string name="group_schedule_hint">"Durante estas horas se bloquean todas las apps del grupo. Si el final es anterior al inicio, sigue hasta el día siguiente."</string>
     <string name="mascot_section">"Personaje"</string>
-    <string name="mascot_section_hint">"Elige un compañero que te acompañe en Hoy, la pantalla de bloqueo, las notificaciones y el historial."</string>
+    <string name="mascot_section_hint">"Elige un compañero para Hoy, la pantalla de bloqueo, las notificaciones y el historial."</string>
     <string name="mascot_otter">"Nutria"</string>
     <string name="mascot_raccoon">"Mapache blanco"</string>
     <string name="mascot_hamster">"Hámster"</string>
     <string name="mascot_rabbit">"Conejo"</string>
     <string name="mascot_fox">"Zorro ártico"</string>
     <string name="today_lock">"Bloqueado. Yo vigilo por ti."</string>
-    <string name="today_focus">"¡Concentración! Te animo en silencio."</string>
+    <string name="today_focus">"¡Estás concentrándote! Te animo en silencio."</string>
     <string name="today_limit">"Una app ya agotó su límite de hoy."</string>
     <string name="today_near">"Casi en el límite. ¡Con calma!"</string>
     <string name="today_rest">"Un pequeño descanso. Vuelvo enseguida a vigilar."</string>

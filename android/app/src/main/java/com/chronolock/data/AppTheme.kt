@@ -57,7 +57,9 @@ class AppTheme(
         fun values(): List<AppTheme> = builtIn + ThemeCatalog.all
 
         /** A stored name: a listed palette, a custom one rebuilt from its colour and effect, or [DARK]. */
-        fun fromStored(value: String?): AppTheme = values().firstOrNull { it.name == value }
-            ?: ThemeCatalog.parseCustom(value)?.let { (rgb, effects) -> ThemeCatalog.custom(rgb, effects) } ?: DARK
+        fun fromStored(value: String?): AppTheme = ThemeCatalog.resolve(value).let { name ->
+            values().firstOrNull { it.name == name }
+                ?: ThemeCatalog.parseCustom(name)?.let { (rgb, effects) -> ThemeCatalog.custom(rgb, effects) } ?: DARK
+        }
     }
 }
