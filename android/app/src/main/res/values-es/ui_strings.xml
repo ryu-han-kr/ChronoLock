@@ -317,7 +317,6 @@
     <string name="sign_in_google">"Iniciar sesión con Google"</string>
     <string name="ads_title">"Anuncios"</string>
     <string name="ads_free">"Estás usando la app sin anuncios."</string>
-    <string name="ads_hint">"Se muestra un banner al final de Hoy e Historial. Nunca aparece en la pantalla de bloqueo ni durante la concentración."</string>
     <string name="ads_privacy">"Privacidad de anuncios"</string>
     <string name="delete_account_title">"¿Eliminar tu cuenta?"</string>
     <string name="delete_account_body">"Tu cuenta se elimina del servidor y se cierra la sesión. Los límites y el historial de este dispositivo se conservan. No se puede deshacer."</string>
@@ -326,13 +325,6 @@
     <string name="error_delete_account">"No se pudo eliminar la cuenta. Revisa la conexión e inténtalo de nuevo."</string>
     <string name="error_google">"No se pudo iniciar sesión con Google. Comprueba que el dispositivo tenga una cuenta de Google."</string>
     <string name="manage_subscription">"Gestionar suscripción"</string>
-    <string name="billing_pending">"Esperando la confirmación del pago. Los anuncios desaparecerán al completarse."</string>
-    <string name="buy_ad_free">"Quitar anuncios · %1$s/mes"</string>
-    <string name="buy_ad_free_no_price">"Quitar anuncios"</string>
-    <string name="billing_terms">"Se cobra mensualmente por Google Play. Cancela cuando quieras en Play Store."</string>
-    <string name="billing_unavailable">"No se pudo cargar el plan sin anuncios. Comprueba que la app se instaló desde Play Store."</string>
-    <string name="billing_checking">"Comprobando el plan sin anuncios…"</string>
-    <string name="billing_offline">"No se pudo conectar con Google Play, así que no se cargó el plan sin anuncios. Comprueba la red e inténtalo de nuevo."</string>
     <string name="billing_retry">"Reintentar"</string>
     <string name="error_billing">"No se pudo abrir la pantalla de pago. Inténtalo de nuevo en un momento."</string>
     <string name="rule_remaining">"Quedan %1$s hoy"</string>
@@ -723,4 +715,7 @@
     <string name="pro_limit_mascot">"Los personajes además del hámster son de Pro."</string>
     <string name="pro_mascots">"Los 5 personajes"</string>
     <string name="pro_no_ads">"Sin anuncios"</string>
+    <string name="ads_pro_none">"Con Pro no hay anuncios."</string>
+    <string name="ads_where">"Solo aparece un pequeño banner al final de Ajustes. Nunca en Hoy, Historial, la pantalla de bloqueo ni durante la concentración."</string>
+    <string name="ads_no_longer_sold">"La suscripción sin anuncios ya no se vende. La tuya sigue activa hasta que la canceles."</string>
 </resources>

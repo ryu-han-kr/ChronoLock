@@ -299,7 +299,6 @@
     <string name="sign_in_google">"Google でログイン"</string>
     <string name="ads_title">"広告"</string>
     <string name="ads_free">"広告なしで利用中です。"</string>
-    <string name="ads_hint">"今日と履歴の画面下部にバナー広告を表示します。ブロック画面と集中中は表示しません。"</string>
     <string name="ads_privacy">"広告のプライバシー設定"</string>
     <string name="delete_account_title">"アカウントを削除しますか？"</string>
     <string name="delete_account_body">"サーバーのアカウント情報を削除してログアウトします。この端末の制限ルールと利用履歴は残ります。元に戻せません。"</string>
@@ -308,13 +307,6 @@
     <string name="error_delete_account">"アカウントを削除できませんでした。ネットワークを確認して再度お試しください。"</string>
     <string name="error_google">"Google ログインを開始できませんでした。端末に Google アカウントがあるか確認してください。"</string>
     <string name="manage_subscription">"サブスクリプション管理"</string>
-    <string name="billing_pending">"支払いの確認を待っています。完了すると広告が消えます。"</string>
-    <string name="buy_ad_free">"広告を削除 · 月 %1$s"</string>
-    <string name="buy_ad_free_no_price">"広告を削除"</string>
-    <string name="billing_terms">"Google Play の定期購入です。Play ストアでいつでも解約できます。"</string>
-    <string name="billing_unavailable">"広告なしプランを読み込めませんでした。Play ストアからインストールしたアプリか確認してください。"</string>
-    <string name="billing_checking">"広告なしプランを確認しています…"</string>
-    <string name="billing_offline">"Google Play に接続できず、広告なしプランを読み込めませんでした。ネットワークを確認してもう一度お試しください。"</string>
     <string name="billing_retry">"再試行"</string>
     <string name="error_billing">"決済画面を開けませんでした。しばらくしてから再度お試しください。"</string>
     <string name="rule_remaining">"今日の残り %1$s"</string>
@@ -681,4 +673,7 @@
     <string name="pro_limit_mascot">"ハムスター以外のキャラクターはプロで使えます。"</string>
     <string name="pro_mascots">"キャラクター5種すべて"</string>
     <string name="pro_no_ads">"広告なし"</string>
+    <string name="ads_pro_none">"プロなので広告は表示されません。"</string>
+    <string name="ads_where">"設定一覧のいちばん下にだけ小さなバナー広告を1つ表示します。今日・履歴・ブロック画面と集中中には表示しません。"</string>
+    <string name="ads_no_longer_sold">"広告削除の定期購入は新規販売を終了しました。現在の購入は解約するまでそのまま続きます。"</string>
 </resources>

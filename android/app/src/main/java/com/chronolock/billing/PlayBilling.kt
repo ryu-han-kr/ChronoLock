@@ -100,15 +100,6 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
         })
     }
 
-    /** Returns false when the purchase sheet could not be opened. */
-    fun purchase(activity: Activity): Boolean {
-        val details = product ?: return false
-        val offer = details.baseOffer()?.offerToken ?: return false
-        val params = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(
-            BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offer).build())).build()
-        return client.launchBillingFlow(activity, params).ok
-    }
-
     /** Opens Play's sheet for the Pro pass; false when it is not loaded (not set up yet, or offline). */
     fun purchasePro(activity: Activity): Boolean {
         val details = proProduct ?: return false
@@ -117,6 +108,7 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
         return client.launchBillingFlow(activity, params).ok
     }
 
+    /** The ad-free subscription is no longer sold (Pro removes ads); subscribers can still manage or cancel it here. */
     fun manageSubscription(activity: Activity) {
         val uri = Uri.parse("https://play.google.com/store/account/subscriptions?sku=${AdFreeProduct.ID}&package=${context.packageName}")
         runCatching { activity.startActivity(Intent(Intent.ACTION_VIEW, uri)) }

@@ -308,7 +308,6 @@
     <string name="sign_in_google">"Sign in with Google"</string>
     <string name="ads_title">"Ads"</string>
     <string name="ads_free">"You are using the app without ads."</string>
-    <string name="ads_hint">"A banner ad appears at the bottom of Today and History. Ads never appear on the block screen or during focus."</string>
     <string name="ads_privacy">"Ad privacy settings"</string>
     <string name="delete_account_title">"Delete your account?"</string>
     <string name="delete_account_body">"Your account is deleted from the server and you are signed out. Limits and history on this device stay. This cannot be undone."</string>
@@ -317,13 +316,6 @@
     <string name="error_delete_account">"Could not delete your account. Check your connection and try again."</string>
     <string name="error_google">"Could not start Google sign-in. Make sure this device has a Google account."</string>
     <string name="manage_subscription">"Manage subscription"</string>
-    <string name="billing_pending">"Waiting for payment confirmation. Ads disappear once it completes."</string>
-    <string name="buy_ad_free">"Remove ads · %1$s/month"</string>
-    <string name="buy_ad_free_no_price">"Remove ads"</string>
-    <string name="billing_terms">"Billed monthly through Google Play. Cancel anytime in the Play Store."</string>
-    <string name="billing_unavailable">"Could not load the ad-free plan. Make sure the app was installed from the Play Store."</string>
-    <string name="billing_checking">"Checking the ad-free plan…"</string>
-    <string name="billing_offline">"Could not reach Google Play, so the ad-free plan was not loaded. Check your network and try again."</string>
     <string name="billing_retry">"Try again"</string>
     <string name="error_billing">"Could not open the payment screen. Please try again shortly."</string>
     <string name="rule_remaining">"%1$s left today"</string>
@@ -702,4 +694,7 @@
     <string name="pro_limit_mascot">"Characters other than the hamster come with Pro."</string>
     <string name="pro_mascots">"All 5 characters"</string>
     <string name="pro_no_ads">"No ads"</string>
+    <string name="ads_pro_none">"No ads with Pro."</string>
+    <string name="ads_where">"A single small banner appears only at the very end of Settings. Never on Today, History, the block screen or during focus."</string>
+    <string name="ads_no_longer_sold">"The ad-free subscription is no longer sold. Yours stays active until you cancel it."</string>
 </resources>

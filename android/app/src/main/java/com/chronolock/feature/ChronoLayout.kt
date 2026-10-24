@@ -60,9 +60,7 @@ internal fun ChronoScreen(
     signOut: () -> Unit = {},
     deleteAccount: () -> Unit = {},
     privacyOptions: () -> Unit = {},
-    buyAdFree: () -> Unit = {},
     manageSubscription: () -> Unit = {},
-    retryBilling: () -> Unit = {},
     openThemeGallery: () -> Unit = {},
     pause: (String, Int?) -> Unit = { _, _ -> },
     resume: (String) -> Unit = {},
@@ -297,7 +295,7 @@ internal fun ChronoScreen(
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
                                 if (com.chronolock.BuildConfig.PRO_GATING) item { ProCard(state, buyPro) }
-                                if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
+                                if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, manageSubscription) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }
                                 item {
@@ -371,28 +369,19 @@ private fun AccountCard(state: MainState, signIn: () -> Unit, signOut: () -> Uni
 }
 
 @Composable
-private fun AdsCard(state: MainState, privacyOptions: () -> Unit, buy: () -> Unit, manage: () -> Unit, retry: () -> Unit) {
+private fun AdsCard(state: MainState, privacyOptions: () -> Unit, manage: () -> Unit) {
     CardBox {
         Text(tr("광고"), style = MaterialTheme.typography.titleLarge)
-        Text(if (state.adFree) tr("광고 없이 이용 중입니다.")
-            else tr("오늘·히스토리 화면 하단에 배너 광고가 표시됩니다. 차단 화면과 집중 중에는 표시하지 않습니다."),
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
-        when {
-            state.adFree -> OutlinedButton(onClick = manage) { Text(tr("구독 관리")) }
-            state.billing.pending -> Text(tr("결제 확인을 기다리고 있습니다. 완료되면 광고가 사라집니다."), color = MaterialTheme.colorScheme.primary)
-            state.billing.available -> {
-                Button(onClick = buy) { Text(state.billing.price?.let { tr("광고 제거 · 월 %1\$s", it) } ?: tr("광고 제거")) }
-                Text(tr("Google Play 정기 결제입니다. Play 스토어에서 언제든 해지할 수 있습니다."),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            }
-            state.billing.status == BillingStatus.CONNECTING ->
-                Text(tr("광고 제거 상품을 확인하는 중입니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            else -> {
-                Text(if (state.billing.status == BillingStatus.OFFLINE) tr("Google Play에 연결하지 못해 광고 제거 상품을 불러오지 못했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.")
-                    else tr("광고 제거 상품을 불러오지 못했습니다. Play 스토어에서 설치한 앱인지 확인해 주세요."),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                OutlinedButton(onClick = retry) { Text(tr("다시 시도")) }
-            }
+        Text(when {
+            state.adFree -> tr("광고 없이 이용 중입니다.")
+            com.chronolock.BuildConfig.PRO_GATING && state.billing.pro -> tr("프로라서 광고가 표시되지 않아요.")
+            else -> tr("설정 목록 맨 아래에만 작은 배너 광고가 하나 표시됩니다. 오늘·히스토리·차단 화면과 집중 중에는 표시하지 않아요.")
+        }, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // The ad-free subscription is no longer sold; existing subscribers keep it until they cancel.
+        if (state.adFree) {
+            OutlinedButton(onClick = manage) { Text(tr("구독 관리")) }
+            Text(tr("광고 제거 구독은 새로 판매하지 않아요. 지금 구독은 해지하기 전까지 그대로 유지돼요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         if (state.ads.privacyOptionsRequired) OutlinedButton(onClick = privacyOptions) { Text(tr("광고 개인정보 설정")) }
     }
