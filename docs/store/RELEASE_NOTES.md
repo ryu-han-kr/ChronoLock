@@ -2,6 +2,46 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.8.5 (versionCode 18) — 미업로드
+
+AAB: `release/chronolock-0.8.5-vc18.aab`. 0.8.4 + 캐릭터 5종·그룹 한 곳 소속/그룹 차단 시간대·사용 중 알림(PR #44) + 번역 검수(PR #43). DB v10.
+0.8.4를 아직 안 올렸다면 0.8.5만 올리고 0.8.4 노트를 합쳐 쓴다.
+
+### ko
+- 함께할 캐릭터를 골라요: 수달·흰너구리·햄스터·토끼·북극여우가 상황마다 다른 표정으로 함께해요.
+- 앱 그룹에 차단 시간대를 정해 그룹 전체를 한 번에 막을 수 있어요.
+- 한 앱은 그룹 하나에만 들어가도록 바뀌었어요.
+- 제한한 앱을 쓰는 동안 알림창 위쪽에 '사용 중'과 남은 한도가 보여요.
+- 영어·일본어·중국어·스페인어 번역을 다듬었어요.
+
+### en
+- Pick a buddy: an otter, white raccoon, hamster, rabbit or arctic fox reacts to how your day is going.
+- App groups can have block hours that stop every app in the group at once.
+- Each app now belongs to one group only.
+- While you use a limited app, the notification shows it is in use and what is left, near the top.
+- Polished the English, Japanese, Chinese and Spanish translations.
+
+### ja
+- 一緒にいるキャラクターを選べます：カワウソ・白いタヌキ・ハムスター・ウサギ・ホッキョクギツネが状況に合わせて表情を変えます。
+- アプリグループにブロック時間帯を設定し、グループ全体をまとめて止められます。
+- 1つのアプリは1つのグループにだけ入るようになりました。
+- 制限中のアプリを使っている間、通知の上の方に「使用中」と残りの上限を表示します。
+- 英語・日本語・中国語・スペイン語の翻訳を見直しました。
+
+### zh-CN
+- 选择陪伴你的角色：水獭、白浣熊、仓鼠、兔子、北极狐会随情况变换表情。
+- 应用组可设置屏蔽时段，一次屏蔽组内所有应用。
+- 每个应用现在只能加入一个组。
+- 使用受限应用时，通知栏上方会显示“正在使用”和剩余上限。
+- 优化了英文、日文、中文和西班牙文翻译。
+
+### es
+- Elige un compañero: una nutria, un mapache blanco, un hámster, un conejo o un zorro ártico reaccionan a tu día.
+- Los grupos de apps pueden tener horas de bloqueo que detienen todas sus apps a la vez.
+- Ahora cada app pertenece a un solo grupo.
+- Mientras usas una app con límite, la notificación muestra arriba que está en uso y lo que queda.
+- Se pulieron las traducciones al inglés, japonés, chino y español.
+
 ## 0.8.4 (versionCode 17) — 미업로드
 
 AAB: `release/chronolock-0.8.4-vc17.aab`. 0.8.3 + 홈 이동 이벤트 누락 보정(PR #39) + 나만의 테마 색상환·효과 조합·움직이는 테마·1년 기록 월/요일. 0.8.3 검토가 끝나기 전에 올리면 0.8.3 노트와 합쳐 쓴다.
