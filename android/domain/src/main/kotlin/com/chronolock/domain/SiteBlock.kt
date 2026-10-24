@@ -37,6 +37,32 @@ object SiteDomains {
         sites.firstOrNull { it.enabled && (host == it.domain || host.endsWith("." + it.domain)) }
 }
 
+/**
+ * Services whose own app opens instead of the website. Blocking the site in a browser does not stop the app,
+ * so the site list points these out and offers an app limit.
+ */
+object SiteApps {
+    private val byDomain: Map<String, List<String>> = mapOf(
+        "youtube.com" to listOf("com.google.android.youtube"),
+        "instagram.com" to listOf("com.instagram.android"),
+        "facebook.com" to listOf("com.facebook.katana"),
+        "x.com" to listOf("com.twitter.android"),
+        "twitter.com" to listOf("com.twitter.android"),
+        "tiktok.com" to listOf("com.zhiliaoapp.musically", "com.ss.android.ugc.trill"),
+        "threads.net" to listOf("com.instagram.barcelona"),
+        "netflix.com" to listOf("com.netflix.mediaclient"),
+        "twitch.tv" to listOf("tv.twitch.android.app"),
+        "reddit.com" to listOf("com.reddit.frontpage"),
+        "coupang.com" to listOf("com.coupang.mobile"),
+        "tving.com" to listOf("net.cj.cjhv.gs.tving"),
+        "wavve.com" to listOf("kr.co.captv.pooqV2"),
+    )
+
+    /** The apps of the service at [domain] (or a parent domain), most likely first. */
+    fun of(domain: String): List<String> =
+        byDomain.entries.firstOrNull { (site, _) -> domain == site || domain.endsWith(".$site") }?.value.orEmpty()
+}
+
 /** One-tap groups of popular sites; [name] is the translatable chip label. */
 enum class SitePreset(val name_: String, val domains: List<String>) {
     SOCIAL("SNS", listOf("instagram.com", "facebook.com", "x.com", "tiktok.com", "threads.net")),

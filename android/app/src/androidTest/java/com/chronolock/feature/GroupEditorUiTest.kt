@@ -51,6 +51,15 @@ class GroupEditorUiTest {
         }
     }
 
+    @Test fun blockedSiteWithItsAppInstalled_offersToLimitTheApp() {
+        var limited: String? = null
+        ui.setContent { ChronoTheme { SitesCard(listOf(com.chronolock.domain.BlockedSite("youtube.com", true)), emptyList(), { _, _ -> }, { _, _ -> }, {}, {},
+            installed = mapOf("com.google.android.youtube" to "YouTube"), limitApp = { limited = it }) } }
+        ui.onNodeWithText("YouTube 앱은 사이트 차단으로 막히지 않아요.").assertExists()
+        ui.onNodeWithText("앱도 제한하기").performClick()
+        ui.runOnIdle { org.junit.Assert.assertEquals("com.google.android.youtube", limited) }
+    }
+
     @Test fun sitePreset_addsItsDomains() {
         var added: List<String>? = null
         ui.setContent { ChronoTheme { SitesCard(emptyList(), emptyList(), { _, _ -> }, { _, _ -> }, {}, {}, addPreset = { added = it }) } }

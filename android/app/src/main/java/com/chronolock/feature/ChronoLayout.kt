@@ -231,7 +231,10 @@ internal fun ChronoScreen(
                                     Text(tr("웹사이트 차단"), style = MaterialTheme.typography.titleLarge)
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
-                                    SitesCard(state.sites, state.pendingSites, addSite, toggleSite, removeSite, cancelPendingSite, addSitePreset)
+                                    SitesCard(state.sites, state.pendingSites, addSite, toggleSite, removeSite, cancelPendingSite, addSitePreset,
+                                        installed = state.apps.associate { it.packageName to it.label },
+                                        limited = state.rules.filter { it.enabled }.mapTo(mutableSetOf()) { it.packageName },
+                                        limitApp = { app -> choosePickRecipe(null); edit(app, null) })
                                 }
                                 item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today) { app, recipe -> edit(app, recipe) } }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
