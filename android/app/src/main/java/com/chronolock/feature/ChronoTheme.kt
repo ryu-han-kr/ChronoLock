@@ -123,7 +123,16 @@ internal val ChronoTypography = Typography(
 internal fun AppTheme.colorScheme(): ColorScheme {
     val base = if (isDark) darkColorScheme() else lightColorScheme()
     // Raised containers (dialogs, menus, chips) tint the card colour toward the text colour instead of sharing one flat tone.
-    fun raised(amount: Float) = lerp(Color(surface), Color(text), amount)
+    // The tint is capped where muted copy (dialog text) or the accent (dialog buttons) would fall below 4.5:1.
+    fun raised(amount: Float): Color {
+        var step = (amount * 100).roundToInt()
+        while (step > 0) {
+            val color = lerp(Color(surface), Color(text), step / 100f)
+            if (contrastRatio(Color(muted), color) >= 4.5f && contrastRatio(Color(primary), color) >= 4.5f) return color
+            step--
+        }
+        return Color(surface)
+    }
     return base.copy(
         primary = Color(primary), onPrimary = Color(onPrimary),
         primaryContainer = Color(primary).copy(alpha = .16f).compositeOver(Color(surface)), onPrimaryContainer = Color(text),
@@ -133,10 +142,22 @@ internal fun AppTheme.colorScheme(): ColorScheme {
         surfaceContainerLowest = Color(background), surfaceContainerLow = Color(surface),
         surfaceContainer = Color(surface), surfaceContainerHigh = raised(.04f), surfaceContainerHighest = raised(.08f),
         secondary = Color(primary), onSecondary = Color(onPrimary),
-        secondaryContainer = Color(primary).copy(alpha = .14f), onSecondaryContainer = Color(primary),
+        // Selected chips and the navigation indicator: the accent on its own 14% tint stays under 4.5:1, so labels use the text colour.
+        secondaryContainer = selectedTint(), onSecondaryContainer = Color(text),
         surfaceVariant = Color(background), outline = outlineFor(Color(muted).copy(alpha = .6f).compositeOver(Color(surface)), Color(surface), Color(background), Color(text)),
         outlineVariant = Color(muted).copy(alpha = .2f), surfaceTint = Color(primary),
     )
+}
+
+/** A translucent accent tint of up to 14%, lowered until text keeps 4.5:1 over every page colour and the cards (mid-grey pages). */
+private fun AppTheme.selectedTint(): Color {
+    var percent = 14
+    while (percent > 0) {
+        val tint = Color(primary).copy(alpha = percent / 100f)
+        if ((pageColors + surface).all { contrastRatio(Color(text), tint.compositeOver(Color(it))) >= 4.5f }) return tint
+        percent--
+    }
+    return Color(primary).copy(alpha = 0f)
 }
 
 @Composable

@@ -238,6 +238,8 @@
     <string name="recommend_title">"추천 앱 잠금"</string>
     <string name="recommend_hint">"이 기간에 많이 쓴 앱 중 아직 제한이 없는 앱이에요. 레시피를 고른 뒤 저장하면 바로 적용돼요."</string>
     <string name="recommend_add">"제한 추가"</string>
+    <string name="history_limit_edit">"제한 수정"</string>
+    <string name="history_limit_set">"제한 걸기"</string>
     <string name="sort_name">"이름순"</string>
     <string name="sort_usage">"사용량순"</string>
     <string name="sort_recent">"최근순"</string>

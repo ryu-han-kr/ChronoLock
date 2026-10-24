@@ -173,9 +173,13 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
         java.security.MessageDigest.getInstance("SHA-256").digest((salt + pin).toByteArray()).joinToString("") { "%02x".format(it) }
 
     /** Theme names the person pinned; names of removed palettes are simply never matched. */
-    val favoriteThemes = context.preferences.data.map { it[favoriteThemesKey] ?: emptySet() }
+    val favoriteThemes = context.preferences.data.map { prefs -> (prefs[favoriteThemesKey] ?: emptySet()).mapNotNullTo(mutableSetOf()) { ThemeCatalog.resolve(it) } }
     suspend fun toggleFavoriteTheme(theme: AppTheme) {
-        context.preferences.edit { val current = it[favoriteThemesKey] ?: emptySet(); it[favoriteThemesKey] = if (theme.name in current) current - theme.name else current + theme.name }
+        context.preferences.edit {
+            // Ids of dropped duplicates are stored under the palette they open, so un-pinning it really removes the pin.
+            val current = (it[favoriteThemesKey] ?: emptySet()).mapNotNullTo(mutableSetOf()) { name -> ThemeCatalog.resolve(name) }
+            it[favoriteThemesKey] = if (theme.name in current) current - theme.name else current + theme.name
+        }
     }
     /** With [followSystem] on, [nightTheme] is used while the device is in dark mode and [theme] otherwise. */
     val followSystem = context.preferences.data.map { it[followSystemKey] ?: false }

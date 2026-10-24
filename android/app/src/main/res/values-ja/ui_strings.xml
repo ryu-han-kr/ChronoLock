@@ -238,6 +238,8 @@
     <string name="recommend_title">"おすすめのアプリ制限"</string>
     <string name="recommend_hint">"この期間によく使ったのに、まだ制限がないアプリです。プリセットを選んで保存すればすぐ適用されます。"</string>
     <string name="recommend_add">"制限を追加"</string>
+    <string name="history_limit_edit">"制限を編集"</string>
+    <string name="history_limit_set">"制限する"</string>
     <string name="sort_name">"名前順"</string>
     <string name="sort_usage">"使用量順"</string>
     <string name="sort_recent">"最近使った順"</string>
@@ -651,7 +653,7 @@
     <string name="group_schedule">"グループのブロック時間帯"</string>
     <string name="group_schedule_hint">"この時間帯はグループのすべてのアプリがまとめてブロックされます。終了が開始より早いと翌日まで続きます。"</string>
     <string name="mascot_section">"キャラクター"</string>
-    <string name="mascot_section_hint">"今日の画面、ブロック画面、通知、記録で一緒にいる仲間を選んでください。"</string>
+    <string name="mascot_section_hint">"「今日」、ブロック画面、通知、履歴で一緒にいる仲間を選んでください。"</string>
     <string name="mascot_otter">"カワウソ"</string>
     <string name="mascot_raccoon">"白いタヌキ"</string>
     <string name="mascot_hamster">"ハムスター"</string>
