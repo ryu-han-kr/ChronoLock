@@ -44,7 +44,8 @@ class ThemePaletteTest {
         val trend = com.chronolock.data.ThemeCatalog.trend.associateBy { it.name }
         // Seed 14 is a mint page with pink buttons; it used to be called "pink 2".
         assertEquals(listOf("트렌드", "민트", "핑크"), trend.getValue("trend_14").label)
-        assertEquals(listOf("트렌드", "아이보리", "앰버"), trend.getValue("trend_13").label)
+        // Seed 13's amber button is darkened to 8A6627 for contrast, which reads as gold.
+        assertEquals(listOf("트렌드", "아이보리", "골드"), trend.getValue("trend_13").label)
         // Seed 3's button is nudged to a grey-brown, so it is not called coral; seed 9 rebuilt into the same palette.
         assertEquals(listOf("트렌드", "버터"), trend.getValue("trend_3").label)
         assertFalse("trend_9" in trend)
@@ -58,15 +59,27 @@ class ThemePaletteTest {
         val families = catalog.trend + catalog.pastel + catalog.cool + catalog.duotone + catalog.gradient + catalog.dual + catalog.deep +
             catalog.live
         families.forEach { theme ->
-            // A moving palette's colour word ("오로라 바이올렛") names where the page starts.
-            if (theme in catalog.live) return@forEach theme.label.filter { it in HUE_WORDS }.forEach { assertHue(theme.name, it, theme.background) }
+            // A moving palette's hue word ("오로라 바이올렛") names where the page starts; a shade word after it names the button.
+            if (theme in catalog.live) {
+                theme.label.filter { it in HUE_WORDS }.forEach { assertColourWord(theme.name, it, theme.background) }
+                theme.label.filter { it in SHADE_WORDS }.forEach { assertColourWord(theme.name, it, theme.primary) }
+                return@forEach
+            }
             val words = theme.label.drop(1)
-            words.getOrNull(0)?.takeIf { it in HUE_WORDS }?.let { assertHue(theme.name, it, theme.background) }
-            words.getOrNull(1)?.takeIf { it in HUE_WORDS }?.let { word ->
+            words.getOrNull(0)?.takeIf { it in HUE_WORDS || it in SHADE_WORDS }?.let { assertColourWord(theme.name, it, theme.background) }
+            words.getOrNull(1)?.takeIf { it in HUE_WORDS || it in SHADE_WORDS }?.let { word ->
                 val second = if (theme in catalog.dual) theme.pageColors.last() else theme.primary
-                assertHue(theme.name, word, second)
+                assertColourWord(theme.name, word, second)
             }
         }
+        // Contrast nudging darkens yellow accents to olive or gold, and deep warm pages are brown or olive; the names say so.
+        val byName = AppTheme.values().associateBy { it.name }
+        mapOf("duo_270_60" to "올리브", "duo_240_45" to "골드", "duo_210_45" to "골드", "duo_255_30" to "브라운", "gradient_0" to "올리브",
+            "gradient_330" to "브라운", "deep_30" to "브라운", "deep_60" to "올리브", "live_aurora_violet" to "골드").forEach { (name, word) ->
+            assertTrue("$name: ${byName.getValue(name).label}", word in byName.getValue(name).label)
+        }
+        // Stored ids never change with the display words, so saved themes, favourites and backups still open.
+        listOf("duo_270_60", "gradient_0", "deep_30", "live_aurora_violet").forEach { assertEquals(it, AppTheme.fromStored(it).name) }
         // A greyish accent is never named by a hue word.
         catalog.trend.filter { it.label.size == 3 }.forEach { assertTrue(it.name, saturationOf(it.primary) >= .2) }
         // Lavender used to end in green with a green button.
@@ -145,11 +158,24 @@ class ThemePaletteTest {
         assertEquals(AppTheme.DARK, AppTheme.fromStored(null))
         assertEquals(AppTheme.DARK, AppTheme.fromStored("removed-theme"))
     }
-    private fun assertHue(theme: String, word: String, color: Long) {
+    /**
+     * A hue word must be near the colour's hue and must not name a dark warm colour (a "레몬" button that shows olive);
+     * a shade word must match its hue range and, for brown and olive, be dark.
+     */
+    private fun assertColourWord(theme: String, word: String, color: Long) {
+        val hue = hueOf(color)
+        SHADE_WORDS[word]?.let { (hues, maxLightness) ->
+            assertTrue("$theme: '$word' names a colour at $hue° L%.2f (%X)".format(lightnessOf(color), color),
+                hue in hues && lightnessOf(color) < maxLightness)
+            return
+        }
         val expected = HUE_WORDS.getValue(word)
-        val distance = abs(hueOf(color) - expected).let { minOf(it, 360 - it) }
-        assertTrue("$theme: '$word' ($expected°) names a colour at ${hueOf(color)}° (%X)".format(color), distance <= 25)
+        val distance = abs(hue - expected).let { minOf(it, 360 - it) }
+        assertTrue("$theme: '$word' ($expected°) names a colour at $hue° (%X)".format(color), distance <= 25)
+        val darkWarm = hue in 20..70 && lightnessOf(color) < .36 && saturationOf(color) >= .2
+        assertFalse("$theme: '$word' names a dark warm colour (%X) that reads as brown, gold or olive".format(color), darkWarm)
     }
+    private fun lightnessOf(color: Long): Double = channels(color).let { (maxOf(it[0], it[1], it[2]) + minOf(it[0], it[1], it[2])) / 2 }
     private fun channels(color: Long) = listOf((color shr 16) and 255, (color shr 8) and 255, color and 255).map { it / 255.0 }
     private fun hueOf(color: Long): Int {
         val (r, g, b) = channels(color)
@@ -178,6 +204,8 @@ class ThemePaletteTest {
         val HUE_WORDS = mapOf("로즈" to 0, "코랄" to 15, "피치" to 30, "앰버" to 45, "레몬" to 60, "라임" to 90, "민트" to 120,
             "에메랄드" to 150, "틸" to 165, "아쿠아" to 180, "세룰리안" to 195, "스카이" to 210, "블루" to 225, "페리윙클" to 240,
             "인디고" to 255, "라벤더" to 270, "바이올렛" to 285, "릴락" to 300, "핑크" to 330)
+        /** Words for warm colours by look: hue range and the lightness they must stay under (gold may be light). */
+        val SHADE_WORDS = mapOf("브라운" to (15..40 to .40), "골드" to (35..55 to 1.01), "올리브" to (45..75 to .40))
     }
     private fun contrast(first: Long, second: Long): Double {
         fun luminance(color: Long): Double {

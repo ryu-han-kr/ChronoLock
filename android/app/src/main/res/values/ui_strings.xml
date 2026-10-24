@@ -193,6 +193,9 @@
     <string name="theme_word_pink">"핑크"</string>
     <string name="theme_word_coral">"코랄"</string>
     <string name="theme_word_amber">"앰버"</string>
+    <string name="theme_word_brown">"브라운"</string>
+    <string name="theme_word_gold">"골드"</string>
+    <string name="theme_word_olive">"올리브"</string>
     <string name="theme_word_teal">"틸"</string>
     <string name="theme_word_cerulean">"세룰리안"</string>
     <string name="theme_word_blue">"블루"</string>
