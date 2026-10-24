@@ -35,6 +35,7 @@ object Strictness {
         fun raised(old: Long?, new: Long?) = old != null && (new == null || new > old)
         return raised(current.dailyLimitSeconds, next.dailyLimitSeconds) ||
             raised(current.maxOpenCount?.toLong(), next.maxOpenCount?.toLong()) ||
+            !next.schedules.containsAll(current.schedules) ||
             !next.members.keys.containsAll(current.members.keys)
     }
 

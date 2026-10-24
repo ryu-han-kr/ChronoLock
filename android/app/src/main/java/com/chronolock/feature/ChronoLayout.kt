@@ -69,6 +69,7 @@ internal fun ChronoScreen(
     cancelPending: (String) -> Unit = {},
     setStrict: (Int) -> Unit = {},
     cancelStrict: () -> Unit = {},
+    selectMascot: (com.chronolock.data.MascotKind) -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
     addSite: (String, () -> Unit) -> Unit = { _, _ -> },
@@ -169,7 +170,7 @@ internal fun ChronoScreen(
                         when (tab) {
                             0 -> {
                                 val stats = state.daily.filter { it.date == today.toString() }
-                                item { UsageSummaryCard(stats, state.rules.count { it.enabled }) }
+                                item { UsageSummaryCard(stats, state, nowEpoch) }
                                 item { QuickFocusCard(state, nowEpoch, startFocus, stopFocus) }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -297,6 +298,7 @@ internal fun ChronoScreen(
                                 if (com.chronolock.BuildConfig.PRO_GATING) item { ProCard(state, buyPro) }
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, buyAdFree, manageSubscription, retryBilling) }
                                 item { LanguagePicker(state.language, selectLanguage) }
+                                item { CardBox { MascotPicker(state.mascot, selectMascot) } }
                                 item {
                                     ThemePicker(if (state.followSystem && state.editingNight) state.nightTheme else state.theme, selectTheme, openThemeGallery,
                                         state.favoriteThemes, state.followSystem, state.editingNight, setFollowSystem, editNightTheme)
@@ -394,11 +396,25 @@ private fun AdsCard(state: MainState, privacyOptions: () -> Unit, buy: () -> Uni
 }
 
 @Composable
-private fun UsageSummaryCard(stats: List<DailyEntity>, enabledRules: Int) {
+private fun UsageSummaryCard(stats: List<DailyEntity>, state: MainState, nowEpoch: Long) {
+    val enabled = state.rules.filter { it.enabled }
+    val left = enabled.mapNotNull { rule ->
+        rule.dailyLimitSeconds?.let { limit -> limit * 1000 - (stats.firstOrNull { it.packageName == rule.packageName }?.usageMillis ?: 0) }
+    }
+    val mood = todayMood(locked = state.lock.lockedAt(nowEpoch), focusing = enabled.any { (it.focusUntilEpochMillis ?: 0) > nowEpoch },
+        limitReached = left.any { it <= 0 }, nearLimit = left.any { it in 1..10 * 60_000L },
+        paused = enabled.any { (it.pausedUntilEpochMillis ?: 0) > nowEpoch },
+        hour = java.time.Instant.ofEpochMilli(nowEpoch).atZone(java.time.ZoneId.systemDefault()).hour, hasRules = enabled.isNotEmpty())
     CardBox {
-        Text(tr("오늘 선택한 앱 사용"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-        Text(duration(stats.sumOf { it.usageMillis } / 1000), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary)
-        Text(tr("%1\$d개 앱 제한 켜짐", enabledRules), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(tr("오늘 선택한 앱 사용"), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                Text(duration(stats.sumOf { it.usageMillis } / 1000), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary)
+                Text(tr("%1\$d개 앱 제한 켜짐", enabled.size), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
+            MascotArt(mood.pose, Modifier.testTag("today-mascot-${mood.pose.name.lowercase()}"), size = 96.dp)
+        }
+        Text(tr(mood.line), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
         HorizontalDivider(Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .15f))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Column(Modifier.weight(1f)) { Metric(tr("허용한 실행"), tr("%1\$d회", stats.sumOf { it.opens })) }

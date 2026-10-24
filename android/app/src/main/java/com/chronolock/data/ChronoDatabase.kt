@@ -43,6 +43,8 @@ data class GroupEntity(
     val dailyLimitSeconds: Long?,
     val maxOpenCount: Int?,
     val enabled: Boolean = true,
+    /** Block windows for every member, encoded like [RuleEntity.schedules]. */
+    val schedules: String? = null,
 )
 
 /** A relaxing group change held back by strict mode, like [PendingRuleEntity]. */
@@ -146,12 +148,18 @@ interface ChronoDao {
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
     HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, HistoryEstimateEntity::class, PendingRuleEntity::class,
     GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class],
-    version = 9, exportSchema = true)
+    version = 10, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE app_groups ADD COLUMN schedules TEXT")
+                db.execSQL("ALTER TABLE pending_groups ADD COLUMN group_schedules TEXT")
+            }
+        }
         val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE blocking_rules ADD COLUMN pauseSeconds INTEGER")

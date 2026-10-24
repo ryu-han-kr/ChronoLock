@@ -13,7 +13,7 @@ class GroupEditorUiTest {
     private val apps = (1..80).map { InstalledApp("app.$it", "App $it") }
 
     @Test fun savingWithoutName_showsTheErrorAtTheTop_notBelowTheAppList() {
-        ui.setContent { ChronoTheme { GroupEditor(null, apps, 0, onDismiss = {}, onSave = { _, _ -> }, onDelete = {}) } }
+        ui.setContent { ChronoTheme { GroupEditor(null, apps, emptyMap(), 0, onDismiss = {}, onSave = { _, _ -> }, onDelete = {}) } }
         ui.onNodeWithTag("group-app-app.1").performScrollTo().performClick()
         ui.onNodeWithTag("group-app-app.2").performScrollTo().performClick()
         ui.onNodeWithTag("group-save").performClick()
@@ -22,13 +22,32 @@ class GroupEditorUiTest {
     }
 
     @Test fun selectAll_warnsFirst_thenSelectsEverySearchResult() {
-        ui.setContent { ChronoTheme { GroupEditor(null, apps, 0, onDismiss = {}, onSave = { _, _ -> }, onDelete = {}) } }
+        ui.setContent { ChronoTheme { GroupEditor(null, apps, emptyMap(), 0, onDismiss = {}, onSave = { _, _ -> }, onDelete = {}) } }
         ui.onNodeWithTag("group-select-all").performScrollTo().performClick()
         ui.onNodeWithText("검색된 앱을 모두 선택할까요?").assertIsDisplayed()
         ui.onNodeWithTag("group-select-all-confirm").performClick()
         ui.onNodeWithText("묶을 앱 · 80개 선택").assertExists()
         ui.onNodeWithTag("group-select-none").performClick()
         ui.onNodeWithText("묶을 앱 · 0개 선택").assertExists()
+    }
+
+    @Test fun appsOfAnotherGroup_cannotBeChosen_andBlockHoursCanBeSet() {
+        var saved: com.chronolock.domain.AppGroup? = null
+        val taken = mapOf("app.1" to "SNS")
+        ui.setContent { ChronoTheme { GroupEditor(null, apps, taken, 0, onDismiss = {}, onSave = { group, _ -> saved = group }, onDelete = {}) } }
+        ui.onNodeWithText("SNS 그룹에 들어 있음").performScrollTo().assertIsDisplayed()
+        ui.onNodeWithTag("group-app-app.1").assertIsNotEnabled()
+        ui.onNodeWithTag("group-select-all").performScrollTo().performClick()
+        ui.onNodeWithTag("group-select-all-confirm").performClick()
+        ui.onNodeWithText("묶을 앱 · 79개 선택").assertExists()
+        ui.onNodeWithTag("group-name").performScrollTo().performTextInput("밤")
+        ui.onNodeWithTag("group-schedule").performScrollTo().performClick()
+        ui.onNodeWithTag("schedule-0-127").performScrollTo().performClick()
+        ui.onNodeWithTag("group-save").performClick()
+        ui.runOnIdle {
+            org.junit.Assert.assertEquals(1, saved?.schedules?.size)
+            org.junit.Assert.assertFalse("app.1" in saved!!.members)
+        }
     }
 
     @Test fun sitePreset_addsItsDomains() {

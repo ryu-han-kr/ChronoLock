@@ -377,7 +377,7 @@
     <string name="group_error_name">"그룹 이름을 입력해 주세요."</string>
     <string name="group_error_members">"묶을 앱을 두 개 이상 선택해 주세요."</string>
     <string name="group_error_max">"한 그룹에는 앱을 최대 200개까지 넣을 수 있습니다."</string>
-    <string name="group_error_limit">"함께 쓸 하루 시간이나 실행 횟수를 설정해 주세요."</string>
+    <string name="group_error_limit">"함께 쓸 하루 시간, 실행 횟수나 차단 시간대를 설정해 주세요."</string>
     <string name="group_error_taken">"다른 그룹에 들어 있는 앱은 함께 넣을 수 없습니다."</string>
     <string name="group_error_save">"그룹을 저장하지 못했습니다. 다시 시도해 주세요."</string>
     <string name="group_error_delete">"그룹을 삭제하지 못했습니다."</string>
@@ -509,7 +509,7 @@
     <string name="unlock_step_6">"한 번에 모두 지우기: 엄격 모드를 끈 뒤 설정의 \'모든 규칙 초기화\'를 누르면 앱 제한·그룹·웹사이트 차단이 모두 지워져요. 사용 기록은 남습니다."</string>
     <string name="unlock_step_7">"앱 밖에서 멈추기: Android 설정 → 접근성 → 설치된 앱 → \'ChronoLock 앱 제한\'을 끄면 모든 차단이 바로 멈춰요. 앱을 삭제해도 되지만 규칙과 기록도 함께 지워집니다."</string>
     <string name="live_channel">"실시간 제한 상태"</string>
-    <string name="live_title">"%1$s 제한 사용 중"</string>
+    <string name="live_title">"%1$s 사용 중"</string>
     <string name="live_daily">"하루 %1$s 중 %2$s 남음"</string>
     <string name="live_session">"이번 사용 %1$s 남음"</string>
     <string name="live_group_time">"%1$s 그룹 %2$s 남음"</string>
@@ -631,4 +631,27 @@
     <string name="goal_pick_app">"앱 고르기"</string>
     <string name="goal_block_sites">"사이트도 막기"</string>
     <string name="goal_pick_hint">"\'%1$s\'을(를) 적용할 앱을 눌러 주세요."</string>
+    <string name="group_one_only">"한 앱은 그룹 하나에만 넣을 수 있어요."</string>
+    <string name="group_taken_by">"%1$s 그룹에 들어 있음"</string>
+    <string name="group_schedule">"그룹 차단 시간대"</string>
+    <string name="group_schedule_hint">"정한 시간에는 그룹의 모든 앱이 함께 막혀요. 종료가 시작보다 이르면 다음 날까지 이어집니다."</string>
+    <string name="mascot_section">"캐릭터"</string>
+    <string name="mascot_section_hint">"오늘 화면, 차단 화면, 알림과 기록에서 함께할 친구를 골라 주세요."</string>
+    <string name="mascot_otter">"수달"</string>
+    <string name="mascot_raccoon">"흰너구리"</string>
+    <string name="mascot_hamster">"햄스터"</string>
+    <string name="mascot_rabbit">"토끼"</string>
+    <string name="mascot_fox">"북극여우"</string>
+    <string name="today_lock">"잠금 중이에요. 제가 꼭 지키고 있을게요."</string>
+    <string name="today_focus">"집중하는 중! 조용히 응원할게요."</string>
+    <string name="today_limit">"오늘 한도를 다 쓴 앱이 있어요."</string>
+    <string name="today_near">"곧 한도예요. 조금만 아껴 써요!"</string>
+    <string name="today_rest">"잠깐 쉬는 중이에요. 금방 다시 지켜 줄게요."</string>
+    <string name="today_sleep">"늦었어요. 폰은 내려놓고 푹 자요."</string>
+    <string name="today_hello">"안녕하세요! 줄이고 싶은 앱부터 골라 봐요."</string>
+    <string name="today_good">"아직 한도 안쪽이에요. 잘하고 있어요!"</string>
+    <string name="live_used">"오늘 %1$s 사용"</string>
+    <plurals name="group_schedules">
+        <item quantity="other">"차단 시간대 %1$d개"</item>
+    </plurals>
 </resources>

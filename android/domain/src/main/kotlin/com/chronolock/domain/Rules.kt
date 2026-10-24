@@ -96,6 +96,7 @@ class RuleEngine {
                 val used = context.groupUsage[group.id] ?: DailyUsage()
                 if (group.dailyLimitSeconds?.let { used.usageMillis >= it * 1000 } == true) add(Reason.GROUP_USAGE)
                 if (context.entering && group.maxOpenCount?.let { used.opens >= it } == true) add(Reason.GROUP_OPENS)
+                if (group.schedules.any { it.contains(context.nowEpochMillis, context.zone) }) add(Reason.SCHEDULE)
             }
         }.distinct()
         if (reasons.isEmpty()) return RuleDecision.Allow

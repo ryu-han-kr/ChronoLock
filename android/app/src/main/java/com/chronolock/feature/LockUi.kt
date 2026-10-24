@@ -72,7 +72,7 @@ internal fun LockCard(state: MainState, today: LocalDate, nowEpoch: Long, keptSt
     var code by remember { mutableStateOf("") }
     var changing by rememberSaveable { mutableStateOf(false) }
     CardBox {
-        Text(tr("잠금 모드"), style = MaterialTheme.typography.titleLarge)
+        MascotTitle(tr("잠금 모드"), if (lock.lockedAt(nowEpoch)) com.chronolock.data.Pose.LOCK else com.chronolock.data.Pose.UNLOCK)
         Text(tr("정한 기간 동안이나 목표를 이룰 때까지, 제한을 풀거나 느슨하게 바꾸는 모든 변경을 막습니다. 더 엄격하게 바꾸는 것은 언제든 됩니다."),
             color = MaterialTheme.colorScheme.onSurfaceVariant)
 

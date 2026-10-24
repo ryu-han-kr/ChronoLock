@@ -7,6 +7,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.chronolock.R
@@ -14,6 +15,8 @@ import com.chronolock.feature.UiText
 import com.chronolock.feature.forLanguage
 import com.chronolock.data.AppLanguage
 import com.chronolock.data.AppTheme
+import com.chronolock.data.MascotKind
+import com.chronolock.data.Pose
 import com.chronolock.domain.Reason
 import com.chronolock.domain.RuleDecision
 
@@ -22,6 +25,9 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     private val manager = service.getSystemService(WindowManager::class.java)
     private var root: View? = null
     private var heading: TextView? = null
+    private var picture: ImageView? = null
+    private var mascot = MascotKind.DEFAULT
+    private var pose = Pose.LIMIT
     private var detail: TextView? = null
     private var settingsButton: Button? = null
     private var continueButton: Button? = null
@@ -49,6 +55,17 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         (root as? LinearLayout)?.let(::applyTheme)
     }
 
+    /** The character on the block screen; it changes pose with what the screen is about. */
+    fun setMascot(value: MascotKind) {
+        mascot = value
+        picture?.setImageResource(mascot.art(pose))
+    }
+
+    private fun showPose(value: Pose) {
+        pose = value
+        picture?.setImageResource(mascot.art(value))
+    }
+
     private fun themeBackground() = android.graphics.drawable.GradientDrawable(
         android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
         (theme.pageColors.takeIf { it.size > 1 } ?: listOf(theme.background, theme.background)).map { it.toInt() }.toIntArray())
@@ -62,8 +79,8 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                     child.setTextColor(theme.onPrimary.toInt())
                 }
                 is TextView -> child.setTextColor(when (index) {
-                    0 -> theme.primary.toInt()
-                    1 -> theme.text.toInt()
+                    1 -> theme.primary.toInt()
+                    2 -> theme.text.toInt()
                     else -> theme.muted.toInt()
                 })
             }
@@ -86,6 +103,9 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 setPadding(0, dp(12), 0, dp(12))
                 content.addView(this, LinearLayout.LayoutParams(-1, -2))
             }
+            // Index 0; applyTheme colours the labels after it by position.
+            picture = ImageView(service).apply { setImageResource(mascot.art(pose)); importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }
+            content.addView(picture, LinearLayout.LayoutParams(dp(132), dp(132)).apply { gravity = Gravity.CENTER_HORIZONTAL })
             label("ChronoLock", 14f, theme.primary.toInt(), font = R.font.pretendard_medium)
             heading = label("", 28f, theme.text.toInt(), font = R.font.pretendard_bold)
             detail = label("", 17f, theme.muted.toInt())
@@ -115,6 +135,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         attach()
         mode = "site"; stopCountdown(); continueButton?.visibility = View.GONE
         lastShown = { showSite(domain) }
+        showPose(Pose.LIMIT)
         heading?.text = text("%1\$s\n지금은 열지 않기로 했어요", domain)
         detail?.text = text("차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다.")
     }
@@ -125,6 +146,12 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         attach()
         lastShown = { show(appName, decision, resistedToday, allowSettings) }
         mode = "block"; stopCountdown(); continueButton?.visibility = View.GONE
+        showPose(when {
+            Reason.FOCUS in decision.reasons -> Pose.FOCUS
+            Reason.SCHEDULE in decision.reasons -> Pose.SLEEP
+            decision.reasons == listOf(Reason.COOLDOWN) -> Pose.TIMER
+            else -> Pose.LIMIT
+        })
         // Under strict mode or a lock the settings shortcut would only lead to changes that cannot be made now.
         settingsButton?.visibility = if (allowSettings) View.VISIBLE else View.GONE
         heading?.text = text("%1\$s\n지금은 쉬는 시간이에요", appName)
@@ -151,6 +178,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         attach()
         lastShown = { showPause(packageName, appName, seconds, opensToday, proceed) }
         mode = "pause:$packageName"
+        showPose(Pose.REST)
         settingsButton?.visibility = View.GONE
         heading?.text = text("숨 한 번 쉬어요")
         detail?.text = text("%1\$s · 오늘 %2\$d번째 열기예요. 지금 꼭 필요한가요?", appName, opensToday + 1)
@@ -175,6 +203,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         attach()
         lastShown = { showCheckIn(packageName, appName, minutes, proceed) }
         mode = "checkin:$packageName"
+        showPose(Pose.WARNING)
         stopCountdown()
         settingsButton?.visibility = View.GONE
         heading?.text = text("%1\$d분 지났어요", minutes)
@@ -191,7 +220,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     fun hide() {
         stopCountdown()
         root?.let { manager.removeView(it) }
-        root = null; heading = null; detail = null; lastShown = null; settingsButton = null; continueButton = null; mode = null
+        root = null; heading = null; picture = null; detail = null; lastShown = null; settingsButton = null; continueButton = null; mode = null
     }
     private fun dp(value: Int) = (value * service.resources.displayMetrics.density).toInt()
 }

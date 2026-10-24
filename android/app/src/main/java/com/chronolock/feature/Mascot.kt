@@ -1,38 +1,45 @@
 package com.chronolock.feature
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.EaseInOutSine
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.chronolock.data.MascotKind
+import com.chronolock.data.Pose
 import java.time.LocalDate
 
 /** How the mascot feels about the usage it is looking at. */
@@ -72,140 +79,93 @@ internal fun Mood.line(day: LocalDate): String {
     return options[day.toEpochDay().mod(options.size)]
 }
 
-/**
- * The history mascot. Draws a PNG named `mascot_<mood>` from res/drawable when one exists (artist-supplied), and the
- * built-in hamster otherwise. Either way it breathes, and wobbles when dizzy.
- */
+/** The pose that shows [this] mood: asleep without records, proud when light, startled or crying as usage grows. */
+internal val Mood.pose: Pose get() = when (this) {
+    Mood.SLEEPY -> Pose.SLEEP
+    Mood.RELAXED -> Pose.SUCCESS
+    Mood.HAPPY -> Pose.DEFAULT
+    Mood.SURPRISED -> Pose.WARNING
+    Mood.DIZZY -> Pose.LIMIT
+}
+
+/** The character chosen in settings; screens draw it through [MascotArt]. */
+internal val LocalMascot = staticCompositionLocalOf { MascotKind.DEFAULT }
+
+/** The history mascot: the chosen character in the pose of [mood]. It breathes, and wobbles when dizzy. */
 @Composable
 internal fun Mascot(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp) {
-    val context = LocalContext.current
-    @SuppressLint("DiscouragedApi")
-    val artwork = remember(mood) {
-        context.resources.getIdentifier("mascot_${mood.name.lowercase()}", "drawable", context.packageName).takeIf { it != 0 }
-    }
+    val description = tr(mood.message)
+    MascotArt(mood.pose, modifier.semantics { contentDescription = description }.testTag("mascot-${mood.name.lowercase()}"), size,
+        wobble = mood == Mood.DIZZY)
+}
+
+/**
+ * The chosen character (or [kind]) in [pose], breathing gently from its feet. Decorative unless the caller adds a
+ * content description.
+ */
+@Composable
+internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.dp, kind: MascotKind = LocalMascot.current, wobble: Boolean = false) {
     val transition = rememberInfiniteTransition(label = "mascot")
     val breath by transition.animateFloat(1f, 1.035f,
         infiniteRepeatable(tween(1600, easing = EaseInOutSine), RepeatMode.Reverse), label = "breath")
-    val wobble by transition.animateFloat(-7f, 7f,
+    val sway by transition.animateFloat(-7f, 7f,
         infiniteRepeatable(tween(900, easing = EaseInOutSine), RepeatMode.Reverse), label = "wobble")
-    val description = tr(mood.message)
-    val tagged = modifier.size(size).semantics { contentDescription = description }.testTag("hamster-${mood.name.lowercase()}")
-    if (artwork != null) {
-        Image(painterResource(artwork), contentDescription = null, modifier = tagged.graphicsLayer {
-            scaleX = breath; scaleY = breath
-            rotationZ = if (mood == Mood.DIZZY) wobble else 0f
-            transformOrigin = TransformOrigin(.5f, .95f)
-        })
-    } else Hamster(mood, tagged, breath, wobble)
+    Image(painterResource(kind.art(pose)), contentDescription = null, modifier = modifier.size(size).graphicsLayer {
+        scaleX = breath; scaleY = breath
+        rotationZ = if (wobble) sway else 0f
+        transformOrigin = TransformOrigin(.5f, .95f)
+    })
 }
 
-// The hamster keeps its own fur so it reads as the same character on every theme.
-private val Fur = Color(0xFFEABC86)
-private val FurShade = Color(0xFFD69C63)
-private val Cream = Color(0xFFFFF4E3)
-private val Pink = Color(0xFFF3A4AA)
-private val Ink = Color(0xFF3B2B22)
-
-/**
- * The built-in hamster drawn with primitives: ears, a blobby body, puffed cheek pouches, paws, whiskers and a face
- * that changes with [mood]. Blinks when its eyes are open.
- */
+/** A card title with the character beside it, doing what the card is about. */
 @Composable
-private fun Hamster(mood: Mood, modifier: Modifier, breath: Float, wobble: Float) {
-    val transition = rememberInfiniteTransition(label = "hamster")
-    val blink by transition.animateFloat(1f, 1f, infiniteRepeatable(keyframes {
-        durationMillis = 4200
-        1f at 0
-        1f at 3800
-        .12f at 3900
-        1f at 4000
-    }), label = "blink")
-    Canvas(modifier) {
-        val u = this.size.width / 100f
-        fun o(x: Float, y: Float) = Offset(x * u, y * u)
-        rotate(if (mood == Mood.DIZZY) wobble else 0f, pivot = o(50f, 92f)) {
-            scale(breath, breath, pivot = o(50f, 94f)) {
-                val earLift = if (mood == Mood.SURPRISED) -5f else 0f
-                listOf(25f, 75f).forEach { x ->
-                    drawCircle(FurShade, 12f * u, o(x, 29f + earLift))
-                    drawCircle(Pink, 6.5f * u, o(x, 30f + earLift))
+internal fun MascotTitle(title: String, pose: Pose, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+        MascotArt(pose, Modifier.testTag("mascot-title-${pose.name.lowercase()}"), size = 56.dp)
+    }
+}
+
+/** What the Today character does and says: the strongest of lock, focus, a used-up limit, a pause, bedtime and so on. */
+internal data class TodayMood(val pose: Pose, val line: String)
+
+internal fun todayMood(locked: Boolean, focusing: Boolean, limitReached: Boolean, nearLimit: Boolean, paused: Boolean,
+    hour: Int, hasRules: Boolean): TodayMood = when {
+    locked -> TodayMood(Pose.LOCK, "잠금 중이에요. 제가 꼭 지키고 있을게요.")
+    focusing -> TodayMood(Pose.FOCUS, "집중하는 중! 조용히 응원할게요.")
+    limitReached -> TodayMood(Pose.LIMIT, "오늘 한도를 다 쓴 앱이 있어요.")
+    nearLimit -> TodayMood(Pose.WARNING, "곧 한도예요. 조금만 아껴 써요!")
+    paused -> TodayMood(Pose.REST, "잠깐 쉬는 중이에요. 금방 다시 지켜 줄게요.")
+    hour >= 23 || hour < 6 -> TodayMood(Pose.SLEEP, "늦었어요. 폰은 내려놓고 푹 자요.")
+    !hasRules -> TodayMood(Pose.DEFAULT, "안녕하세요! 줄이고 싶은 앱부터 골라 봐요.")
+    else -> TodayMood(Pose.SUCCESS, "아직 한도 안쪽이에요. 잘하고 있어요!")
+}
+
+/** Settings card: pick the companion character; the chosen one shows its poses below. */
+@Composable
+internal fun MascotPicker(selected: MascotKind, select: (MascotKind) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(tr("캐릭터"), style = MaterialTheme.typography.titleLarge)
+        Text(tr("오늘 화면, 차단 화면, 알림과 기록에서 함께할 친구를 골라 주세요."), color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MascotKind.entries.forEach { kind ->
+                val chosen = kind == selected
+                val tint = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .2f)
+                Column(Modifier.clip(RoundedCornerShape(16.dp)).border(BorderStroke(if (chosen) 2.dp else 1.dp, tint), RoundedCornerShape(16.dp))
+                    .background(if (chosen) MaterialTheme.colorScheme.primary.copy(alpha = .08f) else MaterialTheme.colorScheme.surface)
+                    .selectable(chosen, role = Role.RadioButton) { select(kind) }.padding(8.dp).testTag("mascot-pick-${kind.name.lowercase()}"),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(painterResource(kind.art(Pose.DEFAULT)), contentDescription = null, modifier = Modifier.size(64.dp))
+                    Text(tr(kind.title), style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
+                        color = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
-                drawOval(Fur, topLeft = o(12f, 26f), size = Size(76f * u, 68f * u))
-                drawOval(Cream, topLeft = o(31f, 62f), size = Size(38f * u, 28f * u))
-                val pouch = if (mood == Mood.SURPRISED) 12.5f else 11f
-                drawCircle(Cream, pouch * u, o(27f, 67f))
-                drawCircle(Cream, pouch * u, o(73f, 67f))
-                val blush = if (mood == Mood.HAPPY || mood == Mood.RELAXED) .75f else .45f
-                drawCircle(Pink.copy(alpha = blush), 7f * u, o(26f, 69f))
-                drawCircle(Pink.copy(alpha = blush), 7f * u, o(74f, 69f))
-                drawCircle(Cream, 6f * u, o(41f, 90f))
-                drawCircle(Cream, 6f * u, o(59f, 90f))
-                whiskers(u)
-                drawCircle(Pink, 3.2f * u, o(50f, 60f))
-                mouth(mood, u)
-                eyes(mood, blink, u)
             }
         }
-        if (mood == Mood.SLEEPY) sleepMarks(u)
-    }
-}
-
-private fun DrawScope.o(x: Float, y: Float, u: Float) = Offset(x * u, y * u)
-
-private fun DrawScope.whiskers(u: Float) {
-    val stroke = 1.4f * u
-    val color = Ink.copy(alpha = .45f)
-    listOf(-1f, 1f).forEach { side ->
-        val cheek = 50f + side * 24f
-        drawLine(color, o(cheek, 63f, u), o(cheek + side * 15f, 59f, u), stroke, StrokeCap.Round)
-        drawLine(color, o(cheek, 67f, u), o(cheek + side * 16f, 68f, u), stroke, StrokeCap.Round)
-    }
-}
-
-private fun DrawScope.mouth(mood: Mood, u: Float) {
-    val stroke = Stroke(1.9f * u, cap = StrokeCap.Round)
-    when (mood) {
-        Mood.RELAXED, Mood.HAPPY -> listOf(45f, 50f).forEach { x ->
-            drawArc(Ink, 0f, 180f, false, topLeft = o(x, 61.5f, u), size = Size(5f * u, 4.5f * u), style = stroke)
-        }
-        Mood.SURPRISED -> drawOval(Ink, topLeft = o(47f, 64f, u), size = Size(6f * u, 7f * u))
-        Mood.DIZZY -> drawPath(Path().apply {
-            moveTo(44f * u, 67f * u)
-            quadraticTo(47f * u, 63.5f * u, 50f * u, 67f * u)
-            quadraticTo(53f * u, 70.5f * u, 56f * u, 67f * u)
-        }, Ink, style = stroke)
-        Mood.SLEEPY -> drawLine(Ink, o(47f, 66f, u), o(53f, 66f, u), 1.8f * u, StrokeCap.Round)
-    }
-}
-
-private fun DrawScope.eyes(mood: Mood, blink: Float, u: Float) {
-    val stroke = Stroke(2.6f * u, cap = StrokeCap.Round)
-    listOf(38f, 62f).forEach { x ->
-        when (mood) {
-            Mood.HAPPY -> {
-                drawOval(Ink, topLeft = o(x - 4.2f, 51f - 4.2f * blink, u), size = Size(8.4f * u, 8.4f * u * blink))
-                if (blink > .5f) drawCircle(Color.White, 1.5f * u, o(x + 1.4f, 49.4f, u))
-            }
-            Mood.SURPRISED -> {
-                drawCircle(Color.White, 7.5f * u, o(x, 50f, u))
-                drawCircle(Ink, 3.6f * u, o(x, 50.5f, u))
-                drawCircle(Color.White, 1.3f * u, o(x + 1.4f, 49f, u))
-                drawArc(Ink, 200f, 140f, false, topLeft = o(x - 7f, 36f, u), size = Size(14f * u, 7f * u), style = Stroke(2.2f * u, cap = StrokeCap.Round))
-            }
-            Mood.RELAXED -> drawArc(Ink, 200f, 140f, false, topLeft = o(x - 6f, 46.5f, u), size = Size(12f * u, 10f * u), style = stroke)
-            Mood.SLEEPY -> drawArc(Ink, 20f, 140f, false, topLeft = o(x - 6f, 47f, u), size = Size(12f * u, 8f * u), style = Stroke(2.4f * u, cap = StrokeCap.Round))
-            Mood.DIZZY -> {
-                drawLine(Ink, o(x - 4f, 47f, u), o(x + 4f, 55f, u), 2.6f * u, StrokeCap.Round)
-                drawLine(Ink, o(x + 4f, 47f, u), o(x - 4f, 55f, u), 2.6f * u, StrokeCap.Round)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Pose.entries.forEach { pose ->
+                Image(painterResource(selected.art(pose)), contentDescription = null, modifier = Modifier.size(44.dp))
             }
         }
-    }
-}
-
-private fun DrawScope.sleepMarks(u: Float) {
-    listOf(Triple(78f, 30f, 5f), Triple(86f, 20f, 7f), Triple(94f, 8f, 9f)).forEach { (x, y, w) ->
-        drawPath(Path().apply {
-            moveTo(x * u, y * u); lineTo((x + w) * u, y * u); lineTo(x * u, (y + w) * u); lineTo((x + w) * u, (y + w) * u)
-        }, Ink.copy(alpha = .6f), style = Stroke(1.8f * u, cap = StrokeCap.Round))
     }
 }

@@ -17,6 +17,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.chronolock.MainActivity
 import com.chronolock.R
+import com.chronolock.data.MascotKind
+import com.chronolock.data.Pose
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.DailyKey
 import com.chronolock.domain.MonitorState
@@ -44,6 +46,10 @@ internal class LimitSurfaces(private val context: Context) {
     } ?: mutableSetOf()
     private var lastSummary: TodaySummary? = null
     private var lastLive: String? = null
+    /** The character on the live notification, kept in step with settings by the service. */
+    var mascot = MascotKind.DEFAULT
+    private val icons = mutableMapOf<Int, android.graphics.Bitmap?>()
+    private var oldChannelGone = false
 
     init { clearLive() } // A notification left by a stopped service must not outlive it.
 
@@ -101,6 +107,7 @@ internal class LimitSurfaces(private val context: Context) {
         fun left(millis: Long) = formatDuration(if (millis >= 60_000) (millis + 59_999) / 60_000 * 60 else (millis + 999) / 1000, text)
         val res = localized.resources
         val lines = buildList {
+            add(localized.getString(R.string.live_used, formatDuration(live.usedTodayMillis / 60_000 * 60, text)))
             live.dailyLeftMillis?.let { add(localized.getString(R.string.live_daily, formatDuration(live.dailyLimitMillis!! / 1000, text), left(it))) }
             live.sessionLeftMillis?.let { add(localized.getString(R.string.live_session, left(it))) }
             live.opensLeft?.let { add(res.getQuantityString(R.plurals.live_opens, it, it)) }
@@ -110,24 +117,33 @@ internal class LimitSurfaces(private val context: Context) {
             }
         }
         val title = localized.getString(R.string.live_title, live.appName)
-        val key = live.packageName + "|" + lines.joinToString("|")
+        val pose = if ((live.nearestMillis ?: Long.MAX_VALUE) < 5 * 60_000) Pose.WARNING else Pose.TIMER
+        val key = live.packageName + "|" + pose + "|" + mascot + "|" + lines.joinToString("|")
         if (key == lastLive) return
         lastLive = key
-        manager.createNotificationChannel(NotificationChannel(LIVE_CHANNEL, localized.getString(R.string.live_channel), NotificationManager.IMPORTANCE_LOW))
+        // Default importance without sound or vibration: a low-importance channel would sink into the silent section
+        // at the bottom of the shade, where "in use" is easy to miss.
+        if (!oldChannelGone) { runCatching { manager.deleteNotificationChannel(OLD_LIVE_CHANNEL) }; oldChannelGone = true }
+        manager.createNotificationChannel(NotificationChannel(LIVE_CHANNEL, localized.getString(R.string.live_channel), NotificationManager.IMPORTANCE_DEFAULT).apply {
+            setSound(null, null); enableVibration(false); setShowBadge(false)
+        })
+        val art = mascot.art(pose)
         val builder = NotificationCompat.Builder(context, LIVE_CHANNEL)
             .setSmallIcon(R.drawable.ic_chronolock)
+            .setLargeIcon(icons.getOrPut(art) { runCatching { android.graphics.BitmapFactory.decodeResource(context.resources, art) }.getOrNull() })
             .setContentTitle(title)
             .setContentText(lines.firstOrNull())
             .setStyle(NotificationCompat.BigTextStyle().bigText(lines.joinToString("\n")))
             .setContentIntent(openApp(context))
-            .setOngoing(true).setOnlyAlertOnce(true).setSilent(true)
+            .setOngoing(true).setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
         live.nearestMillis?.let { builder.setWhen(now + it).setUsesChronometer(true).setChronometerCountDown(true).setShowWhen(true) }
         runCatching { manager.notify(LIVE_ID, builder.build()) }
     }
 
     private companion object {
-        const val LIVE_CHANNEL = "live_limits"
+        const val LIVE_CHANNEL = "live_usage"
+        const val OLD_LIVE_CHANNEL = "live_limits"
         const val LIVE_ID = 0x4C495645
         const val CHANNEL = "limit_reminders"
         const val KEY_WARNED_DATE = "warned_date"

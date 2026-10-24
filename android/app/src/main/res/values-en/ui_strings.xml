@@ -377,7 +377,7 @@
     <string name="group_error_name">"Enter a group name."</string>
     <string name="group_error_members">"Choose at least two apps."</string>
     <string name="group_error_max">"A group can hold up to 200 apps."</string>
-    <string name="group_error_limit">"Set a shared daily time or open count."</string>
+    <string name="group_error_limit">"Set a shared daily time, open count or block hours."</string>
     <string name="group_error_taken">"An app that is already in another group can't be added."</string>
     <string name="group_error_save">"Couldn't save the group. Please try again."</string>
     <string name="group_error_delete">"Couldn't delete the group."</string>
@@ -516,7 +516,7 @@
     <string name="unlock_step_6">"Clear everything: with strict mode off, tap \'Reset all limits\' in Settings to remove all app limits, groups and blocked sites. History stays."</string>
     <string name="unlock_step_7">"Stop it outside the app: Android Settings → Accessibility → Installed apps → turn off \'ChronoLock app limits\' to stop all blocking at once. You can also uninstall, but rules and history go with it."</string>
     <string name="live_channel">"Live limit status"</string>
-    <string name="live_title">"%1$s is limited"</string>
+    <string name="live_title">"Using %1$s"</string>
     <string name="live_daily">"Today: %2$s left of %1$s"</string>
     <string name="live_session">"This session: %1$s left"</string>
     <string name="live_group_time">"%1$s group: %2$s left"</string>
@@ -642,4 +642,28 @@
     <string name="goal_pick_app">"Pick an app"</string>
     <string name="goal_block_sites">"Block the sites too"</string>
     <string name="goal_pick_hint">"Tap the app to apply \'%1$s\' to."</string>
+    <string name="group_one_only">"Each app can be in only one group."</string>
+    <string name="group_taken_by">"Already in %1$s"</string>
+    <string name="group_schedule">"Group block hours"</string>
+    <string name="group_schedule_hint">"Every app in the group is blocked during these hours. If the end is earlier than the start, it runs into the next day."</string>
+    <string name="mascot_section">"Character"</string>
+    <string name="mascot_section_hint">"Pick a buddy to keep you company on Today, the block screen, notifications and history."</string>
+    <string name="mascot_otter">"Otter"</string>
+    <string name="mascot_raccoon">"White raccoon"</string>
+    <string name="mascot_hamster">"Hamster"</string>
+    <string name="mascot_rabbit">"Rabbit"</string>
+    <string name="mascot_fox">"Arctic fox"</string>
+    <string name="today_lock">"Locked. I\'ll keep watch for you."</string>
+    <string name="today_focus">"Focusing! I\'m cheering quietly."</string>
+    <string name="today_limit">"An app has used up today\'s limit."</string>
+    <string name="today_near">"Almost at the limit. Go easy!"</string>
+    <string name="today_rest">"Taking a short break. I\'ll be back on guard soon."</string>
+    <string name="today_sleep">"It\'s late. Put the phone down and sleep well."</string>
+    <string name="today_hello">"Hi! Start by picking an app to cut down on."</string>
+    <string name="today_good">"Still within your limits. Nice work!"</string>
+    <string name="live_used">"%1$s used today"</string>
+    <plurals name="group_schedules">
+        <item quantity="one">"%1$d block window"</item>
+        <item quantity="other">"%1$d block windows"</item>
+    </plurals>
 </resources>

@@ -23,7 +23,8 @@ import com.chronolock.domain.OnboardingGoal
  * [start] receives the chosen goals; they shape the first suggestions on the Today tab.
  */
 @Composable
-internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguage) -> Unit, start: (Set<String>) -> Unit) {
+internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguage) -> Unit, start: (Set<String>) -> Unit,
+    mascot: com.chronolock.data.MascotKind = LocalMascot.current, selectMascot: (com.chronolock.data.MascotKind) -> Unit = {}) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var goals by rememberSaveable { mutableStateOf(emptyList<String>()) }
     // Surface supplies onBackground as the content color; without it untinted Text falls back to black.
@@ -39,6 +40,7 @@ internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguag
         }
         when (step) {
             0 -> {
+                MascotArt(com.chronolock.data.Pose.DEFAULT, Modifier.align(Alignment.CenterHorizontally), size = 140.dp, kind = mascot)
                 Text(tr("ChronoLock에 오신 걸 환영해요"), style = MaterialTheme.typography.headlineMedium)
                 Text(tr("내가 정한 기준으로 앱 사용을 조절하는 도구예요."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -52,6 +54,7 @@ internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguag
                     "기록은 이 기기에만" to "사용 기록과 규칙은 기기에 저장되고 서버로 보내지 않아요.",
                     "언제든 바꿀 수 있어요" to "규칙은 언제든 끄거나 지울 수 있고, 권한도 Android 설정에서 해제할 수 있어요.",
                 ).forEachIndexed { index, (title, body) -> Step(index + 1, tr(title), tr(body)) }
+                MascotPicker(mascot, selectMascot)
             }
             1 -> {
                 Text(tr("무엇을 줄이고 싶나요?"), style = MaterialTheme.typography.headlineMedium)
