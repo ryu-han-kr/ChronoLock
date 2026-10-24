@@ -80,8 +80,8 @@ class CharacterUiTest {
     @Test fun freeVersion_keepsTheHamster_andMarksTheOthersPro() {
         val chosen = mutableStateOf(MascotKind.HAMSTER)
         ui.setContent { ChronoTheme(AppTheme.LIGHT) { MascotPicker(chosen.value, { chosen.value = it }, pro = false) } }
-        ui.onNodeWithTag("mascot-locked-otter").assertExists()
-        ui.onAllNodesWithTag("mascot-locked-hamster").assertCountEquals(0)
+        ui.onNodeWithTag("mascot-locked-otter", useUnmergedTree = true).assertExists()
+        ui.onAllNodesWithTag("mascot-locked-hamster", useUnmergedTree = true).assertCountEquals(0)
         ui.onNodeWithTag("mascot-pick-otter").performClick()
         ui.runOnIdle { org.junit.Assert.assertEquals(MascotKind.HAMSTER, chosen.value) }
         ui.onNodeWithText("햄스터 외의 캐릭터는 프로에서 쓸 수 있어요.").assertExists()
