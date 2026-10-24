@@ -34,13 +34,20 @@ Block chosen apps for a set time, or start right from a Quick Settings tile.
 ■ History
 See how long and how often you used each app over a day, a week or a month, your streak and the change from last week.
 
+■ Lock mode
+• Time lock: for a set time (1 hour–7 days), limits can't be lifted or relaxed.
+• Goal lock: keep your limits N days in a row, then unlock with a password. A "piece password" gives you one digit a day.
+
+■ Live notification
+See the time and opens left in a notification while you use a limited app.
+
 ■ Backup
 Export your limits, groups and settings to a file and restore them on a new phone.
 
 ■ Permissions and privacy
 • Usage access: reads per-app time and opens.
 • Accessibility service: shows the block screen. It checks the app in front and, for website blocking, only the domain in a supported browser's address bar. It never reads other screen content, typing or passwords, and does not save visited pages.
-• Everything stays on this device and is never sent to a server. History is kept for up to 30 days.
+• Everything stays on this device and is never sent to a server. Per-app history is kept for up to 3 months and daily totals for a year.
 
 Languages: English, 한국어, 日本語, 简体中文, Español
 ```
@@ -55,7 +62,7 @@ Languages: English, 한국어, 日本語, 简体中文, Español
 ChronoLockは自分で決めたルールでアプリの利用を制限し、必要な分だけ使えるようにします。
 
 ■ アプリごとの制限
-• 1日の利用時間、1回の利用時間、起動回数、再起動までの待ち時間
+• 1日の利用時間、1回の利用時間、起動回数、再び開くまでの待ち時間
 • 勉強・仕事・睡眠などの時間帯予約。アプリごとに複数の時間帯（毎日・平日・週末）
 
 ■ アプリグループ
@@ -64,9 +71,9 @@ SNSなど似たアプリで、1日の時間と起動回数を共有します。
 ■ ウェブサイトのブロック
 youtube.comなど指定したサイトをChrome・Samsung Internetなどで開くとブロック画面を表示し、ブラウザでの回り道を防ぎます。
 
-■ 厳格モードと休憩
+■ 厳格モードと一時休止
 • 厳格モード：制限をオフにしたり緩めたりすると、10分〜1時間後に適用されます。
-• 休憩：10分・30分・1時間・今日だけ制限を止め、自動で元に戻ります。
+• 一時休止：10分・30分・1時間・今日だけ制限を止め、自動で元に戻ります。
 
 ■ 集中
 決めた時間だけ選んだアプリをまとめてブロック。クイック設定タイルからすぐ開始できます。
@@ -74,13 +81,20 @@ youtube.comなど指定したサイトをChrome・Samsung Internetなどで開�
 ■ 履歴
 1日・1週間・1か月の利用時間と起動回数、連続達成日数、先週との比較を確認できます。
 
+■ ロックモード
+• 期間ロック：決めた期間（1時間〜7日）は制限を解除・緩和できません。
+• 目標ロック：N日連続で上限を守るとパスワードで解除できます。1日1桁ずつ集める「ピースパスワード」もあります。
+
+■ リアルタイム通知
+制限中のアプリを使っている間、残り時間と起動回数を通知で確認できます。
+
 ■ バックアップ
 制限・グループ・設定をファイルに書き出し、新しい端末で復元できます。
 
 ■ 権限とプライバシー
 • 使用状況へのアクセス：アプリごとの利用時間と起動回数を確認します。
 • ユーザー補助サービス：前面のアプリと、ウェブサイトのブロック時は対応ブラウザのアドレスバーのドメインだけを確認します。その他の画面内容・入力・パスワードは読み取らず、閲覧履歴も保存しません。
-• すべて端末内に保存し、サーバーへ送信しません。履歴は最大30日保存します。
+• すべて端末内に保存し、サーバーへ送信しません。アプリ別の記録は最大3か月、1日の合計は1年間保存します。
 ```
 
 ## zh-CN
@@ -102,9 +116,9 @@ ChronoLock 按照你自己设定的规则限制应用使用，让你只用需要
 ■ 网站拦截
 在 Chrome、三星浏览器等中打开 youtube.com 等指定网站时显示拦截画面，防止通过浏览器绕过。
 
-■ 严格模式与休息
+■ 严格模式与暂停
 • 严格模式：关闭或放宽限制需等待 10 分钟至 1 小时后才生效。
-• 休息一下：暂停限制 10/30/60 分钟或今天，结束后自动恢复。
+• 暂停一下：暂停限制 10/30/60 分钟或今天，结束后自动恢复。
 
 ■ 专注
 在设定时间内一次性拦截所选应用，也可从快捷设置图块直接开始。
@@ -112,13 +126,20 @@ ChronoLock 按照你自己设定的规则限制应用使用，让你只用需要
 ■ 历史记录
 查看一天、一周、一个月内各应用的使用时长与次数、连续达标天数以及与上周的对比。
 
+■ 锁定模式
+• 定时锁定：在设定时间（1 小时至 7 天）内无法解除或放宽限制。
+• 目标锁定：连续 N 天守住限制后才能用密码解锁。还有每天收集一位数字的“碎片密码”。
+
+■ 实时通知
+使用受限应用时，可在通知中查看剩余时长和打开次数。
+
 ■ 备份
 将限制、应用组和设置导出为文件，在新设备上恢复。
 
 ■ 权限与隐私
 • 使用情况访问权限：读取各应用的使用时长和打开次数。
 • 无障碍服务：仅检查前台应用，以及使用网站拦截时受支持浏览器地址栏中的域名。不会读取其他屏幕内容、输入或密码，也不保存浏览记录。
-• 所有数据仅保存在本机，不会发送到服务器。历史记录最多保留 30 天。
+• 所有数据仅保存在本机，不会发送到服务器。各应用记录最多保留 3 个月，每日合计保留 1 年。
 ```
 
 ## es-ES
@@ -131,7 +152,7 @@ ChronoLock 按照你自己设定的规则限制应用使用，让你只用需要
 ChronoLock limita las apps con las reglas que tú decides, para usarlas solo lo que quieres.
 
 ■ Límites por app
-• Tiempo diario, tiempo por uso, aperturas al día y espera antes de volver a abrir
+• Tiempo diario, tiempo por sesión, aperturas al día y espera antes de volver a abrir
 • Horarios para estudiar, trabajar o dormir, con varias franjas por app (todos los días, entre semana, fin de semana)
 
 ■ Grupos de apps
@@ -150,11 +171,18 @@ Bloquea las apps elegidas durante un tiempo, también desde un icono de Ajustes 
 ■ Historial
 Consulta el tiempo y las aperturas por día, semana o mes, tu racha y el cambio respecto a la semana pasada.
 
+■ Modo bloqueo
+• Bloqueo por tiempo: durante un plazo (de 1 hora a 7 días) no se pueden quitar ni suavizar los límites.
+• Bloqueo por objetivo: cumple tus límites N días seguidos y desbloquea con una contraseña. Con la "contraseña por piezas" recibes un dígito al día.
+
+■ Notificación en vivo
+Mientras usas una app limitada, consulta en una notificación el tiempo y las aperturas que te quedan.
+
 ■ Copia de seguridad
-Exporta límites, grupos y ajustes a un archivo y restáuralos en otro móvil.
+Exporta límites, grupos y ajustes a un archivo y restáuralos en otro dispositivo.
 
 ■ Permisos y privacidad
 • Acceso al uso: lee el tiempo y las aperturas de cada app.
 • Servicio de accesibilidad: comprueba la app en pantalla y, para el bloqueo de sitios, solo el dominio de la barra de direcciones de un navegador compatible. No lee otro contenido, lo que escribes ni contraseñas, ni guarda las páginas visitadas.
-• Todo se guarda en este dispositivo y nunca se envía a un servidor. El historial se conserva hasta 30 días.
+• Todo se guarda en este dispositivo y nunca se envía a un servidor. El historial por app se conserva hasta 3 meses y los totales diarios, un año.
 ```
