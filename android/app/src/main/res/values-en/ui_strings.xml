@@ -202,6 +202,9 @@
     <string name="theme_word_pink">"Pink"</string>
     <string name="theme_word_coral">"Coral"</string>
     <string name="theme_word_amber">"Amber"</string>
+    <string name="theme_word_brown">"Brown"</string>
+    <string name="theme_word_gold">"Gold"</string>
+    <string name="theme_word_olive">"Olive"</string>
     <string name="theme_word_teal">"Teal"</string>
     <string name="theme_word_cerulean">"Cerulean"</string>
     <string name="theme_word_blue">"Blue"</string>

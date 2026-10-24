@@ -193,6 +193,9 @@
     <string name="theme_word_pink">"粉红"</string>
     <string name="theme_word_coral">"珊瑚"</string>
     <string name="theme_word_amber">"琥珀"</string>
+    <string name="theme_word_brown">"棕色"</string>
+    <string name="theme_word_gold">"金色"</string>
+    <string name="theme_word_olive">"橄榄"</string>
     <string name="theme_word_teal">"蓝绿"</string>
     <string name="theme_word_cerulean">"天蓝"</string>
     <string name="theme_word_blue">"蓝"</string>

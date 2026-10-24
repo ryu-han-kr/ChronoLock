@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.chronolock.data.ThemeCatalog
 import androidx.compose.ui.graphics.compositeOver
@@ -231,8 +232,8 @@ internal fun ThemePicker(selected: AppTheme, select: (AppTheme) -> Unit, openGal
             }
         }
         LazyRow(Modifier.selectableGroup().testTag("themes-${ThemeCatalog.BASIC}"), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (selected !in row) item(key = "current") { ThemeTile(selected, chosen = true, tag = "theme-current") {} }
-            items(row, key = { it.name }) { theme -> ThemeTile(theme, theme == selected, pinned = theme in pinned) { select(theme) } }
+            if (selected !in row) item(key = "current") { ThemeTile(selected, chosen = true, tag = "theme-current", fullName = true) {} }
+            items(row, key = { it.name }) { theme -> ThemeTile(theme, theme == selected, pinned = theme in pinned, fullName = true) { select(theme) } }
         }
         Text(tr("선택: %1\$s", selected.label.map { tr(it) }.joinToString(" ")) +
             selected.description.takeIf { it.isNotBlank() }?.let { " · " + tr(it) }.orEmpty(),
@@ -290,7 +291,7 @@ internal fun ThemeGallery(selected: AppTheme, select: (AppTheme) -> Unit, favori
                         // A pinned palette appears twice; its key in the pinned section must differ from its family one.
                         gridItems(themes, key = { if (family == "찜한 테마") "pinned-${it.name}" else it.name }) { theme ->
                             ThemeTile(theme, theme == selected, tag = if (family == "찜한 테마") "theme-pinned-${theme.name}" else "theme-${theme.name}",
-                                pinned = theme.name in favorites, togglePin = { toggleFavorite(theme) }) { select(theme) }
+                                pinned = theme.name in favorites, togglePin = { toggleFavorite(theme) }, fullName = family == "찜한 테마") { select(theme) }
                         }
                     }
                 }
@@ -452,10 +453,14 @@ private fun ColorFields(rgb: Int, set: (Int) -> Unit) {
     }
 }
 
-/** A miniature of the palette: page background (or gradient), a card, the accent and a line of text. */
+/**
+ * A miniature of the palette: page background (or gradient), a card, the accent and a line of text. Under a family
+ * header the family word is left out; [fullName] keeps it (on up to two lines) where palettes of several families
+ * sit together, so "민트" says which mint and a "Forest" palette is not taken for the built-in one.
+ */
 @Composable
 private fun ThemeTile(theme: AppTheme, chosen: Boolean, tag: String = "theme-${theme.name}", pinned: Boolean = false,
-    togglePin: (() -> Unit)? = null, onClick: () -> Unit) {
+    togglePin: (() -> Unit)? = null, fullName: Boolean = false, onClick: () -> Unit) {
     val shape = RoundedCornerShape(16.dp)
     Column(Modifier.width(76.dp).clip(RoundedCornerShape(12.dp)).testTag(tag).selectable(selected = chosen, role = Role.RadioButton, onClick = onClick).padding(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -477,7 +482,8 @@ private fun ThemeTile(theme: AppTheme, chosen: Boolean, tag: String = "theme-${t
                     modifier = Modifier.align(Alignment.TopEnd).offset(6.dp, (-6).dp).size(14.dp))
             }
         }
-        Text(theme.shortLabel.map { tr(it) }.joinToString(" "), style = MaterialTheme.typography.labelMedium, maxLines = 1,
+        Text((if (fullName) theme.label else theme.shortLabel).map { tr(it) }.joinToString(" "), style = MaterialTheme.typography.labelMedium,
+            maxLines = if (fullName) 2 else 1, textAlign = TextAlign.Center,
             overflow = TextOverflow.Ellipsis, color = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
     }
 }
