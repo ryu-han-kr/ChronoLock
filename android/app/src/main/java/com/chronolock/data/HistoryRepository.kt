@@ -28,7 +28,6 @@ class HistoryRepository @Inject constructor(
     private val mutex = Mutex()
     val daily = dao.observeDaily()
     val meta = dao.observeMeta()
-    val estimates = dao.observeEstimates()
 
     val year = dao.observeYear()
 
@@ -67,8 +66,6 @@ class HistoryRepository @Inject constructor(
         val homes = pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)
             .map { it.activityInfo.packageName }.toSet()
         importEvents(collected, names, homes, now, zone)
-        // Older days are not estimated from the OS's coarse usage buckets: history shows recorded days only.
-        dao.clearEstimates()
         refreshYear(now, zone)
     } }
 
@@ -85,7 +82,7 @@ class HistoryRepository @Inject constructor(
     /** Deletes every kept record and day total; nothing from before now is imported again. Limits are not affected. */
     suspend fun clearHistory(now: Long) = mutex.withLock {
         database.withTransaction {
-            dao.clearDaily(); dao.clearEvents(); dao.clearEstimates(); dao.clearYear()
+            dao.clearDaily(); dao.clearEvents(); dao.clearYear()
             dao.saveMeta((dao.meta() ?: HistoryMetaEntity()).copy(clearedAt = now))
         }
     }
@@ -96,31 +93,6 @@ class HistoryRepository @Inject constructor(
         const val EVENT_DAYS = 10
         const val YEAR_DAYS = 366
         private const val DAY = 86_400_000L
-    }
-
-    /**
-     * Stores per-day estimates for the window days before the first event record and after the last reset.
-     * Days that can no longer be estimated (the OS dropped the bucket) keep their earlier estimate.
-     */
-    internal suspend fun importEstimates(bucketsByInterval: List<List<UsageBucket>>, names: Map<String, String>,
-        homes: Set<String>, now: Long, zone: ZoneId) {
-        val today = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
-        database.withTransaction {
-            val meta = dao.meta() ?: HistoryMetaEntity()
-            val daily = dao.daily()
-            val windowStart = today.minusDays(RETAIN_DAYS - 1L)
-            val afterReset = if (meta.clearedAt > 0) java.time.Instant.ofEpochMilli(meta.clearedAt).atZone(zone).toLocalDate().plusDays(1) else windowStart
-            val gapStart = maxOf(windowStart, afterReset)
-            val gapEnd = daily.minOfOrNull { LocalDate.parse(it.date) } ?: today
-            val labels = dao.estimates().associate { it.packageName to it.appName } + daily.associate { it.packageName to it.appName } + names
-            val recorded = daily.groupBy { it.packageName }.mapValues { (_, rows) -> rows.associate { LocalDate.parse(it.date) to it.usageMillis } }
-            val estimated = estimateGapUsage(bucketsByInterval.map { buckets -> buckets.filter { it.app in labels && it.app !in homes } },
-                recorded, gapStart, gapEnd, zone)
-            dao.dropEstimates(from = gapEnd.toString(), before = gapStart.toString())
-            dao.saveEstimates(estimated.map { (key, millis) ->
-                HistoryEstimateEntity(key.packageName, key.date.toString(), labels.getValue(key.packageName), millis)
-            })
-        }
     }
 
     internal suspend fun importEvents(collected: List<HistoryEventEntity>, names: Map<String, String>,
