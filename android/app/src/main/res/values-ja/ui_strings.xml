@@ -21,7 +21,7 @@
     <string name="refreshing">"更新中…"</string>
     <string name="refresh">"更新"</string>
     <string name="history_error">"履歴を読み込めませんでした。権限を確認して再試行してください。"</string>
-    <string name="history_retention">"履歴は端末内に最大3か月（90日）間保存します。初回起動前や収集が中断した期間は欠落する場合があります。ホーム画面は除外し、分割画面やピクチャーインピクチャーでは数値が異なる場合があります。"</string>
+    <string name="history_retention">"履歴は端末内に最大1年（365日）間保存し、1年を過ぎた日から順に削除します。初回起動前や収集が中断した期間は欠落する場合があります。ホーム画面は除外し、分割画面やピクチャーインピクチャーでは数値が異なる場合があります。"</string>
     <string name="collapse_days">"日別記録を閉じる"</string>
     <string name="expand_days">"日別記録を表示"</string>
     <string name="no_records">"記録なし"</string>
@@ -64,7 +64,7 @@
     <string name="normal_mode_hint">"現在は通常モードです。ルールはいつでも変更・削除できます。Androidの設定で権限の解除やアプリの削除も可能です。"</string>
     <string name="blocking_limits_hint">"端末や電池の設定により検出やブロックが遅れる場合があります。分割画面とピクチャーインピクチャーの制限は未対応です。"</string>
     <string name="local_data">"端末内の記録管理"</string>
-    <string name="local_data_hint">"利用記録は最大30日間、端末内にのみ保存し、サーバーには送信しません。"</string>
+    <string name="local_data_hint">"利用記録は最大1年間、端末内にのみ保存し、サーバーには送信しません。"</string>
     <string name="delete_all">"すべてのルールと記録を削除"</string>
     <string name="today_selected">"今日の選択アプリの利用"</string>
     <string name="enabled_count">"%1$d個のアプリの制限が有効"</string>
@@ -228,7 +228,7 @@
     <string name="accessibility_title">"ユーザー補助の権限について"</string>
     <string name="usage_title">"使用状況へのアクセスについて"</string>
     <string name="accessibility_disclosure">"ChronoLockはアプリ切替イベントで使用中のアプリを確認し、設定した制限に従ってブロック画面を表示します。ウェブサイトのブロックを使う場合は、対応ブラウザのアドレスバーのドメインだけを確認します。それ以外の画面の文字、パスワード、入力内容は読み取りません。選択したアプリのパッケージ名、ブロックするサイトの一覧、利用・ブロック記録は端末内にのみ保存して送信せず、閲覧したアドレスは保存しません。Androidの設定でいつでも解除できます。同意する場合、次の設定画面でChronoLockを有効にしてください。"</string>
-    <string name="usage_disclosure">"使用状況へのアクセスでアプリ別の利用時間と起動回数を確認します。制限なしでも履歴を収集し、最大3か月（90日）間この端末内にのみ保存します。サーバーには送信しません。履歴の閲覧だけならユーザー補助の権限は不要です。Androidの設定でいつでも解除できます。"</string>
+    <string name="usage_disclosure">"使用状況へのアクセスでアプリ別の利用時間と起動回数を確認します。制限なしでも履歴を収集し、最大1年間この端末内にのみ保存します。サーバーには送信しません。履歴の閲覧だけならユーザー補助の権限は不要です。Androidの設定でいつでも解除できます。"</string>
     <string name="consent_settings">"同意して設定を開く"</string>
     <string name="error_data">"保存データを読み込めません。アプリを開き直してください。"</string>
     <string name="error_apps">"アプリ一覧を読み込めません。"</string>
@@ -472,13 +472,13 @@
     <string name="history_year_less">"少ない"</string>
     <string name="history_year_more">"多い"</string>
     <string name="history_delete">"記録を削除"</string>
-    <string name="history_delete_hint">"記録は自分で決めたパスワードを入力しないと削除できません。3か月を過ぎた記録は自動で削除されます。"</string>
+    <string name="history_delete_hint">"記録は自分で決めたパスワードを入力しないと削除できません。1年を過ぎた記録は古い日から自動で削除されます。"</string>
     <string name="history_pin_set_title">"記録削除のパスワードを設定"</string>
     <string name="history_pin_set_body">"記録はこのパスワードがないと削除できません。忘れた場合はアプリを削除するしかありません。"</string>
     <string name="history_pin_field">"パスワード（数字4〜12桁）"</string>
     <string name="history_pin_confirm">"パスワードの確認"</string>
     <string name="history_pin_enter">"パスワード"</string>
-    <string name="history_delete_body">"パスワードを入力すると3か月の記録と1年カレンダーがすべて削除されます。元に戻せません。"</string>
+    <string name="history_delete_body">"パスワードを入力すると1年分の記録とカレンダーがすべて削除されます。元に戻せません。"</string>
     <string name="history_pin_invalid">"パスワードは数字4〜12桁にしてください。"</string>
     <string name="history_pin_mismatch">"パスワードが一致しません。"</string>
     <string name="history_pin_wrong">"パスワードが違います。"</string>
@@ -560,7 +560,7 @@
     <string name="pro_groups">"アプリグループ無制限"</string>
     <string name="pro_sites">"ウェブサイトを50件までブロック"</string>
     <string name="pro_goal">"目標ロックとピースパスワード"</string>
-    <string name="pro_history">"3か月の記録と1年カレンダー"</string>
+    <string name="pro_history">"3か月・1年の記録と1年カレンダー"</string>
     <string name="pro_themes">"すべてのテーマとマイテーマ"</string>
     <string name="pro_owned">"プロをご利用中です。ありがとうございます！"</string>
     <string name="pro_pending">"決済の確認を待っています。完了するとプロが使えます。"</string>
@@ -571,7 +571,7 @@
     <string name="pro_limit_groups">"無料版で作れるアプリグループは1つです。プロでは無制限です。"</string>
     <string name="pro_limit_goal">"目標ロックはプロの機能です。"</string>
     <string name="pro_limit_themes">"基本以外のテーマとマイテーマはプロで使えます。"</string>
-    <string name="pro_limit_history">"3か月の記録と1年カレンダーはプロで見られます。"</string>
+    <string name="pro_limit_history">"3か月・1年の記録と1年カレンダーはプロで見られます。"</string>
     <string name="lock_pill_goal">"目標ロック中"</string>
     <string name="lock_pill_until">"%1$sまでロック"</string>
     <string name="weekly_report_channel">"週間レポート"</string>
@@ -654,4 +654,5 @@
     <plurals name="group_schedules">
         <item quantity="other">"ブロック時間帯 %1$d件"</item>
     </plurals>
+    <string name="history_one_year">"1年"</string>
 </resources>

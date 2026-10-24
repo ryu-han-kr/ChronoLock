@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 internal fun ProCard(state: MainState, buy: () -> Unit) {
     CardBox {
         Text(tr("ChronoLock 프로"), style = MaterialTheme.typography.titleLarge)
-        listOf("앱 그룹 무제한", "웹사이트 차단 50개", "목표 잠금과 조각 비밀번호", "3개월 기록과 1년 달력", "모든 테마와 나만의 테마").forEach {
+        listOf("앱 그룹 무제한", "웹사이트 차단 50개", "목표 잠금과 조각 비밀번호", "3개월·1년 기록과 1년 달력", "모든 테마와 나만의 테마").forEach {
             Text("• " + tr(it), style = MaterialTheme.typography.bodyMedium)
         }
         when {

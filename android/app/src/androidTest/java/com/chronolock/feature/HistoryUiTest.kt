@@ -40,6 +40,18 @@ class HistoryUiTest {
         ui.runOnIdle { assertEquals("app.a", picked?.first); assertEquals(com.chronolock.domain.RuleRecipe.SHORT_BREAK, picked?.second) }
     }
 
+    @Test fun usageRow_opensTheLimitEditor_andLimitedAppsOfferToEditIt() {
+        var limited: String? = null
+        val withRule = state.copy(rules = listOf(com.chronolock.data.RuleEntity("app.a", "Example A", 600, null, null)))
+        ui.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
+            HistoryPanel(withRule, today, {}, {}, limit = { limited = it })
+        } } }
+        ui.onNodeWithText("일주일").performClick()
+        ui.onNodeWithTag("history-limit-app.a").performScrollTo().assertTextEquals("제한 수정")
+        ui.onNodeWithTag("history-limit-app.b").performScrollTo().assertTextEquals("제한 걸기").performClick()
+        ui.runOnIdle { assertEquals("app.b", limited) }
+    }
+
     @Test fun periodSwitch_changesTotals_andSurvivesRestoration() {
         val restoration = StateRestorationTester(ui)
         restoration.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) {

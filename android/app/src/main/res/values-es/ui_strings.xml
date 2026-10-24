@@ -21,7 +21,7 @@
     <string name="refreshing">"Actualizando…"</string>
     <string name="refresh">"Actualizar"</string>
     <string name="history_error">"No se pudo cargar el historial. Revisa el permiso e inténtalo de nuevo."</string>
-    <string name="history_retention">"Los registros se guardan hasta 3 meses (90 días) en este dispositivo. Pueden faltar datos anteriores o de periodos sin recopilación. Se excluye el inicio. La pantalla dividida y la imagen en imagen pueden dar cifras distintas."</string>
+    <string name="history_retention">"Los registros se guardan hasta 1 año (365 días) en este dispositivo y se borran por orden a partir del día que supera el año. Pueden faltar datos anteriores o de periodos sin recopilación. Se excluye el inicio. La pantalla dividida y la imagen en imagen pueden dar cifras distintas."</string>
     <string name="collapse_days">"Ocultar días"</string>
     <string name="expand_days">"Ver por día"</string>
     <string name="no_records">"Sin registros"</string>
@@ -64,7 +64,7 @@
     <string name="normal_mode_hint">"El modo normal está activo. Puedes editar o borrar reglas, revocar permisos o desinstalar la app desde Ajustes de Android."</string>
     <string name="blocking_limits_hint">"Los ajustes de batería o del dispositivo pueden retrasar el bloqueo. Aún no se admite bloquear pantalla dividida ni imagen en imagen."</string>
     <string name="local_data">"Datos locales"</string>
-    <string name="local_data_hint">"Los registros se guardan hasta 30 días solo en este dispositivo. No se envían a ningún servidor."</string>
+    <string name="local_data_hint">"Los registros se guardan hasta 1 año solo en este dispositivo. No se envían a ningún servidor."</string>
     <string name="delete_all">"Borrar reglas y registros"</string>
     <string name="today_selected">"Apps elegidas hoy"</string>
     <string name="enabled_count">"Límites activos en %1$d apps"</string>
@@ -228,7 +228,7 @@
     <string name="accessibility_title">"Sobre la accesibilidad"</string>
     <string name="usage_title">"Sobre el acceso al uso"</string>
     <string name="accessibility_disclosure">"ChronoLock usa eventos de cambio de app para identificar la app activa y mostrar un bloqueo según tus límites. Con el bloqueo de sitios, solo comprueba el dominio de la barra de direcciones de un navegador compatible. No lee otro texto de pantalla, contraseñas ni lo que escribes. Los nombres de paquete, tu lista de sitios bloqueados y los registros de uso y bloqueo se guardan solo en este dispositivo y no se transmiten; no se guardan las direcciones visitadas. Puedes revocar el acceso en Ajustes de Android. Si aceptas, activa ChronoLock en la siguiente pantalla."</string>
-    <string name="usage_disclosure">"El acceso al uso permite leer el tiempo y las aperturas de cada app. El historial funciona sin reglas de bloqueo y se guarda hasta 3 meses (90 días) solo en este dispositivo, nunca en un servidor. No requiere accesibilidad para consultar registros. Puedes revocar el permiso en Ajustes de Android."</string>
+    <string name="usage_disclosure">"El acceso al uso permite leer el tiempo y las aperturas de cada app. El historial funciona sin reglas de bloqueo y se guarda hasta 1 año solo en este dispositivo, nunca en un servidor. No requiere accesibilidad para consultar registros. Puedes revocar el permiso en Ajustes de Android."</string>
     <string name="consent_settings">"Aceptar y abrir ajustes"</string>
     <string name="error_data">"No se pudieron leer los datos. Vuelve a abrir la app."</string>
     <string name="error_apps">"No se pudo cargar la lista de apps."</string>
@@ -486,13 +486,13 @@
     <string name="history_year_less">"Menos"</string>
     <string name="history_year_more">"Más"</string>
     <string name="history_delete">"Borrar historial"</string>
-    <string name="history_delete_hint">"El historial solo se borra con una contraseña que tú defines. Lo que tenga más de 3 meses se borra solo."</string>
+    <string name="history_delete_hint">"El historial solo se borra con una contraseña que tú defines. Lo que tenga más de 1 año se borra solo, empezando por lo más antiguo."</string>
     <string name="history_pin_set_title">"Define una contraseña para borrar el historial"</string>
     <string name="history_pin_set_body">"El historial solo se puede borrar con esta contraseña. Si la olvidas, solo se borra desinstalando la app."</string>
     <string name="history_pin_field">"Contraseña (4–12 dígitos)"</string>
     <string name="history_pin_confirm">"Confirmar contraseña"</string>
     <string name="history_pin_enter">"Contraseña"</string>
-    <string name="history_delete_body">"Introduce la contraseña para borrar el historial de 3 meses y el calendario anual. No se puede deshacer."</string>
+    <string name="history_delete_body">"Introduce la contraseña para borrar el historial de 1 año y el calendario anual. No se puede deshacer."</string>
     <string name="history_pin_invalid">"Usa de 4 a 12 dígitos para la contraseña."</string>
     <string name="history_pin_mismatch">"Las contraseñas no coinciden."</string>
     <string name="history_pin_wrong">"Contraseña incorrecta."</string>
@@ -582,7 +582,7 @@
     <string name="pro_groups">"Grupos ilimitados"</string>
     <string name="pro_sites">"Bloquea hasta 50 sitios"</string>
     <string name="pro_goal">"Bloqueo por objetivo y contraseña por piezas"</string>
-    <string name="pro_history">"3 meses de historial y calendario anual"</string>
+    <string name="pro_history">"Historial de 3 meses y 1 año con calendario anual"</string>
     <string name="pro_themes">"Todos los temas y temas propios"</string>
     <string name="pro_owned">"Tienes Pro. ¡Gracias!"</string>
     <string name="pro_pending">"Esperando la confirmación del pago. Pro se abrirá al completarse."</string>
@@ -593,7 +593,7 @@
     <string name="pro_limit_groups">"La versión gratis permite 1 grupo. Pro no tiene límite."</string>
     <string name="pro_limit_goal">"El bloqueo por objetivo es de Pro."</string>
     <string name="pro_limit_themes">"Los temas aparte de los básicos y los temas propios son de Pro."</string>
-    <string name="pro_limit_history">"El historial de 3 meses y el calendario anual son de Pro."</string>
+    <string name="pro_limit_history">"El historial de 3 meses y 1 año y el calendario anual son de Pro."</string>
     <string name="lock_pill_goal">"Bloqueo por objetivo activo"</string>
     <string name="lock_pill_until">"Bloqueado hasta %1$s"</string>
     <string name="weekly_report_channel">"Informe semanal"</string>
@@ -678,4 +678,5 @@
         <item quantity="many">"%1$d franjas de bloqueo"</item>
         <item quantity="other">"%1$d franjas de bloqueo"</item>
     </plurals>
+    <string name="history_one_year">"1 año"</string>
 </resources>

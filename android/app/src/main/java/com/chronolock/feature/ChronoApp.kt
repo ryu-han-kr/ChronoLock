@@ -169,7 +169,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 AlertDialog(onDismissRequest = { permissionDialog = null }, title = { Text(if (accessibility) tr("접근성 권한 안내") else tr("사용 정보 접근 안내")) },
                     text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { Text(if (accessibility)
                         tr("ChronoLock은 앱 전환 이벤트로 실행 중인 앱을 확인하고, 직접 설정한 제한에 따라 다른 앱 위에 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인만 확인합니다. 그 밖의 화면 텍스트, 비밀번호, 입력 내용은 읽지 않습니다. 선택한 앱의 패키지 이름, 차단할 사이트 목록과 사용·차단 기록은 이 기기에만 저장되며 전송되지 않고, 방문한 주소는 저장하지 않습니다. Android 설정에서 언제든 해제할 수 있습니다. 동의하면 다음 설정 화면에서 ChronoLock을 직접 활성화해 주세요.")
-                    else tr("사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 3개월(90일)간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."))
+                    else tr("사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 1년간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."))
                         if (accessibility) Text(tr("설정 화면이 열리면 ① '설치된 앱'(또는 '다운로드한 앱')에서 ChronoLock을 누르고 ② 'ChronoLock 사용'을 켠 뒤 ③ '허용'을 누르세요. 기기에 따라 항목 이름과 위치가 다를 수 있습니다."), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
                     } },
                     confirmButton = { TextButton(onClick = { model.acknowledge { permissionDialog = null; openSettings(accessibility) } }) { Text(tr("동의하고 설정 열기")) } },

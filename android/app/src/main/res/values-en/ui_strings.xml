@@ -21,7 +21,7 @@
     <string name="refreshing">"Refreshing…"</string>
     <string name="refresh">"Refresh"</string>
     <string name="history_error">"Could not load history. Check usage access and try again."</string>
-    <string name="history_retention">"Records accumulate on this device for up to 3 months (90 days). Earlier records and collection gaps may be missing. The home screen is excluded. Split-screen and picture-in-picture totals may differ."</string>
+    <string name="history_retention">"Records accumulate on this device for up to 1 year (365 days); the oldest day is removed as each new one is added. Earlier records and collection gaps may be missing. The home screen is excluded. Split-screen and picture-in-picture totals may differ."</string>
     <string name="collapse_days">"Hide daily records"</string>
     <string name="expand_days">"Show daily records"</string>
     <string name="no_records">"No records"</string>
@@ -64,7 +64,7 @@
     <string name="normal_mode_hint">"Normal mode is active. You can edit or delete rules at any time, revoke permissions or uninstall the app in Android settings."</string>
     <string name="blocking_limits_hint">"Device and battery settings may delay detection and blocking. Split-screen and picture-in-picture blocking are not supported yet."</string>
     <string name="local_data">"Local data"</string>
-    <string name="local_data_hint">"Usage records are kept for up to 30 days, on this device only. They are never sent to a server."</string>
+    <string name="local_data_hint">"Usage records are kept for up to 1 year, on this device only. They are never sent to a server."</string>
     <string name="delete_all">"Delete all rules and usage"</string>
     <string name="today_selected">"Selected apps today"</string>
     <string name="enabled_count">"Apps with limits enabled: %1$d"</string>
@@ -228,7 +228,7 @@
     <string name="accessibility_title">"About accessibility access"</string>
     <string name="usage_title">"About usage access"</string>
     <string name="accessibility_disclosure">"ChronoLock uses app-switch events to identify the active app and display a blocking screen according to your limits. With website blocking, it checks only the domain in a supported browser\'s address bar. It does not read other screen text, passwords or typed content. Selected app package names, your blocked-site list and usage/blocking records stay on this device and are not transmitted; visited addresses are not saved. You can revoke access in Android settings at any time. If you agree, enable ChronoLock on the next settings screen."</string>
-    <string name="usage_disclosure">"Usage access lets ChronoLock read time and opens for each app. History works without blocking rules and is kept for up to 3 months (90 days) on this device only, never on a server. Accessibility access is not needed just to view history. You can revoke usage access in Android settings at any time."</string>
+    <string name="usage_disclosure">"Usage access lets ChronoLock read time and opens for each app. History works without blocking rules and is kept for up to 1 year on this device only, never on a server. Accessibility access is not needed just to view history. You can revoke usage access in Android settings at any time."</string>
     <string name="consent_settings">"Agree and open settings"</string>
     <string name="error_data">"Could not read saved data. Reopen the app."</string>
     <string name="error_apps">"Could not load the app list."</string>
@@ -479,13 +479,13 @@
     <string name="history_year_less">"Less"</string>
     <string name="history_year_more">"More"</string>
     <string name="history_delete">"Delete history"</string>
-    <string name="history_delete_hint">"History can only be deleted with a password you set. Records older than 3 months are removed automatically."</string>
+    <string name="history_delete_hint">"History can only be deleted with a password you set. Records older than 1 year are removed automatically, oldest first."</string>
     <string name="history_pin_set_title">"Set a password to delete history"</string>
     <string name="history_pin_set_body">"History can only be deleted with this password. If you forget it, only uninstalling the app removes it."</string>
     <string name="history_pin_field">"Password (4–12 digits)"</string>
     <string name="history_pin_confirm">"Confirm password"</string>
     <string name="history_pin_enter">"Password"</string>
-    <string name="history_delete_body">"Enter the password to delete the 3-month history and the yearly calendar. This cannot be undone."</string>
+    <string name="history_delete_body">"Enter the password to delete the 1-year history and the yearly calendar. This cannot be undone."</string>
     <string name="history_pin_invalid">"Use 4–12 digits for the password."</string>
     <string name="history_pin_mismatch">"The passwords do not match."</string>
     <string name="history_pin_wrong">"Wrong password."</string>
@@ -571,7 +571,7 @@
     <string name="pro_groups">"Unlimited app groups"</string>
     <string name="pro_sites">"Block up to 50 websites"</string>
     <string name="pro_goal">"Goal lock and piece password"</string>
-    <string name="pro_history">"3 months of history and a yearly calendar"</string>
+    <string name="pro_history">"3-month and 1-year history with a yearly calendar"</string>
     <string name="pro_themes">"Every theme and custom themes"</string>
     <string name="pro_owned">"You have Pro. Thank you!"</string>
     <string name="pro_pending">"Waiting for payment confirmation. Pro opens once it completes."</string>
@@ -582,7 +582,7 @@
     <string name="pro_limit_groups">"The free version allows 1 app group. Pro has no limit."</string>
     <string name="pro_limit_goal">"Goal lock is a Pro feature."</string>
     <string name="pro_limit_themes">"Themes beyond the basic ones, and custom themes, come with Pro."</string>
-    <string name="pro_limit_history">"3 months of history and the yearly calendar come with Pro."</string>
+    <string name="pro_limit_history">"3-month and 1-year history and the yearly calendar come with Pro."</string>
     <string name="lock_pill_goal">"Goal lock on"</string>
     <string name="lock_pill_until">"Locked until %1$s"</string>
     <string name="weekly_report_channel">"Weekly report"</string>
@@ -666,4 +666,5 @@
         <item quantity="one">"%1$d block window"</item>
         <item quantity="other">"%1$d block windows"</item>
     </plurals>
+    <string name="history_one_year">"1 year"</string>
 </resources>

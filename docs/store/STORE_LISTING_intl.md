@@ -47,7 +47,7 @@ Export your limits, groups and settings to a file and restore them on a new phon
 ■ Permissions and privacy
 • Usage access: reads per-app time and opens.
 • Accessibility service: shows the block screen. It checks the app in front and, for website blocking, only the domain in a supported browser's address bar. It never reads other screen content, typing or passwords, and does not save visited pages.
-• Everything stays on this device and is never sent to a server. Per-app history is kept for up to 3 months and daily totals for a year.
+• Everything stays on this device and is never sent to a server. Per-app history and daily totals are kept for up to a year.
 
 Languages: English, 한국어, 日本語, 简体中文, Español
 ```
@@ -94,7 +94,7 @@ youtube.comなど指定したサイトをChrome・Samsung Internetなどで開�
 ■ 権限とプライバシー
 • 使用状況へのアクセス：アプリごとの利用時間と起動回数を確認します。
 • ユーザー補助サービス：前面のアプリと、ウェブサイトのブロック時は対応ブラウザのアドレスバーのドメインだけを確認します。その他の画面内容・入力・パスワードは読み取らず、閲覧履歴も保存しません。
-• すべて端末内に保存し、サーバーへ送信しません。アプリ別の記録は最大3か月、1日の合計は1年間保存します。
+• すべて端末内に保存し、サーバーへ送信しません。アプリ別の記録と1日の合計は最大1年間保存します。
 ```
 
 ## zh-CN
@@ -139,7 +139,7 @@ ChronoLock 按照你自己设定的规则限制应用使用，让你只用需要
 ■ 权限与隐私
 • 使用情况访问权限：读取各应用的使用时长和打开次数。
 • 无障碍服务：仅检查前台应用，以及使用网站拦截时受支持浏览器地址栏中的域名。不会读取其他屏幕内容、输入或密码，也不保存浏览记录。
-• 所有数据仅保存在本机，不会发送到服务器。各应用记录最多保留 3 个月，每日合计保留 1 年。
+• 所有数据仅保存在本机，不会发送到服务器。各应用记录和每日合计最多保留 1 年。
 ```
 
 ## es-ES
@@ -184,5 +184,5 @@ Exporta límites, grupos y ajustes a un archivo y restáuralos en otro dispositi
 ■ Permisos y privacidad
 • Acceso al uso: lee el tiempo y las aperturas de cada app.
 • Servicio de accesibilidad: comprueba la app en pantalla y, para el bloqueo de sitios, solo el dominio de la barra de direcciones de un navegador compatible. No lee otro contenido, lo que escribes ni contraseñas, ni guarda las páginas visitadas.
-• Todo se guarda en este dispositivo y nunca se envía a un servidor. El historial por app se conserva hasta 3 meses y los totales diarios, un año.
+• Todo se guarda en este dispositivo y nunca se envía a un servidor. El historial por app y los totales diarios se conservan hasta un año.
 ```
