@@ -25,7 +25,7 @@ object ProProduct {
 
 /** What the free tier allows; with Pro, or while the app does not gate features yet, none of these apply. */
 object FreeTier {
-    const val GROUPS = 1
-    const val SITES = 3
+    const val GROUPS = 2
+    const val SITES = 5
     const val HISTORY_DAYS = 30
 }

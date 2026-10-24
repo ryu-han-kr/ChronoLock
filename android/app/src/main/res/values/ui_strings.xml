@@ -586,8 +586,8 @@
     <string name="pro_buy">"프로 평생 이용권 · %1$s"</string>
     <string name="pro_loading">"프로 상품을 불러오는 중"</string>
     <string name="pro_note">"한 번 결제하면 같은 Google 계정의 기기에서 계속 쓸 수 있어요."</string>
-    <string name="pro_limit_sites">"무료 버전은 사이트를 3개까지 차단할 수 있어요. 프로에서 50개까지 늘어나요."</string>
-    <string name="pro_limit_groups">"무료 버전은 앱 그룹을 1개까지 만들 수 있어요. 프로에서는 제한이 없어요."</string>
+    <string name="pro_limit_sites">"무료 버전은 사이트를 5개까지 차단할 수 있어요. 프로에서 50개까지 늘어나요."</string>
+    <string name="pro_limit_groups">"무료 버전은 앱 그룹을 2개까지 만들 수 있어요. 프로에서는 제한이 없어요."</string>
     <string name="pro_limit_goal">"목표 잠금은 프로 기능이에요."</string>
     <string name="pro_limit_themes">"기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요."</string>
     <string name="pro_limit_history">"3개월·1년 기록과 1년 달력은 프로에서 볼 수 있어요."</string>
@@ -678,4 +678,7 @@
     <string name="history_wait_body">"지금까지 %1$d일 기록이 모였어요. %2$d일 더 모이면 집계해 드릴게요. 없는 기록은 지어내지 않아요."</string>
     <string name="history_show_collected">"모인 %1$d일만 보기"</string>
     <string name="history_guide">"%1$d일 기록이 모두 모였어요! 하루 평균 %2$s, 가장 많이 쓴 앱은 %3$s예요."</string>
+    <string name="pro_limit_mascot">"햄스터 외의 캐릭터는 프로에서 쓸 수 있어요."</string>
+    <string name="pro_mascots">"캐릭터 5종 전부"</string>
+    <string name="pro_no_ads">"광고 없음"</string>
 </resources>

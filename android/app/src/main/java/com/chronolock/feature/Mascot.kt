@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
@@ -152,7 +153,9 @@ internal fun todayMood(locked: Boolean, focusing: Boolean, limitReached: Boolean
 
 /** Settings card: pick the companion character; the chosen one shows its poses below. */
 @Composable
-internal fun MascotPicker(selected: MascotKind, select: (MascotKind) -> Unit) {
+internal fun MascotPicker(selected: MascotKind, select: (MascotKind) -> Unit, pro: Boolean = true) {
+    // Locked characters stay visible (with a PRO mark); tapping one explains instead of switching.
+    var lockedTapped by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(tr("캐릭터"), style = MaterialTheme.typography.titleLarge)
         Text(tr("오늘 화면, 차단 화면, 알림과 기록에서 함께할 친구를 골라 주세요."), color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -160,17 +163,24 @@ internal fun MascotPicker(selected: MascotKind, select: (MascotKind) -> Unit) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MascotKind.entries.forEach { kind ->
                 val chosen = kind == selected
+                val locked = !pro && kind != MascotKind.FREE && !chosen
                 val tint = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .2f)
                 Column(Modifier.clip(RoundedCornerShape(16.dp)).border(BorderStroke(if (chosen) 2.dp else 1.dp, tint), RoundedCornerShape(16.dp))
                     .background(if (chosen) MaterialTheme.colorScheme.primary.copy(alpha = .08f) else MaterialTheme.colorScheme.surface)
-                    .selectable(chosen, role = Role.RadioButton) { select(kind) }.padding(8.dp).testTag("mascot-pick-${kind.name.lowercase()}"),
+                    .selectable(chosen, role = Role.RadioButton) { if (locked) lockedTapped = true else select(kind) }.padding(8.dp)
+                    .testTag("mascot-pick-${kind.name.lowercase()}"),
                     horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(kind.art(Pose.DEFAULT)), contentDescription = null, modifier = Modifier.size(64.dp))
+                    Image(painterResource(kind.art(Pose.DEFAULT)), contentDescription = null,
+                        modifier = Modifier.size(64.dp).graphicsLayer { alpha = if (locked) .55f else 1f })
                     Text(tr(kind.title), style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
                         color = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                    if (locked) Text("PRO", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.testTag("mascot-locked-${kind.name.lowercase()}"))
                 }
             }
         }
+        if (lockedTapped) Text(tr("햄스터 외의 캐릭터는 프로에서 쓸 수 있어요."), color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall)
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Pose.entries.forEach { pose ->
                 Image(painterResource(selected.art(pose)), contentDescription = null, modifier = Modifier.size(44.dp))

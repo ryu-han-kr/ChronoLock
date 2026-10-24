@@ -97,7 +97,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         }
         if (state.onboarded != true) {
             ChronoTheme(shown) {
-                if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding, state.mascot, { model.selectMascot(it) })
+                if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding, state.mascot, { model.selectMascot(it) }, state.pro)
                 else Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             }
             return@LocalizedApp
@@ -117,7 +117,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 toggleRule = { rule, on -> model.save(rule.toDomain().copy(enabled = on), {}) },
                 selectLanguage = model::selectLanguage, refreshHistory = model::refreshHistory,
                 banner = state.ads.takeIf {
-                    AdPolicy.showBanner(tab, it.configured, state.adFree, it.canRequestAds,
+                    AdPolicy.showBanner(tab, it.configured, state.adFree || (com.chronolock.BuildConfig.PRO_GATING && state.billing.pro), it.canRequestAds,
                         focusActive = focusActive)
                 }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },

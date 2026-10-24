@@ -59,6 +59,8 @@ class AccountAdsUiTest {
 
     @Test fun adsCard_andBannerSlot() {
         show(MainState(ads = AdState(configured = true, canRequestAds = true, privacyOptionsRequired = true)), banner = true)
+        // The banner sits at the end of Settings, not over the screen.
+        ui.onNodeWithTag("main-list").performScrollToNode(hasTestTag("settings-ad"))
         ui.onNodeWithTag("fake-banner").assertIsDisplayed()
         scrollTo("광고 개인정보 설정")
         ui.onNodeWithText("광고 제거 상품을 확인하는 중입니다.").assertExists()

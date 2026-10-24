@@ -17,6 +17,8 @@ enum class MascotKind(val title: String) {
 
     companion object {
         val DEFAULT = HAMSTER
+        /** The one character of the free version; the others come with Pro. */
+        val FREE = HAMSTER
         fun fromStored(value: String?) = entries.firstOrNull { it.name == value } ?: DEFAULT
     }
 }

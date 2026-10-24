@@ -24,7 +24,7 @@ import com.chronolock.domain.OnboardingGoal
  */
 @Composable
 internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguage) -> Unit, start: (Set<String>) -> Unit,
-    mascot: com.chronolock.data.MascotKind = LocalMascot.current, selectMascot: (com.chronolock.data.MascotKind) -> Unit = {}) {
+    mascot: com.chronolock.data.MascotKind = LocalMascot.current, selectMascot: (com.chronolock.data.MascotKind) -> Unit = {}, pro: Boolean = true) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var goals by rememberSaveable { mutableStateOf(emptyList<String>()) }
     // Surface supplies onBackground as the content color; without it untinted Text falls back to black.
@@ -54,7 +54,7 @@ internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguag
                     "기록은 이 기기에만" to "사용 기록과 규칙은 기기에 저장되고 서버로 보내지 않아요.",
                     "언제든 바꿀 수 있어요" to "규칙은 언제든 끄거나 지울 수 있고, 권한도 Android 설정에서 해제할 수 있어요.",
                 ).forEachIndexed { index, (title, body) -> Step(index + 1, tr(title), tr(body)) }
-                MascotPicker(mascot, selectMascot)
+                MascotPicker(mascot, selectMascot, pro)
             }
             1 -> {
                 Text(tr("무엇을 줄이고 싶나요?"), style = MaterialTheme.typography.headlineMedium)

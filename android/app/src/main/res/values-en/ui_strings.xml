@@ -606,8 +606,8 @@
     <string name="pro_buy">"Pro lifetime · %1$s"</string>
     <string name="pro_loading">"Loading Pro"</string>
     <string name="pro_note">"Pay once and keep it on devices with the same Google account."</string>
-    <string name="pro_limit_sites">"The free version blocks up to 3 sites. Pro raises it to 50."</string>
-    <string name="pro_limit_groups">"The free version allows 1 app group. Pro has no limit."</string>
+    <string name="pro_limit_sites">"The free version blocks up to 5 sites. Pro raises it to 50."</string>
+    <string name="pro_limit_groups">"The free version allows 2 app groups. Pro has no limit."</string>
     <string name="pro_limit_goal">"Goal lock is a Pro feature."</string>
     <string name="pro_limit_themes">"Themes beyond the basic ones, and custom themes, come with Pro."</string>
     <string name="pro_limit_history">"3-month and 1-year history and the yearly calendar come with Pro."</string>
@@ -699,4 +699,7 @@
     <string name="history_wait_body">"Days collected: %1$d · days to go: %2$d. Totals appear once the period is covered; missing records are never made up."</string>
     <string name="history_show_collected">"Show collected days (%1$d)"</string>
     <string name="history_guide">"All %1$d days are in! Daily average %2$s · most used: %3$s."</string>
+    <string name="pro_limit_mascot">"Characters other than the hamster come with Pro."</string>
+    <string name="pro_mascots">"All 5 characters"</string>
+    <string name="pro_no_ads">"No ads"</string>
 </resources>
