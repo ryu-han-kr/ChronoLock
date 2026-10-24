@@ -71,11 +71,24 @@ object ThemeCatalog {
         Solid("oat", "오트", 50, .22, .92), Solid("graphite", "그라파이트", 220, .05, .13), Solid("sepia", "세피아", 30, .30, .13))
 
     /**
+     * Seeds that rebuild into the same page and accent as another seed (9 is seed 3 with the darkest colour shifted by
+     * a few steps). They are left out of the catalog; their stored ids open the palette they repeat.
+     */
+    private val trendAliases = mapOf("trend_9" to "trend_3")
+
+    /** [name] with a dropped duplicate id replaced by the palette it repeats; other names unchanged. */
+    fun resolve(name: String?): String? = trendAliases[name] ?: name
+
+    /**
      * Trend palettes are named page colour first, then accent ("민트 핑크"), since the page is what the tile mostly shows.
+     * An accent that contrast nudging turned greyish is not named by its hue ("코랄" for a grey-brown button misleads).
      * A number is added only when two seeds look alike under the same words.
      */
-    val trend: List<AppTheme> = trendSeeds.mapIndexed { index, seed -> fromSeed("trend_${index + 1}", listOf(TREND), seed) }.let { themes ->
-        val words = themes.map { theme -> listOf(pageWord(theme.background), wordFor(hueOf(theme.primary))).distinct() }
+    val trend: List<AppTheme> = trendSeeds.mapIndexed { index, seed -> fromSeed("trend_${index + 1}", listOf(TREND), seed) }
+        .filter { it.name !in trendAliases }.let { themes ->
+        val words = themes.map { theme ->
+            listOfNotNull(pageWord(theme.background), wordFor(hueOf(theme.primary)).takeIf { saturation(theme.primary) >= .2 }).distinct()
+        }
         themes.mapIndexed { index, theme ->
             val word = words[index]
             val duplicates = words.count { it == word }
@@ -105,7 +118,8 @@ object ThemeCatalog {
         Triple("aurora_violet", listOf("오로라", "바이올렛"), 285 to setOf(ThemeEffect.DEEP, ThemeEffect.AURORA)),
         Triple("sunset", listOf("노을"), 20 to setOf(ThemeEffect.SUNSET)),
         Triple("ocean", listOf("아쿠아"), 190 to setOf(ThemeEffect.GRADIENT)),
-        Triple("lavender", listOf("라벤더"), 270 to setOf(ThemeEffect.MIST, ThemeEffect.COMPLEMENT)),
+        // A soft lavender-to-orchid drift; the complementary sweep it used to have ended in green with a green button.
+        Triple("lavender", listOf("라벤더"), 270 to setOf(ThemeEffect.MIST, ThemeEffect.GRADIENT)),
     ).map { (id, words, look) ->
         val (hue, effects) = look
         combined("live_$id", listOf(LIVE) + words, hsl(hue, .7, .5), hue, 1.0, effects + ThemeEffect.FLOW).copy(premium = true)
@@ -197,7 +211,7 @@ object ThemeCatalog {
             // Hues of equal lightness differ in luminance (yellow vs blue), so the other colours are moved off the text colour.
             val bands = bandHues.map { ensure(hsl(it, saturation(base), lightness(base)), if (light) WHITE else BLACK, 8.0, target) }
             val surface = if (light) mix(base, WHITE, .45) else mix(base, BLACK, .12)
-            val pages = (listOf(base, surface) + bands).toLongArray()
+            val pages = spread(listOf(base) + bands) + surface
             val accentSaturation = if (vivid == 0.0) 0.0 else max(saturation(base), .5)
             val primary = ensure(hsl(accentHue, accentSaturation, if (light) .30 else .75), target, 4.5, *pages)
             val text = ensure(mix(base, target, .85), target, 7.0, *pages)
@@ -211,7 +225,7 @@ object ThemeCatalog {
             val background = hsl(hue, saturation, lightness)
             val bands = bandHues.map { hsl(it, saturation, if (sweep == ThemeEffect.RAINBOW) .20 else .24) }
             val surface = hsl(hue, saturation * .7, lightness + .08)
-            val pages = (listOf(background, surface) + bands).toLongArray()
+            val pages = spread(listOf(background) + bands) + surface
             val primary = ensure(hsl(accentHue, min(max(saturation * 1.4, .45 * vivid), 1.0), .72), WHITE, 4.5, *pages)
             val text = ensure(hsl(hue, .2, .93), WHITE, 7.0, *pages)
             val muted = ensure(hsl(hue, .15, .70), WHITE, 4.5, *pages)
@@ -222,7 +236,7 @@ object ThemeCatalog {
         val background = hsl(hue, saturation, lightness)
         val bands = bandHues.map { hsl(it, saturation, lightness - .04) }
         val surface = hsl(hue, min(saturation + .05, 1.0), .975)
-        val pages = (listOf(background, surface) + bands).toLongArray()
+        val pages = spread(listOf(background) + bands) + surface
         val primary = ensure(hsl(accentHue, max(saturation * .73, .35 * vivid), .40), BLACK, 4.5, *pages)
         val text = ensure(hsl(hue, .25, .14), BLACK, 7.0, *pages)
         val muted = ensure(hsl(hue, .12, .40), BLACK, 4.5, *pages)
@@ -288,9 +302,9 @@ object ThemeCatalog {
         val background = hsl(from, saturation, .88)
         val end = hsl(to, saturation, .84)
         val surface = hsl(from, saturation * .8, .975)
-        val primary = ensure(hsl(to, saturation * .73, .38), BLACK, 4.5, background, end, surface)
-        val text = ensure(hsl(from, .25, .14), BLACK, 7.0, background, end, surface)
-        val muted = ensure(hsl(from, .12, .40), BLACK, 4.5, background, end, surface)
+        val primary = ensure(hsl(to, saturation * .73, .38), BLACK, 4.5, *spread(listOf(background, end)), surface)
+        val text = ensure(hsl(from, .25, .14), BLACK, 7.0, *spread(listOf(background, end)), surface)
+        val muted = ensure(hsl(from, .12, .40), BLACK, 4.5, *spread(listOf(background, end)), surface)
         return AppTheme(id, label, "", false, background, surface, primary, onPrimary(primary, WHITE, surface, BLACK), text, muted, end, premium = true)
     }
 
@@ -298,9 +312,9 @@ object ThemeCatalog {
         val background = hsl(hue, saturation, .12)
         val end = hsl(endHue, saturation, .24)
         val surface = hsl(hue, saturation * .7, .20)
-        val primary = ensure(hsl(endHue, saturation * 1.4, .72), WHITE, 4.5, background, end, surface)
-        val text = ensure(hsl(hue, .2, .93), WHITE, 7.0, background, end, surface)
-        val muted = ensure(hsl(hue, .15, .70), WHITE, 4.5, background, end, surface)
+        val primary = ensure(hsl(endHue, saturation * 1.4, .72), WHITE, 4.5, *spread(listOf(background, end)), surface)
+        val text = ensure(hsl(hue, .2, .93), WHITE, 7.0, *spread(listOf(background, end)), surface)
+        val muted = ensure(hsl(hue, .15, .70), WHITE, 4.5, *spread(listOf(background, end)), surface)
         return AppTheme(id, label, "", true, background, surface, primary, onPrimary(primary, background, BLACK, WHITE), text, muted, end, premium = true)
     }
 
@@ -312,6 +326,13 @@ object ThemeCatalog {
         val muted = ensure(hsl(solid.hue, min(solid.saturation, .12), .70), WHITE, 4.5, background, surface)
         return AppTheme(id, label, "", true, background, surface, primary, onPrimary(primary, background, BLACK, WHITE), text, muted, premium = true)
     }
+
+    /**
+     * The colours a gradient through [pages] shows: each stop and nine blends between neighbours. Text is checked on all
+     * of them because a blend of two readable stops can be darker or lighter than both.
+     */
+    private fun spread(pages: List<Long>): LongArray =
+        (if (pages.size < 2) pages else pages.zipWithNext().flatMap { (a, b) -> (0..10).map { mix(a, b, it / 10.0) } }).toLongArray()
 
     /** First candidate readable on [primary]; the last one is the fallback. */
     private fun onPrimary(primary: Long, vararg candidates: Long): Long =

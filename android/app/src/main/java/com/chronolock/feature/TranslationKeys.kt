@@ -218,6 +218,8 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "추천 앱 잠금" to R.string.recommend_title,
     "이 기간에 많이 쓴 앱 중 아직 제한이 없는 앱이에요. 레시피를 고른 뒤 저장하면 바로 적용돼요." to R.string.recommend_hint,
     "제한 추가" to R.string.recommend_add,
+    "제한 수정" to R.string.history_limit_edit,
+    "제한 걸기" to R.string.history_limit_set,
     "이름순" to R.string.sort_name,
     "사용량순" to R.string.sort_usage,
     "최근순" to R.string.sort_recent,
