@@ -2,6 +2,56 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.9.0 (versionCode 19) — 미업로드
+
+AAB: `release/chronolock-0.9.0-vc19.aab`. 0.8.5 이후 PR #46~#59(1년 기록·기록 부족 안내·히스토리에서 제한·그룹 시간대·사용 중 알림·위젯 캐릭터·움직임 줄이기·엄격 6/24시간·테마 이름·번역). Room v11.
+0.8.4·0.8.5를 올리지 않았다면 0.9.0만 올리고, 500자 안에서 0.8.4(색상환·움직이는 테마) 한 줄을 더해 쓴다. 유료 구분(PRO_GATING)은 꺼진 빌드라 6·24시간 대기도 모두 쓸 수 있다.
+
+### ko
+- 함께할 캐릭터: 수달·흰너구리·햄스터·토끼·북극여우가 상황마다 다른 표정으로 오늘 화면·차단 화면·위젯에 나와요.
+- 기록을 1년까지 모아요. 기록이 모자란 기간은 지어내지 않고 캐릭터가 며칠 모였는지 알려 줘요.
+- 히스토리에서 바로 앱 제한을 걸 수 있어요.
+- 앱 그룹 차단 시간대, 한 앱은 그룹 하나에만.
+- 제한한 앱을 쓰는 동안 알림창 위쪽에 '사용 중'과 남은 한도가 보여요.
+- 엄격 모드 6시간·24시간 대기, 움직이는 효과 줄이기.
+- 테마 이름과 번역을 다듬었어요.
+
+### en
+- Pick a buddy (otter, white raccoon, hamster, rabbit or arctic fox) that reacts on Today, the block screen and the widget.
+- History keeps a year. Missing days are never made up; your buddy says how many are in.
+- Set a limit straight from History.
+- Block hours for app groups; each app belongs to one group.
+- A limited app in use shows "in use" and what is left in the notification.
+- 6- and 24-hour strict waits, and Reduce motion.
+- Polished theme names and translations.
+
+### ja
+- キャラクターを選べます：カワウソ・白いアライグマ・ハムスター・ウサギ・ホッキョクギツネが今日の画面・ブロック画面・ウィジェットで表情を変えます。
+- 記録を1年間保存。足りない期間は作らず、何日分集まったかをキャラクターがお知らせします。
+- 履歴からすぐにアプリを制限できます。
+- アプリグループのブロック時間帯。1つのアプリは1つのグループに。
+- 制限中のアプリを使っている間、通知の上の方に「使用中」と残りを表示します。
+- 厳格モードの6時間・24時間の待ち時間、動きを減らす設定。
+- テーマ名と翻訳を見直しました。
+
+### zh-CN
+- 选择陪伴角色：水獭、白浣熊、仓鼠、兔子、北极狐会在今日、拦截画面和小部件中变换表情。
+- 记录最多保存1年。记录不足的时段不会编造，角色会告诉你已收集几天。
+- 可直接在历史记录中限制应用。
+- 应用组拦截时段；每个应用只能加入一个组。
+- 使用受限应用时，通知栏上方显示“正在使用”和剩余上限。
+- 严格模式新增6小时和24小时等待，以及“减少动态效果”。
+- 优化了主题名称和翻译。
+
+### es
+- Elige un compañero (nutria, mapache blanco, hámster, conejo o zorro ártico) que reacciona en Hoy, el bloqueo y el widget.
+- El historial guarda un año. Nunca inventamos días que faltan; tu compañero dice cuántos hay.
+- Pon límites desde el Historial.
+- Horas de bloqueo para grupos; cada app en un solo grupo.
+- Al usar una app con límite, la notificación muestra "en uso" y lo que queda.
+- Esperas estrictas de 6 y 24 horas, y Reducir movimiento.
+- Nombres de temas y traducciones mejorados.
+
 ## 0.8.5 (versionCode 18) — 미업로드
 
 AAB: `release/chronolock-0.8.5-vc18.aab`. 0.8.4 + 캐릭터 5종·그룹 한 곳 소속/그룹 차단 시간대·사용 중 알림(PR #44) + 번역 검수(PR #43). DB v10.

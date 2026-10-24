@@ -676,4 +676,7 @@
     <string name="ads_where">"設定一覧のいちばん下にだけ小さなバナー広告を1つ表示します。今日・履歴・ブロック画面と集中中には表示しません。"</string>
     <string name="ads_no_longer_sold">"広告削除の定期購入は新規販売を終了しました。現在の購入は解約するまでそのまま続きます。"</string>
     <string name="pro_limit_strict">"6時間・24時間の待ち時間はプロで使えます。"</string>
+    <string name="site_app_not_blocked">"%1$sアプリはサイトブロックでは止まりません。"</string>
+    <string name="site_limit_app">"アプリも制限"</string>
+    <string name="site_scope_note">"カカオトーク・NAVERなど他のアプリ内で開くページや、各サービスのアプリ（YouTubeアプリなど）はブロックされません。アプリはアプリ制限で止めてください。"</string>
 </resources>

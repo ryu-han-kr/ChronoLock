@@ -46,4 +46,10 @@ class SiteBlockTest {
     @Test fun everyBrowserId_belongsToItsPackage() {
         Browsers.urlBarIds.forEach { (app, id) -> assertTrue(id, id.startsWith("$app:id/")) }
     }
+
+    @Test fun siteApps_coverSubdomains_andUnknownSitesHaveNone() {
+        assertEquals(listOf("com.google.android.youtube"), SiteApps.of("youtube.com"))
+        assertEquals(listOf("com.google.android.youtube"), SiteApps.of("m.youtube.com"))
+        assertEquals(emptyList<String>(), SiteApps.of("example.com"))
+    }
 }

@@ -676,4 +676,7 @@
     <string name="ads_where">"仅在设置列表最底部显示一个小横幅广告。今日、历史、拦截画面和专注期间不显示。"</string>
     <string name="ads_no_longer_sold">"去广告订阅已停止新购。你现有的订阅在取消前会继续有效。"</string>
     <string name="pro_limit_strict">"6 小时和 24 小时等待需要专业版。"</string>
+    <string name="site_app_not_blocked">"%1$s 应用不会被网站拦截阻止。"</string>
+    <string name="site_limit_app">"也限制应用"</string>
+    <string name="site_scope_note">"在 KakaoTalk、NAVER 等其他应用内打开的页面，以及各服务自己的应用（如 YouTube 应用）不会被拦截。请用应用限制来限制这些应用。"</string>
 </resources>

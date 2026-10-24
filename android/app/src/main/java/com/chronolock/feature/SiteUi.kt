@@ -24,7 +24,8 @@ import com.chronolock.domain.BlockedSite
 /** Blocked websites with an address field; a change strict mode holds back shows under its site. */
 @Composable
 internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity>, add: (String, () -> Unit) -> Unit,
-    toggle: (BlockedSite, Boolean) -> Unit, remove: (String) -> Unit, cancelHeld: (String) -> Unit, addPreset: (List<String>) -> Unit = {}) {
+    toggle: (BlockedSite, Boolean) -> Unit, remove: (String) -> Unit, cancelHeld: (String) -> Unit, addPreset: (List<String>) -> Unit = {},
+    installed: Map<String, String> = emptyMap(), limited: Set<String> = emptySet(), limitApp: (String) -> Unit = {}) {
     var input by rememberSaveable { mutableStateOf("") }
     val submit = { if (input.isNotBlank()) add(input) { input = "" } }
     CardBox {
@@ -51,6 +52,14 @@ internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity
                 Switch(checked = site.enabled, onCheckedChange = null)
                 TextButton(onClick = { remove(site.domain) }) { Text(tr("삭제")) }
             }
+            // The service's own app is not a website: point it out while it is installed and not limited yet.
+            com.chronolock.domain.SiteApps.of(site.domain).firstOrNull { it in installed && it !in limited }?.takeIf { site.enabled }?.let { app ->
+                Row(Modifier.fillMaxWidth().testTag("site-app-$app"), verticalAlignment = Alignment.CenterVertically) {
+                    Text(tr("%1\$s 앱은 사이트 차단으로 막히지 않아요.", installed.getValue(app)), Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = { limitApp(app) }) { Text(tr("앱도 제한하기")) }
+                }
+            }
             pending.firstOrNull { it.domain == site.domain }?.let { held ->
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(tr("엄격 모드: %1\$s에 %2\$s 적용 예정", timeText(held.applyAtEpochMillis), if (held.remove) tr("사이트 삭제") else tr("차단 끄기")),
@@ -60,6 +69,8 @@ internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity
             }
         }
         Text(tr("지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+        Text(tr("카카오톡·네이버처럼 다른 앱 안에서 열리는 페이지와 각 서비스의 앱(유튜브 앱 등)은 막히지 않아요. 앱은 앱 제한으로 막아 주세요."),
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
     }
 }

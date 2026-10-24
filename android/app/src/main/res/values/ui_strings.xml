@@ -676,4 +676,7 @@
     <string name="ads_where">"설정 목록 맨 아래에만 작은 배너 광고가 하나 표시됩니다. 오늘·히스토리·차단 화면과 집중 중에는 표시하지 않아요."</string>
     <string name="ads_no_longer_sold">"광고 제거 구독은 새로 판매하지 않아요. 지금 구독은 해지하기 전까지 그대로 유지돼요."</string>
     <string name="pro_limit_strict">"6시간·24시간 대기는 프로에서 쓸 수 있어요."</string>
+    <string name="site_app_not_blocked">"%1$s 앱은 사이트 차단으로 막히지 않아요."</string>
+    <string name="site_limit_app">"앱도 제한하기"</string>
+    <string name="site_scope_note">"카카오톡·네이버처럼 다른 앱 안에서 열리는 페이지와 각 서비스의 앱(유튜브 앱 등)은 막히지 않아요. 앱은 앱 제한으로 막아 주세요."</string>
 </resources>
