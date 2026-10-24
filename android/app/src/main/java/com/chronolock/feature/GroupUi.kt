@@ -143,7 +143,7 @@ internal fun GroupEditor(saved: AppGroup?, apps: List<InstalledApp>, taken: Map<
                 Text(tr("제한 사용"))
                 Switch(checked = draft.enabled, onCheckedChange = null, enabled = !saving)
             }
-            if (strictMinutes > 0) Text(tr("엄격 모드: 그룹을 끄거나 느슨하게 바꾸면 %1\$d분 뒤에 적용됩니다.", strictMinutes),
+            if (strictMinutes > 0) Text(tr("엄격 모드: 그룹을 끄거나 느슨하게 바꾸면 %1\$s 뒤에 적용됩니다.", waitText(strictMinutes)),
                 color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             error?.let { Text(tr(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("group-error")) }
             OutlinedTextField(value = draft.name, onValueChange = { if (it.length <= 30) { draft = draft.copy(name = it); error = null } },

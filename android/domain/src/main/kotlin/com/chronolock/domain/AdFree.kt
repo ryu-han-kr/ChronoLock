@@ -27,5 +27,7 @@ object ProProduct {
 object FreeTier {
     const val GROUPS = 2
     const val SITES = 5
+    /** Longest strict-mode delay of the free version; 6 and 24 hours are Pro. */
+    const val STRICT_MINUTES = 60
     const val HISTORY_DAYS = 30
 }

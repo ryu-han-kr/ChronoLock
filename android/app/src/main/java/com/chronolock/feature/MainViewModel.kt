@@ -361,6 +361,7 @@ class MainViewModel @Inject constructor(
     fun setStrict(minutes: Int) = viewModelScope.launch {
         val now = environment.clock().epochMillis
         if (locked(now) && minutes < preferences.strict.first().delayAt(now)) { showError(LocalRepository.LOCKED); return@launch }
+        if (!state.value.pro && minutes > com.chronolock.domain.FreeTier.STRICT_MINUTES) { showError(PRO_STRICT); return@launch }
         try { preferences.updateStrict { it.request(minutes, environment.clock().epochMillis) } }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
@@ -547,6 +548,7 @@ class MainViewModel @Inject constructor(
         const val PRO_GROUPS = "무료 버전은 앱 그룹을 2개까지 만들 수 있어요. 프로에서는 제한이 없어요."
         const val PRO_GOAL = "목표 잠금은 프로 기능이에요."
         const val PRO_MASCOT = "햄스터 외의 캐릭터는 프로에서 쓸 수 있어요."
+        const val PRO_STRICT = "6시간·24시간 대기는 프로에서 쓸 수 있어요."
         const val PRO_THEMES = "기본 테마 외의 테마와 나만의 테마는 프로에서 쓸 수 있어요."
     }
     fun showError(message: String) { local.update { it.copy(error = message) } }

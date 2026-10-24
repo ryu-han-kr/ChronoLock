@@ -335,7 +335,7 @@
     <string name="onboarding_control_body">"规则可随时关闭或删除，也可在 Android 设置中撤销权限。"</string>
     <string name="onboarding_start">"开始使用"</string>
     <string name="error_save_setting">"无法保存设置，请重试。"</string>
-    <string name="strict_editor_note">"严格模式：关闭或放宽限制将在 %1$d 分钟后生效。"</string>
+    <string name="strict_editor_note">"严格模式：关闭或放宽限制将在 %1$s后生效。"</string>
     <string name="schedule_add">"添加时段"</string>
     <string name="schedule_number">"时段 %1$d"</string>
     <string name="schedule_remove">"删除时段"</string>
@@ -352,14 +352,14 @@
     <string name="held_at">"严格模式：将于 %1$s 应用%2$s"</string>
     <string name="pause_title">"要休息多久？"</string>
     <string name="pause_body">"所选时间结束后，限制会自动重新开启。"</string>
-    <string name="pause_strict_delay">"严格模式已开启，休息将在 %1$d 分钟后开始。"</string>
+    <string name="pause_strict_delay">"严格模式已开启，休息将在 %1$s后开始。"</string>
     <string name="one_hour">"1 小时"</string>
     <string name="today_only">"仅今天"</string>
     <string name="strict_mode">"严格模式"</string>
     <string name="strict_body">"关闭或放宽限制会在你选择的时间过后才生效。收紧限制会立即生效，专注期间无法结束专注。"</string>
     <string name="strict_off">"关闭"</string>
     <string name="strict_turns_off_at">"严格模式将于 %1$s 关闭。"</string>
-    <string name="strict_delay_changes_at">"等待时间将于 %1$s 改为 %2$d 分钟。"</string>
+    <string name="strict_delay_changes_at">"等待时间将于 %1$s 改为 %2$s。"</string>
     <string name="strict_limits_note">"无法阻止你在 Android 设置中关闭无障碍权限或卸载应用。"</string>
     <string name="strict_on_summary">"严格模式已开启。放宽限制的更改会在等待时间后生效。"</string>
     <string name="strict_clear_locked">"请先关闭严格模式，再删除所有数据。"</string>
@@ -375,7 +375,7 @@
     <string name="group_daily">"合计每天 %1$s"</string>
     <string name="group_new">"新应用组"</string>
     <string name="group_intro">"组内应用共用每日时长和打开次数。各应用自己的限制仍然有效。"</string>
-    <string name="group_strict_note">"严格模式：关闭或放宽组将在 %1$d 分钟后生效。"</string>
+    <string name="group_strict_note">"严格模式：关闭或放宽组将在 %1$s后生效。"</string>
     <string name="group_name">"组名称"</string>
     <string name="group_name_hint">"例如：社交"</string>
     <string name="group_daily_title">"共用每日时长"</string>
@@ -672,4 +672,5 @@
     <string name="ads_pro_none">"专业版不显示广告。"</string>
     <string name="ads_where">"仅在设置列表最底部显示一个小横幅广告。今日、历史、拦截画面和专注期间不显示。"</string>
     <string name="ads_no_longer_sold">"去广告订阅已停止新购。你现有的订阅在取消前会继续有效。"</string>
+    <string name="pro_limit_strict">"6 小时和 24 小时等待需要专业版。"</string>
 </resources>

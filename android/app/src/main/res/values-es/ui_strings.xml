@@ -353,7 +353,7 @@
     <string name="onboarding_control_body">"Desactiva o elimina reglas cuando quieras y retira permisos en los ajustes de Android."</string>
     <string name="onboarding_start">"Empezar"</string>
     <string name="error_save_setting">"No se pudo guardar el ajuste. Inténtalo de nuevo."</string>
-    <string name="strict_editor_note">"Modo estricto: desactivar o suavizar un límite se aplica en %1$d min."</string>
+    <string name="strict_editor_note">"Modo estricto: desactivar o suavizar un límite se aplica en %1$s."</string>
     <string name="schedule_add">"Añadir franja"</string>
     <string name="schedule_number">"Franja %1$d"</string>
     <string name="schedule_remove">"Quitar franja"</string>
@@ -370,14 +370,14 @@
     <string name="held_at">"Modo estricto: %2$s se aplica a las %1$s"</string>
     <string name="pause_title">"¿Cuánto dura el descanso?"</string>
     <string name="pause_body">"El límite se reactiva solo cuando termine el tiempo."</string>
-    <string name="pause_strict_delay">"El modo estricto está activo: el descanso empieza en %1$d min."</string>
+    <string name="pause_strict_delay">"El modo estricto está activo: el descanso empieza en %1$s."</string>
     <string name="one_hour">"1 hora"</string>
     <string name="today_only">"Solo hoy"</string>
     <string name="strict_mode">"Modo estricto"</string>
     <string name="strict_body">"Desactivar o suavizar un límite espera el tiempo que elijas. Hacerlo más estricto se aplica al instante y no puedes terminar una concentración antes de tiempo."</string>
     <string name="strict_off">"Desactivado"</string>
     <string name="strict_turns_off_at">"El modo estricto se desactiva a las %1$s."</string>
-    <string name="strict_delay_changes_at">"La espera cambia a %2$d min a las %1$s."</string>
+    <string name="strict_delay_changes_at">"La espera cambia a %2$s a las %1$s."</string>
     <string name="strict_limits_note">"No impide desactivar el acceso de accesibilidad en los ajustes de Android ni desinstalar la app."</string>
     <string name="strict_on_summary">"El modo estricto está activo. Los cambios que suavizan límites se aplican tras la espera."</string>
     <string name="strict_clear_locked">"Desactiva el modo estricto antes de borrar todos los datos."</string>
@@ -393,7 +393,7 @@
     <string name="group_daily">"%1$s al día en total"</string>
     <string name="group_new">"Nuevo grupo de apps"</string>
     <string name="group_intro">"Las apps del grupo comparten el tiempo y las aperturas diarias. Los límites propios de cada app siguen vigentes."</string>
-    <string name="group_strict_note">"Modo estricto: desactivar o suavizar un grupo se aplica en %1$d min."</string>
+    <string name="group_strict_note">"Modo estricto: desactivar o suavizar un grupo se aplica en %1$s."</string>
     <string name="group_name">"Nombre del grupo"</string>
     <string name="group_name_hint">"p. ej., Redes"</string>
     <string name="group_daily_title">"Tiempo diario compartido"</string>
@@ -714,4 +714,5 @@
     <string name="ads_pro_none">"Con Pro no hay anuncios."</string>
     <string name="ads_where">"Solo aparece un pequeño banner al final de Ajustes. Nunca en Hoy, Historial, la pantalla de bloqueo ni durante la concentración."</string>
     <string name="ads_no_longer_sold">"La suscripción sin anuncios ya no se vende. La tuya sigue activa hasta que la canceles."</string>
+    <string name="pro_limit_strict">"Las esperas de 6 y 24 horas son de Pro."</string>
 </resources>

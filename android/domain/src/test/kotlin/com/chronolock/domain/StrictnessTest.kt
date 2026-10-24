@@ -78,4 +78,12 @@ class StrictnessTest {
         // Once the decrease has taken over, turning strict mode back on starts from it and applies at once.
         assertEquals(StrictSetting(10), off.request(10, now + 31 * 60_000L))
     }
+
+    @Test fun dayLongWait_appliesAtOnce_andLoweringItWaitsADay() {
+        val day = StrictSetting().request(1440, 0)
+        assertEquals(1440, day.delayAt(0))
+        val lowered = day.request(60, 1_000)
+        assertEquals(1440, lowered.delayAt(1_000 + 1439 * 60_000L))
+        assertEquals(60, lowered.delayAt(1_000 + 1440 * 60_000L))
+    }
 }

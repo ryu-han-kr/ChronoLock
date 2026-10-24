@@ -335,7 +335,7 @@
     <string name="onboarding_control_body">"규칙은 언제든 끄거나 지울 수 있고, 권한도 Android 설정에서 해제할 수 있어요."</string>
     <string name="onboarding_start">"시작하기"</string>
     <string name="error_save_setting">"설정을 저장하지 못했습니다. 다시 시도해 주세요."</string>
-    <string name="strict_editor_note">"엄격 모드: 제한을 끄거나 느슨하게 바꾸면 %1$d분 뒤에 적용됩니다."</string>
+    <string name="strict_editor_note">"엄격 모드: 제한을 끄거나 느슨하게 바꾸면 %1$s 뒤에 적용됩니다."</string>
     <string name="schedule_add">"예약 구간 추가"</string>
     <string name="schedule_number">"예약 %1$d"</string>
     <string name="schedule_remove">"구간 삭제"</string>
@@ -352,14 +352,14 @@
     <string name="held_at">"엄격 모드: %1$s에 %2$s 적용 예정"</string>
     <string name="pause_title">"얼마 동안 쉴까요?"</string>
     <string name="pause_body">"선택한 시간이 지나면 제한이 자동으로 다시 켜집니다."</string>
-    <string name="pause_strict_delay">"엄격 모드라 %1$d분 뒤부터 쉬기가 시작됩니다."</string>
+    <string name="pause_strict_delay">"엄격 모드라 %1$s 뒤부터 쉬기가 시작됩니다."</string>
     <string name="one_hour">"1시간"</string>
     <string name="today_only">"오늘만"</string>
     <string name="strict_mode">"엄격 모드"</string>
     <string name="strict_body">"제한을 끄거나 느슨하게 바꾸면 정한 시간이 지난 뒤에 적용됩니다. 더 엄격하게 바꾸는 것은 바로 적용되고, 집중 중에는 집중을 끝낼 수 없습니다."</string>
     <string name="strict_off">"끄기"</string>
     <string name="strict_turns_off_at">"%1$s에 엄격 모드가 꺼집니다."</string>
-    <string name="strict_delay_changes_at">"%1$s에 대기 시간이 %2$d분으로 바뀝니다."</string>
+    <string name="strict_delay_changes_at">"%1$s에 대기 시간이 %2$s(으)로 바뀝니다."</string>
     <string name="strict_limits_note">"Android 설정에서 접근성 권한을 끄거나 앱을 삭제하는 것은 막을 수 없습니다."</string>
     <string name="strict_on_summary">"엄격 모드가 켜져 있습니다. 느슨하게 바꾸는 변경은 대기 시간이 지난 뒤 적용됩니다."</string>
     <string name="strict_clear_locked">"엄격 모드를 끈 뒤에 모든 데이터를 삭제할 수 있습니다."</string>
@@ -375,7 +375,7 @@
     <string name="group_daily">"함께 하루 %1$s"</string>
     <string name="group_new">"새 앱 그룹"</string>
     <string name="group_intro">"묶은 앱들은 하루 시간과 실행 횟수를 함께 씁니다. 앱마다 정한 제한도 그대로 적용됩니다."</string>
-    <string name="group_strict_note">"엄격 모드: 그룹을 끄거나 느슨하게 바꾸면 %1$d분 뒤에 적용됩니다."</string>
+    <string name="group_strict_note">"엄격 모드: 그룹을 끄거나 느슨하게 바꾸면 %1$s 뒤에 적용됩니다."</string>
     <string name="group_name">"그룹 이름"</string>
     <string name="group_name_hint">"예: SNS"</string>
     <string name="group_daily_title">"함께 쓰는 하루 시간"</string>
@@ -672,4 +672,5 @@
     <string name="ads_pro_none">"프로라서 광고가 표시되지 않아요."</string>
     <string name="ads_where">"설정 목록 맨 아래에만 작은 배너 광고가 하나 표시됩니다. 오늘·히스토리·차단 화면과 집중 중에는 표시하지 않아요."</string>
     <string name="ads_no_longer_sold">"광고 제거 구독은 새로 판매하지 않아요. 지금 구독은 해지하기 전까지 그대로 유지돼요."</string>
+    <string name="pro_limit_strict">"6시간·24시간 대기는 프로에서 쓸 수 있어요."</string>
 </resources>

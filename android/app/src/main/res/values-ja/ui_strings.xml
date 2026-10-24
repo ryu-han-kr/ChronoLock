@@ -335,7 +335,7 @@
     <string name="onboarding_control_body">"ルールはいつでもオフ・削除でき、権限もAndroidの設定で解除できます。"</string>
     <string name="onboarding_start">"はじめる"</string>
     <string name="error_save_setting">"設定を保存できませんでした。もう一度お試しください。"</string>
-    <string name="strict_editor_note">"厳格モード：制限をオフにしたり緩めたりすると、%1$d分後に反映されます。"</string>
+    <string name="strict_editor_note">"厳格モード：制限をオフにしたり緩めたりすると、%1$s後に反映されます。"</string>
     <string name="schedule_add">"時間帯を追加"</string>
     <string name="schedule_number">"時間帯 %1$d"</string>
     <string name="schedule_remove">"時間帯を削除"</string>
@@ -352,14 +352,14 @@
     <string name="held_at">"厳格モード：%1$sに%2$sを適用予定"</string>
     <string name="pause_title">"どのくらい休みますか？"</string>
     <string name="pause_body">"選んだ時間が過ぎると制限は自動で再開します。"</string>
-    <string name="pause_strict_delay">"厳格モードのため、休止は%1$d分後に始まります。"</string>
+    <string name="pause_strict_delay">"厳格モードのため、休止は%1$s後に始まります。"</string>
     <string name="one_hour">"1時間"</string>
     <string name="today_only">"今日だけ"</string>
     <string name="strict_mode">"厳格モード"</string>
     <string name="strict_body">"制限をオフにしたり緩めたりする変更は、選んだ時間が過ぎてから反映されます。厳しくする変更はすぐに反映され、集中中は集中を終了できません。"</string>
     <string name="strict_off">"オフ"</string>
     <string name="strict_turns_off_at">"%1$sに厳格モードがオフになります。"</string>
-    <string name="strict_delay_changes_at">"%1$sに待ち時間が%2$d分に変わります。"</string>
+    <string name="strict_delay_changes_at">"%1$sに待ち時間が%2$sに変わります。"</string>
     <string name="strict_limits_note">"Androidの設定でユーザー補助をオフにしたり、アプリを削除したりすることは防げません。"</string>
     <string name="strict_on_summary">"厳格モードがオンです。制限を緩める変更は待ち時間の後に反映されます。"</string>
     <string name="strict_clear_locked">"すべてのデータを削除するには、先に厳格モードをオフにしてください。"</string>
@@ -375,7 +375,7 @@
     <string name="group_daily">"合わせて1日%1$s"</string>
     <string name="group_new">"新しいアプリグループ"</string>
     <string name="group_intro">"グループのアプリは1日の時間と起動回数を共有します。アプリごとの制限もそのまま適用されます。"</string>
-    <string name="group_strict_note">"厳格モード：グループをオフにしたり緩めたりすると、%1$d分後に反映されます。"</string>
+    <string name="group_strict_note">"厳格モード：グループをオフにしたり緩めたりすると、%1$s後に反映されます。"</string>
     <string name="group_name">"グループ名"</string>
     <string name="group_name_hint">"例：SNS"</string>
     <string name="group_daily_title">"共有する1日の時間"</string>
@@ -672,4 +672,5 @@
     <string name="ads_pro_none">"プロなので広告は表示されません。"</string>
     <string name="ads_where">"設定一覧のいちばん下にだけ小さなバナー広告を1つ表示します。今日・履歴・ブロック画面と集中中には表示しません。"</string>
     <string name="ads_no_longer_sold">"広告削除の定期購入は新規販売を終了しました。現在の購入は解約するまでそのまま続きます。"</string>
+    <string name="pro_limit_strict">"6時間・24時間の待ち時間はプロで使えます。"</string>
 </resources>
