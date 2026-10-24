@@ -70,7 +70,7 @@
     <string name="enabled_count">"Límites activos en %1$d apps"</string>
     <string name="allowed_opens">"Aperturas permitidas"</string>
     <string name="blocked_attempts">"Límites / bloqueos"</string>
-    <string name="count_times">"%1$d veces"</string>
+    <string name="count_times">"%1$d×"</string>
     <string name="today_usage">"Hoy %1$s · %2$d aperturas"</string>
     <string name="cancel">"Cancelar"</string>
     <string name="save">"Guardar"</string>
@@ -82,7 +82,7 @@
     <string name="focus_title">"Concéntrate ahora"</string>
     <string name="focus_start">"Iniciar concentración"</string>
     <string name="focus_stop">"Terminar concentración"</string>
-    <string name="focus_confirm">"¿Concentrarte %1$d minutos?"</string>
+    <string name="focus_confirm">"¿Concentrarte durante %1$d min?"</string>
     <string name="focus_targets">"Se bloquearán las %1$d apps con límites hasta que termine la concentración. Las añadidas después no se incluyen."</string>
     <string name="focus_keep_rules">"Se mantienen las reglas existentes. Puedes terminar cuando quieras."</string>
     <string name="focus_after">"Los límites de tiempo, aperturas y horarios se mantienen al terminar."</string>
@@ -190,7 +190,7 @@
     <string name="theme_word_wine">"Vino"</string>
     <string name="theme_word_warm_gray">"Gris cálido"</string>
     <string name="theme_word_cool_gray">"Gris frío"</string>
-    <string name="theme_word_beige">"Beis"</string>
+    <string name="theme_word_beige">"Beige"</string>
     <string name="theme_word_sand">"Arena"</string>
     <string name="theme_word_stone">"Piedra"</string>
     <string name="theme_word_oat">"Avena"</string>
@@ -213,12 +213,12 @@
     <string name="mascot_dizzy">"Mareado… toca descansar."</string>
     <string name="mascot_relaxed_2">"Tu día duró más que tu teléfono."</string>
     <string name="mascot_happy_2">"¡Otro día equilibrado!"</string>
-    <string name="mascot_surprised_2">"¡Se me van a reventar los cachetes! ¡Espera!"</string>
+    <string name="mascot_surprised_2">"¡Se me van a reventar las mejillas! ¡Espera!"</string>
     <string name="mascot_dizzy_2">"Hoy toca soltar el teléfono."</string>
     <string name="accessibility_steps">"Cuando se abra Ajustes: ① toca ChronoLock en 'Aplicaciones instaladas' (o 'descargadas'), ② activa 'Usar ChronoLock', ③ toca 'Permitir'. Los nombres varían según el dispositivo."</string>
     <string name="accessibility_hint">"Accesibilidad → Apps instaladas → ChronoLock → Activar → Permitir"</string>
     <string name="recommend_title">"Límites sugeridos"</string>
-    <string name="recommend_hint">"Apps que más usaste en este periodo y aún no tienen límite. Elige una receta y guarda para aplicarla."</string>
+    <string name="recommend_hint">"Apps que más usaste en este periodo y aún no tienen límite. Elige un preajuste y guarda para aplicarla."</string>
     <string name="recommend_add">"Añadir límite"</string>
     <string name="sort_name">"Por nombre"</string>
     <string name="sort_usage">"Por uso"</string>
@@ -260,7 +260,7 @@
     <string name="overlay_title">"%1$s\nEs hora de descansar"</string>
     <string name="overlay_daily">"Has agotado tu tiempo diario."</string>
     <string name="overlay_opens">"Has alcanzado el límite diario de aperturas."</string>
-    <string name="overlay_retry">"Podrás volver a abrir en %1$d segundos."</string>
+    <string name="overlay_retry">"Podrás volver a abrir en %1$d s."</string>
     <string name="overlay_cooldown">"Hay un periodo de espera activo."</string>
     <string name="overlay_session">"Has alcanzado el límite de esta sesión."</string>
     <string name="overlay_schedule">"Es un descanso programado."</string>
@@ -279,7 +279,7 @@
     <string name="sign_in_google">"Iniciar sesión con Google"</string>
     <string name="ads_title">"Anuncios"</string>
     <string name="ads_free">"Estás usando la app sin anuncios."</string>
-    <string name="ads_hint">"Se muestra un banner al final de Hoy e Historial. Nunca aparece en la pantalla de bloqueo ni durante el enfoque."</string>
+    <string name="ads_hint">"Se muestra un banner al final de Hoy e Historial. Nunca aparece en la pantalla de bloqueo ni durante la concentración."</string>
     <string name="ads_privacy">"Privacidad de anuncios"</string>
     <string name="delete_account_title">"¿Eliminar tu cuenta?"</string>
     <string name="delete_account_body">"Tu cuenta se elimina del servidor y se cierra la sesión. Los límites y el historial de este dispositivo se conservan. No se puede deshacer."</string>
@@ -334,7 +334,7 @@
     <string name="every_day">"Todos los días"</string>
     <string name="weekdays">"Entre semana"</string>
     <string name="weekend">"Fin de semana"</string>
-    <string name="strict_focus_locked">"En modo estricto no puedes terminar el enfoque antes de tiempo."</string>
+    <string name="strict_focus_locked">"En modo estricto no puedes terminar la concentración antes de tiempo."</string>
     <string name="paused_until">"En pausa hasta %1$s"</string>
     <string name="resume_rule">"Reactivar"</string>
     <string name="pause_rule">"Tomar un descanso"</string>
@@ -348,7 +348,7 @@
     <string name="one_hour">"1 hora"</string>
     <string name="today_only">"Solo hoy"</string>
     <string name="strict_mode">"Modo estricto"</string>
-    <string name="strict_body">"Desactivar o suavizar un límite espera el tiempo que elijas. Hacerlo más estricto se aplica al instante y no puedes terminar un enfoque antes de tiempo."</string>
+    <string name="strict_body">"Desactivar o suavizar un límite espera el tiempo que elijas. Hacerlo más estricto se aplica al instante y no puedes terminar una concentración antes de tiempo."</string>
     <string name="strict_off">"Desactivado"</string>
     <string name="strict_turns_off_at">"El modo estricto se desactiva a las %1$s."</string>
     <string name="strict_delay_changes_at">"La espera cambia a %2$d min a las %1$s."</string>
@@ -383,10 +383,10 @@
     <string name="group_error_delete">"No se pudo eliminar el grupo."</string>
     <string name="block_group_usage">"Se agotó el tiempo compartido del grupo por hoy."</string>
     <string name="block_group_opens">"Se agotaron las aperturas compartidas del grupo por hoy."</string>
-    <string name="tile_focus_label">"Enfoque"</string>
+    <string name="tile_focus_label">"Concentración"</string>
     <string name="tile_focus_until">"Hasta %1$s"</string>
-    <string name="tile_focus_minutes">"Enfoque de %1$d min"</string>
-    <string name="tile_focus_failed">"No se pudo cambiar el enfoque. Inténtalo de nuevo en la app."</string>
+    <string name="tile_focus_minutes">"%1$d min de concentración"</string>
+    <string name="tile_focus_failed">"No se pudo cambiar la concentración. Inténtalo de nuevo en la app."</string>
     <string name="week_less">"%1$d%% menos que la semana pasada"</string>
     <string name="week_more">"%1$d%% más que la semana pasada"</string>
     <string name="week_same">"Más o menos igual que la semana pasada"</string>
@@ -598,7 +598,7 @@
     <string name="lock_pill_until">"Bloqueado hasta %1$s"</string>
     <string name="weekly_report_channel">"Informe semanal"</string>
     <string name="weekly_report_title">"Tu uso esta semana"</string>
-    <string name="weekly_report_first">"Usaste el móvil %1$s esta semana. La próxima semana podremos comparar."</string>
+    <string name="weekly_report_first">"Usaste el teléfono %1$s esta semana. La próxima semana podremos comparar."</string>
     <string name="weekly_report_less">"Esta semana: %1$s, un %2$d%% menos que la anterior. ¡Bien hecho!"</string>
     <string name="weekly_report_more">"Esta semana: %1$s, un %2$d%% más que la anterior. ¿Un poco menos la próxima?"</string>
     <string name="block_suggestion">"¿Y si mejor…? %1$s"</string>
@@ -608,9 +608,9 @@
     <string name="suggest_todo">"Apunta una tarea"</string>
     <string name="suggest_breathe">"Respira hondo cinco veces"</string>
     <string name="suggest_walk">"Levántate y camina"</string>
-    <string name="site_preset_title">"Añadir un grupo"</string>
+    <string name="site_preset_title">"Añadir en bloque"</string>
     <string name="site_preset_social">"Redes sociales"</string>
-    <string name="site_preset_video">"Vídeo"</string>
+    <string name="site_preset_video">"Video"</string>
     <string name="site_preset_shopping">"Compras"</string>
     <string name="site_preset_community">"Comunidades"</string>
     <string name="site_preset_all_added">"Ya están todos añadidos."</string>
@@ -634,7 +634,7 @@
     <string name="fr_checkin_heading">"Han pasado %1$d minutos"</string>
     <string name="fr_checkin_detail">"¿Sigues usando %1$s?"</string>
     <string name="fr_checkin_continue">"Seguir"</string>
-    <string name="fr_block_resisted">"Hoy te has contenido %1$d veces. ¡Bien hecho!"</string>
+    <string name="fr_block_resisted">"Veces que te contuviste hoy: %1$d. ¡Bien hecho!"</string>
     <string name="onb_goal_question">"¿Qué quieres reducir?"</string>
     <string name="onb_goal_hint">"Te sugeriremos los primeros límites según lo que elijas. Puedes elegir varios y cambiarlos luego."</string>
     <string name="onb_goal_games">"Juegos"</string>

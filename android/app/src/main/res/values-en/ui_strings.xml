@@ -24,7 +24,7 @@
     <string name="history_retention">"Records accumulate on this device for up to 3 months (90 days). Earlier records and collection gaps may be missing. The home screen is excluded. Split-screen and picture-in-picture totals may differ."</string>
     <string name="collapse_days">"Hide daily records"</string>
     <string name="expand_days">"Show daily records"</string>
-    <string name="no_records">"No record"</string>
+    <string name="no_records">"No records"</string>
     <string name="usage_opens">"%1$s · Opens: %2$d"</string>
     <string name="usage_by_app">"Usage by app"</string>
     <string name="sort_time">"By time"</string>
@@ -70,7 +70,7 @@
     <string name="enabled_count">"Apps with limits enabled: %1$d"</string>
     <string name="allowed_opens">"Allowed opens"</string>
     <string name="blocked_attempts">"Limits reached / blocked"</string>
-    <string name="count_times">"Count: %1$d"</string>
+    <string name="count_times">"%1$d×"</string>
     <string name="today_usage">"Today %1$s · Opens: %2$d"</string>
     <string name="cancel">"Cancel"</string>
     <string name="save">"Save"</string>
@@ -209,7 +209,7 @@
     <string name="mascot_sleepy">"No records yet. Zzz…"</string>
     <string name="mascot_relaxed">"A relaxed day. Keep it up!"</string>
     <string name="mascot_happy">"Just the right pace."</string>
-    <string name="mascot_surprised">"Oh, that is more than expected!"</string>
+    <string name="mascot_surprised">"Whoa, that\'s more than expected!"</string>
     <string name="mascot_dizzy">"Dizzy… time for a break."</string>
     <string name="mascot_relaxed_2">"Your day was longer than your phone time."</string>
     <string name="mascot_happy_2">"Another balanced day!"</string>
@@ -218,7 +218,7 @@
     <string name="accessibility_steps">"When Settings opens: ① tap ChronoLock under 'Installed apps' (or 'Downloaded apps'), ② turn on 'Use ChronoLock', ③ tap 'Allow'. Names and positions vary by device."</string>
     <string name="accessibility_hint">"Accessibility → Installed apps → ChronoLock → Turn on → Allow"</string>
     <string name="recommend_title">"Suggested app limits"</string>
-    <string name="recommend_hint">"Apps you used most in this period that have no limit yet. Pick a recipe and save to apply it right away."</string>
+    <string name="recommend_hint">"Apps you used most in this period that have no limit yet. Pick a preset and save to apply it right away."</string>
     <string name="recommend_add">"Add limit"</string>
     <string name="sort_name">"By name"</string>
     <string name="sort_usage">"By usage"</string>
@@ -260,7 +260,7 @@
     <string name="overlay_title">"%1$s\nTime for a break"</string>
     <string name="overlay_daily">"You have used your daily time allowance."</string>
     <string name="overlay_opens">"You have reached your daily open limit."</string>
-    <string name="overlay_retry">"Seconds until you can reopen: %1$d."</string>
+    <string name="overlay_retry">"You can reopen in %1$d s."</string>
     <string name="overlay_cooldown">"A waiting period is active."</string>
     <string name="overlay_session">"You have reached this session’s limit."</string>
     <string name="overlay_schedule">"This is a scheduled break."</string>
@@ -458,7 +458,7 @@
     <string name="theme_favorites_hint">"Tap ♡ to pin a theme to the front of the theme list in Settings."</string>
     <string name="theme_custom">"My theme"</string>
     <string name="theme_custom_hint">"Drag on the wheel or enter a code or R·G·B; effects of different kinds can be combined."</string>
-    <string name="theme_custom_code">"Colour code"</string>
+    <string name="theme_custom_code">"Color code"</string>
     <string name="theme_custom_effect">"Effect"</string>
     <string name="theme_custom_apply">"Apply"</string>
     <string name="theme_custom_brightness">"Brightness"</string>
@@ -586,7 +586,7 @@
     <string name="lock_pill_goal">"Goal lock on"</string>
     <string name="lock_pill_until">"Locked until %1$s"</string>
     <string name="weekly_report_channel">"Weekly report"</string>
-    <string name="weekly_report_title">"This week's use"</string>
+    <string name="weekly_report_title">"This week\'s usage report"</string>
     <string name="weekly_report_first">"You used your phone for %1$s this week. Next week we can compare."</string>
     <string name="weekly_report_less">"This week: %1$s, %2$d%% less than last week. Nice work!"</string>
     <string name="weekly_report_more">"This week: %1$s, %2$d%% more than last week. Try a little less next week?"</string>
@@ -608,16 +608,16 @@
     <string name="theme_day">"Day theme"</string>
     <string name="theme_night">"Night theme"</string>
     <string name="theme_random">"Random"</string>
-    <string name="restricted_settings_hint">"If the switch is greyed out: App info → ⋮ (top right) → \'Allow restricted settings\', then try again."</string>
+    <string name="restricted_settings_hint">"If the switch is grayed out: App info → ⋮ (top right) → \'Allow restricted settings\', then try again."</string>
     <string name="fr_pause_title">"Pause before opening"</string>
     <string name="fr_pause_hint">"Shows a short breathing screen each time you open the app. It gets a little longer with each open that day."</string>
     <string name="fr_checkin_title">"Check-in while using"</string>
-    <string name="fr_checkin_hint">"While you keep using it, asks every set time whether to go on."</string>
+    <string name="fr_checkin_hint">"Asks at set intervals whether you want to keep going."</string>
     <string name="fr_pause_seconds">"%1$d s"</string>
     <string name="fr_pause_summary">"%1$d s pause before opening"</string>
     <string name="fr_checkin_summary">"Check-in every %1$d min"</string>
     <string name="fr_pause_heading">"Take a breath"</string>
-    <string name="fr_pause_detail">"%1$s · open number %2$d today. Do you really need it now?"</string>
+    <string name="fr_pause_detail">"%1$s · open #%2$d today. Do you really need it now?"</string>
     <string name="fr_pause_open_count">"Open anyway (%1$d)"</string>
     <string name="fr_pause_open">"Open anyway"</string>
     <string name="fr_checkin_heading">"%1$d minutes have passed"</string>

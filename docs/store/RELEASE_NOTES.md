@@ -13,10 +13,28 @@ AAB: `release/chronolock-0.8.4-vc17.aab`. 0.8.3 + 홈 이동 이벤트 누락 �
 - 홈으로 나간 뒤에도 앱 사용 시간이 계속 늘어날 수 있던 문제를 고쳤어요.
 
 ### en
-- My theme: drag on a colour wheel and combine several effects.
+- My theme: drag on a color wheel and combine several effects.
 - New moving themes such as rainbow and aurora.
 - The year view now shows months and weekdays.
 - Fixed usage time that could keep counting after going back to the home screen.
+
+### ja
+- マイテーマ：カラーホイールで色を選び、複数の効果を組み合わせられます。
+- 虹やオーロラのようにゆっくり動くテーマを追加しました。
+- 1年間の記録に月と曜日を表示します。
+- ホームに戻った後も利用時間が増え続けることがある問題を修正しました。
+
+### zh-CN
+- 我的主题：拖动色轮选色，并可组合多种效果。
+- 新增彩虹、极光等缓慢流动的动态主题。
+- 一年记录现在显示月份和星期。
+- 修复了返回主屏幕后使用时长仍可能继续累计的问题。
+
+### es
+- Mi tema: arrastra en la rueda de color y combina varios efectos.
+- Nuevos temas en movimiento, como arcoíris y aurora.
+- La vista anual ahora muestra los meses y los días de la semana.
+- Se corrigió el tiempo de uso que podía seguir contando tras volver a la pantalla de inicio.
 
 ## 0.8.3 (versionCode 16) — 2026-10-23 내부·비공개 테스트 업로드(사용자)
 
@@ -92,7 +110,7 @@ AAB: `release/chronolock-0.8.0-vc13.aab`. 업로드 전 접근성 API 신고(웹
 - 3 months of history and a yearly calendar; tap a day for its apps.
 - Deleting history needs a password you set.
 - Apps can join several groups; select apps all at once.
-- Custom colour themes and favourites.
+- Custom color themes and favorites.
 - Update right inside the app.
 - Smaller and faster to open.
 

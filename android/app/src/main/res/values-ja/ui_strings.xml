@@ -116,7 +116,7 @@
     <string name="schedule_end">"終了（HH:mm）"</string>
     <string name="delete_rule">"このアプリの制限を削除"</string>
     <string name="daily_time">"1日の利用時間"</string>
-    <string name="hours_input">"時"</string>
+    <string name="hours_input">"時間"</string>
     <string name="minutes_input">"分"</string>
     <string name="seconds_input">"秒"</string>
     <string name="daily_time_hint">"最大24時間 · 分・秒は0～59\n3つの欄を空にすると1日の時間制限を解除します。"</string>
@@ -139,7 +139,7 @@
     <string name="suggestion_wait">"3日以上の記録から、利用傾向と既存の制限を考慮して提案します。"</string>
     <string name="suggestion_hint">"選択したアプリの端末内の記録のみ使用します。監視中断中の記録は欠落する場合があります。保存後に適用します。"</string>
     <string name="recipe_short">"短く使って休む"</string>
-    <string name="recipe_short_hint">"1回5分 · 再起動まで10分待機"</string>
+    <string name="recipe_short_hint">"1回5分 · 再び開くまで10分待機"</string>
     <string name="recipe_less">"確認回数を減らす"</string>
     <string name="recipe_less_hint">"1日5回 · 1回3分"</string>
     <string name="recipe_sleep">"就寝時間を守る"</string>
@@ -204,7 +204,7 @@
     <string name="theme_word_more">"もっと見る"</string>
     <string name="theme_word_gallery_title">"テーマ"</string>
     <string name="theme_word_back">"戻る"</string>
-    <string name="theme_word_selected">"選択中: %1$s"</string>
+    <string name="theme_word_selected">"選択中：%1$s"</string>
     <string name="history_partial_range">"%1$s からの記録です。端末はそれ以前の利用イベントを保持しないため、期間の合計は実際より少ない場合があります。"</string>
     <string name="mascot_sleepy">"まだ記録がありません。すやすや…"</string>
     <string name="mascot_relaxed">"ゆったりした一日ですね。この調子！"</string>
@@ -218,7 +218,7 @@
     <string name="accessibility_steps">"設定が開いたら ①「インストール済みアプリ」（または「ダウンロードしたアプリ」）で ChronoLock をタップ ②「ChronoLock を使用」をオン ③「許可」をタップ。端末により名称や位置が異なります。"</string>
     <string name="accessibility_hint">"ユーザー補助 → インストール済みアプリ → ChronoLock → オン → 許可"</string>
     <string name="recommend_title">"おすすめのアプリ制限"</string>
-    <string name="recommend_hint">"この期間によく使ったのに、まだ制限がないアプリです。レシピを選んで保存すればすぐ適用されます。"</string>
+    <string name="recommend_hint">"この期間によく使ったのに、まだ制限がないアプリです。プリセットを選んで保存すればすぐ適用されます。"</string>
     <string name="recommend_add">"制限を追加"</string>
     <string name="sort_name">"名前順"</string>
     <string name="sort_usage">"使用量順"</string>
@@ -252,7 +252,7 @@
     <string name="error_field_range">"%1$s：1～%2$sの整数を入力してください。"</string>
     <string name="error_time_part">"%1$s：%2$sには0～%3$sの整数を入力してください。"</string>
     <string name="daily_seconds">"1日の時間（秒）"</string>
-    <string name="cooldown_seconds">"再起動待機（秒）"</string>
+    <string name="cooldown_seconds">"再度開くまでの待機（秒）"</string>
     <string name="session_seconds">"1回の時間（秒）"</string>
     <string name="overlay_pause">"少し立ち止まり、今やりたいことを選びましょう。"</string>
     <string name="overlay_home">"ホームに戻る"</string>
@@ -261,7 +261,7 @@
     <string name="overlay_daily">"今日の利用時間を使い切りました。"</string>
     <string name="overlay_opens">"今日の起動回数の上限に達しました。"</string>
     <string name="overlay_retry">"あと%1$d秒で開けます。"</string>
-    <string name="overlay_cooldown">"再起動の待機時間中です。"</string>
+    <string name="overlay_cooldown">"再び開くまでの待機時間です。"</string>
     <string name="overlay_session">"今回の利用時間の上限に達しました。"</string>
     <string name="overlay_schedule">"使用しないと決めた時間帯です。"</string>
     <string name="overlay_focus">"集中時間中です。"</string>
@@ -299,7 +299,7 @@
     <string name="error_billing">"決済画面を開けませんでした。しばらくしてから再度お試しください。"</string>
     <string name="rule_remaining">"今日の残り %1$s"</string>
     <string name="rule_limit_reached">"今日の上限に到達"</string>
-    <string name="limit_channel">"上限前のお知らせ"</string>
+    <string name="limit_channel">"上限間近のお知らせ"</string>
     <string name="limit_warning_title">"%1$sが今日の上限に近づいています"</string>
     <string name="limit_warning_text">"今日の残りは%1$sです。そろそろ切り上げましょう。"</string>
     <string name="notify_permission">"通知"</string>
@@ -310,7 +310,7 @@
     <string name="widget_reached">"%1$s 上限に到達"</string>
     <string name="widget_description">"今日の使用時間といちばん近い上限"</string>
     <string name="week_kept">"直近7日のうち%1$d日は上限を守りました"</string>
-    <string name="focus_custom">"指定"</string>
+    <string name="focus_custom">"カスタム"</string>
     <string name="focus_custom_title">"何分集中しますか？"</string>
     <string name="focus_minutes">"集中時間（分・1〜180）"</string>
     <string name="next">"次へ"</string>
@@ -405,7 +405,7 @@
     <string name="backup_restore_failed">"バックアップを復元できませんでした。"</string>
     <string name="backup_invalid">"ChronoLockのバックアップではないか、破損しています。"</string>
     <plurals name="theme_word_count">
-        <item quantity="other">"テーマ %1$d 件"</item>
+        <item quantity="other">"テーマ%1$d種"</item>
     </plurals>
     <plurals name="usage_week">
         <item quantity="other">"直近7日 %1$s · %2$d回起動"</item>
@@ -579,7 +579,7 @@
     <string name="weekly_report_first">"今週は%1$s使いました。来週は比較してみましょう。"</string>
     <string name="weekly_report_less">"今週 %1$s・先週より%2$d%%減りました。いい調子です！"</string>
     <string name="weekly_report_more">"今週 %1$s・先週より%2$d%%増えました。来週は少し減らしてみませんか？"</string>
-    <string name="block_suggestion">"代わりにこれはどう？ %1$s"</string>
+    <string name="block_suggestion">"代わりにこれはどうですか？ %1$s"</string>
     <string name="suggest_water">"水を一杯飲む"</string>
     <string name="suggest_stretch">"1分ストレッチ"</string>
     <string name="suggest_window">"20秒間窓の外を見る"</string>
