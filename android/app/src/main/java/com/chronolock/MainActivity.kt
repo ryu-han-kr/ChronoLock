@@ -34,8 +34,7 @@ class MainActivity : ComponentActivity() {
         ads.gatherConsent(this)
         billing.connect()
         setContent { ChronoApp(model, ::openPermissionSettings, ::signIn, { ads.showPrivacyOptions(this) },
-            buyAdFree = { if (!billing.purchase(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") },
-            manageSubscription = { billing.manageSubscription(this) }, retryBilling = billing::connect,
+            manageSubscription = { billing.manageSubscription(this) },
             installUpdate = updates::complete,
             buyPro = { if (!billing.purchasePro(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") }) }
         updates.check()

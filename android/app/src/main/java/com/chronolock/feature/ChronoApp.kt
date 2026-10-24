@@ -58,7 +58,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}, privacyOptions: () -> Unit = {},
-    buyAdFree: () -> Unit = {}, manageSubscription: () -> Unit = {}, retryBilling: () -> Unit = {}, installUpdate: () -> Unit = {},
+    manageSubscription: () -> Unit = {}, installUpdate: () -> Unit = {},
     buyPro: () -> Unit = {}) {
     val state by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -121,7 +121,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                         focusActive = focusActive)
                 }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
-                privacyOptions = privacyOptions, buyAdFree = buyAdFree, manageSubscription = manageSubscription, retryBilling = retryBilling,
+                privacyOptions = privacyOptions, manageSubscription = manageSubscription,
                 openThemeGallery = { themeGallery = true },
                 pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
