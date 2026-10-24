@@ -42,7 +42,9 @@ class HistoryUiTest {
 
     @Test fun usageRow_opensTheLimitEditor_andLimitedAppsOfferToEditIt() {
         var limited: String? = null
-        val withRule = state.copy(rules = listOf(com.chronolock.data.RuleEntity("app.a", "Example A", 600, null, null)))
+        // Rows offer a limit for installed apps the editor lists, and for apps that already have a rule.
+        val withRule = state.copy(rules = listOf(com.chronolock.data.RuleEntity("app.a", "Example A", 600, null, null)),
+            apps = listOf(com.chronolock.blocking.InstalledApp("app.b", "Example B")))
         ui.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
             HistoryPanel(withRule, today, {}, {}, limit = { limited = it })
         } } }
@@ -50,6 +52,21 @@ class HistoryUiTest {
         ui.onNodeWithTag("history-limit-app.a").performScrollTo().assertTextEquals("제한 수정")
         ui.onNodeWithTag("history-limit-app.b").performScrollTo().assertTextEquals("제한 걸기").performClick()
         ui.runOnIdle { assertEquals("app.b", limited) }
+    }
+
+    @Test fun shortRecords_areNotTotalled_theCharacterSaysHowManyDaysAreIn() {
+        val short = state.copy(history = listOf(
+            HistoryDailyEntity("app.a", today.toString(), "Example A", 3_600_000, 2),
+            HistoryDailyEntity("app.b", today.minusDays(3).toString(), "Example B", 1_800_000, 3)))
+        ui.setContent { ChronoTheme { Column(Modifier.verticalScroll(rememberScrollState())) { HistoryPanel(short, today, {}, {}) } } }
+        ui.onNodeWithText("한 달").performClick()
+        ui.onNodeWithTag("history-wait").assertExists()
+        ui.onNodeWithText("아직 30일 치 기록이 다 모이지 않았어요").assertExists()
+        ui.onNodeWithText("1시간 30분", substring = true).assertDoesNotExist()
+        ui.onNodeWithTag("history-show-collected").performScrollTo().assertTextEquals("모인 4일만 보기").performClick()
+        ui.onNodeWithTag("history-wait").assertDoesNotExist()
+        ui.onNodeWithTag("history-guide", useUnmergedTree = true).assertTextContains("4일 기록이 모두 모였어요", substring = true)
+        ui.onNodeWithTag("history-guide", useUnmergedTree = true).assertTextContains("Example A", substring = true)
     }
 
     @Test fun periodSwitch_changesTotals_andSurvivesRestoration() {
@@ -93,7 +110,7 @@ class HistoryUiTest {
         ui.onNodeWithTag("history-pin").performTextInput("2468")
         ui.onNodeWithTag("history-pin-confirm").performTextInput("2468")
         ui.onNodeWithTag("history-pin-ok").performClick()
-        ui.onNodeWithText("비밀번호를 입력하면 3개월 기록과 1년 달력이 모두 지워집니다. 되돌릴 수 없습니다.").assertIsDisplayed()
+        ui.onNodeWithText("비밀번호를 입력하면 1년 기록과 달력이 모두 지워집니다. 되돌릴 수 없습니다.").assertIsDisplayed()
         ui.onNodeWithTag("history-pin").performTextInput("2468")
         ui.onNodeWithTag("history-pin-ok").performClick()
         ui.runOnIdle { assertEquals("2468", deletedWith) }

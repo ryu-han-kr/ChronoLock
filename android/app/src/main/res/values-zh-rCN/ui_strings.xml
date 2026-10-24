@@ -672,4 +672,8 @@
     <string name="history_one_year">"1年"</string>
     <string name="reduce_motion">"减少动态效果"</string>
     <string name="reduce_motion_hint">"停止动态主题和角色动画，节省电量。"</string>
+    <string name="history_wait_title">"还没收集满%1$d天的记录"</string>
+    <string name="history_wait_body">"目前已收集%1$d天的记录，再过%2$d天就会显示统计。不会凭空编造缺失的记录。"</string>
+    <string name="history_show_collected">"查看已收集的%1$d天"</string>
+    <string name="history_guide">"%1$d天的记录已全部收集！日均%2$s，用得最多的是%3$s。"</string>
 </resources>

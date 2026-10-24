@@ -29,7 +29,7 @@ data class TodaySummary(val usedMillis: Long, val tightestApp: String?, val tigh
 fun MonitorState.todaySummary(rules: Map<String, AppRule>): TodaySummary {
     val date = clock?.date ?: return TodaySummary(0, null, null)
     val used = rules.keys.sumOf { daily[DailyKey(it, date)]?.usageMillis ?: 0 }
-    val tightest = rules.values.filter { it.enabled }
+    val tightest = rules.values.filter { it.enabled && !it.pausedAt(clock.epochMillis) }
         .mapNotNull { rule -> remainingDailyMillis(rule)?.let { rule to it } }
         .minByOrNull { it.second }
     return TodaySummary(used, tightest?.first?.appName, tightest?.second)

@@ -693,4 +693,8 @@
     <string name="history_one_year">"1 year"</string>
     <string name="reduce_motion">"Reduce motion"</string>
     <string name="reduce_motion_hint">"Stops moving themes and the character\'s animation to save battery."</string>
+    <string name="history_wait_title">"Not enough records for %1$d days yet"</string>
+    <string name="history_wait_body">"Days collected: %1$d · days to go: %2$d. Totals appear once the period is covered; missing records are never made up."</string>
+    <string name="history_show_collected">"Show collected days (%1$d)"</string>
+    <string name="history_guide">"All %1$d days are in! Daily average %2$s · most used: %3$s."</string>
 </resources>

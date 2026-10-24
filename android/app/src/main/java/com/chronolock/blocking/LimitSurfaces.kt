@@ -57,8 +57,8 @@ internal class LimitSurfaces(private val context: Context) {
     /** Removes the live notification; the service calls this when it stops. */
     fun clearLive() { lastLive = null; runCatching { NotificationManagerCompat.from(context).cancel(LIVE_ID) } }
 
-    fun update(state: MonitorState, rules: Map<String, AppRule>, localized: Context) {
-        showLive(state.liveLimit(rules), state.clock?.epochMillis ?: System.currentTimeMillis(), localized)
+    fun update(state: MonitorState, rules: Map<String, AppRule>, localized: Context, inUse: Boolean = true) {
+        showLive(state.liveLimit(rules).takeIf { inUse }, state.clock?.epochMillis ?: System.currentTimeMillis(), localized)
         state.clock?.date?.let { today -> warned.removeAll { it.date != today } }
         state.limitWarning(rules, warned)?.let { key ->
             warned += key
@@ -106,7 +106,8 @@ internal class LimitSurfaces(private val context: Context) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         val text = UiText(localized)
-        fun left(millis: Long) = formatDuration(if (millis >= 60_000) (millis + 59_999) / 60_000 * 60 else (millis + 999) / 1000, text)
+        // Whole minutes, rounded up, so the text (and the notification) changes at most once a minute.
+        fun left(millis: Long) = formatDuration((millis + 59_999) / 60_000 * 60, text)
         val res = localized.resources
         val lines = buildList {
             add(localized.getString(R.string.live_used, formatDuration(live.usedTodayMillis / 60_000 * 60, text)))

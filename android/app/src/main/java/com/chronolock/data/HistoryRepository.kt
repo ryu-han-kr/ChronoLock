@@ -67,14 +67,8 @@ class HistoryRepository @Inject constructor(
         val homes = pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)
             .map { it.activityInfo.packageName }.toSet()
         importEvents(collected, names, homes, now, zone)
-        // Events only reach back about a week; usage-stats buckets (finest first) estimate the older days of the window.
-        val usage = context.getSystemService(UsageStatsManager::class.java)
-        val windowStart = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate().minusDays(RETAIN_DAYS - 1L).atStartOfDay(zone).toInstant().toEpochMilli()
-        val buckets = listOf(UsageStatsManager.INTERVAL_DAILY, UsageStatsManager.INTERVAL_WEEKLY, UsageStatsManager.INTERVAL_MONTHLY).map { interval ->
-            usage.queryUsageStats(interval, windowStart, now).orEmpty().filter { it.totalTimeInForeground > 0 }
-                .map { UsageBucket(it.packageName, it.firstTimeStamp, it.lastTimeStamp, it.totalTimeInForeground) }
-        }
-        importEstimates(buckets, names, homes, now, zone)
+        // Older days are not estimated from the OS's coarse usage buckets: history shows recorded days only.
+        dao.clearEstimates()
         refreshYear(now, zone)
     } }
 
@@ -83,10 +77,7 @@ class HistoryRepository @Inject constructor(
         val today = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
         database.withTransaction {
             val recorded = dao.daily().groupBy { it.date }.mapValues { (_, rows) -> rows.sumOf { it.usageMillis } }
-            val estimated = dao.estimates().groupBy { it.date }.mapValues { (_, rows) -> rows.sumOf { it.usageMillis } }
-            dao.saveYear((recorded.keys + estimated.keys).map { date ->
-                HistoryYearEntity(date, (recorded[date] ?: 0) + (estimated[date] ?: 0), date !in recorded)
-            })
+            dao.saveYear(recorded.map { (date, millis) -> HistoryYearEntity(date, millis, false) })
             dao.pruneYear(today.minusDays(YEAR_DAYS - 1L).toString())
         }
     }

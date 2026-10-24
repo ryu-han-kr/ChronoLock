@@ -563,16 +563,16 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
     val maximum = (totals.values.maxOrNull() ?: 0L).coerceAtLeast(1L)
     val suggestion = remember(state.daily, state.rules, today) {
         suggestUsageRule(records.associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) },
-            state.rules.map { it.toDomain() }, today)
+            state.rulesWithGroups, today)
     }
     CardBox {
         Text(tr("최근 7일 돌아보기"), style = MaterialTheme.typography.titleLarge)
         WeekDots(dayResults(records.associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) },
-            state.rules.map { it.toDomain() }, today))
+            state.rulesWithGroups, today))
         // Streaks and the week-over-week change look further back than the seven bars, over everything still stored.
-        val (streak, weeks) = remember(state.daily, state.rules, today) {
+        val (streak, weeks) = remember(state.daily, state.rules, state.groups, today) {
             val all = state.daily.associate { DailyKey(it.packageName, LocalDate.parse(it.date)) to DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) }
-            keptStreak(all, state.rules.map { it.toDomain() }, today) to compareWeeks(all, today)
+            keptStreak(all, state.rulesWithGroups, today) to compareWeeks(all, today)
         }
         if (streak > 0) Text(tr("%1\$d일 연속 한도를 지켰어요", streak), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         weeks.changePercent?.let { change ->

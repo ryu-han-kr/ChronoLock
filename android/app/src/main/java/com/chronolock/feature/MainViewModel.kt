@@ -76,6 +76,9 @@ data class MainState(
     val pendingSites: List<com.chronolock.data.PendingSiteEntity> = emptyList(),
 ) {
     val adFree get() = billing.adFree
+    /** Every rule with the groups attached, members without a rule of their own included; for day results and streaks. */
+    val rulesWithGroups: List<com.chronolock.domain.AppRule> get() =
+        com.chronolock.domain.withGroups(rules.associate { it.packageName to it.toDomain() }, groups).values.toList()
     /** Every feature is open while the Pro split is switched off ([com.chronolock.BuildConfig.PRO_GATING]). */
     val pro get() = !com.chronolock.BuildConfig.PRO_GATING || billing.pro
 }

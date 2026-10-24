@@ -714,4 +714,8 @@
     <string name="history_one_year">"1 año"</string>
     <string name="reduce_motion">"Reducir movimiento"</string>
     <string name="reduce_motion_hint">"Detiene los temas en movimiento y la animación del personaje para ahorrar batería."</string>
+    <string name="history_wait_title">"Aún no hay registros de %1$d días"</string>
+    <string name="history_wait_body">"Días recogidos: %1$d · faltan: %2$d. El total aparece cuando el periodo esté completo; nunca inventamos registros."</string>
+    <string name="history_show_collected">"Ver días recogidos (%1$d)"</string>
+    <string name="history_guide">"¡Ya están los %1$d días! Media diaria: %2$s · más usada: %3$s."</string>
 </resources>

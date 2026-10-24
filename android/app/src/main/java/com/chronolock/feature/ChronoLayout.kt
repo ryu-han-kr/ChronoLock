@@ -118,7 +118,7 @@ internal fun ChronoScreen(
             if (!expanded) NavigationBar(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onBackground) {
                 destinations.forEachIndexed { index, title ->
                     NavigationBarItem(selected = tab == index, onClick = { selectTab(index) },
-                        label = { Text(title) }, icon = { DestinationIcon(index) })
+                        label = { Text(title) }, icon = { DestinationIcon(index) }, modifier = Modifier.testTag("nav-$index"))
                 }
             }
         } }) { insets ->
@@ -130,7 +130,7 @@ internal fun ChronoScreen(
                     }) {
                     destinations.forEachIndexed { index, title ->
                         NavigationRailItem(selected = tab == index, onClick = { selectTab(index) },
-                            label = { Text(title) }, icon = { DestinationIcon(index) })
+                            label = { Text(title) }, icon = { DestinationIcon(index) }, modifier = Modifier.testTag("nav-$index"))
                     }
                 }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
@@ -292,7 +292,7 @@ internal fun ChronoScreen(
                             }
                             2 -> {
                                 historyItems(state, today, historyFilter, historyView, refreshHistory, usagePermission, suggest = { app, recipe -> edit(app, recipe) },
-                                    limit = { app -> edit(app, null) },
+                                    limit = { app -> choosePickRecipe(null); edit(app, null) },
                                     setPin = setHistoryPin, deleteHistory = deleteHistory, changePin = changeHistoryPin, nowEpoch = nowEpoch)
                             }
                             3 -> {
@@ -308,10 +308,10 @@ internal fun ChronoScreen(
                                 item { StrictModeCard(state, nowEpoch, setStrict, cancelStrict) }
                                 item {
                                     // Completed days since the goal lock began; a day without any use of the limited apps counts as kept.
-                                    val kept = remember(state.daily, state.rules, state.lock.goalStart, today) {
+                                    val kept = remember(state.daily, state.rules, state.groups, state.lock.goalStart, today) {
                                         state.lock.goalStart?.let { start ->
                                             com.chronolock.domain.goalKeptDays(state.daily.associate { com.chronolock.domain.DailyKey(it.packageName, java.time.LocalDate.parse(it.date)) to
-                                                com.chronolock.domain.DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) }, state.rules.map { it.toDomain() }, start, today)
+                                                com.chronolock.domain.DailyUsage(it.usageMillis, it.opens, it.blockedAttempts) }, state.rulesWithGroups, start, today)
                                         } ?: 0
                                     }
                                     LockCard(state, today, nowEpoch, kept, lockFor, startGoalLock, { endGoalLock(it, kept) }, { collectPiece(kept) }, changeGoalPin)
