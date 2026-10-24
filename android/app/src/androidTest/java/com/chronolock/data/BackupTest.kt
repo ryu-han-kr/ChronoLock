@@ -26,6 +26,21 @@ class BackupTest {
 
     private val sites = listOf(BlockedSite("youtube.com"), BlockedSite("x.com", enabled = false))
 
+    @Test fun lookAndFeel_roundTrips_andOlderFilesLeaveItAlone() {
+        val backup = Backup(emptyList(), emptyList(), "LIGHT", nightTheme = "OCEAN", followSystem = true,
+            favoriteThemes = setOf("FOREST", "LAVENDER"), mascot = "OTTER", reduceMotion = true)
+        val decoded = BackupCodec.decode(BackupCodec.encode(backup, 0))
+        assertEquals("OCEAN", decoded.nightTheme)
+        assertEquals(true, decoded.followSystem)
+        assertEquals(setOf("FOREST", "LAVENDER"), decoded.favoriteThemes)
+        assertEquals("OTTER", decoded.mascot)
+        assertEquals(true, decoded.reduceMotion)
+        val older = JSONObject(BackupCodec.encode(Backup(emptyList(), emptyList(), "LIGHT"), 0)).put("version", 2)
+        val restored = BackupCodec.decode(older.toString())
+        assertEquals(null, restored.mascot)
+        assertEquals(null, restored.favoriteThemes)
+    }
+
     @Test fun roundTrip_keepsLimitsSchedulesGroupsAndSettings_butNotFocusOrPause() {
         val text = BackupCodec.encode(Backup(listOf(rule), listOf(group), "LIGHT", "ENGLISH", 30, sites), 1234)
         val decoded = BackupCodec.decode(text)

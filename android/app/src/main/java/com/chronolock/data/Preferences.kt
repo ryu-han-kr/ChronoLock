@@ -174,6 +174,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
 
     /** Theme names the person pinned; names of removed palettes are simply never matched. */
     val favoriteThemes = context.preferences.data.map { prefs -> (prefs[favoriteThemesKey] ?: emptySet()).mapNotNullTo(mutableSetOf()) { ThemeCatalog.resolve(it) } }
+    suspend fun setFavoriteThemes(names: Set<String>) { context.preferences.edit { it[favoriteThemesKey] = names } }
     suspend fun toggleFavoriteTheme(theme: AppTheme) {
         context.preferences.edit {
             // Ids of dropped duplicates are stored under the palette they open, so un-pinning it really removes the pin.
