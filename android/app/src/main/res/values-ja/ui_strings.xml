@@ -249,7 +249,7 @@
     <string name="last_used">"最終使用 %1$s"</string>
     <string name="accessibility_title">"ユーザー補助の権限について"</string>
     <string name="usage_title">"使用状況へのアクセスについて"</string>
-    <string name="accessibility_disclosure">"ChronoLockはアプリ切替イベントで使用中のアプリを確認し、設定した制限に従ってブロック画面を表示します。ウェブサイトのブロックを使う場合は、対応ブラウザのアドレスバーのドメインだけを確認します。それ以外の画面の文字、パスワード、入力内容は読み取りません。選択したアプリのパッケージ名、ブロックするサイトの一覧、利用・ブロック記録は端末内にのみ保存して送信せず、閲覧したアドレスは保存しません。Androidの設定でいつでも解除できます。同意する場合、次の設定画面でChronoLockを有効にしてください。"</string>
+    <string name="accessibility_disclosure">"ChronoLockはアプリ切替イベントで使用中のアプリを確認し、設定した制限に従ってブロック画面を表示します。ウェブサイトのブロックを使う場合は、対応ブラウザのアドレスバーのドメインを確認し、アドレスが表示されないアプリ内ブラウザ（KakaoTalk・NAVER）ではページのタイトルとページ内リンクのドメインで判断します。それ以外の画面の文字、パスワード、入力内容は読み取りません。選択したアプリのパッケージ名、ブロックするサイトの一覧、利用・ブロック記録は端末内にのみ保存して送信せず、閲覧したアドレスは保存しません。Androidの設定でいつでも解除できます。同意する場合、次の設定画面でChronoLockを有効にしてください。"</string>
     <string name="usage_disclosure">"使用状況へのアクセスでアプリ別の利用時間と起動回数を確認します。制限なしでも履歴を収集し、最大1年間この端末内にのみ保存します。サーバーには送信しません。履歴の閲覧だけならユーザー補助の権限は不要です。Androidの設定でいつでも解除できます。"</string>
     <string name="consent_settings">"同意して設定を開く"</string>
     <string name="error_data">"保存データを読み込めません。アプリを開き直してください。"</string>
@@ -290,7 +290,7 @@
     <string name="overlay_reset">"1日の上限は現地時刻の午前0時にリセットします。"</string>
     <string name="error_settings">"設定画面を開けません。Androidの設定で権限を有効にしてください。"</string>
     <string name="service_label">"ChronoLock アプリ制限"</string>
-    <string name="accessibility_description">"選択したアプリへの切替を検出し、設定した上限に達するとブロック画面を表示します。ウェブサイトのブロックを使う場合は、対応ブラウザのアドレスバーのドメインだけを確認します。それ以外の画面の文字や入力内容は読み取りません。データは端末内にのみ保存します。Androidの設定でいつでも解除できます。"</string>
+    <string name="accessibility_description">"選択したアプリへの切替を検出し、設定した上限に達するとブロック画面を表示します。ウェブサイトのブロックを使う場合は、対応ブラウザのアドレスバーのドメイン、またはアドレスが表示されないアプリ内ブラウザではページのタイトルとリンク先のドメインを確認します。それ以外の画面の文字や入力内容は読み取りません。データは端末内にのみ保存します。Androidの設定でいつでも解除できます。"</string>
     <string name="account_title">"アカウント"</string>
     <string name="account_signed_in">"ログイン中：%1$s"</string>
     <string name="account_google">"Google アカウント"</string>
@@ -436,7 +436,7 @@
         <item quantity="other">"%1$d日連続で制限を守りました"</item>
     </plurals>
     <string name="site_title">"ウェブサイトのブロック"</string>
-    <string name="site_description">"Chrome・Samsung Internetなどのブラウザで以下のサイトを開くとブロック画面を表示します。アドレスバーのドメインだけを確認し、閲覧履歴は保存しません。"</string>
+    <string name="site_description">"Chrome・Samsung Internetなどのブラウザで以下のサイトを開くとブロック画面を表示します。アドレスバーのドメイン（アドレスが表示されないアプリ内ブラウザではページのタイトルとリンク先のドメイン）だけを確認し、閲覧履歴は保存しません。"</string>
     <string name="site_input">"サイトのアドレス"</string>
     <string name="site_add">"追加"</string>
     <string name="site_remove">"削除"</string>
@@ -444,7 +444,7 @@
     <string name="held_site_off">"ブロックのオフ"</string>
     <string name="site_browsers">"対応ブラウザ：Chrome、Samsung Internet、Edge、Firefox、Brave、Opera、Whale、DuckDuckGo、Vivaldi、KakaoTalk・NAVERのアプリ内ブラウザ"</string>
     <string name="site_block_heading">"%1$s\n今は開かないと決めました"</string>
-    <string name="site_block_detail">"ブロックリストに追加したサイトです。アドレスバーのドメインだけを確認し、閲覧履歴は保存しません。"</string>
+    <string name="site_block_detail">"ブロックリストに追加したサイトです。閲覧履歴は保存しません。"</string>
     <string name="site_invalid">"youtube.comのようにサイトのアドレスを入力してください。"</string>
     <string name="sites_full">"ブロックできるサイトは最大50件です。"</string>
     <string name="site_save_failed">"サイトを保存できませんでした。もう一度お試しください。"</string>

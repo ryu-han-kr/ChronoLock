@@ -249,7 +249,7 @@
     <string name="last_used">"마지막 사용 %1$s"</string>
     <string name="accessibility_title">"접근성 권한 안내"</string>
     <string name="usage_title">"사용 정보 접근 안내"</string>
-    <string name="accessibility_disclosure">"ChronoLock은 앱 전환 이벤트로 실행 중인 앱을 확인하고, 직접 설정한 제한에 따라 다른 앱 위에 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인만 확인합니다. 그 밖의 화면 텍스트, 비밀번호, 입력 내용은 읽지 않습니다. 선택한 앱의 패키지 이름, 차단할 사이트 목록과 사용·차단 기록은 이 기기에만 저장되며 전송되지 않고, 방문한 주소는 저장하지 않습니다. Android 설정에서 언제든 해제할 수 있습니다. 동의하면 다음 설정 화면에서 ChronoLock을 직접 활성화해 주세요."</string>
+    <string name="accessibility_disclosure">"ChronoLock은 앱 전환 이벤트로 실행 중인 앱을 확인하고, 직접 설정한 제한에 따라 다른 앱 위에 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인을 확인하고, 주소가 보이지 않는 앱 내 브라우저(카카오톡·네이버)에서는 페이지 제목과 페이지 속 링크의 도메인으로 사이트를 판단합니다. 그 밖의 화면 텍스트, 비밀번호, 입력 내용은 읽지 않습니다. 선택한 앱의 패키지 이름, 차단할 사이트 목록과 사용·차단 기록은 이 기기에만 저장되며 전송되지 않고, 방문한 주소는 저장하지 않습니다. Android 설정에서 언제든 해제할 수 있습니다. 동의하면 다음 설정 화면에서 ChronoLock을 직접 활성화해 주세요."</string>
     <string name="usage_disclosure">"사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 1년간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."</string>
     <string name="consent_settings">"동의하고 설정 열기"</string>
     <string name="error_data">"저장된 데이터를 읽지 못했습니다. 앱을 다시 열어 주세요."</string>
@@ -290,7 +290,7 @@
     <string name="overlay_reset">"하루 한도는 자정에 다시 채워져요."</string>
     <string name="error_settings">"설정 화면을 열 수 없습니다. Android 설정에서 권한을 직접 활성화해 주세요."</string>
     <string name="service_label">"ChronoLock 앱 제한"</string>
-    <string name="accessibility_description">"사용자가 선택한 앱의 전환을 감지하고, 직접 설정한 제한에 도달하면 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인만 확인합니다. 그 밖의 화면 텍스트나 입력 내용은 읽지 않으며 데이터는 기기에만 저장합니다. Android 설정에서 언제든 이 서비스를 해제할 수 있습니다."</string>
+    <string name="accessibility_description">"사용자가 선택한 앱의 전환을 감지하고, 직접 설정한 제한에 도달하면 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인을, 주소가 보이지 않는 앱 내 브라우저에서는 페이지 제목과 링크 도메인을 확인합니다. 그 밖의 화면 텍스트나 입력 내용은 읽지 않으며 데이터는 기기에만 저장합니다. Android 설정에서 언제든 이 서비스를 해제할 수 있습니다."</string>
     <string name="account_title">"계정"</string>
     <string name="account_signed_in">"로그인됨: %1$s"</string>
     <string name="account_google">"Google 계정"</string>
@@ -436,7 +436,7 @@
         <item quantity="other">"%1$d일 연속 한도를 지켰어요"</item>
     </plurals>
     <string name="site_title">"웹사이트 차단"</string>
-    <string name="site_description">"Chrome·삼성 인터넷 등 브라우저에서 아래 사이트를 열면 차단 화면을 띄웁니다. 주소창의 도메인만 확인하고 방문 기록은 저장하지 않습니다."</string>
+    <string name="site_description">"Chrome·삼성 인터넷 등 브라우저에서 아래 사이트를 열면 차단 화면을 띄웁니다. 주소창의 도메인(주소가 보이지 않는 앱 내 브라우저는 페이지 제목과 링크 도메인)만 확인하고 방문 기록은 저장하지 않습니다."</string>
     <string name="site_input">"사이트 주소"</string>
     <string name="site_add">"추가"</string>
     <string name="site_remove">"삭제"</string>
@@ -444,7 +444,7 @@
     <string name="held_site_off">"차단 끄기"</string>
     <string name="site_browsers">"지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi, 카카오톡·네이버 앱 내 브라우저"</string>
     <string name="site_block_heading">"%1$s\n지금은 열지 않기로 했어요"</string>
-    <string name="site_block_detail">"차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다."</string>
+    <string name="site_block_detail">"차단 목록에 추가한 사이트입니다. 방문 기록은 저장하지 않습니다."</string>
     <string name="site_invalid">"youtube.com처럼 사이트 주소를 입력해 주세요."</string>
     <string name="sites_full">"차단할 사이트는 최대 50개까지 추가할 수 있습니다."</string>
     <string name="site_save_failed">"사이트를 저장하지 못했습니다. 다시 시도해 주세요."</string>
