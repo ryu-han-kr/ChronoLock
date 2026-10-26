@@ -9,7 +9,14 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.res.imageResource
 import kotlin.math.PI
+import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.random.Random
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -114,9 +121,9 @@ internal fun Mascot(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp)
 }
 
 /**
- * The chosen character (or [kind]) in [pose], alive but calm: it breathes from its feet (taller and a little narrower,
- * never zooming as a whole) and leans slowly from side to side, sleeps slower, now and then hops when proud or flinches
- * when warned, and sways further when dizzy.
+ * The chosen character (or [kind]) in [pose], alive but calm: its belly swells and settles while the head stays put
+ * ([BreathingArt]), it leans slowly from side to side, sleeps slower, now and then hops when proud or flinches when
+ * warned, and sways further when dizzy.
  * Each one starts at its own point in the cycle so characters side by side do not move in step, and a new pose fades in.
  * Decorative unless the caller adds a content description.
  */
@@ -149,13 +156,10 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
     // A slow lean from side to side keeps a still character alive; dizzy leans further and faster.
     val sway by transition.animateFloat(-1f, 1f,
         infiniteRepeatable(tween(if (wobble) 2600 else 4200, easing = EaseInOutSine), RepeatMode.Reverse, offset), label = "sway")
-    val depth = if (asleep) .055f else .04f
-    val lean = when { wobble -> 6f; asleep -> .8f; else -> 1.8f }
+    val depth = if (asleep) .16f else .12f
+    val lean = when { wobble -> 6f; asleep -> .6f; else -> 1.2f }
     Crossfade(pose to kind, modifier.size(size), animationSpec = tween(280), label = "pose") { (shown, character) ->
-        Image(painterResource(character.art(shown)), contentDescription = null, modifier = Modifier.size(size).graphicsLayer {
-            val stretch = breath * depth
-            scaleY = 1f + stretch
-            scaleX = 1f - stretch / 2
+        BreathingArt(character.art(shown), { breath * depth }, Modifier.size(size).graphicsLayer {
             rotationZ = sway * lean
             when (shown) {
                 Pose.SUCCESS -> { translationY = -beat.coerceAtLeast(0f) * .12f * this.size.height; scaleY += beat.coerceAtMost(0f) * .12f }
@@ -169,6 +173,30 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
 
 private const val BREATH_MS = 3_600
 private const val BEAT_MS = 3_600
+private const val MESH = 12
+
+/**
+ * [art] drawn through a mesh so only the body breathes: around the belly the sides swell outward and the chest rises a
+ * little, while the head and the feet keep their place. [swell] is the current breath, 0 to about 0.16.
+ */
+@Composable
+private fun BreathingArt(art: Int, swell: () -> Float, modifier: Modifier) {
+    val bitmap = ImageBitmap.imageResource(art).asAndroidBitmap()
+    val paint = remember { android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG or android.graphics.Paint.ANTI_ALIAS_FLAG) }
+    val vertices = remember { FloatArray((MESH + 1) * (MESH + 1) * 2) }
+    Canvas(modifier) {
+        val amount = swell()
+        var k = 0
+        for (row in 0..MESH) for (col in 0..MESH) {
+            val u = col / MESH.toFloat(); val v = row / MESH.toFloat()
+            // Strongest at the belly, fading out before the head and pinned at the feet.
+            val belly = exp(-((v - .66f) / .16f).let { it * it }) * ((1f - v) / .08f).coerceAtMost(1f)
+            vertices[k++] = (u + (u - .5f) * amount * belly) * size.width
+            vertices[k++] = (v - amount * .12f * belly) * size.height
+        }
+        drawIntoCanvas { it.nativeCanvas.drawBitmapMesh(bitmap, MESH, MESH, vertices, 0, null, 0, paint) }
+    }
+}
 
 /** A card title with the character beside it, doing what the card is about. */
 @Composable
