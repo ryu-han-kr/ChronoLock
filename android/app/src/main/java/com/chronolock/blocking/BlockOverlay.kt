@@ -137,7 +137,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         lastShown = { showSite(domain) }
         showPose(Pose.LIMIT)
         heading?.text = text("%1\$s\n지금은 열지 않기로 했어요", domain)
-        detail?.text = text("차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다.")
+        detail?.text = text("차단 목록에 추가한 사이트입니다. 방문 기록은 저장하지 않습니다.")
     }
 
     // Each reason is a complete localized resource; only line separators are concatenated.

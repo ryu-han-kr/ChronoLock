@@ -29,7 +29,7 @@ internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity
     var input by rememberSaveable { mutableStateOf("") }
     val submit = { if (input.isNotBlank()) add(input) { input = "" } }
     CardBox {
-        Text(tr("Chrome·삼성 인터넷 등 브라우저에서 아래 사이트를 열면 차단 화면을 띄웁니다. 주소창의 도메인만 확인하고 방문 기록은 저장하지 않습니다."),
+        Text(tr("Chrome·삼성 인터넷 등 브라우저에서 아래 사이트를 열면 차단 화면을 띄웁니다. 주소창의 도메인(주소가 보이지 않는 앱 내 브라우저는 페이지 제목과 링크 도메인)만 확인하고 방문 기록은 저장하지 않습니다."),
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.weight(1f).testTag("site-input"),

@@ -42,7 +42,7 @@
 
 | 항목 | 이 빌드의 답변 |
 |---|---|
-| 개인정보처리방침 | 공개 URL 입력(HTML 페이지, PDF 불가). 접근성·사용 정보 이용 목적, 기기 내 저장, 30일 보관, 삭제 방법, 문의 이메일을 적습니다 |
+| 개인정보처리방침 | 공개 URL 입력(HTML 페이지, PDF 불가). 접근성·사용 정보 이용 목적, 기기 내 저장, 최대 1년 보관, 삭제 방법, 문의 이메일을 적습니다 |
 | 광고 | **아니요, 광고가 포함되어 있지 않습니다** (광고 버전을 출시할 때 "예"로 바꿈) |
 | 앱 액세스 권한 | 모든 기능을 로그인 없이 이용 가능 → "특별한 액세스 권한 없이 모든 기능 이용 가능" |
 | 콘텐츠 등급 | 이메일 입력 → 카테고리 "기타 앱 유형(유틸리티·생산성 등)" → 폭력·성적 콘텐츠·도박·사용자 간 소통·위치 공유·디지털 상품 구매 모두 **아니요** → 대부분 전체이용가 |
@@ -56,11 +56,16 @@
 
 AAB 업로드 후 앱 콘텐츠에 "접근성 API"가 나타납니다. `isAccessibilityTool`은 false입니다(장애인 보조 도구가 아님).
 
-- **핵심 기능:** "사용자가 직접 정한 앱 사용 제한(하루 시간, 1회 시간, 실행 횟수, 재실행 대기, 시간대 예약, 앱 그룹, 집중 모드)에 도달하면, 접근성 서비스의 앱 전환 이벤트(TYPE_WINDOW_STATE_CHANGED)로 현재 실행 앱을 확인해 차단 화면을 표시합니다. 0.8.0부터 사용자가 추가한 웹사이트를 지원 브라우저에서 열면, 브라우저 주소창(view ID로 지정한 노드 하나)의 도메인을 확인해 차단 화면을 표시합니다."
-- **수집·이용 데이터:** 실행 중인 앱의 패키지 이름, 웹사이트 차단을 쓸 때 지원 브라우저 주소창의 도메인만 사용합니다(`canRetrieveWindowContent=true`는 주소창 노드 조회에만 사용). 다른 화면 내용, 입력, 비밀번호는 읽지 않고, 주소·방문 기록은 저장하지 않습니다. 기록은 기기에만 저장하고 전송하지 않습니다.
-- **명시적 고지·동의:** 앱 설정 → 권한 카드 → "접근성 권한 안내" 대화상자에서 목적을 고지하고 "동의하고 설정 열기"를 눌러야 시스템 설정으로 이동합니다.
+0.10.0 출시 때 아래 문구로 갱신합니다(0.10.0부터 카카오톡·네이버 앱 내 브라우저 지원). 양식 칸에 그대로 붙여넣을 수 있습니다.
+
+- **핵심 기능:** "사용자가 직접 정한 앱 사용 제한(하루 시간, 1회 시간, 실행 횟수, 재실행 대기, 시간대 예약, 앱 그룹, 집중 모드)에 도달하면, 접근성 서비스의 앱 전환 이벤트(TYPE_WINDOW_STATE_CHANGED)로 현재 실행 앱을 확인해 차단 화면을 표시합니다. 사용자가 웹사이트 차단 목록에 추가한 사이트를 지원 브라우저에서 열면, 브라우저 주소창(view ID로 지정한 노드 하나)의 도메인을 확인해 차단 화면을 표시합니다. 주소가 화면에 보이지 않는 앱 내 브라우저(카카오톡·네이버 앱)에서는 웹뷰 노드의 페이지 제목과 링크 대상(URL)의 도메인만 확인해 차단 목록의 사이트인지 판단합니다."
+- **수집·이용 데이터:** 실행 중인 앱의 패키지 이름, 웹사이트 차단을 쓸 때 지원 브라우저 주소창의 도메인, 앱 내 브라우저의 페이지 제목과 링크 도메인만 사용합니다(`canRetrieveWindowContent=true`는 이 판정에만 사용, 앱 내 브라우저는 웹사이트 차단 사용 중이고 그 앱이 화면에 있을 때만 확인). 본문, 대화 내용, 입력, 비밀번호는 읽지 않고, 주소·제목·방문 기록은 저장하지 않습니다. 기록은 기기에만 저장하고 전송하지 않습니다.
+- **명시적 고지·동의:** 앱 설정 → 권한 카드 → "접근성 권한 안내" 대화상자에서 목적(앱 내 브라우저의 페이지 제목·링크 도메인 확인 포함)을 고지하고 "동의하고 설정 열기"를 눌러야 시스템 설정으로 이동합니다.
 - **시연 영상(30초~2분):** 앱 실행 → 고지 대화상자 → 동의 → Android 접근성 설정에서 ChronoLock 켜기 → 제한 설정 → 대상 앱 실행 시 차단 화면.
-  0.8.0부터: 앱 제한 탭 "웹사이트 차단"에 youtube.com 추가 → Chrome에서 youtube.com 열기 → 차단 화면 장면을 추가합니다.
+  웹사이트 차단: 앱 제한 탭 "웹사이트 차단"에 youtube.com 추가 → Chrome에서 youtube.com 열기 → 차단 화면.
+  0.10.0 권장 추가 장면: 카카오톡 채팅의 youtube.com 링크 탭 → 앱 내 브라우저 위 차단 화면. 기존 영상이 핵심 기능을 보여주므로 재녹화는 필수가 아니지만, 심사에서 데이터 사용 범위를 물으면 이 장면을 추가합니다.
+
+영어 양식용(Core functionality): "When the user's own limits (daily time, session time, open count, cooldown, schedules, app groups, focus mode) are reached, the service uses window-state-change events to identify the foreground app and shows a blocking screen. For websites the user adds to the block list, it reads the domain from a supported browser's address bar (one node found by view ID). In in-app browsers that show no address (KakaoTalk, NAVER), it reads only the web view's page title and link target domains to decide whether the page is a blocked site. No other screen content, messages, input or passwords are read; addresses, titles and history are not stored; all data stays on the device and is never transmitted."
   화면 녹화 후 YouTube에 **일부 공개**로 올리고 링크를 입력합니다. 영상 필수 여부는 현재 양식에서 확인하세요.
 
 ## 4. 스토어 등록정보 (기본 스토어 등록정보, ko-KR)

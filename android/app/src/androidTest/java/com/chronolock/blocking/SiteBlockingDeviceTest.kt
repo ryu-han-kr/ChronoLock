@@ -28,7 +28,7 @@ class SiteBlockingDeviceTest {
     private lateinit var db: ChronoDatabase
     private var originalServices = ""
     private val detail = AppLanguage.values().filter { it != AppLanguage.SYSTEM }.map {
-        UiText(context.forLanguage(it))("차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다.")
+        UiText(context.forLanguage(it))("차단 목록에 추가한 사이트입니다. 방문 기록은 저장하지 않습니다.")
     }
 
     @Before fun prepare() {
