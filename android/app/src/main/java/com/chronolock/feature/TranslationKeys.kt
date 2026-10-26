@@ -386,7 +386,7 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "삭제" to R.string.site_remove,
     "사이트 삭제" to R.string.held_site_delete,
     "차단 끄기" to R.string.held_site_off,
-    "지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi" to R.string.site_browsers,
+    "지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi, 카카오톡·네이버 앱 내 브라우저" to R.string.site_browsers,
     "%1\$s\n지금은 열지 않기로 했어요" to R.string.site_block_heading,
     "차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다." to R.string.site_block_detail,
     "youtube.com처럼 사이트 주소를 입력해 주세요." to R.string.site_invalid,

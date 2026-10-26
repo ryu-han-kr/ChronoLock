@@ -458,7 +458,7 @@
     <string name="site_remove">"Remove"</string>
     <string name="held_site_delete">"Remove site"</string>
     <string name="held_site_off">"Turn off blocking"</string>
-    <string name="site_browsers">"Supported browsers: Chrome, Samsung Internet, Edge, Firefox, Brave, Opera, Whale, DuckDuckGo, Vivaldi"</string>
+    <string name="site_browsers">"Supported browsers: Chrome, Samsung Internet, Edge, Firefox, Brave, Opera, Whale, DuckDuckGo, Vivaldi, KakaoTalk and NAVER in-app browsers"</string>
     <string name="site_block_heading">"%1$s\nYou chose not to open this now"</string>
     <string name="site_block_detail">"This site is on your block list. Only the domain in the address bar is checked; visited pages are not saved."</string>
     <string name="site_invalid">"Enter a site address such as youtube.com."</string>

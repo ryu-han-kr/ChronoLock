@@ -199,7 +199,7 @@ class ChronoAccessibilityService : AccessibilityService() {
         val app = event?.packageName?.toString() ?: return
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             // Content changes arrive constantly from every app; only a browser's address bar matters here.
-            if (app in Browsers.urlBarIds) requestSiteCheck(app)
+            if (Browsers.watches(app)) requestSiteCheck(app)
             return
         }
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
@@ -209,7 +209,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             WindowKind.LEAVE -> { blockedSite = null; commands.trySend(Command.Foreground(limitedWindowApp())) }
             WindowKind.APP -> {
                 if (app != siteBrowser) blockedSite = null
-                if (app in Browsers.urlBarIds) requestSiteCheck(app)
+                if (Browsers.watches(app)) requestSiteCheck(app)
                 commands.trySend(Command.Foreground(limitedWindowApp() ?: app))
             }
         }
@@ -267,7 +267,8 @@ class ChronoAccessibilityService : AccessibilityService() {
         if (siteCheckScheduled) return
         siteCheckScheduled = true
         scope.launch {
-            delay(SITE_CHECK_MS)
+            // Reading an in-app page walks its web view, so those apps (chats that change constantly) are checked less often.
+            delay(if (browser in Browsers.inApp) IN_APP_CHECK_MS else SITE_CHECK_MS)
             siteCheckScheduled = false
             siteBrowser?.let { checkSite(it) }
         }
@@ -277,24 +278,53 @@ class ChronoAccessibilityService : AccessibilityService() {
      * The browser's address bar. Samsung tablets often report no active-window root (taskbar, pop-up and split views),
      * so the browser's own application window is searched first.
      */
-    private fun addressBar(browser: String): AccessibilityNodeInfo? {
-        val id = Browsers.urlBarIds.getValue(browser)
-        val roots = windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }.mapNotNull { it.root }
+    private fun browserRoots(browser: String): List<AccessibilityNodeInfo> =
+        windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }.mapNotNull { it.root }
             .filter { it.packageName == browser } + listOfNotNull(rootInActiveWindow)
-        return roots.firstNotNullOfOrNull { it.findAccessibilityNodeInfosByViewId(id).firstOrNull() }
+
+    private fun addressBar(browser: String): AccessibilityNodeInfo? {
+        val id = Browsers.urlBarIds[browser] ?: return null
+        return browserRoots(browser).firstNotNullOfOrNull { it.findAccessibilityNodeInfosByViewId(id).firstOrNull() }
+    }
+
+    /**
+     * The title and link targets of the page in an in-app browser, or null when none is open. Only these are read, never
+     * the page text, and at most [MAX_PAGE_NODES] nodes are visited so a long page or chat stays cheap.
+     */
+    private fun inAppPage(app: String): Pair<String?, List<String>>? {
+        val page = browserRoots(app).filter { it.packageName == app }.firstNotNullOfOrNull { root ->
+            breadthFirst(root).firstOrNull { it.className == WEB_VIEW }
+        } ?: return null
+        return page.text?.toString() to breadthFirst(page).mapNotNull { it.extras?.getCharSequence(TARGET_URL)?.toString() }.toList()
+    }
+
+    private fun breadthFirst(root: AccessibilityNodeInfo): Sequence<AccessibilityNodeInfo> = sequence {
+        val queue = ArrayDeque(listOf(root))
+        var visited = 0
+        while (queue.isNotEmpty() && visited++ < MAX_PAGE_NODES) {
+            val node = queue.removeFirst()
+            yield(node)
+            for (i in 0 until node.childCount) node.getChild(i)?.let(queue::addLast)
+        }
+    }
+
+    /** The blocked site open in [browser]: its domain, "" when none is, or null when it cannot be told. */
+    private fun openSite(browser: String, current: List<BlockedSite>): String? {
+        val bar = addressBar(browser)
+        // While the person types an address the bar holds their input, not the page.
+        if (bar != null && bar.isFocused) return null
+        bar?.text?.toString()?.let(SiteDomains::hostOf)?.let { return SiteDomains.match(it, current)?.domain.orEmpty() }
+        if (browser !in Browsers.inApp) return null // another window is in front, or the bar scrolled away
+        val (title, links) = inAppPage(browser) ?: return "" // the in-app browser is closed
+        return Browsers.pageSite(links, title, current)
     }
 
     private suspend fun checkSite(browser: String) {
         val current = sites
         val match = if (current.isEmpty()) null else {
             // Node queries are binder calls that can stall on heavy pages; keep them off the main thread.
-            val text = withContext(Dispatchers.Default) {
-                runCatching { addressBar(browser)?.let { bar -> if (bar.isFocused) FOCUSED else bar.text?.toString().orEmpty() } }.getOrNull()
-            } ?: return // another window is in front, or the bar scrolled away: keep the last answer
-            // While the person types an address the bar holds their input, not the page.
-            if (text === FOCUSED) return
-            val host = SiteDomains.hostOf(text) ?: return
-            SiteDomains.match(host, current)?.domain
+            val open = withContext(Dispatchers.Default) { runCatching { openSite(browser, current) }.getOrNull() } ?: return // keep the last answer
+            open.ifEmpty { null }
         }
         if (match == blockedSite) return
         blockedSite = match
@@ -374,8 +404,10 @@ class ChronoAccessibilityService : AccessibilityService() {
         const val RESTART_MAX_MS = 300_000L
         /** Seconds between checks for a missed app switch. */
         const val RECONCILE_TICKS = 3
-        /** Marker for an address bar being edited. */
-        val FOCUSED = String(charArrayOf('\u0000'))
+        const val IN_APP_CHECK_MS = 1000L
+        const val MAX_PAGE_NODES = 600
+        const val WEB_VIEW = "android.webkit.WebView"
+        const val TARGET_URL = "AccessibilityNodeInfo.targetUrl"
     }
     override fun onDestroy() {
         if (::overlay.isInitialized) overlay.hide()

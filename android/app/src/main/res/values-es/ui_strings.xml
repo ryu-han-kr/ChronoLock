@@ -474,7 +474,7 @@
     <string name="site_remove">"Quitar"</string>
     <string name="held_site_delete">"Quitar sitio"</string>
     <string name="held_site_off">"Desactivar bloqueo"</string>
-    <string name="site_browsers">"Navegadores compatibles: Chrome, Samsung Internet, Edge, Firefox, Brave, Opera, Whale, DuckDuckGo, Vivaldi"</string>
+    <string name="site_browsers">"Navegadores compatibles: Chrome, Samsung Internet, Edge, Firefox, Brave, Opera, Whale, DuckDuckGo, Vivaldi, navegadores integrados de KakaoTalk y NAVER"</string>
     <string name="site_block_heading">"%1$s\nDecidiste no abrirlo ahora"</string>
     <string name="site_block_detail">"Este sitio está en tu lista de bloqueo. Solo se comprueba el dominio de la barra de direcciones; no se guardan las páginas visitadas."</string>
     <string name="site_invalid">"Escribe una dirección como youtube.com."</string>
