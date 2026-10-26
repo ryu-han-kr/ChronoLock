@@ -115,7 +115,8 @@ internal fun Mascot(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp)
 
 /**
  * The chosen character (or [kind]) in [pose], alive but calm: it breathes from its feet (taller and a little narrower,
- * never zooming as a whole), sleeps slower, now and then hops when proud or flinches when warned, and sways when dizzy.
+ * never zooming as a whole) and leans slowly from side to side, sleeps slower, now and then hops when proud or flinches
+ * when warned, and sways further when dizzy.
  * Each one starts at its own point in the cycle so characters side by side do not move in step, and a new pose fades in.
  * Decorative unless the caller adds a content description.
  */
@@ -145,27 +146,29 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
         -.35f at BEAT_MS - 150
         0f at BEAT_MS - 60
     }, initialStartOffset = offset), label = "beat")
+    // A slow lean from side to side keeps a still character alive; dizzy leans further and faster.
     val sway by transition.animateFloat(-1f, 1f,
-        infiniteRepeatable(tween(2600, easing = EaseInOutSine), RepeatMode.Reverse, offset), label = "wobble")
-    val depth = if (asleep) .03f else .018f
+        infiniteRepeatable(tween(if (wobble) 2600 else 4200, easing = EaseInOutSine), RepeatMode.Reverse, offset), label = "sway")
+    val depth = if (asleep) .055f else .04f
+    val lean = when { wobble -> 6f; asleep -> .8f; else -> 1.8f }
     Crossfade(pose to kind, modifier.size(size), animationSpec = tween(280), label = "pose") { (shown, character) ->
         Image(painterResource(character.art(shown)), contentDescription = null, modifier = Modifier.size(size).graphicsLayer {
             val stretch = breath * depth
             scaleY = 1f + stretch
             scaleX = 1f - stretch / 2
+            rotationZ = sway * lean
             when (shown) {
-                Pose.SUCCESS -> { translationY = -beat.coerceAtLeast(0f) * 0.06f * this.size.height; scaleY += beat.coerceAtMost(0f) * .08f }
-                Pose.WARNING -> rotationZ = if (beat > .05f) sin(beat * 3 * PI).toFloat() * 3f else 0f
+                Pose.SUCCESS -> { translationY = -beat.coerceAtLeast(0f) * .12f * this.size.height; scaleY += beat.coerceAtMost(0f) * .12f }
+                Pose.WARNING -> if (beat > .05f) rotationZ += sin(beat * 3 * PI).toFloat() * 5f
                 else -> Unit
             }
-            if (wobble) rotationZ = sway * 4f
             transformOrigin = TransformOrigin(.5f, .95f)
         })
     }
 }
 
 private const val BREATH_MS = 3_600
-private const val BEAT_MS = 5_200
+private const val BEAT_MS = 3_600
 
 /** A card title with the character beside it, doing what the card is about. */
 @Composable
