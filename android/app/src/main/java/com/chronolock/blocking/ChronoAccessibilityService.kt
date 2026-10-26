@@ -335,7 +335,11 @@ class ChronoAccessibilityService : AccessibilityService() {
         lastState = state
         observed = state.observedPackage
         val target = state.observedPackage
-        if (target != visitApp) { visitApp = target; passedApp = null; nextCheckInMillis = 0 }
+        if (target != visitApp) {
+            visitApp = target; passedApp = null; nextCheckInMillis = 0
+            // A browser already on screen when the service starts, or reached through a missed switch, sends no event to check it by.
+            if (target != null && Browsers.watches(target)) requestSiteCheck(target)
+        }
         val site = blockedSite
         val covered = when {
             target != null && state.decision.denied -> {
