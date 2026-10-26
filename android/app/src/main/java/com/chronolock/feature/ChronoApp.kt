@@ -575,6 +575,18 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             keptStreak(all, state.rulesWithGroups, today) to compareWeeks(all, today)
         }
         if (streak > 0) Text(tr("%1\$d일 연속 한도를 지켰어요", streak), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        // A few kept days in a row is a good moment to ask for a Play review; the prompt itself throttles and Play may skip it.
+        val askReview = LocalAskReview.current
+        LaunchedEffect(streak >= REVIEW_STREAK_DAYS) { if (streak >= REVIEW_STREAK_DAYS) askReview() }
+        if (streak > 0 || (weeks.changePercent ?: 0) < 0) {
+            val context = LocalContext.current
+            val message = tr("ChronoLock으로 스마트폰 사용 시간을 줄이고 있어요. 같이 해 볼래요?") + "\n" + SHARE_LINK
+            TextButton(onClick = {
+                val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                    .putExtra(android.content.Intent.EXTRA_TEXT, message)
+                runCatching { context.startActivity(android.content.Intent.createChooser(send, null)) }
+            }, modifier = Modifier.testTag("share-app")) { Text(tr("친구에게 추천하기")) }
+        }
         weeks.changePercent?.let { change ->
             Text(when {
                 change < 0 -> tr("지난주보다 %1\$d%% 덜 썼어요", -change)
@@ -682,3 +694,9 @@ internal fun StrictModeCard(state: MainState, nowEpoch: Long, select: (Int) -> U
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
     }
 }
+
+/** Asks for a Play review; provided by the activity, a no-op in previews and tests. */
+internal val LocalAskReview = androidx.compose.runtime.staticCompositionLocalOf<() -> Unit> { {} }
+private const val REVIEW_STREAK_DAYS = 3
+/** Store link with a source tag, so installs from shares show up separately in Play Console acquisition reports. */
+private const val SHARE_LINK = "https://play.google.com/store/apps/details?id=com.chronolock.app&referrer=utm_source%3Dshare%26utm_medium%3Dapp"

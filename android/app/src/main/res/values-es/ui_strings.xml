@@ -721,4 +721,6 @@
     <string name="site_app_not_blocked">"La app %1$s no se detiene con el bloqueo de sitios."</string>
     <string name="site_limit_app">"Limitar también la app"</string>
     <string name="site_scope_note">"Las páginas abiertas dentro de otras apps (salvo KakaoTalk y NAVER) y la app propia de cada servicio (como YouTube) no se bloquean. Limita esas apps con límites de app."</string>
+    <string name="share_app">"Recomendar a un amigo"</string>
+    <string name="share_app_text">"Estoy reduciendo mi tiempo de móvil con ChronoLock. ¿Lo pruebas conmigo?"</string>
 </resources>
