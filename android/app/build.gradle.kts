@@ -75,6 +75,8 @@ android {
     // Opt-in device scenarios change permissions and reboot. Keep their data separate.
     if (providers.gradleProperty("deviceVerification").orNull == "true") {
         buildTypes.getByName("debug") { applicationIdSuffix = ".verification"; buildConfigField("Boolean", "TEST_ADS", "false") }
+        // A minified build beside the installed Play app, for measuring real performance on a personal device.
+        buildTypes.getByName("release") { applicationIdSuffix = ".verification" }
     }
     // Every supported language must be available offline after an in-app language change.
     bundle { language { enableSplit = false } }

@@ -3,12 +3,9 @@ package com.chronolock.feature
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.EaseInOutSine
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.StartOffset
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.withFrameMillis
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.LaunchedEffect
@@ -24,7 +21,6 @@ import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.random.Random
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -138,29 +134,22 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
         Image(painterResource(kind.art(pose)), contentDescription = null, modifier = modifier.size(size))
         return
     }
-    val offset = remember { StartOffset(Random.nextInt(BREATH_MS)) }
-    val transition = rememberInfiniteTransition(label = "mascot")
+    val offset = remember { Random.nextInt(BREATH_MS).toLong() }
+    // The motion is slow, so it is stepped at ANIMATION_FPS instead of every frame of a 120 Hz screen; redrawing
+    // continuously kept the app at about half a CPU core while it sat on a screen.
+    val clock by produceState(0L) {
+        val start = withFrameMillis { it }
+        while (true) { value = withFrameMillis { it } - start; delay(1000L / ANIMATION_FPS) }
+    }
     val asleep = pose == Pose.SLEEP
     val breathMs = if (asleep) BREATH_MS * 3 / 2 else BREATH_MS
+    val swayMs = if (wobble) 2600 else 4200
     // Inhale over two fifths of the cycle, exhale over the rest, as resting breath does.
-    val breath by transition.animateFloat(0f, 0f, infiniteRepeatable(keyframes {
-        durationMillis = breathMs
-        0f at 0 using EaseInOutSine
-        1f at breathMs * 2 / 5 using EaseInOutSine
-    }, initialStartOffset = offset), label = "breath")
+    val breath = { breathAt(((clock + offset) % breathMs) / breathMs.toFloat()) }
     // An occasional beat: a small hop for success, a quick flinch for a warning; still the rest of the time.
-    val beat by transition.animateFloat(0f, 0f, infiniteRepeatable(keyframes {
-        durationMillis = BEAT_MS
-        0f at 0
-        0f at BEAT_MS - 600
-        1f at BEAT_MS - 450 using FastOutSlowInEasing
-        0f at BEAT_MS - 250 using EaseInOutSine
-        -.35f at BEAT_MS - 150
-        0f at BEAT_MS - 60
-    }, initialStartOffset = offset), label = "beat")
+    val beat = { beatAt(((clock + offset) % BEAT_MS).toInt()) }
     // A slow lean from side to side keeps a still character alive; dizzy leans further and faster.
-    val sway by transition.animateFloat(-1f, 1f,
-        infiniteRepeatable(tween(if (wobble) 2600 else 4200, easing = EaseInOutSine), RepeatMode.Reverse, offset), label = "sway")
+    val sway = { swayAt(((clock + offset) % (2L * swayMs)).toInt(), swayMs) }
     val depth = if (asleep) .16f else .12f
     val lean = when { wobble -> 6f; asleep -> .6f; else -> 1.2f }
     Crossfade(pose to kind, modifier.size(size), animationSpec = tween(280), label = "pose") { (shown, character) ->
@@ -175,8 +164,9 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
                 repeat(if (Random.nextFloat() < .2f) 2 else 1) { blinking = true; delay(130); blinking = false; delay(150) }
             }
         }
-        BreathingArt(if (blinking && closed != null) closed else open, { breath * depth }, Modifier.size(size).graphicsLayer {
-            rotationZ = sway * lean
+        BreathingArt(if (blinking && closed != null) closed else open, { breath() * depth }, Modifier.size(size).graphicsLayer {
+            rotationZ = sway() * lean
+            val beat = beat()
             when (shown) {
                 Pose.SUCCESS -> { translationY = -beat.coerceAtLeast(0f) * .12f * this.size.height; scaleY += beat.coerceAtMost(0f) * .12f }
                 Pose.WARNING -> if (beat > .05f) rotationZ += sin(beat * 3 * PI).toFloat() * 5f
@@ -189,6 +179,29 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
 
 private const val BREATH_MS = 3_600
 private const val BEAT_MS = 3_600
+private const val ANIMATION_FPS = 30
+
+/** Breath at [phase] (0..1 of a cycle): eased rise to 1 over two fifths, eased fall over the rest. */
+internal fun breathAt(phase: Float): Float =
+    if (phase < .4f) EaseInOutSine.transform(phase / .4f) else 1f - EaseInOutSine.transform((phase - .4f) / .6f)
+
+/** The beat at [ms] into its cycle: still, then a hop to 1, back down, a small dip below zero and still again. */
+internal fun beatAt(ms: Int): Float {
+    fun seg(from: Int, to: Int) = (ms - from) / (to - from).toFloat()
+    return when {
+        ms < BEAT_MS - 600 -> 0f
+        ms < BEAT_MS - 450 -> seg(BEAT_MS - 600, BEAT_MS - 450)
+        ms < BEAT_MS - 250 -> 1f - FastOutSlowInEasing.transform(seg(BEAT_MS - 450, BEAT_MS - 250))
+        ms < BEAT_MS - 150 -> -.35f * EaseInOutSine.transform(seg(BEAT_MS - 250, BEAT_MS - 150))
+        ms < BEAT_MS - 60 -> -.35f * (1f - seg(BEAT_MS - 150, BEAT_MS - 60))
+        else -> 0f
+    }
+}
+
+/** Lean from -1 to 1 and back, [ms] into a cycle of twice [halfMs]. */
+internal fun swayAt(ms: Int, halfMs: Int): Float =
+    if (ms < halfMs) -1f + 2f * EaseInOutSine.transform(ms / halfMs.toFloat())
+    else 1f - 2f * EaseInOutSine.transform((ms - halfMs) / halfMs.toFloat())
 private const val MESH = 12
 
 /**
