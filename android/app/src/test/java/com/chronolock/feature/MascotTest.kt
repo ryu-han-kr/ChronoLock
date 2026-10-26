@@ -22,4 +22,17 @@ class MascotTest {
         assertEquals(com.chronolock.domain.RuleRecipe.LESS_CHECKING, recommendRecipe(usageMillis = 60 * 60_000L, opens = 60, recordedDays = 7))
     @Test fun longSessions_suggestShortBreaks() =
         assertEquals(com.chronolock.domain.RuleRecipe.SHORT_BREAK, recommendRecipe(usageMillis = 3 * 60 * 60_000L, opens = 6, recordedDays = 1))
+
+    @Test fun steppedMotion_keepsTheOriginalCurves() {
+        assertEquals(0f, breathAt(0f), 1e-4f)
+        assertEquals(1f, breathAt(.4f), 1e-4f)
+        assertEquals(0f, breathAt(.9999f), 1e-3f)
+        assertEquals(0f, beatAt(0), 0f)
+        assertEquals(1f, beatAt(3_150), 1e-4f)
+        assertEquals(-.35f, beatAt(3_450), 1e-4f)
+        assertEquals(0f, beatAt(3_599), 0f)
+        assertEquals(-1f, swayAt(0, 4_200), 1e-4f)
+        assertEquals(1f, swayAt(4_200, 4_200), 1e-4f)
+        assertEquals(0f, swayAt(6_300, 4_200), 1e-4f)
+    }
 }
