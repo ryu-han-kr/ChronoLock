@@ -9,7 +9,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.runtime.remember
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -121,8 +126,8 @@ internal fun Mascot(mood: Mood, modifier: Modifier = Modifier, size: Dp = 96.dp)
 }
 
 /**
- * The chosen character (or [kind]) in [pose], alive but calm: its belly swells and settles while the head stays put
- * ([BreathingArt]), it leans slowly from side to side, sleeps slower, now and then hops when proud or flinches when
+ * The chosen character (or [kind]) in [pose], alive but calm: it blinks now and then, its belly swells and settles
+ * while the head stays put ([BreathingArt]), it leans slowly from side to side, sleeps slower, now and then hops when proud or flinches when
  * warned, and sways further when dizzy.
  * Each one starts at its own point in the cycle so characters side by side do not move in step, and a new pose fades in.
  * Decorative unless the caller adds a content description.
@@ -159,7 +164,18 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
     val depth = if (asleep) .16f else .12f
     val lean = when { wobble -> 6f; asleep -> .6f; else -> 1.2f }
     Crossfade(pose to kind, modifier.size(size), animationSpec = tween(280), label = "pose") { (shown, character) ->
-        BreathingArt(character.art(shown), { breath * depth }, Modifier.size(size).graphicsLayer {
+        val open = character.art(shown)
+        val closed = blinkArt(open)
+        var blinking by remember { mutableStateOf(false) }
+        // Blinks at uneven intervals, now and then twice in a row, as a living face does.
+        LaunchedEffect(closed) {
+            if (closed == null) return@LaunchedEffect
+            while (true) {
+                delay(Random.nextLong(2_500, 6_000))
+                repeat(if (Random.nextFloat() < .2f) 2 else 1) { blinking = true; delay(130); blinking = false; delay(150) }
+            }
+        }
+        BreathingArt(if (blinking && closed != null) closed else open, { breath * depth }, Modifier.size(size).graphicsLayer {
             rotationZ = sway * lean
             when (shown) {
                 Pose.SUCCESS -> { translationY = -beat.coerceAtLeast(0f) * .12f * this.size.height; scaleY += beat.coerceAtMost(0f) * .12f }
@@ -174,6 +190,20 @@ internal fun MascotArt(pose: Pose, modifier: Modifier = Modifier, size: Dp = 96.
 private const val BREATH_MS = 3_600
 private const val BEAT_MS = 3_600
 private const val MESH = 12
+
+/**
+ * The closed-eye frame of [art] (`<name>_blink`, made by scripts/make_blinks.py), or null for poses whose eyes are
+ * already closed. Looked up by name so new frames need no code change.
+ */
+@SuppressLint("DiscouragedApi")
+@Composable
+private fun blinkArt(art: Int): Int? {
+    val resources = LocalContext.current.resources
+    return remember(art) {
+        resources.getIdentifier(resources.getResourceEntryName(art) + "_blink", "drawable", resources.getResourcePackageName(art))
+            .takeIf { it != 0 }
+    }
+}
 
 /**
  * [art] drawn through a mesh so only the body breathes: around the belly the sides swell outward and the chest rises a
