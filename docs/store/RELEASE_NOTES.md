@@ -2,6 +2,41 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.10.0 (versionCode 20) — 미업로드
+
+AAB: `release/chronolock-0.10.0-vc20.aab`. 0.9.0 이후 PR #63~#71(카카오톡·네이버 앱 내 브라우저 사이트 차단, 고지 문구, 캐릭터 잘림 복원, 숨쉬기·깜빡임). Room v11 그대로.
+올리기 전에 개인정보처리방침 게시본 교체와 접근성 API 신고 문구 수정(`docs/POLICY_AND_PAYMENTS_2026-10-26.md` 1장)을 함께 한다.
+
+### ko
+- 카카오톡·네이버 앱 안에서 연 페이지도 웹사이트 차단에 걸려요.
+- 잘려 보이던 캐릭터 그림을 다시 다듬었어요.
+- 캐릭터가 숨 쉬고 눈을 깜빡이며 더 살아 있는 것처럼 움직여요. 설정의 '움직이는 효과 줄이기'로 멈출 수 있어요.
+- 웹사이트 차단과 권한 안내를 실제 동작에 맞게 고쳤어요.
+
+### en
+- Website blocking now also covers pages opened inside KakaoTalk and NAVER.
+- Character art that looked clipped has been redrawn.
+- Your buddy breathes and blinks to feel more alive. Turn it off with Reduce motion in Settings.
+- Website blocking and permission notes now match how they work.
+
+### ja
+- KakaoTalk・NAVERアプリ内で開いたページもウェブサイトのブロック対象になりました。
+- 切れて見えていたキャラクターの絵を直しました。
+- キャラクターが呼吸してまばたきし、より生き生きと動きます。設定の「動きを減らす」で止められます。
+- ウェブサイトのブロックと権限の説明を実際の動作に合わせました。
+
+### zh-CN
+- 在 KakaoTalk 和 NAVER 应用内打开的页面现在也会被网站拦截。
+- 修复了被裁切的角色图片。
+- 角色会呼吸和眨眼，显得更生动。可在设置中用“减少动态效果”关闭。
+- 网站拦截和权限说明已与实际行为一致。
+
+### es
+- El bloqueo de sitios ahora también cubre las páginas abiertas dentro de KakaoTalk y NAVER.
+- Redibujamos el arte de los personajes que se veía recortado.
+- Tu compañero respira y parpadea para sentirse más vivo. Desactívalo con Reducir movimiento en Ajustes.
+- Las notas del bloqueo de sitios y de permisos ahora coinciden con su funcionamiento.
+
 ## 0.9.0 (versionCode 19) — 2026-10-24 업로드(사용자)
 
 AAB: `release/chronolock-0.9.0-vc19.aab`. 0.8.5 이후 PR #46~#59(1년 기록·기록 부족 안내·히스토리에서 제한·그룹 시간대·사용 중 알림·위젯 캐릭터·움직임 줄이기·엄격 6/24시간·테마 이름·번역). Room v11.
