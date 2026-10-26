@@ -699,5 +699,5 @@
     <string name="pro_limit_strict">"6- and 24-hour waits come with Pro."</string>
     <string name="site_app_not_blocked">"The %1$s app is not stopped by site blocking."</string>
     <string name="site_limit_app">"Limit the app too"</string>
-    <string name="site_scope_note">"Pages opened inside other apps (such as KakaoTalk or Naver) and a service\'s own app (such as the YouTube app) are not blocked. Limit those apps in App limits."</string>
+    <string name="site_scope_note">"Pages opened inside other apps (except KakaoTalk and NAVER) and each service\'s own app (such as the YouTube app) are not blocked. Limit those apps with app limits."</string>
 </resources>

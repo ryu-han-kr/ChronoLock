@@ -678,5 +678,5 @@
     <string name="pro_limit_strict">"6시간·24시간 대기는 프로에서 쓸 수 있어요."</string>
     <string name="site_app_not_blocked">"%1$s 앱은 사이트 차단으로 막히지 않아요."</string>
     <string name="site_limit_app">"앱도 제한하기"</string>
-    <string name="site_scope_note">"카카오톡·네이버처럼 다른 앱 안에서 열리는 페이지와 각 서비스의 앱(유튜브 앱 등)은 막히지 않아요. 앱은 앱 제한으로 막아 주세요."</string>
+    <string name="site_scope_note">"카카오톡·네이버 외의 앱 안에서 열리는 페이지와 각 서비스의 앱(유튜브 앱 등)은 막히지 않아요. 앱은 앱 제한으로 막아 주세요."</string>
 </resources>

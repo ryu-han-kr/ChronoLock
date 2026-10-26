@@ -678,5 +678,5 @@
     <string name="pro_limit_strict">"6時間・24時間の待ち時間はプロで使えます。"</string>
     <string name="site_app_not_blocked">"%1$sアプリはサイトブロックでは止まりません。"</string>
     <string name="site_limit_app">"アプリも制限"</string>
-    <string name="site_scope_note">"カカオトーク・NAVERなど他のアプリ内で開くページや、各サービスのアプリ（YouTubeアプリなど）はブロックされません。アプリはアプリ制限で止めてください。"</string>
+    <string name="site_scope_note">"KakaoTalk・NAVER以外のアプリ内で開くページや、各サービスのアプリ（YouTubeアプリなど）はブロックされません。アプリはアプリ制限で止めてください。"</string>
 </resources>

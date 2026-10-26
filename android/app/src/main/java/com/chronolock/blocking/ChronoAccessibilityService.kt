@@ -315,6 +315,8 @@ class ChronoAccessibilityService : AccessibilityService() {
         if (bar != null && bar.isFocused) return null
         bar?.text?.toString()?.let(SiteDomains::hostOf)?.let { return SiteDomains.match(it, current)?.domain.orEmpty() }
         if (browser !in Browsers.inApp) return null // another window is in front, or the bar scrolled away
+        // An app whose in-app browser has a bar (KakaoTalk) shows no page without it: its chats are not walked.
+        if (bar == null && browser in Browsers.urlBarIds) return ""
         val (title, links) = inAppPage(browser) ?: return "" // the in-app browser is closed
         return Browsers.pageSite(links, title, current)
     }

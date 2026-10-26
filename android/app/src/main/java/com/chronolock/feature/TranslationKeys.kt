@@ -424,7 +424,7 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "1년" to R.string.history_one_year,
     "%1\$s 앱은 사이트 차단으로 막히지 않아요." to R.string.site_app_not_blocked,
     "앱도 제한하기" to R.string.site_limit_app,
-    "카카오톡·네이버처럼 다른 앱 안에서 열리는 페이지와 각 서비스의 앱(유튜브 앱 등)은 막히지 않아요. 앱은 앱 제한으로 막아 주세요." to R.string.site_scope_note,
+    "카카오톡·네이버 외의 앱 안에서 열리는 페이지와 각 서비스의 앱(유튜브 앱 등)은 막히지 않아요. 앱은 앱 제한으로 막아 주세요." to R.string.site_scope_note,
     "6시간·24시간 대기는 프로에서 쓸 수 있어요." to R.string.pro_limit_strict,
     "프로라서 광고가 표시되지 않아요." to R.string.ads_pro_none,
     "설정 목록 맨 아래에만 작은 배너 광고가 하나 표시됩니다. 오늘·히스토리·차단 화면과 집중 중에는 표시하지 않아요." to R.string.ads_where,
