@@ -44,6 +44,8 @@ class ChronoAccessibilityService : AccessibilityService() {
     /** The app on screen before the screen turned off; re-observed after unlock when usage events cannot tell. */
     private var observed: String? = null
     private var beforeScreenOff: String? = null
+    /** Blocked apps let go while only in picture-in-picture; ignored as on-screen until they return to a full window. */
+    private val pipReleased = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     /** The last check found only home or settings on screen while an app was still observed. */
     private var leaveSuspected = false
     private var sites: List<BlockedSite> = emptyList()
@@ -210,6 +212,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             WindowKind.TRANSIENT, WindowKind.NONE -> Unit // keyboard, permission prompt, status bar: the app underneath stays observed
             WindowKind.LEAVE -> { blockedSite = null; commands.trySend(Command.Foreground(limitedWindowApp())) }
             WindowKind.APP -> {
+                if (app in pipReleased && pipOnly(app)) return // its small window changing must not bring the block back
                 if (app != siteBrowser) blockedSite = null
                 if (Browsers.watches(app)) requestSiteCheck(app)
                 commands.trySend(Command.Foreground(limitedWindowApp() ?: app))
@@ -241,6 +244,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             windows.firstOrNull { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.isActive }?.root?.packageName?.toString()
         }.getOrNull() ?: return
         if (top == observed || top == packageName || (::overlay.isInitialized && overlay.visible)) return
+        if (top in pipReleased && pipOnly(top)) return
         // Only a missed switch into an app; the launcher or taskbar can hold the active window while an app is still on screen.
         if (environment.windowKind(top) == WindowKind.APP) {
             commands.trySend(Command.Foreground(limitedWindowApp() ?: top))
@@ -252,9 +256,26 @@ class ChronoAccessibilityService : AccessibilityService() {
      * Observing it keeps its time counted and the block screen up even when another app takes focus beside it.
      */
     private fun limitedWindowApp(): String? = runCatching {
-        windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }.mapNotNull { it.root?.packageName?.toString() }
+        val apps = windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
+        // Back in a full window, a released app is limited again.
+        pipReleased.removeAll { app -> apps.any { !it.isInPictureInPictureMode && it.root?.packageName?.toString() == app } }
+        apps.filterNot { it.isInPictureInPictureMode && it.root?.packageName?.toString() in pipReleased }
+            .mapNotNull { it.root?.packageName?.toString() }
             .firstOrNull { it != packageName && rules[it]?.enabled == true && it !in environment.safetyPackages() }
     }.getOrNull()
+
+    /** [app] is on screen only as a picture-in-picture window. */
+    private fun pipOnly(app: String): Boolean = runCatching {
+        val own = windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && it.root?.packageName?.toString() == app }
+        own.isNotEmpty() && own.all { it.isInPictureInPictureMode }
+    }.getOrDefault(false)
+
+    private fun pauseMedia() {
+        val audio = getSystemService(android.media.AudioManager::class.java) ?: return
+        listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP).forEach {
+            audio.dispatchMediaKeyEvent(android.view.KeyEvent(it, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE))
+        }
+    }
 
     /** Content-change events wake the service for every app; they are only needed while some site is blocked. */
     private fun watchContent(on: Boolean) {
@@ -346,6 +367,14 @@ class ChronoAccessibilityService : AccessibilityService() {
         }
         val site = blockedSite
         val covered = when {
+            // A blocked app left only in picture-in-picture (video apps go there on Home) would keep a full-screen block
+            // over everything with no way to close the small window underneath. Pause its playback and let the person go.
+            target != null && state.decision.denied && pipOnly(target) -> {
+                pipReleased += target
+                pauseMedia()
+                commands.trySend(Command.Foreground(null))
+                overlay.hide(); false
+            }
             target != null && state.decision.denied -> {
                 val now = environment.clock()
                 val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0

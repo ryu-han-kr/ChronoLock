@@ -2,7 +2,24 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 0.10.0 (versionCode 20) — 미업로드
+## 0.11.0 (versionCode 21) — 2026-10-26 API 업로드(internal·테스터들)
+
+AAB: `release/chronolock-0.11.0-vc21.aab`. 0.10.0 이후 PR #74·#76·#78·#80(QA 수정, 리뷰 요청·추천, 애니메이션 절전, PiP). Room v11 그대로. Pro 구분은 꺼진 빌드.
+
+### ko
+- 화면을 껐다 켜서 같은 앱으로 돌아오면 새로 연 것으로 세지 않아요.
+- 그룹에만 넣은 앱도 집중 모드에서 막혀요. 한글 주소 사이트도 차단돼요.
+- 화면 속 화면(PiP)으로 띄운 앱이 제한에 걸려도 차단 화면에 갇히지 않아요.
+- 캐릭터 움직임을 다듬어 배터리를 덜 써요.
+- 친구에게 추천하기 버튼이 생겼어요.
+
+### en
+- Unlocking back into the same app no longer counts as a new open.
+- Apps only in a group are blocked during focus, and non-Latin domains can be blocked.
+- A limited app in picture-in-picture no longer traps you behind the block screen.
+- The character's motion uses less battery.
+- New: recommend ChronoLock to a friend.
+## 0.10.0 (versionCode 20) — 2026-10-26 API 업로드
 
 AAB: `release/chronolock-0.10.0-vc20.aab`. 0.9.0 이후 PR #63~#71(카카오톡·네이버 앱 내 브라우저 사이트 차단, 고지 문구, 캐릭터 잘림 복원, 숨쉬기·깜빡임). Room v11 그대로.
 올리기 전에 개인정보처리방침 게시본 교체와 접근성 API 신고 문구 수정(`docs/POLICY_AND_PAYMENTS_2026-10-26.md` 1장)을 함께 한다.

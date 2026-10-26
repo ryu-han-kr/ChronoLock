@@ -82,6 +82,8 @@ try {
         'cooldown30Seconds_retriesDoNotExtendDeadline',
         'sessionLimit_survivesAccessibilityReconnect_andSettingsRemainReachable',
         'screenLock_doesNotAccumulateUsage',
+        'unlockingBackIntoTheSameApp_isNotANewOpen',
+        'blockedAppInPictureInPicture_doesNotTrapThePerson',
         'revokingUsagePermission_isDetected_andRestoringItRecovers',
         'deletingRule_removesActiveOverlay'
     )

@@ -217,6 +217,38 @@ class DeviceBlockingTest {
         await("usage resumes") { daily()!!.usageMillis > before }
     }
 
+    @Test fun unlockingBackIntoTheSameApp_isNotANewOpen() {
+        rule(opens = 5, cooldown = 600)
+        launch()
+        await("initial usage") { (daily()?.usageMillis ?: 0) >= 2000 }
+        shell("input keyevent KEYCODE_SLEEP")
+        await("screen off closes active session") { checkpoint()?.activePackage == null }
+        shell("input keyevent KEYCODE_WAKEUP")
+        shell("wm dismiss-keyguard")
+        // No relaunch: the target is still on top after unlocking, as when a person unlocks to keep reading.
+        await("session continues after unlock", timeout = 15_000) { checkpoint()?.activePackage == target }
+        assertFalse("Unlocking must not start the cooldown", checkpoint()!!.wasBlocked)
+        assertEquals(1, daily()!!.opens)
+    }
+
+    @Test fun blockedAppInPictureInPicture_doesNotTrapThePerson() {
+        rule(daily = 600)
+        // Its own task, as video players use, so no full window of the same app from an earlier test is left beside it.
+        shell("input keyevent KEYCODE_HOME")
+        shell("am start -W -n $target/com.chronolock.blocking.VerificationPipActivity")
+        await("pip target observed") { checkpoint()?.observedPackage == target }
+        runBlocking { db.dao().saveRule(RuleEntity(target, "Device verification", 1, null, null)) }
+        connect()
+        try {
+            // Before the fix the block stayed up over the home screen indefinitely; now the small window is let go.
+            await("pip-only blocked app released", timeout = 15_000) { checkpoint()?.observedPackage != target }
+            SystemClock.sleep(3000)
+            assertNotEquals("The released picture-in-picture app must not be blocked again", target, checkpoint()?.observedPackage)
+        } finally {
+            shell("am start -W -n $target/com.chronolock.blocking.VerificationPipActivity --ez close true")
+        }
+    }
+
     @Test fun revokingUsagePermission_isDetected_andRestoringItRecovers() {
         rule(daily = 600)
         launch()
