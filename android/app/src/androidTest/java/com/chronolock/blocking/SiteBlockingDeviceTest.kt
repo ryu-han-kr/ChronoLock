@@ -126,6 +126,25 @@ class SiteBlockingDeviceTest {
         assertTrue("live notification stayed after leaving", await(10_000) { !liveShown() })
     }
 
+    /** The Naver app's in-app browser shows no address; the page is told by where its links point. */
+    @Test fun blockedSite_inNaverInAppBrowser_showsOverlay() {
+        val naver = "com.nhn.android.search"
+        val installed = shell("pm list packages").lines().map { it.removePrefix("package:").trim() }.toSet()
+        assumeTrue("Naver app not installed", naver in installed)
+        fun inApp(url: String) = shell("am start -W -a android.intent.action.VIEW -d naversearchapp://inappbrowser?url=${java.net.URLEncoder.encode(url, "UTF-8")}&target=new&version=6")
+        inApp("https://example.com")
+        SystemClock.sleep(5000)
+        capture("site-allowed-naver")
+        val allowedClean = !overlayVisible()
+        inApp("https://m.youtube.com")
+        val shown = await(20_000, ::overlayVisible)
+        capture("site-blocked-naver")
+        shell("am force-stop $naver")
+        shell("input keyevent KEYCODE_HOME")
+        assertTrue("overlay on example.com in the Naver app", allowedClean)
+        assertTrue("no overlay on youtube.com in the Naver app", shown)
+    }
+
     @Test fun blockedSite_showsOverlay_andOtherSitesDoNot() {
         val installed = shell("pm list packages").lines().map { it.removePrefix("package:").trim() }.toSet()
         val browsers = listOf("com.android.chrome", "com.sec.android.app.sbrowser").filter { it in installed }

@@ -68,7 +68,7 @@ internal fun SitesCard(sites: List<BlockedSite>, pending: List<PendingSiteEntity
                 }
             }
         }
-        Text(tr("지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi"),
+        Text(tr("지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi, 카카오톡·네이버 앱 내 브라우저"),
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
         Text(tr("카카오톡·네이버처럼 다른 앱 안에서 열리는 페이지와 각 서비스의 앱(유튜브 앱 등)은 막히지 않아요. 앱은 앱 제한으로 막아 주세요."),
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)

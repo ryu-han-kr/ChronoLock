@@ -82,5 +82,53 @@ object Browsers {
         "org.mozilla.firefox" to "org.mozilla.firefox:id/mozac_browser_toolbar_url_view",
         "com.opera.browser" to "com.opera.browser:id/url_field",
         "com.duckduckgo.mobile.android" to "com.duckduckgo.mobile.android:id/omnibarTextInput",
+        "com.kakao.talk" to "com.kakao.talk:id/webview_navi_address_bar",
     )
+
+    /**
+     * Apps whose built-in browser may show no address (the Naver app shows none at all). Their web view exposes only the
+     * page title and the targets of its links, so the page is told from those.
+     */
+    val inApp: Set<String> = setOf("com.kakao.talk", "com.nhn.android.search")
+
+    fun watches(app: String): Boolean = app in urlBarIds || app in inApp
+
+    /**
+     * The blocked site an in-app page belongs to: its domain, "" when the page is some other site, or null while it cannot
+     * be told (still loading). The page is the host most of its [links] point to, or else a [title] naming the site.
+     */
+    fun pageSite(links: List<String>, title: String?, sites: List<BlockedSite>): String? {
+        val host = pageHost(links)
+        host?.let { SiteDomains.match(it, sites) }?.let { return it.domain }
+        sites.firstOrNull { it.enabled && title != null && titleNames(title, it.domain) }?.let { return it.domain }
+        return if (host != null || !title.isNullOrBlank()) "" else null
+    }
+
+    /** The host that most of [links] on a page point to; null while too few links agree. */
+    fun pageHost(links: List<String>): String? {
+        val hosts = links.mapNotNull { SiteDomains.hostOf(it)?.removePrefix("www.") }
+        val (host, count) = hosts.groupingBy { it }.eachCount().maxByOrNull { it.value } ?: return null
+        return host.takeIf { count >= MIN_PAGE_LINKS && count * 2 > hosts.size }
+    }
+
+    /**
+     * Whether [title] is the service's own page title: "YouTube", or "A video - YouTube" for youtube.com. A title that
+     * only mentions the service ("YouTube tips") does not count.
+     */
+    fun titleNames(title: String, domain: String): Boolean {
+        val name = brand(domain)
+        val text = title.trim().lowercase()
+        return text == name || TITLE_SEPARATORS.any { text.endsWith("$it$name") }
+    }
+
+    /** The name part of a domain: youtube for m.youtube.com, 11st for 11st.co.kr. */
+    private fun brand(domain: String): String {
+        val labels = domain.split('.')
+        val countrySecond = labels.size >= 3 && labels.last().length == 2 && labels[labels.size - 2] in SECOND_LEVELS
+        return labels[labels.size - if (countrySecond) 3 else 2]
+    }
+
+    const val MIN_PAGE_LINKS = 3
+    private val TITLE_SEPARATORS = listOf(" - ", " – ", " | ", " · ", " • ", " :: ", ": ")
+    private val SECOND_LEVELS = setOf("co", "or", "ne", "go", "ac", "com", "net", "org")
 }

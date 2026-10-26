@@ -47,6 +47,31 @@ class SiteBlockTest {
         Browsers.urlBarIds.forEach { (app, id) -> assertTrue(id, id.startsWith("$app:id/")) }
     }
 
+    @Test fun inAppPage_isTheHostMostLinksPointTo() {
+        val youtube = List(5) { "https://m.youtube.com/watch?v=$it" } + "https://accounts.google.com/login" + "javascript:void(0)"
+        assertEquals("m.youtube.com", Browsers.pageHost(youtube))
+        assertEquals("youtube.com", Browsers.pageHost(List(3) { "https://www.youtube.com/@a$it" }))
+        // A blog with one embedded video is not the video site.
+        assertEquals("m.blog.naver.com", Browsers.pageHost(List(6) { "https://m.blog.naver.com/p/$it" } + "https://youtu.be/x"))
+        assertNull(Browsers.pageHost(listOf("https://a.com/1", "https://a.com/2")))
+        assertNull(Browsers.pageHost(List(3) { "https://a.com/$it" } + List(3) { "https://b.com/$it" }))
+        assertNull(Browsers.pageHost(emptyList()))
+        assertTrue(Browsers.watches("com.nhn.android.search") && Browsers.watches("com.kakao.talk") && !Browsers.watches("com.example"))
+    }
+
+    @Test fun inAppPage_isTheBlockedSite_byLinksOrOwnTitle() {
+        val sites = listOf(BlockedSite("youtube.com"), BlockedSite("11st.co.kr"))
+        // YouTube's empty home has no link targets, only its title.
+        assertEquals("youtube.com", Browsers.pageSite(emptyList(), "YouTube", sites))
+        assertEquals("youtube.com", Browsers.pageSite(emptyList(), "고양이 영상 - YouTube", sites))
+        assertEquals("11st.co.kr", Browsers.pageSite(emptyList(), "11st", sites))
+        assertEquals("youtube.com", Browsers.pageSite(List(4) { "https://m.youtube.com/watch?v=$it" }, "", sites))
+        assertEquals("", Browsers.pageSite(emptyList(), "YouTube 수익 창출 방법 : 네이버 블로그", sites))
+        assertEquals("", Browsers.pageSite(List(4) { "https://news.naver.com/$it" }, null, sites))
+        assertNull(Browsers.pageSite(emptyList(), null, sites))
+        assertNull(Browsers.pageSite(emptyList(), " ", sites))
+    }
+
     @Test fun siteApps_coverSubdomains_andUnknownSitesHaveNone() {
         assertEquals(listOf("com.google.android.youtube"), SiteApps.of("youtube.com"))
         assertEquals(listOf("com.google.android.youtube"), SiteApps.of("m.youtube.com"))

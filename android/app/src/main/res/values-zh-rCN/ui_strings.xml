@@ -442,7 +442,7 @@
     <string name="site_remove">"删除"</string>
     <string name="held_site_delete">"删除网站"</string>
     <string name="held_site_off">"关闭拦截"</string>
-    <string name="site_browsers">"支持的浏览器：Chrome、三星浏览器、Edge、Firefox、Brave、Opera、Whale、DuckDuckGo、Vivaldi"</string>
+    <string name="site_browsers">"支持的浏览器：Chrome、三星浏览器、Edge、Firefox、Brave、Opera、Whale、DuckDuckGo、Vivaldi、KakaoTalk 和 NAVER 应用内浏览器"</string>
     <string name="site_block_heading">"%1$s\n你决定现在不打开它"</string>
     <string name="site_block_detail">"此网站在你的拦截列表中。仅检查地址栏中的域名，不保存浏览记录。"</string>
     <string name="site_invalid">"请输入网站地址，例如 youtube.com。"</string>

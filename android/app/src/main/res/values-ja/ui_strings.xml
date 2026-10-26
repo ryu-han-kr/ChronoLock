@@ -442,7 +442,7 @@
     <string name="site_remove">"削除"</string>
     <string name="held_site_delete">"サイトの削除"</string>
     <string name="held_site_off">"ブロックのオフ"</string>
-    <string name="site_browsers">"対応ブラウザ：Chrome、Samsung Internet、Edge、Firefox、Brave、Opera、Whale、DuckDuckGo、Vivaldi"</string>
+    <string name="site_browsers">"対応ブラウザ：Chrome、Samsung Internet、Edge、Firefox、Brave、Opera、Whale、DuckDuckGo、Vivaldi、KakaoTalk・NAVERのアプリ内ブラウザ"</string>
     <string name="site_block_heading">"%1$s\n今は開かないと決めました"</string>
     <string name="site_block_detail">"ブロックリストに追加したサイトです。アドレスバーのドメインだけを確認し、閲覧履歴は保存しません。"</string>
     <string name="site_invalid">"youtube.comのようにサイトのアドレスを入力してください。"</string>

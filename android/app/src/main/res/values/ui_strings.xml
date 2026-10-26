@@ -442,7 +442,7 @@
     <string name="site_remove">"삭제"</string>
     <string name="held_site_delete">"사이트 삭제"</string>
     <string name="held_site_off">"차단 끄기"</string>
-    <string name="site_browsers">"지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi"</string>
+    <string name="site_browsers">"지원 브라우저: Chrome, 삼성 인터넷, Edge, Firefox, Brave, Opera, 웨일, DuckDuckGo, Vivaldi, 카카오톡·네이버 앱 내 브라우저"</string>
     <string name="site_block_heading">"%1$s\n지금은 열지 않기로 했어요"</string>
     <string name="site_block_detail">"차단 목록에 추가한 사이트입니다. 주소창의 도메인만 확인하며 방문 기록은 저장하지 않습니다."</string>
     <string name="site_invalid">"youtube.com처럼 사이트 주소를 입력해 주세요."</string>
