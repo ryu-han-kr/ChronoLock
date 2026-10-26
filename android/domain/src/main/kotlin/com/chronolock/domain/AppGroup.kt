@@ -74,9 +74,13 @@ fun MonitorState.groupUsage(group: AppGroup): DailyUsage {
  */
 fun withGroups(rules: Map<String, AppRule>, groups: List<AppGroup>): Map<String, AppRule> {
     val result = rules.toMutableMap()
+    // Focus is stored on each enabled rule; a member known only through its group takes the same deadline.
+    val focus = rules.values.filter { it.enabled }.mapNotNull { it.focusUntilEpochMillis }.maxOrNull()
     groups.filter { it.enabled }.forEach { group ->
         group.members.forEach { (app, name) ->
-            val current = result[app]?.takeIf { it.groups.isNotEmpty() } ?: rules[app]?.takeIf { it.enabled } ?: AppRule(app, name)
+            // A blank label (empty launcher name, or one from a hand-edited backup) must not fail the whole rule map.
+            val current = result[app]?.takeIf { it.groups.isNotEmpty() } ?: rules[app]?.takeIf { it.enabled }
+                ?: AppRule(app, name.ifBlank { app }, focusUntilEpochMillis = focus)
             result[app] = current.copy(groups = current.groups + group)
         }
     }

@@ -19,6 +19,7 @@ class SiteBlockTest {
     @Test fun addressBarText_givesTheHostOrNothing() {
         assertEquals("m.youtube.com", SiteDomains.hostOf("m.youtube.com/watch?v=abc"))
         assertEquals("www.instagram.com", SiteDomains.hostOf("https://user@www.instagram.com:8443/reels#x"))
+        assertEquals("xn--3e0b707e.kr", SiteDomains.hostOf("한국.kr/path"))
         assertEquals("m.youtube.com", SiteDomains.hostOf("‎m.youtube.com"))
         assertNull(SiteDomains.hostOf("how to focus"))
         assertNull(SiteDomains.hostOf("Search or type URL"))

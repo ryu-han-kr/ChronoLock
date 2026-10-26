@@ -290,6 +290,12 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         update.state
     }
 
+    suspend fun screenOff(now: ClockReading): MonitorState = mutex.withLock {
+        val update = monitor.screenOff(state ?: load(), now, ruleMap(now))
+        persist(update, tracked = false)
+        update.state
+    }
+
     suspend fun tick(now: ClockReading): MonitorState = mutex.withLock {
         val rules = ruleMap(now)
         val update = monitor.tick(state ?: load(), now, rules)

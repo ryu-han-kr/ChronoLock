@@ -574,9 +574,9 @@
     <string name="pro_themes">"全部主题与自定义主题"</string>
     <string name="pro_owned">"你已拥有专业版，谢谢！"</string>
     <string name="pro_pending">"正在等待付款确认，完成后即可使用专业版。"</string>
-    <string name="pro_buy">"专业版终身 · %1$s"</string>
+    <string name="pro_buy">"专业版月度订阅 · 每月 %1$s"</string>
     <string name="pro_loading">"正在加载专业版"</string>
-    <string name="pro_note">"一次付款，同一 Google 账户的设备都能使用。"</string>
+    <string name="pro_note">"每月自动续订，可随时在 Google Play 中取消。同一 Google 账户的设备都能使用。"</string>
     <string name="pro_limit_sites">"免费版最多拦截 5 个网站，专业版可增至 50 个。"</string>
     <string name="pro_limit_groups">"免费版最多创建 2 个应用组，专业版不限。"</string>
     <string name="pro_limit_goal">"目标锁定是专业版功能。"</string>

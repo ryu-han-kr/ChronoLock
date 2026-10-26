@@ -36,7 +36,8 @@ class MainActivity : ComponentActivity() {
         setContent { ChronoApp(model, ::openPermissionSettings, ::signIn, { ads.showPrivacyOptions(this) },
             manageSubscription = { billing.manageSubscription(this) },
             installUpdate = updates::complete,
-            buyPro = { if (!billing.purchasePro(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") }) }
+            buyPro = { if (!billing.purchasePro(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") },
+            managePro = { billing.managePro(this) }) }
         updates.check()
     }
     override fun onDestroy() { updates.stop(); super.onDestroy() }

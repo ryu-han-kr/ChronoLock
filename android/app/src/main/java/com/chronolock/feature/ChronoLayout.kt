@@ -84,6 +84,7 @@ internal fun ChronoScreen(
     collectPiece: (Int) -> Unit = {},
     changeGoalPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
     buyPro: () -> Unit = {},
+    managePro: () -> Unit = {},
     setFollowSystem: (Boolean) -> Unit = {},
     editNightTheme: (Boolean) -> Unit = {},
     pickRecipe: RuleRecipe? = null,
@@ -297,7 +298,7 @@ internal fun ChronoScreen(
                             }
                             3 -> {
                                 if (state.account.configured) item { AccountCard(state, signIn, signOut, deleteAccount) }
-                                if (com.chronolock.BuildConfig.PRO_GATING) item { ProCard(state, buyPro) }
+                                if (com.chronolock.BuildConfig.PRO_GATING) item { ProCard(state, buyPro, managePro) }
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, manageSubscription) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }

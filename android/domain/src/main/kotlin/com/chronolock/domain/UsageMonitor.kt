@@ -24,6 +24,8 @@ data class MonitorState(
     val decision: RuleDecision = RuleDecision.Allow,
     // Preserve the completed session's usage while its blocking overlay is still visible.
     val blockedSession: ActiveSession? = null,
+    // The session paused by a screen lock; unlocking back into the same app continues it instead of opening anew.
+    val screenOffSession: ActiveSession? = null,
 )
 data class UsageEvent(val type: String, val packageName: String?, val epochMillis: Long)
 data class MonitorUpdate(val state: MonitorState, val events: List<UsageEvent> = emptyList())
@@ -32,9 +34,14 @@ data class MonitorUpdate(val state: MonitorState, val events: List<UsageEvent> =
 class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
     fun foreground(state: MonitorState, target: String?, now: ClockReading, rules: Map<String, AppRule>): MonitorUpdate {
         if (state.observedPackage == target) return tick(state, now, rules)
+        val paused = state.screenOffSession
+        if (paused != null && state.observedPackage == null && target == paused.packageName && rules[target]?.enabled == true) {
+            return tick(state.copy(observedPackage = target, active = paused, clock = now, screenOffSession = null), now, rules)
+        }
         val measured = measure(state, now)
         val events = mutableListOf<UsageEvent>()
-        var next = close(measured, now, events).copy(observedPackage = target, decision = RuleDecision.Allow, blockedSession = null)
+        var next = close(measured, now, events).copy(observedPackage = target, decision = RuleDecision.Allow, blockedSession = null,
+            screenOffSession = null)
         if (target != null && rules[target]?.enabled == true) {
             val decision = evaluate(next, target, now, rules)
             if (decision.denied) {
@@ -66,6 +73,16 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
             next = next.copy(decision = RuleDecision.Allow, blockedSession = null)
         }
         return MonitorUpdate(next, events)
+    }
+
+    /**
+     * The screen locked: stop measuring, but remember the session. If the next foreground app after unlocking is the
+     * same one, [foreground] continues that session (no extra open, no cooldown, the session limit keeps counting).
+     */
+    fun screenOff(state: MonitorState, now: ClockReading, rules: Map<String, AppRule>): MonitorUpdate {
+        val paused = measure(state, now).active ?: state.screenOffSession
+        val update = foreground(state, null, now, rules)
+        return update.copy(state = update.state.copy(screenOffSession = paused))
     }
 
     /** Never bill service downtime as if continuous foreground usage had been observed. */

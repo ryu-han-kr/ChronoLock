@@ -29,7 +29,9 @@ object SiteDomains {
         val afterScheme = trimmed.substringAfter("://", trimmed)
         val host = afterScheme.substringBefore('/').substringBefore('?').substringBefore('#')
             .substringAfterLast('@').substringBefore(':').trimEnd('.')
-        return host.takeIf(::valid)
+        // Browsers show internationalized names (예: 한글.kr) in Unicode; compare them in their ASCII (punycode) form.
+        val ascii = if (host.all { it.code < 128 }) host else runCatching { java.net.IDN.toASCII(host).lowercase() }.getOrNull() ?: return null
+        return ascii.takeIf(::valid)
     }
 
     /** The enabled entry of [sites] that covers [host], if any. */

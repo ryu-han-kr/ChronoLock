@@ -574,9 +574,9 @@
     <string name="pro_themes">"すべてのテーマとマイテーマ"</string>
     <string name="pro_owned">"プロをご利用中です。ありがとうございます！"</string>
     <string name="pro_pending">"決済の確認を待っています。完了するとプロが使えます。"</string>
-    <string name="pro_buy">"プロ買い切り · %1$s"</string>
+    <string name="pro_buy">"プロ月額 · 月%1$s"</string>
     <string name="pro_loading">"プロを読み込み中"</string>
-    <string name="pro_note">"一度購入すれば同じGoogleアカウントの端末で使い続けられます。"</string>
+    <string name="pro_note">"毎月自動で更新され、Google Playでいつでも解約できます。同じGoogleアカウントの端末で使えます。"</string>
     <string name="pro_limit_sites">"無料版でブロックできるサイトは5件までです。プロでは50件まで増えます。"</string>
     <string name="pro_limit_groups">"無料版で作れるアプリグループは2つまでです。プロでは無制限です。"</string>
     <string name="pro_limit_goal">"目標ロックはプロの機能です。"</string>
