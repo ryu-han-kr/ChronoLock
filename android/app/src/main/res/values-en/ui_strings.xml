@@ -700,4 +700,6 @@
     <string name="site_app_not_blocked">"The %1$s app is not stopped by site blocking."</string>
     <string name="site_limit_app">"Limit the app too"</string>
     <string name="site_scope_note">"Pages opened inside other apps (except KakaoTalk and NAVER) and each service\'s own app (such as the YouTube app) are not blocked. Limit those apps with app limits."</string>
+    <string name="share_app">"Recommend to a friend"</string>
+    <string name="share_app_text">"I\'m cutting my phone time with ChronoLock. Want to try it with me?"</string>
 </resources>

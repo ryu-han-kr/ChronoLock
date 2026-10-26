@@ -679,4 +679,6 @@
     <string name="site_app_not_blocked">"%1$s 应用不会被网站拦截阻止。"</string>
     <string name="site_limit_app">"也限制应用"</string>
     <string name="site_scope_note">"除 KakaoTalk 和 NAVER 外，在其他应用内打开的页面以及各服务自己的应用（如 YouTube 应用）不会被拦截。请用应用限制来限制这些应用。"</string>
+    <string name="share_app">"推荐给朋友"</string>
+    <string name="share_app_text">"我在用 ChronoLock 减少手机使用时间，要不要一起试试？"</string>
 </resources>

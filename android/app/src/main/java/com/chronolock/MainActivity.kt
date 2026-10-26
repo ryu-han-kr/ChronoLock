@@ -9,13 +9,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.lifecycleScope
 import com.chronolock.account.AuthConfig
 import com.chronolock.account.GoogleSignIn
 import com.chronolock.ads.AdsController
 import com.chronolock.billing.BillingController
 import com.chronolock.feature.ChronoApp
+import com.chronolock.feature.LocalAskReview
 import com.chronolock.feature.MainViewModel
+import com.chronolock.review.ReviewPrompt
 import com.chronolock.update.InAppUpdates
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -33,11 +36,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         ads.gatherConsent(this)
         billing.connect()
-        setContent { ChronoApp(model, ::openPermissionSettings, ::signIn, { ads.showPrivacyOptions(this) },
-            manageSubscription = { billing.manageSubscription(this) },
-            installUpdate = updates::complete,
-            buyPro = { if (!billing.purchasePro(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") },
-            managePro = { billing.managePro(this) }) }
+        val review = ReviewPrompt(this)
+        setContent { CompositionLocalProvider(LocalAskReview provides { review.maybeAsk() }) {
+            ChronoApp(model, ::openPermissionSettings, ::signIn, { ads.showPrivacyOptions(this) },
+                manageSubscription = { billing.manageSubscription(this) },
+                installUpdate = updates::complete,
+                buyPro = { if (!billing.purchasePro(this)) model.showError("결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.") },
+                managePro = { billing.managePro(this) })
+        } }
         updates.check()
     }
     override fun onDestroy() { updates.stop(); super.onDestroy() }

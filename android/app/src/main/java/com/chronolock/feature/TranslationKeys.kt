@@ -286,6 +286,8 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "계정을 삭제하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요." to R.string.error_delete_account,
     "Google 로그인을 시작하지 못했습니다. 기기에 Google 계정이 있는지 확인해 주세요." to R.string.error_google,
     "구독 관리" to R.string.manage_subscription,
+    "친구에게 추천하기" to R.string.share_app,
+    "ChronoLock으로 스마트폰 사용 시간을 줄이고 있어요. 같이 해 볼래요?" to R.string.share_app_text,
     "다시 시도" to R.string.billing_retry,
     "결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요." to R.string.error_billing,
     "오늘 %1\$s 남음" to R.string.rule_remaining,

@@ -679,4 +679,6 @@
     <string name="site_app_not_blocked">"%1$sアプリはサイトブロックでは止まりません。"</string>
     <string name="site_limit_app">"アプリも制限"</string>
     <string name="site_scope_note">"KakaoTalk・NAVER以外のアプリ内で開くページや、各サービスのアプリ（YouTubeアプリなど）はブロックされません。アプリはアプリ制限で止めてください。"</string>
+    <string name="share_app">"友だちにすすめる"</string>
+    <string name="share_app_text">"ChronoLockでスマホの使用時間を減らしています。一緒にやってみませんか？"</string>
 </resources>
