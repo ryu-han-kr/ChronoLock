@@ -307,4 +307,39 @@ class UsageMonitorTest {
         assertFalse(state.decision.denied)
         assertEquals(2000L, usage(state).usageMillis)
     }
+
+    @Test fun screenLockThenUnlockIntoSameApp_continuesSession() {
+        val rules = mapOf(app to AppRule(app, "Test", maxOpenCount = 2, cooldownSeconds = 600, sessionLimitSeconds = 120))
+        var state = monitor.foreground(MonitorState(), app, clock(), rules).state
+        state = monitor.screenOff(state, clock(60_000), rules).state
+        assertNull(state.active)
+        state = monitor.foreground(state, app, clock(65_000), rules).state
+        assertFalse("Unlocking must not trigger the cooldown", state.decision.denied)
+        assertEquals(1, usage(state).opens)
+        assertEquals(60_000L, state.active?.usageMillis)
+        // The screen-off gap is not usage, and the session limit keeps counting from where it was.
+        state = monitor.tick(state, clock(124_999), rules).state
+        assertFalse(state.decision.denied)
+        state = monitor.tick(state, clock(125_000), rules).state
+        assertEquals(listOf(Reason.SESSION_USAGE), state.decision.reasons)
+    }
+
+    @Test fun repeatedScreenOffTicks_keepThePausedSession() {
+        val rules = rules(cooldown = 600)
+        var state = monitor.foreground(MonitorState(), app, clock(), rules).state
+        state = monitor.screenOff(state, clock(1000), rules).state
+        state = monitor.screenOff(state, clock(2000), rules).state
+        state = monitor.foreground(state, app, clock(3000), rules).state
+        assertFalse(state.decision.denied)
+    }
+
+    @Test fun unlockToAnotherAppFirst_makesReturningAnOrdinaryOpen() {
+        val rules = rules(cooldown = 600)
+        var state = monitor.foreground(MonitorState(), app, clock(), rules).state
+        state = monitor.screenOff(state, clock(1000), rules).state
+        state = monitor.foreground(state, "launcher", clock(2000), rules).state
+        state = monitor.foreground(state, null, clock(2500), rules).state
+        state = monitor.foreground(state, app, clock(3000), rules).state
+        assertEquals(listOf(Reason.COOLDOWN), state.decision.reasons)
+    }
 }

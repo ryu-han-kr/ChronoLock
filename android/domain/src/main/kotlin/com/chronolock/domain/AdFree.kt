@@ -15,11 +15,11 @@ object AdFreeProduct {
         purchases.filter { ID in it.products && it.purchased && !it.acknowledged }
 }
 
-/** The one-time Pro pass (an in-app product, not a subscription). */
+/** Monthly Pro subscription (990 KRW auto-renewing base plan in Play Console). */
 object ProProduct {
-    const val ID = "chronolock_pro_lifetime"
+    const val ID = "chronolock_pro_monthly"
     fun entitled(purchases: List<StorePurchase>): Boolean = purchases.any { ID in it.products && it.purchased }
-    /** Play refunds one-time purchases that stay unacknowledged for three days. */
+    /** Play refunds subscriptions that stay unacknowledged for three days. */
     fun toAcknowledge(purchases: List<StorePurchase>): List<StorePurchase> = purchases.filter { ID in it.products && it.purchased && !it.acknowledged }
 }
 

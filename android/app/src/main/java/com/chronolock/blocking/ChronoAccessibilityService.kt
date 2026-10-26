@@ -65,12 +65,13 @@ class ChronoAccessibilityService : AccessibilityService() {
         data class Foreground(val packageName: String?) : Command
         data object Tick : Command
         data object Recover : Command
+        data object ScreenOff : Command
     }
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
                 beforeScreenOff = observed
-                commands.trySend(Command.Foreground(null))
+                commands.trySend(Command.ScreenOff)
             } else commands.trySend(Command.Recover)
         }
     }
@@ -169,7 +170,8 @@ class ChronoAccessibilityService : AccessibilityService() {
                     try {
                         val state = when (command) {
                             is Command.Foreground -> repository.foreground(command.packageName?.takeUnless { it in environment.safetyPackages() }, environment.clock())
-                            Command.Tick -> if (environment.interactive()) repository.tick(environment.clock()) else repository.foreground(null, environment.clock())
+                            Command.Tick -> if (environment.interactive()) repository.tick(environment.clock()) else repository.screenOff(environment.clock())
+                            Command.ScreenOff -> repository.screenOff(environment.clock())
                             Command.Recover -> {
                                 delay(RECOVER_DELAY_MS) // The resumed activity's usage event lands shortly after USER_PRESENT.
                                 // Without usage access the recovery is always empty, so fall back to what was on screen before the lock.

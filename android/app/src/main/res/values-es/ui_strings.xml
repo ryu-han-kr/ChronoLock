@@ -614,9 +614,9 @@
     <string name="pro_themes">"Todos los temas y temas propios"</string>
     <string name="pro_owned">"Tienes Pro. ¡Gracias!"</string>
     <string name="pro_pending">"Esperando la confirmación del pago. Pro se abrirá al completarse."</string>
-    <string name="pro_buy">"Pro de por vida · %1$s"</string>
+    <string name="pro_buy">"Pro mensual · %1$s/mes"</string>
     <string name="pro_loading">"Cargando Pro"</string>
-    <string name="pro_note">"Paga una vez y úsalo en los dispositivos con la misma cuenta de Google."</string>
+    <string name="pro_note">"Se renueva cada mes; cancela cuando quieras en Google Play. Funciona en los dispositivos con la misma cuenta de Google."</string>
     <string name="pro_limit_sites">"La versión gratis bloquea hasta 5 sitios. Pro sube a 50."</string>
     <string name="pro_limit_groups">"La versión gratis permite 2 grupos. Pro no tiene límite."</string>
     <string name="pro_limit_goal">"El candado por objetivo es de Pro."</string>

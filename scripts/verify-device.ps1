@@ -97,6 +97,9 @@ try {
         if ($LASTEXITCODE -eq 0 -and "$booted".Trim() -eq '1') { break }
     } while ((Get-Date) -lt $deadline)
     if ("$booted".Trim() -ne '1') { throw 'Emulator did not complete reboot within three minutes.' }
+    # A software-rendered emulator is still busy right after boot_completed; starting instrumentation then
+    # ANRs the app process during startup ("failed to complete startup"), which is not an app failure.
+    Start-Sleep -Seconds 45
     Invoke-Adb @('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
     Invoke-Adb @('shell', 'wm', 'dismiss-keyguard')
     Invoke-Scenario 'reboot-verify' "$testClass#rebootCheckpoint" 'verify'

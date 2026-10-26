@@ -100,17 +100,23 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
         })
     }
 
-    /** Opens Play's sheet for the Pro pass; false when it is not loaded (not set up yet, or offline). */
+    /** Opens Play's sheet for the monthly Pro subscription; false when it is not loaded (not set up yet, or offline). */
     fun purchasePro(activity: Activity): Boolean {
         val details = proProduct ?: return false
+        val offer = details.baseOffer() ?: return false
         val params = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(
-            BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).build())).build()
+            BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offer.offerToken).build())).build()
         return client.launchBillingFlow(activity, params).ok
     }
 
     /** The ad-free subscription is no longer sold (Pro removes ads); subscribers can still manage or cancel it here. */
-    fun manageSubscription(activity: Activity) {
-        val uri = Uri.parse("https://play.google.com/store/account/subscriptions?sku=${AdFreeProduct.ID}&package=${context.packageName}")
+    fun manageSubscription(activity: Activity) = openSubscription(activity, AdFreeProduct.ID)
+
+    /** Play's page for cancelling or changing the Pro subscription. */
+    fun managePro(activity: Activity) = openSubscription(activity, ProProduct.ID)
+
+    private fun openSubscription(activity: Activity, id: String) {
+        val uri = Uri.parse("https://play.google.com/store/account/subscriptions?sku=$id&package=${context.packageName}")
         runCatching { activity.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
     }
 
@@ -130,43 +136,28 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
             mutable.update { it.copy(status = status, price = price) }
         }
         val pro = QueryProductDetailsParams.newBuilder().setProductList(listOf(
-            QueryProductDetailsParams.Product.newBuilder().setProductId(ProProduct.ID).setProductType(BillingClient.ProductType.INAPP).build())).build()
+            QueryProductDetailsParams.Product.newBuilder().setProductId(ProProduct.ID).setProductType(BillingClient.ProductType.SUBS).build())).build()
         client.queryProductDetailsAsync(pro) { result, details ->
             proProduct = details.productDetailsList.firstOrNull().takeIf { result.ok }
-            mutable.update { it.copy(proPrice = proProduct?.oneTimePurchaseOfferDetails?.formattedPrice) }
+            mutable.update { it.copy(proPrice = proProduct?.baseOffer()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice) }
         }
     }
 
+    /** Both products are subscriptions, so one query covers the ad-free and Pro entitlements. */
     fun refreshPurchases() {
         if (!client.isReady) return
-        refreshPro()
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { result, purchases ->
             if (!result.ok) return@queryPurchasesAsync
             val store = purchases.map { StorePurchase(it.products, it.purchaseState == Purchase.PurchaseState.PURCHASED, it.isAcknowledged, it.purchaseToken) }
             val adFree = AdFreeProduct.entitled(store)
-            prefs.edit().putBoolean(KEY_AD_FREE, adFree).apply()
-            mutable.update { it.copy(adFree = adFree,
-                pending = purchases.any { p -> AdFreeProduct.ID in p.products && p.purchaseState == Purchase.PurchaseState.PENDING }) }
-            AdFreeProduct.toAcknowledge(store).forEach { purchase ->
+            val pro = ProProduct.entitled(store)
+            prefs.edit { putBoolean(KEY_AD_FREE, adFree).putBoolean(KEY_PRO, pro) }
+            fun pending(id: String) = purchases.any { p -> id in p.products && p.purchaseState == Purchase.PurchaseState.PENDING }
+            mutable.update { it.copy(adFree = adFree, pending = pending(AdFreeProduct.ID), pro = pro, proPending = pending(ProProduct.ID)) }
+            (AdFreeProduct.toAcknowledge(store) + ProProduct.toAcknowledge(store)).forEach { purchase ->
                 client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.token).build()) { ack ->
                     // Unacknowledged purchases are refunded by Play after three days; the next refresh retries.
                     if (!ack.ok) android.util.Log.w("ChronoLock", "Billing acknowledge failed: ${ack.responseCode} ${ack.debugMessage}")
-                }
-            }
-        }
-    }
-
-    private fun refreshPro() {
-        client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()) { result, purchases ->
-            if (!result.ok) return@queryPurchasesAsync
-            val store = purchases.map { StorePurchase(it.products, it.purchaseState == Purchase.PurchaseState.PURCHASED, it.isAcknowledged, it.purchaseToken) }
-            val pro = ProProduct.entitled(store)
-            prefs.edit { putBoolean(KEY_PRO, pro) }
-            mutable.update { it.copy(pro = pro,
-                proPending = purchases.any { p -> ProProduct.ID in p.products && p.purchaseState == Purchase.PurchaseState.PENDING }) }
-            ProProduct.toAcknowledge(store).forEach { purchase ->
-                client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.token).build()) { ack ->
-                    if (!ack.ok) android.util.Log.w("ChronoLock", "Pro acknowledge failed: ${ack.responseCode} ${ack.debugMessage}")
                 }
             }
         }

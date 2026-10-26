@@ -120,4 +120,12 @@ class AppGroupTest {
         val under = mapOf(DailyKey("a", day) to DailyUsage(20_000, 1, 0))
         assertEquals(DayResult.KEPT, dayResults(under, rules, day, 1).single().second)
     }
+
+    @Test fun groupOnlyMember_withBlankName_getsARuleAndTheFocusDeadline() {
+        val own = mapOf("own.app" to AppRule("own.app", "Own", focusUntilEpochMillis = 5000))
+        val group = AppGroup(1, "SNS", mapOf("blank.app" to " ", "other.app" to "Other"), dailyLimitSeconds = 60)
+        val rule = withGroups(own, listOf(group))["blank.app"]!!
+        assertEquals("blank.app", rule.appName)
+        assertEquals(5000L, rule.focusUntilEpochMillis)
+    }
 }
