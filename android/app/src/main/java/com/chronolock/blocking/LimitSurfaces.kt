@@ -15,6 +15,7 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.chronolock.MainActivity
 import com.chronolock.R
 import com.chronolock.data.MascotKind
@@ -30,6 +31,7 @@ import com.chronolock.domain.liveLimit
 import com.chronolock.domain.remainingDailyMillis
 import com.chronolock.domain.todaySummary
 import com.chronolock.feature.UiText
+import kotlin.math.roundToInt
 import com.chronolock.feature.formatDuration
 
 /**
@@ -51,13 +53,25 @@ internal class LimitSurfaces(private val context: Context) {
     var mascot = MascotKind.DEFAULT
     private val icons = mutableMapOf<Int, android.graphics.Bitmap?>()
     private var oldChannelGone = false
+    private val rings = mutableMapOf<Int, IconCompat>()
+    /** The app whose limit warning is posted; it goes once that app is no longer in use. */
+    private var warnedNow: String? = null
     private var lastWidgetMascot: MascotKind? = null
     private var lastWidgetStatus: String? = null
 
     init { clearLive() } // A notification left by a stopped service must not outlive it.
 
     /** Removes the live notification; the service calls this when it stops. */
-    fun clearLive() { lastLive = null; runCatching { NotificationManagerCompat.from(context).cancel(LIVE_ID) } }
+    fun clearLive() {
+        lastLive = null
+        runCatching { NotificationManagerCompat.from(context).cancel(LIVE_ID) }
+        clearWarning()
+    }
+
+    private fun clearWarning() {
+        warnedNow?.let { runCatching { NotificationManagerCompat.from(context).cancel(it.hashCode()) } }
+        warnedNow = null
+    }
 
     fun update(state: MonitorState, rules: Map<String, AppRule>, localized: Context, inUse: Boolean = true, lock: LockSetting = LockSetting()) {
         val now = state.clock?.epochMillis ?: System.currentTimeMillis()
@@ -89,13 +103,15 @@ internal class LimitSurfaces(private val context: Context) {
         manager.createNotificationChannel(NotificationChannel(CHANNEL, localized.getString(R.string.limit_channel), NotificationManager.IMPORTANCE_DEFAULT))
         val text = UiText(localized)
         val notification = NotificationCompat.Builder(context, CHANNEL)
-            .setSmallIcon(R.drawable.ic_chronolock)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(localized.getString(R.string.limit_warning_title, rule.appName))
             .setContentText(localized.getString(R.string.limit_warning_text, formatDuration((remainingMillis + 999) / 1000, text)))
             .setContentIntent(openApp(context))
             .setAutoCancel(true)
             .build()
+        clearWarning()
         runCatching { manager.notify(rule.packageName.hashCode(), notification) }
+        warnedNow = rule.packageName
     }
 
     /**
@@ -104,6 +120,8 @@ internal class LimitSurfaces(private val context: Context) {
      */
     private fun showLive(live: LiveLimit?, now: Long, localized: Context) {
         val manager = NotificationManagerCompat.from(context)
+        // Nothing of ChronoLock stays in the status bar once the limited app is left.
+        if (live?.packageName != warnedNow) clearWarning()
         if (live == null) {
             if (lastLive != null) { lastLive = null; runCatching { manager.cancel(LIVE_ID) } }
             return
@@ -126,7 +144,8 @@ internal class LimitSurfaces(private val context: Context) {
         }
         val title = localized.getString(R.string.live_title, live.appName)
         val pose = if ((live.nearestMillis ?: Long.MAX_VALUE) < 5 * 60_000) Pose.WARNING else Pose.TIMER
-        val key = live.packageName + "|" + pose + "|" + mascot + "|" + lines.joinToString("|")
+        val ring = live.nearestFraction?.let { (it * RING_STEPS).roundToInt().coerceIn(1, RING_STEPS) }
+        val key = live.packageName + "|" + pose + "|" + mascot + "|" + ring + "|" + lines.joinToString("|")
         if (key == lastLive) return
         lastLive = key
         // Default importance without sound or vibration: a low-importance channel would sink into the silent section
@@ -137,7 +156,7 @@ internal class LimitSurfaces(private val context: Context) {
         })
         val art = mascot.art(pose)
         val builder = NotificationCompat.Builder(context, LIVE_CHANNEL)
-            .setSmallIcon(R.drawable.ic_chronolock)
+            .setSmallIcon(ring?.let(::ringIcon) ?: IconCompat.createWithResource(context, R.drawable.ic_notification))
             .setLargeIcon(icons.getOrPut(art) { runCatching { android.graphics.BitmapFactory.decodeResource(context.resources, art) }.getOrNull() })
             .setContentTitle(title)
             .setContentText(lines.firstOrNull())
@@ -149,7 +168,29 @@ internal class LimitSurfaces(private val context: Context) {
         runCatching { manager.notify(LIVE_ID, builder.build()) }
     }
 
+    /** A ring drawn [step] of [RING_STEPS] round: the share left of the allowance that ends first. */
+    private fun ringIcon(step: Int): IconCompat = rings.getOrPut(step) {
+        val size = (24 * context.resources.displayMetrics.density).roundToInt()
+        val unit = size / 24f
+        val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            style = android.graphics.Paint.Style.STROKE; strokeWidth = 2.6f * unit; strokeCap = android.graphics.Paint.Cap.ROUND
+            color = android.graphics.Color.WHITE
+        }
+        val center = size / 2f
+        val radius = 8.6f * unit
+        paint.alpha = 77
+        canvas.drawCircle(center, center, radius, paint)
+        paint.alpha = 255
+        canvas.drawArc(center - radius, center - radius, center + radius, center + radius, -90f, 360f * step / RING_STEPS, false, paint)
+        paint.style = android.graphics.Paint.Style.FILL
+        canvas.drawCircle(center, center, 2f * unit, paint)
+        IconCompat.createWithBitmap(bitmap)
+    }
+
     private companion object {
+        const val RING_STEPS = 48
         const val LIVE_CHANNEL = "live_usage"
         const val OLD_LIVE_CHANNEL = "live_limits"
         const val LIVE_ID = 0x4C495645

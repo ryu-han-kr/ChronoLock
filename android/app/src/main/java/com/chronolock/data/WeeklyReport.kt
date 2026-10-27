@@ -53,9 +53,11 @@ internal object WeeklyReport {
         val open = PendingIntent.getActivity(context, 1, Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             PendingIntent.FLAG_IMMUTABLE)
         runCatching {
-            manager.notify(ID, NotificationCompat.Builder(context, CHANNEL).setSmallIcon(R.drawable.ic_chronolock)
+            manager.notify(ID, NotificationCompat.Builder(context, CHANNEL).setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(localized.getString(R.string.weekly_report_title)).setContentText(body)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true).build())
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true)
+                // The status bar stays clear outside of use: an unread report leaves after a day.
+                .setTimeoutAfter(24 * 60 * 60_000L).build())
         }
     }
 }
