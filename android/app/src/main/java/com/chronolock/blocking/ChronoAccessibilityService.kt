@@ -378,7 +378,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             target != null && state.decision.denied -> {
                 val now = environment.clock()
                 val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
-                overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now.epochMillis) == 0 && !lock.lockedAt(now))
+                overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now))
                 true
             }
             site != null && target != null && target == siteBrowser -> { overlay.showSite(site); true }

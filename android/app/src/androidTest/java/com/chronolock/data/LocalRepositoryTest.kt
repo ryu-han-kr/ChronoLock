@@ -220,7 +220,7 @@ class LocalRepositoryTest {
         assertEquals(listOf(Reason.FOCUS), repository.reconnect(clock(10 * 60000L, epoch = jumped), emptyMap(), "test.app").decision.reasons)
         assertEquals(jumped + 15 * 60000, database.dao().rules().single().focusUntilEpochMillis)
         assertFalse(repository.tick(clock(25 * 60000L, epoch = jumped + 15 * 60000)).decision.denied)
-        assertNull(database.dao().focusAnchor())
+        assertNull(database.dao().anchor(ClockAnchors.FOCUS))
     }
 
     @Test fun focus_anchorEndsWithTheBootOrACancel() = runBlocking {
@@ -229,11 +229,11 @@ class LocalRepositoryTest {
         repository.startFocus(25, origin, clock(0))
         // After a reboot only the wall clock is known.
         repository.reconnect(clock(1000, epoch = origin + 86_400_000L, boot = 2), emptyMap(), "test.app")
-        assertNull(database.dao().focusAnchor())
+        assertNull(database.dao().anchor(ClockAnchors.FOCUS))
         assertEquals(origin + 25 * 60000, database.dao().rules().single().focusUntilEpochMillis)
         repository.startFocus(25, origin, clock(0))
         repository.stopFocus(origin + 1000)
-        assertNull(database.dao().focusAnchor())
+        assertNull(database.dao().anchor(ClockAnchors.FOCUS))
     }
 
     @Test fun focus_requiresAnEnabledTargetAndValidDuration() = runBlocking {
@@ -290,6 +290,56 @@ class LocalRepositoryTest {
         repository.tick(clock(600_000, now + 600_000))
         assertFalse(database.dao().rules().single().enabled)
         assertTrue(database.dao().duePending(Long.MAX_VALUE).isEmpty())
+    }
+
+    @Test fun strictMode_movingTheClockForwardDoesNotApplyAHeldChangeEarly() = runBlocking {
+        val repository = LocalRepository(database)
+        val rule = AppRule("test.app", "Test", maxOpenCount = 1)
+        repository.saveRule(rule)
+        repository.requestGroup(AppGroup(0, name = "G", members = mapOf("a" to "A", "b" to "B"), dailyLimitSeconds = 600), 0, origin)
+        val group = database.dao().groups().single().toDomain()
+        repository.requestSite(com.chronolock.domain.BlockedSite("example.com"), 0, origin)
+        assertNotNull(repository.requestRule(rule.copy(enabled = false), 600_000, origin, clock(0)))
+        assertNotNull(repository.requestDeleteGroup(group.id, 600_000, origin, clock(0)))
+        assertNotNull(repository.requestDeleteSite("example.com", 600_000, origin, clock(0)))
+        // One minute later the wall clock says a day has passed: nothing applies, and the shown times move out.
+        val jumped = origin + 86_400_000L
+        repository.tick(clock(60_000, jumped))
+        assertTrue(database.dao().rules().single().enabled)
+        assertEquals(1, database.dao().groups().size)
+        assertEquals(1, database.dao().sites().size)
+        assertEquals(jumped + 540_000, database.dao().duePending(Long.MAX_VALUE).single().applyAtEpochMillis)
+        repository.tick(clock(600_000, jumped + 540_000))
+        assertFalse(database.dao().rules().single().enabled)
+        assertTrue(database.dao().groups().isEmpty())
+        assertTrue(database.dao().sites().isEmpty())
+        assertTrue(database.dao().anchors().isEmpty())
+    }
+
+    @Test fun pause_movingTheClockBackDoesNotStretchIt() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", dailyLimitSeconds = 60))
+        repository.requestPause("test.app", 10, 0, origin, ZoneId.of("Asia/Seoul"), clock(0))
+        assertEquals(origin + 600_000, database.dao().rules().single().pausedUntilEpochMillis)
+        // Five minutes in, the wall clock goes back an hour: five minutes of pause are left, not 65.
+        val back = origin - 3_600_000L + 300_000
+        repository.tick(clock(300_000, back))
+        assertEquals(back + 300_000, database.dao().rules().single().pausedUntilEpochMillis)
+        repository.tick(clock(600_000, back + 300_000))
+        assertNull(database.dao().rules().single().pausedUntilEpochMillis)
+        assertTrue(database.dao().anchors().isEmpty())
+    }
+
+    @Test fun pause_heldByStrictModeKeepsItsAnchorUntilItApplies() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", dailyLimitSeconds = 60))
+        assertNotNull(repository.requestPause("test.app", 10, 600_000, origin, ZoneId.of("Asia/Seoul"), clock(0)))
+        repository.tick(clock(60_000, origin + 60_000))
+        assertNotNull(database.dao().anchor(ClockAnchors.pause("test.app")))
+        repository.tick(clock(600_000, origin + 600_000))
+        assertEquals(origin + 1_200_000, database.dao().rules().single().pausedUntilEpochMillis)
+        repository.resume("test.app", origin + 700_000)
+        assertTrue(database.dao().anchors().isEmpty())
     }
 
     @Test fun strictMode_deleteWaits_andCancelKeepsTheRule() = runBlocking {

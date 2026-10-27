@@ -65,25 +65,28 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
      * Saves [rule] now, or, when it relaxes the current rule and strict mode asks for [delayMillis], holds it until then.
      * Returns the time a held change will apply, or null when it was saved at once.
      */
-    suspend fun requestRule(rule: AppRule, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+    suspend fun requestRule(rule: AppRule, delayMillis: Long, nowEpochMillis: Long, clock: ClockReading? = null): Long? = mutex.withLock {
         database.withTransaction {
             val current = dao.rules().firstOrNull { it.packageName == rule.packageName }
             // Focus and pauses belong to the running session, not to an editor snapshot opened earlier.
             val next = rule.copy(focusUntilEpochMillis = current?.focusUntilEpochMillis, pausedUntilEpochMillis = current?.pausedUntilEpochMillis)
-            change(rule.packageName, current, next, delayMillis, nowEpochMillis)
+            change(rule.packageName, current, next, delayMillis, nowEpochMillis, clock)
         }
     }
 
-    suspend fun requestDelete(packageName: String, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
-        database.withTransaction { change(packageName, dao.rules().firstOrNull { it.packageName == packageName }, null, delayMillis, nowEpochMillis) }
+    suspend fun requestDelete(packageName: String, delayMillis: Long, nowEpochMillis: Long, clock: ClockReading? = null): Long? = mutex.withLock {
+        database.withTransaction { change(packageName, dao.rules().firstOrNull { it.packageName == packageName }, null, delayMillis, nowEpochMillis, clock) }
     }
 
     /** Pauses a rule for [minutes], or until midnight when null. Under strict mode the pause starts once the delay has passed. */
-    suspend fun requestPause(packageName: String, minutes: Int?, delayMillis: Long, nowEpochMillis: Long, zone: ZoneId): Long? = mutex.withLock {
+    suspend fun requestPause(packageName: String, minutes: Int?, delayMillis: Long, nowEpochMillis: Long, zone: ZoneId,
+                             clock: ClockReading? = null): Long? = mutex.withLock {
         database.withTransaction {
             val current = requireNotNull(dao.rules().firstOrNull { it.packageName == packageName })
             val until = Strictness.pauseEnd(nowEpochMillis + delayMillis.coerceAtLeast(0), minutes, zone)
-            change(packageName, current, current.toDomain().copy(pausedUntilEpochMillis = until), delayMillis, nowEpochMillis)
+            change(packageName, current, current.toDomain().copy(pausedUntilEpochMillis = until), delayMillis, nowEpochMillis, clock).also {
+                anchor(ClockAnchors.pause(packageName), clock, until - nowEpochMillis)
+            }
         }
     }
 
@@ -92,19 +95,23 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         database.withTransaction {
             val current = dao.rules().firstOrNull { it.packageName == packageName }
             if (current != null) change(packageName, current, current.toDomain().copy(pausedUntilEpochMillis = null), 0, nowEpochMillis)
-            else dao.deletePending(packageName)
+            else { dao.deletePending(packageName); dao.deleteAnchor(ClockAnchors.rule(packageName)) }
+            dao.deleteAnchor(ClockAnchors.pause(packageName))
         }
     }
 
-    suspend fun cancelPending(packageName: String) = mutex.withLock { dao.deletePending(packageName) }
+    suspend fun cancelPending(packageName: String) = mutex.withLock { dao.deletePending(packageName); dao.deleteAnchor(ClockAnchors.rule(packageName)) }
 
     /** Drops every held relaxation (rules, groups, sites); dropping only tightens, so a lock starts with none waiting. */
     suspend fun cancelAllPending() = mutex.withLock {
-        database.withTransaction { dao.clearPending(); dao.clearPendingGroups(); dao.clearPendingSites() }
+        database.withTransaction {
+            dao.clearPending(); dao.clearPendingGroups(); dao.clearPendingSites()
+            dao.anchors().filter { it.key != ClockAnchors.FOCUS && !it.key.startsWith(ClockAnchors.PAUSE_PREFIX) }.forEach { dao.deleteAnchor(it.key) }
+        }
     }
 
     /** Applies held changes whose time has come; the monitor calls this on every evaluation, the screen when it opens. */
-    suspend fun applyDuePending(nowEpochMillis: Long) = mutex.withLock { applyDue(nowEpochMillis) }
+    suspend fun applyDuePending(nowEpochMillis: Long, clock: ClockReading? = null) = mutex.withLock { applyDue(nowEpochMillis, clock) }
 
     val groups = dao.observeGroups()
     val pendingGroups = dao.observePendingGroups()
@@ -113,7 +120,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
      * Saves a new or edited group, or holds a relaxing edit like [requestRule]. A new group only adds limits, so it never waits.
      * Returns the time a held change will apply, or null when it was saved at once.
      */
-    suspend fun requestGroup(group: AppGroup, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+    suspend fun requestGroup(group: AppGroup, delayMillis: Long, nowEpochMillis: Long, clock: ClockReading? = null): Long? = mutex.withLock {
         database.withTransaction {
             val all = dao.groups()
             val current = all.firstOrNull { it.id == group.id }?.toDomain()
@@ -125,7 +132,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
                 dao.insertEvents(listOf(EventEntity(type = "GROUP_UPDATED", packageName = null, epochMillis = nowEpochMillis)))
                 return@withTransaction null
             }
-            changeGroup(group.id, current, group, delayMillis, nowEpochMillis)
+            changeGroup(group.id, current, group, delayMillis, nowEpochMillis, clock)
         }
     }
 
@@ -138,21 +145,23 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         const val LOCKED = "잠금 중에는 제한을 풀거나 느슨하게 바꿀 수 없습니다."
     }
 
-    suspend fun requestDeleteGroup(id: Long, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
-        database.withTransaction { changeGroup(id, dao.groups().firstOrNull { it.id == id }?.toDomain(), null, delayMillis, nowEpochMillis) }
+    suspend fun requestDeleteGroup(id: Long, delayMillis: Long, nowEpochMillis: Long, clock: ClockReading? = null): Long? = mutex.withLock {
+        database.withTransaction { changeGroup(id, dao.groups().firstOrNull { it.id == id }?.toDomain(), null, delayMillis, nowEpochMillis, clock) }
     }
 
-    suspend fun cancelPendingGroup(id: Long) = mutex.withLock { dao.deletePendingGroup(id) }
+    suspend fun cancelPendingGroup(id: Long) = mutex.withLock { dao.deletePendingGroup(id); dao.deleteAnchor(ClockAnchors.group(id)) }
 
-    private suspend fun changeGroup(id: Long, current: AppGroup?, next: AppGroup?, delayMillis: Long, nowEpochMillis: Long): Long? {
+    private suspend fun changeGroup(id: Long, current: AppGroup?, next: AppGroup?, delayMillis: Long, nowEpochMillis: Long,
+                                    clock: ClockReading? = null): Long? {
         val loosens = Strictness.loosens(current, next)
         if (delayMillis == LOCKED_DELAY && loosens) throw IllegalStateException(LOCKED)
         if (delayMillis > 0 && loosens) {
             val applyAt = Math.addExact(nowEpochMillis, delayMillis)
             dao.savePendingGroup(PendingGroupEntity(id, applyAt, next == null, (next ?: current!!).toEntity()))
+            anchor(ClockAnchors.group(id), clock, delayMillis)
             return applyAt
         }
-        dao.deletePendingGroup(id)
+        dao.deletePendingGroup(id); dao.deleteAnchor(ClockAnchors.group(id))
         if (next != null || current != null) writeGroup(id, next, nowEpochMillis)
         return null
     }
@@ -166,42 +175,67 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     val pendingSites = dao.observePendingSites()
 
     /** Adds, re-enables or disables a site; disabling under strict mode waits like [requestRule]. */
-    suspend fun requestSite(site: BlockedSite, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
+    suspend fun requestSite(site: BlockedSite, delayMillis: Long, nowEpochMillis: Long, clock: ClockReading? = null): Long? = mutex.withLock {
         database.withTransaction {
             val all = dao.sites()
             val current = all.firstOrNull { it.domain == site.domain }?.toDomain()
             require(current != null || all.size < SiteDomains.MAX_SITES) { SITES_FULL }
-            changeSite(site.domain, current, site, delayMillis, nowEpochMillis)
+            changeSite(site.domain, current, site, delayMillis, nowEpochMillis, clock)
         }
     }
 
-    suspend fun requestDeleteSite(domain: String, delayMillis: Long, nowEpochMillis: Long): Long? = mutex.withLock {
-        database.withTransaction { changeSite(domain, dao.sites().firstOrNull { it.domain == domain }?.toDomain(), null, delayMillis, nowEpochMillis) }
+    suspend fun requestDeleteSite(domain: String, delayMillis: Long, nowEpochMillis: Long, clock: ClockReading? = null): Long? = mutex.withLock {
+        database.withTransaction { changeSite(domain, dao.sites().firstOrNull { it.domain == domain }?.toDomain(), null, delayMillis, nowEpochMillis, clock) }
     }
 
-    suspend fun cancelPendingSite(domain: String) = mutex.withLock { dao.deletePendingSite(domain) }
+    suspend fun cancelPendingSite(domain: String) = mutex.withLock { dao.deletePendingSite(domain); dao.deleteAnchor(ClockAnchors.site(domain)) }
 
     /** Enabled sites after applying held changes whose time has come; the accessibility service checks addresses against these. */
-    suspend fun blockedSites(nowEpochMillis: Long): List<BlockedSite> = mutex.withLock {
-        applyDue(nowEpochMillis)
+    suspend fun blockedSites(nowEpochMillis: Long, clock: ClockReading? = null): List<BlockedSite> = mutex.withLock {
+        applyDue(nowEpochMillis, clock)
         dao.sites().map { it.toDomain() }.filter { it.enabled }
     }
 
-    private suspend fun changeSite(domain: String, current: BlockedSite?, next: BlockedSite?, delayMillis: Long, nowEpochMillis: Long): Long? {
+    private suspend fun changeSite(domain: String, current: BlockedSite?, next: BlockedSite?, delayMillis: Long, nowEpochMillis: Long,
+                                   clock: ClockReading? = null): Long? {
         val loosens = Strictness.loosens(current, next)
         if (delayMillis == LOCKED_DELAY && loosens) throw IllegalStateException(LOCKED)
         if (delayMillis > 0 && loosens) {
             val applyAt = Math.addExact(nowEpochMillis, delayMillis)
             dao.savePendingSite(PendingSiteEntity(domain, applyAt, next == null, (next ?: current!!).toEntity()))
+            anchor(ClockAnchors.site(domain), clock, delayMillis)
             return applyAt
         }
-        dao.deletePendingSite(domain)
+        dao.deletePendingSite(domain); dao.deleteAnchor(ClockAnchors.site(domain))
         if (next == null) dao.deleteSite(domain) else dao.saveSite(next.toEntity())
         return null
     }
 
-    private suspend fun applyDue(nowEpochMillis: Long) {
-        dao.duePendingSites(nowEpochMillis).takeIf { it.isNotEmpty() }?.let { due ->
+    /** Keeps [key]'s deadline [millis] from [clock] on the boot clock too; without a clock only the wall clock counts. */
+    private suspend fun anchor(key: String, clock: ClockReading?, millis: Long) {
+        if (clock == null) dao.deleteAnchor(key)
+        else dao.saveAnchor(ClockAnchorEntity(key, clock.elapsedMillis + millis.coerceAtLeast(0), clock.bootId))
+    }
+
+    /**
+     * Time still to wait on the boot clock for [key], or 0 when its deadline has passed there too (or cannot be told:
+     * no [clock], no anchor, another boot). A held change applies only once both clocks are due, so moving the wall clock
+     * forward cannot hurry it; while it waits, the shown time is pushed out to match.
+     */
+    private suspend fun stillHeld(key: String, clock: ClockReading?): Long {
+        clock ?: return 0
+        val anchor = dao.anchor(key) ?: return 0
+        val left = anchor.untilElapsedMillis - clock.elapsedMillis
+        if (anchor.bootId != clock.bootId || left <= 0) { dao.deleteAnchor(key); return 0 }
+        return left
+    }
+
+    private suspend fun applyDue(nowEpochMillis: Long, clock: ClockReading? = null) {
+        dao.duePendingSites(nowEpochMillis).filter { held ->
+            val left = stillHeld(ClockAnchors.site(held.domain), clock)
+            if (left > 0) dao.savePendingSite(held.copy(applyAtEpochMillis = nowEpochMillis + left))
+            left == 0L
+        }.takeIf { it.isNotEmpty() }?.let { due ->
             database.withTransaction {
                 due.forEach { held ->
                     // A site removed meanwhile stays removed; the held change has nothing left to unblock.
@@ -211,7 +245,11 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
                 }
             }
         }
-        dao.duePendingGroups(nowEpochMillis).takeIf { it.isNotEmpty() }?.let { due ->
+        dao.duePendingGroups(nowEpochMillis).filter { held ->
+            val left = stillHeld(ClockAnchors.group(held.groupId), clock)
+            if (left > 0) dao.savePendingGroup(held.copy(applyAtEpochMillis = nowEpochMillis + left))
+            left == 0L
+        }.takeIf { it.isNotEmpty() }?.let { due ->
             database.withTransaction {
                 due.forEach { held ->
                     // A group deleted meanwhile stays deleted; the held edit has nothing left to relax.
@@ -227,7 +265,11 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
                 }
             }
         }
-        val due = dao.duePending(nowEpochMillis).takeIf { it.isNotEmpty() } ?: return
+        val due = dao.duePending(nowEpochMillis).filter { held ->
+            val left = stillHeld(ClockAnchors.rule(held.packageName), clock)
+            if (left > 0) dao.savePending(held.copy(applyAtEpochMillis = nowEpochMillis + left))
+            left == 0L
+        }.takeIf { it.isNotEmpty() } ?: return
         database.withTransaction {
             due.forEach { held ->
                 val current = dao.rules().firstOrNull { it.packageName == held.packageName }
@@ -238,16 +280,18 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         }
     }
 
-    private suspend fun change(packageName: String, current: RuleEntity?, next: AppRule?, delayMillis: Long, nowEpochMillis: Long): Long? {
+    private suspend fun change(packageName: String, current: RuleEntity?, next: AppRule?, delayMillis: Long, nowEpochMillis: Long,
+                               clock: ClockReading? = null): Long? {
         val loosens = Strictness.loosens(current?.toDomain(), next, nowEpochMillis)
         if (delayMillis == LOCKED_DELAY && loosens) throw IllegalStateException(LOCKED)
         if (delayMillis > 0 && loosens) {
             val applyAt = Math.addExact(nowEpochMillis, delayMillis)
             dao.savePending(PendingRuleEntity(packageName, applyAt, next == null, (next ?: current!!.toDomain()).toEntity()))
+            anchor(ClockAnchors.rule(packageName), clock, delayMillis)
             return applyAt
         }
         // The latest decision replaces one still waiting; dropping a held relaxation only tightens.
-        dao.deletePending(packageName)
+        dao.deletePending(packageName); dao.deleteAnchor(ClockAnchors.rule(packageName))
         if (next != null || current != null) writeRule(packageName, next, nowEpochMillis)
         return null
     }
@@ -264,15 +308,14 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         val until = Math.addExact(nowEpochMillis, minutes * 60000L)
         database.withTransaction {
             dao.startFocus(until)
-            if (clock != null) dao.saveFocusAnchor(FocusAnchorEntity(untilElapsedMillis = clock.elapsedMillis + minutes * 60000L, bootId = clock.bootId))
-            else dao.clearFocusAnchor()
+            anchor(ClockAnchors.FOCUS, clock, minutes * 60000L)
             dao.insertEvents(listOf(EventEntity(type = "FOCUS_STARTED", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
 
     suspend fun stopFocus(nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.stopFocus(); dao.clearFocusAnchor()
+            dao.stopFocus(); dao.deleteAnchor(ClockAnchors.FOCUS)
             dao.insertEvents(listOf(EventEntity(type = "FOCUS_CANCELLED", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
@@ -309,7 +352,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     /** Replaces every rule, group and site, as a restore does; usage history and the monitor state stay. */
     suspend fun replaceAll(rules: List<AppRule>, groups: List<AppGroup>, sites: List<BlockedSite>, nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearFocusAnchor()
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearAnchors()
             sites.take(SiteDomains.MAX_SITES).forEach { dao.saveSite(it.toEntity()) }
             rules.forEach { dao.saveRule(it.copy(focusUntilEpochMillis = null, pausedUntilEpochMillis = null).toEntity()) }
             groups.forEach { dao.insertGroup(it.copy(id = 0).toEntity()) }
@@ -323,14 +366,15 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
      */
     suspend fun resetRules(nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearFocusAnchor()
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearAnchors()
             dao.insertEvents(listOf(EventEntity(type = "RULES_RESET", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
 
     private suspend fun ruleMap(now: ClockReading): Map<String, AppRule> {
-        applyDue(now.epochMillis)
+        applyDue(now.epochMillis, now)
         holdFocus(now)
+        holdPauses(now)
         return withGroups(dao.rules().associate { it.packageName to it.toDomain() }, dao.groups().map { it.toDomain() })
     }
 
@@ -339,12 +383,35 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
      * left, the stored end is pushed out to match. A clock moved back only makes the focus last longer, as a lock does.
      */
     private suspend fun holdFocus(now: ClockReading) {
-        val anchor = dao.focusAnchor() ?: return
+        val anchor = dao.anchor(ClockAnchors.FOCUS) ?: return
         val left = anchor.untilElapsedMillis - now.elapsedMillis
         val end = dao.rules().filter { it.enabled }.mapNotNull { it.focusUntilEpochMillis }.maxOrNull()
-        if (anchor.bootId != now.bootId || left <= 0 || end == null) { dao.clearFocusAnchor(); return }
+        if (anchor.bootId != now.bootId || left <= 0 || end == null) { dao.deleteAnchor(ClockAnchors.FOCUS); return }
         // A little slack: the two clocks drift by milliseconds and the end need not be rewritten for that.
         if (end < now.epochMillis + left - 5_000) dao.startFocus(now.epochMillis + left)
+    }
+
+    /**
+     * A pause lifts limits, so it ends at whichever clock gets there first: moving the wall clock back cannot stretch it.
+     * An anchor without a pause stays while a held pause for that app still waits to apply.
+     */
+    private suspend fun holdPauses(now: ClockReading) {
+        val anchors = dao.anchors().filter { it.key.startsWith(ClockAnchors.PAUSE_PREFIX) }
+        if (anchors.isEmpty()) return
+        val rules = dao.rules().associateBy { it.packageName }
+        val waiting = dao.duePending(Long.MAX_VALUE).mapTo(mutableSetOf()) { it.packageName }
+        anchors.forEach { anchor ->
+            val packageName = anchor.key.removePrefix(ClockAnchors.PAUSE_PREFIX)
+            val rule = rules[packageName]
+            val end = rule?.pausedUntilEpochMillis
+            val left = anchor.untilElapsedMillis - now.elapsedMillis
+            when {
+                end == null -> if (packageName !in waiting) dao.deleteAnchor(anchor.key)
+                anchor.bootId != now.bootId -> dao.deleteAnchor(anchor.key)
+                left <= 0 -> { dao.saveRule(rule.copy(pausedUntilEpochMillis = null)); dao.deleteAnchor(anchor.key) }
+                end > now.epochMillis + left + 5_000 -> dao.saveRule(rule.copy(pausedUntilEpochMillis = now.epochMillis + left))
+            }
+        }
     }
 
     private suspend fun load(): MonitorState {

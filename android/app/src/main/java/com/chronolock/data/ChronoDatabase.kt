@@ -90,9 +90,21 @@ data class CheckpointEntity(
     @ColumnInfo(defaultValue = "0") val wasBlocked: Boolean = false,
 )
 
-/** The running focus's end on the boot clock of [bootId], so moving the wall clock forward cannot end it early. */
-@Entity(tableName = "focus_anchor")
-data class FocusAnchorEntity(@PrimaryKey val id: Int = 1, val untilElapsedMillis: Long, val bootId: Int)
+/**
+ * A deadline also kept on the boot clock of [bootId], so changing the wall clock cannot move it: the running focus, a change
+ * strict mode holds back, or the end of a pause. [key] names which, see [ClockAnchors].
+ */
+@Entity(tableName = "clock_anchor")
+data class ClockAnchorEntity(@PrimaryKey val key: String, val untilElapsedMillis: Long, val bootId: Int)
+
+object ClockAnchors {
+    const val FOCUS = "focus"
+    fun rule(packageName: String) = "rule:$packageName"
+    fun group(id: Long) = "group:$id"
+    fun site(domain: String) = "site:$domain"
+    fun pause(packageName: String) = "pause:$packageName"
+    const val PAUSE_PREFIX = "pause:"
+}
 
 @Entity(tableName = "app_usage_events", indices = [Index("epochMillis")])
 data class EventEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val type: String, val packageName: String?, val epochMillis: Long)
@@ -108,9 +120,11 @@ interface ChronoDao {
     @Upsert suspend fun saveRule(rule: RuleEntity)
     @Query("UPDATE blocking_rules SET focusUntilEpochMillis = :until WHERE enabled = 1") suspend fun startFocus(until: Long)
     @Query("UPDATE blocking_rules SET focusUntilEpochMillis = NULL") suspend fun stopFocus()
-    @Query("SELECT * FROM focus_anchor WHERE id = 1") suspend fun focusAnchor(): FocusAnchorEntity?
-    @Upsert suspend fun saveFocusAnchor(row: FocusAnchorEntity)
-    @Query("DELETE FROM focus_anchor") suspend fun clearFocusAnchor()
+    @Query("SELECT * FROM clock_anchor WHERE `key` = :key") suspend fun anchor(key: String): ClockAnchorEntity?
+    @Query("SELECT * FROM clock_anchor") suspend fun anchors(): List<ClockAnchorEntity>
+    @Upsert suspend fun saveAnchor(row: ClockAnchorEntity)
+    @Query("DELETE FROM clock_anchor WHERE `key` = :key") suspend fun deleteAnchor(key: String)
+    @Query("DELETE FROM clock_anchor") suspend fun clearAnchors()
     @Query("DELETE FROM blocking_rules WHERE packageName = :packageName") suspend fun deleteRule(packageName: String)
     @Upsert suspend fun saveDaily(rows: List<DailyEntity>)
     @Upsert suspend fun saveCloses(rows: List<CloseEntity>)
@@ -154,7 +168,7 @@ interface ChronoDao {
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
     HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, PendingRuleEntity::class,
-    GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class, FocusAnchorEntity::class],
+    GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class, ClockAnchorEntity::class],
     version = 12, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
@@ -163,7 +177,7 @@ abstract class ChronoDatabase : RoomDatabase() {
     companion object {
         val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS focus_anchor (id INTEGER NOT NULL, untilElapsedMillis INTEGER NOT NULL, bootId INTEGER NOT NULL, PRIMARY KEY(id))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS clock_anchor (`key` TEXT NOT NULL, untilElapsedMillis INTEGER NOT NULL, bootId INTEGER NOT NULL, PRIMARY KEY(`key`))")
             }
         }
         /** Estimates from OS usage buckets are gone: history shows recorded days only. */

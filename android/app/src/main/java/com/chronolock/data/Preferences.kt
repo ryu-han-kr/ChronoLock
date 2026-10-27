@@ -37,6 +37,8 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val goalsKey = stringSetPreferencesKey("onboarding_goals")
     private val nightThemeKey = stringPreferencesKey("night_theme")
     private val historyPinKey = stringPreferencesKey("history_pin")
+    private val strictPendingElapsedKey = longPreferencesKey("strict_pending_elapsed")
+    private val strictPendingBootKey = intPreferencesKey("strict_pending_boot")
     private val lockUntilKey = longPreferencesKey("lock_until")
     private val lockUntilElapsedKey = longPreferencesKey("lock_until_elapsed")
     private val lockBootKey = intPreferencesKey("lock_boot")
@@ -58,16 +60,22 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     val acknowledged = context.preferences.data.map { it[disclosure] ?: false }
     // People who already accepted the permission disclosure predate the welcome screen and skip it.
     val onboarded = context.preferences.data.map { it[onboardedKey] ?: it[disclosure] ?: false }
-    val strict = context.preferences.data.map { StrictSetting(it[strictKey] ?: 0, it[strictPendingKey], it[strictPendingAtKey]) }
+    private fun strictOf(it: androidx.datastore.preferences.core.Preferences) =
+        StrictSetting(it[strictKey] ?: 0, it[strictPendingKey], it[strictPendingAtKey], it[strictPendingElapsedKey], it[strictPendingBootKey])
+    val strict = context.preferences.data.map { strictOf(it) }
     /** Applies [change] to the stored strict setting atomically. */
     suspend fun updateStrict(change: (StrictSetting) -> StrictSetting) {
         context.preferences.edit {
-            val next = change(StrictSetting(it[strictKey] ?: 0, it[strictPendingKey], it[strictPendingAtKey]))
+            val next = change(strictOf(it))
             it[strictKey] = next.delayMinutes
             val minutes = next.pendingMinutes
             val at = next.pendingAtEpochMillis
             if (minutes != null && at != null) { it[strictPendingKey] = minutes; it[strictPendingAtKey] = at }
             else { it.remove(strictPendingKey); it.remove(strictPendingAtKey) }
+            val elapsed = next.pendingAtElapsedMillis
+            val boot = next.bootId
+            if (minutes != null && elapsed != null && boot != null) { it[strictPendingElapsedKey] = elapsed; it[strictPendingBootKey] = boot }
+            else { it.remove(strictPendingElapsedKey); it.remove(strictPendingBootKey) }
         }
     }
     /** The last focus length started from the app, reused by the quick settings tile. */

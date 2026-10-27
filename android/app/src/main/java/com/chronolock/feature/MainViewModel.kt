@@ -141,7 +141,7 @@ class MainViewModel @Inject constructor(
         local.update { it.copy(permissions = PermissionState(environment.hasUsageAccess(), environment.accessibilityEnabled())) }
         refreshHistory()
         viewModelScope.launch {
-            runCatching { repository.applyDuePending(environment.clock().epochMillis) }
+            runCatching { environment.clock().let { repository.applyDuePending(it.epochMillis, it) } }
                 .onFailure { android.util.Log.w("ChronoLock", "Held changes could not be applied", it) }
             runCatching { environment.installedApps() }
                 .onSuccess { apps -> local.update { it.copy(apps = apps, loading = false) } }
@@ -199,8 +199,8 @@ class MainViewModel @Inject constructor(
     fun save(rule: AppRule, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
         try {
             require(rule.packageName !in environment.safetyPackages())
-            val now = environment.clock().epochMillis
-            if (repository.requestRule(rule, strictDelay(now), now) != null) showError(HELD)
+            val clock = environment.clock()
+            if (repository.requestRule(rule, strictDelay(clock), clock.epochMillis, clock) != null) showError(HELD)
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError(failure(error, "제한을 저장하지 못했습니다. 다시 시도해 주세요.")) }
@@ -229,7 +229,7 @@ class MainViewModel @Inject constructor(
                 val now = environment.clock().epochMillis
                 // Read from storage: the screen state may not have loaded the lock or strict setting yet.
                 if (locked(now)) { showError(LocalRepository.LOCKED); return@launch }
-                if (preferences.strict.first().delayAt(now) > 0) { showError("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."); return@launch }
+                if (preferences.strict.first().delayAt(environment.clock()) > 0) { showError("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."); return@launch }
                 repository.stopFocus(now)
             }
             catch (cancelled: CancellationException) { throw cancelled }
@@ -239,8 +239,8 @@ class MainViewModel @Inject constructor(
     }
     fun remove(packageName: String, onSaved: () -> Unit) = viewModelScope.launch {
         try {
-            val now = environment.clock().epochMillis
-            if (repository.requestDelete(packageName, strictDelay(now), now) != null) showError(HELD)
+            val clock = environment.clock()
+            if (repository.requestDelete(packageName, strictDelay(clock), clock.epochMillis, clock) != null) showError(HELD)
             onSaved()
         }
         catch (cancelled: CancellationException) { throw cancelled }
@@ -251,7 +251,7 @@ class MainViewModel @Inject constructor(
     fun pause(packageName: String, minutes: Int?) = viewModelScope.launch {
         try {
             val clock = environment.clock()
-            if (repository.requestPause(packageName, minutes, strictDelay(clock.epochMillis), clock.epochMillis, clock.zone) != null) showError(HELD)
+            if (repository.requestPause(packageName, minutes, strictDelay(clock), clock.epochMillis, clock.zone, clock) != null) showError(HELD)
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError(failure(error, "제한을 쉬게 하지 못했습니다. 다시 시도해 주세요.")) }
     }
@@ -281,8 +281,8 @@ class MainViewModel @Inject constructor(
         }
         try {
             require(group.members.keys.none { it in environment.safetyPackages() })
-            val now = environment.clock().epochMillis
-            if (repository.requestGroup(group, strictDelay(now), now) != null) showError(HELD)
+            val clock = environment.clock()
+            if (repository.requestGroup(group, strictDelay(clock), clock.epochMillis, clock) != null) showError(HELD)
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) {
@@ -293,8 +293,8 @@ class MainViewModel @Inject constructor(
 
     fun removeGroup(id: Long, onSaved: () -> Unit) = viewModelScope.launch {
         try {
-            val now = environment.clock().epochMillis
-            if (repository.requestDeleteGroup(id, strictDelay(now), now) != null) showError(HELD)
+            val clock = environment.clock()
+            if (repository.requestDeleteGroup(id, strictDelay(clock), clock.epochMillis, clock) != null) showError(HELD)
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError(failure(error, "그룹을 삭제하지 못했습니다.")) }
@@ -311,8 +311,8 @@ class MainViewModel @Inject constructor(
         if (!state.value.pro && state.value.sites.size >= com.chronolock.domain.FreeTier.SITES) { showError(PRO_SITES); return@launch }
         val domain = try { SiteDomains.normalize(input) } catch (invalid: IllegalArgumentException) { showError(SiteDomains.INVALID); return@launch }
         try {
-            val now = environment.clock().epochMillis
-            repository.requestSite(BlockedSite(domain), strictDelay(now), now)
+            val clock = environment.clock()
+            repository.requestSite(BlockedSite(domain), strictDelay(clock), clock.epochMillis, clock)
             onAdded()
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) {
@@ -329,8 +329,8 @@ class MainViewModel @Inject constructor(
             else com.chronolock.domain.FreeTier.SITES - existing.size
         if (room <= 0) { showError(if (state.value.pro) LocalRepository.SITES_FULL else PRO_SITES); return@launch }
         try {
-            val now = environment.clock().epochMillis
-            missing.take(room).forEach { repository.requestSite(BlockedSite(it), strictDelay(now), now) }
+            val clock = environment.clock()
+            missing.take(room).forEach { repository.requestSite(BlockedSite(it), strictDelay(clock), clock.epochMillis, clock) }
             if (missing.size > room) showError(if (state.value.pro) LocalRepository.SITES_FULL else PRO_SITES)
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError(failure(error, "사이트를 저장하지 못했습니다. 다시 시도해 주세요.")) }
@@ -338,16 +338,16 @@ class MainViewModel @Inject constructor(
 
     fun toggleSite(site: BlockedSite, enabled: Boolean) = viewModelScope.launch {
         try {
-            val now = environment.clock().epochMillis
-            if (repository.requestSite(site.copy(enabled = enabled), strictDelay(now), now) != null) showError(HELD)
+            val clock = environment.clock()
+            if (repository.requestSite(site.copy(enabled = enabled), strictDelay(clock), clock.epochMillis, clock) != null) showError(HELD)
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError(failure(error, "사이트를 저장하지 못했습니다. 다시 시도해 주세요.")) }
     }
 
     fun removeSite(domain: String) = viewModelScope.launch {
         try {
-            val now = environment.clock().epochMillis
-            if (repository.requestDeleteSite(domain, strictDelay(now), now) != null) showError(HELD)
+            val clock = environment.clock()
+            if (repository.requestDeleteSite(domain, strictDelay(clock), clock.epochMillis, clock) != null) showError(HELD)
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError(failure(error, "사이트를 삭제하지 못했습니다.")) }
     }
@@ -360,15 +360,15 @@ class MainViewModel @Inject constructor(
 
     fun setStrict(minutes: Int) = viewModelScope.launch {
         val now = environment.clock().epochMillis
-        if (locked(now) && minutes < preferences.strict.first().delayAt(now)) { showError(LocalRepository.LOCKED); return@launch }
+        if (locked(now) && minutes < preferences.strict.first().delayAt(environment.clock())) { showError(LocalRepository.LOCKED); return@launch }
         if (!state.value.pro && minutes > com.chronolock.domain.FreeTier.STRICT_MINUTES) { showError(PRO_STRICT); return@launch }
-        try { preferences.updateStrict { it.request(minutes, environment.clock().epochMillis) } }
+        try { preferences.updateStrict { it.request(minutes, environment.clock()) } }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
 
     fun cancelStrictChange() = viewModelScope.launch {
-        try { preferences.updateStrict { it.cancel(environment.clock().epochMillis) } }
+        try { preferences.updateStrict { it.cancel(environment.clock()) } }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
@@ -384,7 +384,7 @@ class MainViewModel @Inject constructor(
         try {
             val now = environment.clock().epochMillis
             if (locked(now)) { showError(LocalRepository.LOCKED); return@launch }
-            if (preferences.strict.first().delayAt(now) > 0) { showError("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."); return@launch }
+            if (preferences.strict.first().delayAt(environment.clock()) > 0) { showError("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."); return@launch }
             backups.restore(uri, environment.safetyPackages(), now)
             showError("백업을 복원했습니다.")
         } catch (cancelled: CancellationException) { throw cancelled }
@@ -395,8 +395,8 @@ class MainViewModel @Inject constructor(
     }
 
     /** Read from storage rather than the screen state, which may not have loaded yet. A lock overrides strict mode. */
-    private suspend fun strictDelay(now: Long) =
-        if (locked(now)) LocalRepository.LOCKED_DELAY else preferences.strict.first().delayMillisAt(now)
+    private suspend fun strictDelay(clock: com.chronolock.domain.ClockReading) =
+        if (locked(clock.epochMillis)) LocalRepository.LOCKED_DELAY else preferences.strict.first().delayMillisAt(clock)
     /** Read from storage on the boot clock too, so a changed wall clock does not end a lock. */
     @Suppress("UNUSED_PARAMETER")
     private suspend fun locked(now: Long) = preferences.lock.first().lockedAt(environment.clock())
@@ -444,7 +444,7 @@ class MainViewModel @Inject constructor(
         try {
             val now = environment.clock().epochMillis
             if (locked(now)) { showError(LocalRepository.LOCKED); return@launch }
-            if (preferences.strict.first().delayAt(now) > 0) { showError("엄격 모드를 끈 뒤에 모든 규칙을 초기화할 수 있습니다."); return@launch }
+            if (preferences.strict.first().delayAt(environment.clock()) > 0) { showError("엄격 모드를 끈 뒤에 모든 규칙을 초기화할 수 있습니다."); return@launch }
             repository.resetRules(now)
         }
         catch (cancelled: CancellationException) { throw cancelled }
