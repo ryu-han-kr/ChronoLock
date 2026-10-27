@@ -343,6 +343,7 @@
     <string name="widget_tightest">"%1$s: quedan %2$s"</string>
     <string name="widget_reached">"%1$s alcanzó su límite"</string>
     <string name="widget_description">"Uso de hoy y el límite más cercano"</string>
+    <string name="widget_focus_until">"Enfoque · hasta %1$s"</string>
     <string name="week_kept">"Límites respetados %1$d de los últimos 7 días"</string>
     <string name="focus_custom">"Otro"</string>
     <string name="focus_custom_title">"¿Cuántos minutos quieres concentrarte?"</string>

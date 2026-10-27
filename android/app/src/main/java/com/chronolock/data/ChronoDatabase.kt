@@ -90,6 +90,10 @@ data class CheckpointEntity(
     @ColumnInfo(defaultValue = "0") val wasBlocked: Boolean = false,
 )
 
+/** The running focus's end on the boot clock of [bootId], so moving the wall clock forward cannot end it early. */
+@Entity(tableName = "focus_anchor")
+data class FocusAnchorEntity(@PrimaryKey val id: Int = 1, val untilElapsedMillis: Long, val bootId: Int)
+
 @Entity(tableName = "app_usage_events", indices = [Index("epochMillis")])
 data class EventEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val type: String, val packageName: String?, val epochMillis: Long)
 
@@ -104,6 +108,9 @@ interface ChronoDao {
     @Upsert suspend fun saveRule(rule: RuleEntity)
     @Query("UPDATE blocking_rules SET focusUntilEpochMillis = :until WHERE enabled = 1") suspend fun startFocus(until: Long)
     @Query("UPDATE blocking_rules SET focusUntilEpochMillis = NULL") suspend fun stopFocus()
+    @Query("SELECT * FROM focus_anchor WHERE id = 1") suspend fun focusAnchor(): FocusAnchorEntity?
+    @Upsert suspend fun saveFocusAnchor(row: FocusAnchorEntity)
+    @Query("DELETE FROM focus_anchor") suspend fun clearFocusAnchor()
     @Query("DELETE FROM blocking_rules WHERE packageName = :packageName") suspend fun deleteRule(packageName: String)
     @Upsert suspend fun saveDaily(rows: List<DailyEntity>)
     @Upsert suspend fun saveCloses(rows: List<CloseEntity>)
@@ -147,13 +154,18 @@ interface ChronoDao {
 
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
     HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, PendingRuleEntity::class,
-    GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class],
-    version = 11, exportSchema = true)
+    GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class, FocusAnchorEntity::class],
+    version = 12, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS focus_anchor (id INTEGER NOT NULL, untilElapsedMillis INTEGER NOT NULL, bootId INTEGER NOT NULL, PRIMARY KEY(id))")
+            }
+        }
         /** Estimates from OS usage buckets are gone: history shows recorded days only. */
         val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {

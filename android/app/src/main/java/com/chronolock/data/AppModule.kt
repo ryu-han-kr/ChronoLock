@@ -17,6 +17,6 @@ object AppModule {
     fun database(@ApplicationContext context: Context): ChronoDatabase =
         Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db")
             .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4,
-                ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10, ChronoDatabase.MIGRATION_10_11).build()
+                ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10, ChronoDatabase.MIGRATION_10_11, ChronoDatabase.MIGRATION_11_12).build()
     @Provides fun ruleRepository(repository: LocalRepository): RuleRepository = repository
 }

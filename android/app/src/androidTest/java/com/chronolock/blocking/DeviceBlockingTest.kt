@@ -51,7 +51,7 @@ class DeviceBlockingTest {
         shell("input keyevent KEYCODE_HOME")
         shell("appops set $app GET_USAGE_STATS allow")
         db = Room.databaseBuilder(context, ChronoDatabase::class.java, "chronolock.db")
-            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10, ChronoDatabase.MIGRATION_10_11).build()
+            .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10, ChronoDatabase.MIGRATION_10_11, ChronoDatabase.MIGRATION_11_12).build()
         if (rebootStage != "verify") {
             db.clearAllTables()
             // Without a checkpoint the service recovers usage since midnight, including earlier scenarios.

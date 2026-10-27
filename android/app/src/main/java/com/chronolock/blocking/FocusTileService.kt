@@ -56,7 +56,8 @@ class FocusTileService : TileService() {
         scope.launch {
             val localized = forLanguage(preferences.language.first())
             try {
-                val now = environment.clock().epochMillis
+                val clock = environment.clock()
+                val now = clock.epochMillis
                 val rules = repository.rules.first()
                 when {
                     focusEnd(rules, now) != null -> if (preferences.strict.first().delayAt(now) > 0 || preferences.lock.first().lockedAt(environment.clock())) {
@@ -64,7 +65,7 @@ class FocusTileService : TileService() {
                     } else repository.stopFocus(now)
                     // Without a rule or the permissions a focus cannot start; the app explains what is missing.
                     rules.none { it.enabled } || !environment.hasUsageAccess() || !environment.accessibilityEnabled() -> openApp()
-                    else -> repository.startFocus(preferences.focusMinutes.first(), now)
+                    else -> repository.startFocus(preferences.focusMinutes.first(), now, clock)
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) {

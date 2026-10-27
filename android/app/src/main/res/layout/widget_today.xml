@@ -34,6 +34,15 @@
         android:maxLines="2"
         android:textColor="#CECDC3"
         android:textSize="13sp" />
+    <TextView
+        android:id="@+id/widget_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:maxLines="1"
+        android:textColor="#D14D41"
+        android:textSize="12sp"
+        android:visibility="gone" />
     </LinearLayout>
     <ImageView
         android:id="@+id/widget_mascot"

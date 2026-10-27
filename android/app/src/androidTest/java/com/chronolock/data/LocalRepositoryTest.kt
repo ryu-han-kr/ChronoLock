@@ -42,7 +42,7 @@ class LocalRepositoryTest {
     }
 
     private fun openDatabase() = Room.databaseBuilder(context, ChronoDatabase::class.java, databaseName)
-        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10, ChronoDatabase.MIGRATION_10_11).build()
+        .addMigrations(ChronoDatabase.MIGRATION_1_2, ChronoDatabase.MIGRATION_2_3, ChronoDatabase.MIGRATION_3_4, ChronoDatabase.MIGRATION_4_5, ChronoDatabase.MIGRATION_5_6, ChronoDatabase.MIGRATION_6_7, ChronoDatabase.MIGRATION_7_8, ChronoDatabase.MIGRATION_8_9, ChronoDatabase.MIGRATION_9_10, ChronoDatabase.MIGRATION_10_11, ChronoDatabase.MIGRATION_11_12).build()
 
     @Test fun databaseReopen_restoresRuleCountersAndCooldown() = runBlocking {
         val rule = AppRule("test.app", "Test", dailyLimitSeconds = 60, maxOpenCount = 3, cooldownSeconds = 30)
@@ -209,6 +209,31 @@ class LocalRepositoryTest {
         assertEquals(origin + 25 * 60000, database.dao().rules().single().focusUntilEpochMillis)
         repository.stopFocus(origin + 1000)
         assertEquals(rule.copy(sessionLimitSeconds = 120), database.dao().rules().single().toDomain())
+    }
+
+    @Test fun focus_movingTheClockForwardDoesNotEndItEarly() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", dailyLimitSeconds = 600))
+        repository.startFocus(25, origin, clock(0))
+        // Ten minutes in, the wall clock jumps a day ahead: the 15 minutes left still hold.
+        val jumped = origin + 86_400_000L + 10 * 60000
+        assertEquals(listOf(Reason.FOCUS), repository.reconnect(clock(10 * 60000L, epoch = jumped), emptyMap(), "test.app").decision.reasons)
+        assertEquals(jumped + 15 * 60000, database.dao().rules().single().focusUntilEpochMillis)
+        assertFalse(repository.tick(clock(25 * 60000L, epoch = jumped + 15 * 60000)).decision.denied)
+        assertNull(database.dao().focusAnchor())
+    }
+
+    @Test fun focus_anchorEndsWithTheBootOrACancel() = runBlocking {
+        val repository = LocalRepository(database)
+        repository.saveRule(AppRule("test.app", "Test", dailyLimitSeconds = 600))
+        repository.startFocus(25, origin, clock(0))
+        // After a reboot only the wall clock is known.
+        repository.reconnect(clock(1000, epoch = origin + 86_400_000L, boot = 2), emptyMap(), "test.app")
+        assertNull(database.dao().focusAnchor())
+        assertEquals(origin + 25 * 60000, database.dao().rules().single().focusUntilEpochMillis)
+        repository.startFocus(25, origin, clock(0))
+        repository.stopFocus(origin + 1000)
+        assertNull(database.dao().focusAnchor())
     }
 
     @Test fun focus_requiresAnEnabledTargetAndValidDuration() = runBlocking {
