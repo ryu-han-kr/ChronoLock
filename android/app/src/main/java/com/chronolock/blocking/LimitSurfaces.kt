@@ -24,6 +24,7 @@ import com.chronolock.domain.DailyKey
 import com.chronolock.domain.MonitorState
 import com.chronolock.domain.TodaySummary
 import com.chronolock.domain.LiveLimit
+import com.chronolock.domain.LockSetting
 import com.chronolock.domain.limitWarning
 import com.chronolock.domain.liveLimit
 import com.chronolock.domain.remainingDailyMillis
@@ -51,14 +52,16 @@ internal class LimitSurfaces(private val context: Context) {
     private val icons = mutableMapOf<Int, android.graphics.Bitmap?>()
     private var oldChannelGone = false
     private var lastWidgetMascot: MascotKind? = null
+    private var lastWidgetStatus: String? = null
 
     init { clearLive() } // A notification left by a stopped service must not outlive it.
 
     /** Removes the live notification; the service calls this when it stops. */
     fun clearLive() { lastLive = null; runCatching { NotificationManagerCompat.from(context).cancel(LIVE_ID) } }
 
-    fun update(state: MonitorState, rules: Map<String, AppRule>, localized: Context, inUse: Boolean = true) {
-        showLive(state.liveLimit(rules).takeIf { inUse }, state.clock?.epochMillis ?: System.currentTimeMillis(), localized)
+    fun update(state: MonitorState, rules: Map<String, AppRule>, localized: Context, inUse: Boolean = true, lock: LockSetting = LockSetting()) {
+        val now = state.clock?.epochMillis ?: System.currentTimeMillis()
+        showLive(state.liveLimit(rules).takeIf { inUse }, now, localized)
         state.clock?.date?.let { today -> warned.removeAll { it.date != today } }
         state.limitWarning(rules, warned)?.let { key ->
             warned += key
@@ -70,10 +73,12 @@ internal class LimitSurfaces(private val context: Context) {
         val summary = state.todaySummary(rules).let {
             it.copy(usedMillis = it.usedMillis / 60_000 * 60_000, tightestRemainingMillis = it.tightestRemainingMillis?.let { ms -> (ms + 59_999) / 60_000 * 60_000 })
         }
-        if (summary != lastSummary || mascot != lastWidgetMascot) {
+        val status = TodayWidget.status(lock, rules, now, localized)
+        if (summary != lastSummary || mascot != lastWidgetMascot || status != lastWidgetStatus) {
             lastSummary = summary
             lastWidgetMascot = mascot
-            TodayWidget.store(context, summary, localized, mascot)
+            lastWidgetStatus = status
+            TodayWidget.store(context, summary, localized, mascot, status)
         }
     }
 
@@ -172,7 +177,21 @@ class TodayWidget : AppWidgetProvider() {
             else -> Pose.SUCCESS
         }
 
-        internal fun store(context: Context, summary: TodaySummary, localized: Context, mascot: MascotKind = MascotKind.DEFAULT) {
+        /** What holds the limits right now, as the app's lock pill says it: a lock, else a running focus, else nothing. */
+        internal fun status(lock: LockSetting, rules: Map<String, AppRule>, nowEpochMillis: Long, localized: Context): String? {
+            fun time(epochMillis: Long) = java.time.Instant.ofEpochMilli(epochMillis).atZone(java.time.ZoneId.systemDefault()).toLocalTime()
+                .format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT)
+                    .withLocale(localized.resources.configuration.locales[0]))
+            val focusEnd = rules.values.filter { it.enabled }.mapNotNull { it.focusUntilEpochMillis }.filter { it > nowEpochMillis }.maxOrNull()
+            return when {
+                lock.goalLocked -> "🔒 " + localized.getString(R.string.lock_pill_goal)
+                lock.timeLockedAt(nowEpochMillis) -> "🔒 " + localized.getString(R.string.lock_pill_until, time(lock.untilEpochMillis!!))
+                focusEnd != null -> localized.getString(R.string.widget_focus_until, time(focusEnd))
+                else -> null
+            }
+        }
+
+        internal fun store(context: Context, summary: TodaySummary, localized: Context, mascot: MascotKind = MascotKind.DEFAULT, status: String? = null) {
             val text = UiText(localized)
             val detail = when {
                 summary.tightestApp == null -> localized.getString(R.string.widget_empty)
@@ -184,6 +203,7 @@ class TodayWidget : AppWidgetProvider() {
                 .putString("label", localized.getString(R.string.widget_label))
                 .putString("used", formatDuration(summary.usedMillis / 1000, text))
                 .putString("detail", detail)
+                .putString("status", status)
                 // Names, not resource ids: ids can change between builds while the stored values outlive an update.
                 .putString("mascot", mascot.name).putString("pose", pose(summary).name).apply()
             val manager = AppWidgetManager.getInstance(context)
@@ -197,6 +217,11 @@ class TodayWidget : AppWidgetProvider() {
                 setTextViewText(R.id.widget_label, saved.getString("label", null) ?: context.getString(R.string.widget_label))
                 setTextViewText(R.id.widget_used, saved.getString("used", null) ?: "—")
                 setTextViewText(R.id.widget_detail, saved.getString("detail", null) ?: context.getString(R.string.widget_empty))
+                val status = saved.getString("status", null)
+                setTextViewText(R.id.widget_status, status.orEmpty())
+                setViewVisibility(R.id.widget_status, if (status == null) android.view.View.GONE else android.view.View.VISIBLE)
+                // One cell high has room for one extra line: the detail gives up its second while a status shows.
+                setInt(R.id.widget_detail, "setMaxLines", if (status == null) 2 else 1)
                 setImageViewResource(R.id.widget_mascot, MascotKind.fromStored(saved.getString("mascot", null))
                     .art(Pose.entries.firstOrNull { it.name == saved.getString("pose", null) } ?: Pose.DEFAULT))
                 setOnClickPendingIntent(R.id.widget_root, openApp(context))

@@ -213,7 +213,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 require(environment.hasUsageAccess() && environment.accessibilityEnabled()) { "사용 정보와 접근성 권한을 먼저 켜 주세요." }
-                repository.startFocus(minutes, environment.clock().epochMillis)
+                environment.clock().let { repository.startFocus(minutes, it.epochMillis, it) }
                 runCatching { preferences.setFocusMinutes(minutes) }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { showError(if (error is IllegalArgumentException) error.message.orEmpty() else "집중 모드를 시작하지 못했습니다.") }

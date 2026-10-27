@@ -386,7 +386,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             else -> { overlay.hide(); false }
         }
         // "In use" only while the app itself is on screen, not under a block, site or pause screen.
-        runCatching { surfaces.update(state, rules, localized, inUse = !covered) }
+        runCatching { surfaces.update(state, rules, localized, inUse = !covered, lock = lock) }
             .onFailure { android.util.Log.w("ChronoLock", "Could not update reminders or widget", it) }
     }
 

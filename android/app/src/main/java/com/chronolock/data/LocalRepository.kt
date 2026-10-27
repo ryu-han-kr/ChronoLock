@@ -257,19 +257,22 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         dao.insertEvents(listOf(EventEntity(type = if (rule == null) "RULE_DISABLED" else "RULE_UPDATED", packageName = packageName, epochMillis = epochMillis)))
     }
 
-    suspend fun startFocus(minutes: Int, nowEpochMillis: Long) = mutex.withLock {
+    /** Starts a focus; with [clock] its end is also kept on the boot clock, see [holdFocus]. */
+    suspend fun startFocus(minutes: Int, nowEpochMillis: Long, clock: ClockReading? = null) = mutex.withLock {
         require(minutes in 1..180) { "집중 시간은 1~180분으로 설정해 주세요." }
         require(dao.rules().any { it.enabled }) { "먼저 집중할 때 제한할 앱을 설정해 주세요." }
         val until = Math.addExact(nowEpochMillis, minutes * 60000L)
         database.withTransaction {
             dao.startFocus(until)
+            if (clock != null) dao.saveFocusAnchor(FocusAnchorEntity(untilElapsedMillis = clock.elapsedMillis + minutes * 60000L, bootId = clock.bootId))
+            else dao.clearFocusAnchor()
             dao.insertEvents(listOf(EventEntity(type = "FOCUS_STARTED", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
 
     suspend fun stopFocus(nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.stopFocus()
+            dao.stopFocus(); dao.clearFocusAnchor()
             dao.insertEvents(listOf(EventEntity(type = "FOCUS_CANCELLED", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
@@ -306,7 +309,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     /** Replaces every rule, group and site, as a restore does; usage history and the monitor state stay. */
     suspend fun replaceAll(rules: List<AppRule>, groups: List<AppGroup>, sites: List<BlockedSite>, nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites()
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearFocusAnchor()
             sites.take(SiteDomains.MAX_SITES).forEach { dao.saveSite(it.toEntity()) }
             rules.forEach { dao.saveRule(it.copy(focusUntilEpochMillis = null, pausedUntilEpochMillis = null).toEntity()) }
             groups.forEach { dao.insertGroup(it.copy(id = 0).toEntity()) }
@@ -320,14 +323,28 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
      */
     suspend fun resetRules(nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
-            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites()
+            dao.clearRules(); dao.clearPending(); dao.clearGroups(); dao.clearPendingGroups(); dao.clearSites(); dao.clearPendingSites(); dao.clearFocusAnchor()
             dao.insertEvents(listOf(EventEntity(type = "RULES_RESET", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
 
     private suspend fun ruleMap(now: ClockReading): Map<String, AppRule> {
         applyDue(now.epochMillis)
+        holdFocus(now)
         return withGroups(dao.rules().associate { it.packageName to it.toDomain() }, dao.groups().map { it.toDomain() })
+    }
+
+    /**
+     * Moving the wall clock forward must not end a focus early: while the boot that started it still has focus time
+     * left, the stored end is pushed out to match. A clock moved back only makes the focus last longer, as a lock does.
+     */
+    private suspend fun holdFocus(now: ClockReading) {
+        val anchor = dao.focusAnchor() ?: return
+        val left = anchor.untilElapsedMillis - now.elapsedMillis
+        val end = dao.rules().filter { it.enabled }.mapNotNull { it.focusUntilEpochMillis }.maxOrNull()
+        if (anchor.bootId != now.bootId || left <= 0 || end == null) { dao.clearFocusAnchor(); return }
+        // A little slack: the two clocks drift by milliseconds and the end need not be rewritten for that.
+        if (end < now.epochMillis + left - 5_000) dao.startFocus(now.epochMillis + left)
     }
 
     private suspend fun load(): MonitorState {
