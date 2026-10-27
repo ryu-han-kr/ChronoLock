@@ -92,6 +92,7 @@ internal fun ChronoScreen(
     deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> },
     exportBackup: () -> Unit = {},
     restoreBackup: () -> Unit = {},
+    redeemCode: (String) -> Boolean = { false },
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
     var query by rememberSaveable { mutableStateOf("") }
@@ -343,6 +344,7 @@ internal fun ChronoScreen(
                                     OutlinedButton(onClick = clear, enabled = !strict, modifier = Modifier.testTag("rules-reset")) { Text(tr("모든 규칙 초기화")) }
                                     if (strict) Text(tr("엄격 모드를 끈 뒤에 모든 규칙을 초기화할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 } }
+                                item { VersionLine(state, redeemCode) }
                                 // The one ad: last in Settings, scrolling with the list.
                                 banner?.let { ad -> item(span = { GridItemSpan(maxLineSpan) }) { Box(Modifier.fillMaxWidth().testTag("settings-ad"), contentAlignment = Alignment.Center) { ad() } } }
                             }
@@ -378,7 +380,7 @@ private fun AdsCard(state: MainState, privacyOptions: () -> Unit, manage: () -> 
         Text(tr("광고"), style = MaterialTheme.typography.titleLarge)
         Text(when {
             state.adFree -> tr("광고 없이 이용 중입니다.")
-            com.chronolock.BuildConfig.PRO_GATING && state.billing.pro -> tr("프로라서 광고가 표시되지 않아요.")
+            com.chronolock.BuildConfig.PRO_GATING && state.billing.proAccess -> tr("프로라서 광고가 표시되지 않아요.")
             else -> tr("설정 목록 맨 아래에만 작은 배너 광고가 하나 표시됩니다. 오늘·히스토리·차단 화면과 집중 중에는 표시하지 않아요.")
         }, color = MaterialTheme.colorScheme.onSurfaceVariant)
         // The ad-free subscription is no longer sold; existing subscribers keep it until they cancel.

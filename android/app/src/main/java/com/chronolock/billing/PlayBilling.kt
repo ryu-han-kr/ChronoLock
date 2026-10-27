@@ -50,8 +50,11 @@ enum class BillingStatus {
 data class BillingState(val status: BillingStatus = BillingStatus.CONNECTING, val price: String? = null,
     val adFree: Boolean = false, val pending: Boolean = false,
     /** The Pro pass: owned, its price once loaded, and a purchase still being processed. */
-    val pro: Boolean = false, val proPrice: String? = null, val proPending: Boolean = false) {
+    val pro: Boolean = false, val proPrice: String? = null, val proPending: Boolean = false,
+    /** Pro opened with a shared code from the hidden settings field instead of a purchase. */
+    val code: Boolean = false) {
     val available get() = status == BillingStatus.READY
+    val proAccess get() = pro || code
 }
 
 /**
@@ -62,7 +65,8 @@ data class BillingState(val status: BillingStatus = BillingStatus.CONNECTING, va
 class BillingController @Inject constructor(@ApplicationContext private val context: Context) {
     // The last entitlement Play confirmed, so a subscriber never sees a banner while the purchase query is in flight.
     private val prefs = context.getSharedPreferences("billing", Context.MODE_PRIVATE)
-    private val mutable = MutableStateFlow(BillingState(adFree = prefs.getBoolean(KEY_AD_FREE, false), pro = prefs.getBoolean(KEY_PRO, false)))
+    private val mutable = MutableStateFlow(BillingState(adFree = prefs.getBoolean(KEY_AD_FREE, false), pro = prefs.getBoolean(KEY_PRO, false),
+        code = prefs.getBoolean(KEY_CODE, false)))
     val state: StateFlow<BillingState> = mutable.asStateFlow()
     @Volatile private var product: ProductDetails? = null
     @Volatile private var proProduct: ProductDetails? = null
@@ -107,6 +111,14 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
         val params = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offer.offerToken).build())).build()
         return client.launchBillingFlow(activity, params).ok
+    }
+
+    /** Opens Pro on this device for a valid shared code; it stays open until the app data is cleared. */
+    fun redeem(code: String): Boolean {
+        if (!com.chronolock.domain.ProCode.matches(code)) return false
+        prefs.edit { putBoolean(KEY_CODE, true) }
+        mutable.update { it.copy(code = true) }
+        return true
     }
 
     /** The ad-free subscription is no longer sold (Pro removes ads); subscribers can still manage or cancel it here. */
@@ -171,5 +183,6 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
     private companion object {
         const val KEY_AD_FREE = "ad_free"
         const val KEY_PRO = "pro"
+        const val KEY_CODE = "pro_code"
     }
 }

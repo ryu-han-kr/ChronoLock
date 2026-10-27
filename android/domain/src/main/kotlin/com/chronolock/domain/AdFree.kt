@@ -31,3 +31,16 @@ object FreeTier {
     const val STRICT_MINUTES = 60
     const val HISTORY_DAYS = 30
 }
+
+/** Shared codes that open Pro without a purchase (testers, friends); only their hashes ship in the app. */
+object ProCode {
+    private val hashes = setOf("efc9c0cb6a8822a78b75ac2f3eb7bb38ee6dff4189d8b9c74358f7e21c3e81c2")
+
+    /** Case, spaces and hyphens do not matter, so a code read aloud or retyped still works. */
+    fun matches(input: String): Boolean {
+        val normalized = input.uppercase().filter { it.isLetterOrDigit() }
+        if (normalized.isEmpty()) return false
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest("chronolock-pro:$normalized".toByteArray())
+        return digest.joinToString("") { "%02x".format(it) } in hashes
+    }
+}
