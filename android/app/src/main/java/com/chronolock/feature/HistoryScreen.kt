@@ -221,6 +221,7 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
                 }
             }
         }
+        WeekCompareCard(state.historyYear, today)
         if (state.pro) YearCalendar(state.historyYear, today)
         else Text(tr("3개월·1년 기록과 1년 달력은 프로에서 볼 수 있어요."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Text(tr("앱별 사용 기록"), style = MaterialTheme.typography.titleLarge)
@@ -232,6 +233,46 @@ private fun HistorySummary(state: MainState, today: LocalDate, filter: HistoryFi
             Text(tr("이 기간에 저장된 사용 기록이 없습니다."))
             Text(tr("권한을 켠 뒤 다른 앱을 사용하고 새로고침해 보세요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+/**
+ * The last seven days beside the seven before, day by day, with the change in total, like the Sunday report but at any
+ * time. Estimated days (before recording began) are left out, as in the calendar.
+ */
+@Composable
+internal fun WeekCompareCard(days: List<HistoryYearEntity>, today: LocalDate) {
+    val totals = remember(days) { days.filter { !it.estimated }.associate { LocalDate.parse(it.date) to it.usageMillis } }
+    val pairs = remember(totals, today) { com.chronolock.domain.weekDays(totals, today) }
+    val week = remember(totals, today) { com.chronolock.domain.weekTotals(totals, today) }
+    if (week.thisWeekMillis == 0L && week.lastWeekMillis == 0L) return
+    val locale = uiText().locale
+    val top = pairs.maxOf { maxOf(it.first, it.second) }.coerceAtLeast(1)
+    val used = duration(week.thisWeekMillis / 1000)
+    CardBox {
+        Text(tr("최근 7일과 그 전 7일"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("week-compare"))
+        Text(when (val change = week.changePercent) {
+            null -> tr("최근 7일 %1\$s 사용했어요.", used)
+            else -> if (change <= 0) tr("최근 7일 %1\$s · 그 전 7일보다 %2\$d%% 줄었어요.", used, -change)
+                else tr("최근 7일 %1\$s · 그 전 7일보다 %2\$d%% 늘었어요.", used, change)
+        }, color = MaterialTheme.colorScheme.primary)
+        Row(Modifier.fillMaxWidth().height(120.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+            pairs.forEachIndexed { index, (recent, before) ->
+                val day = today.minusDays(6L - index)
+                Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.Bottom) {
+                        listOf(before to MaterialTheme.colorScheme.primary.copy(alpha = .3f), recent to MaterialTheme.colorScheme.primary).forEach { (millis, color) ->
+                            Box(Modifier.width(8.dp).fillMaxHeight((millis.toFloat() / top).coerceAtLeast(.02f))
+                                .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(color))
+                        }
+                    }
+                    Text(day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, locale), style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                }
+            }
+        }
+        Text(tr("진한 막대는 최근 7일, 옅은 막대는 그 전 7일의 같은 요일입니다."), color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
     }
 }
 

@@ -127,6 +127,11 @@ object ClockAnchors {
             else rule.copy(focusUntilEpochMillis = focus, pausedUntilEpochMillis = paused)
         }
     }
+    /** When a held change under [key] applies as the screen should say it: no sooner than its boot clock lets it. */
+    fun heldUntil(key: String, storedEpochMillis: Long, anchors: List<ClockAnchorEntity>, clock: com.chronolock.domain.ClockReading): Long {
+        val left = anchors.firstOrNull { it.key == key && it.bootId == clock.bootId }?.let { it.untilElapsedMillis - clock.elapsedMillis }
+        return if (left != null && left > 0) maxOf(storedEpochMillis, clock.epochMillis + left) else storedEpochMillis
+    }
 }
 
 @Entity(tableName = "app_usage_events", indices = [Index("epochMillis")])

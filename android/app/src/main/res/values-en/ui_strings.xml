@@ -68,7 +68,7 @@
     <string name="set_limits_hint">"Set your own usage limits"</string>
     <string name="personal_limits">"Limits for you"</string>
     <string name="normal_mode_hint">"Normal mode is active. You can edit or delete rules at any time, revoke permissions or uninstall the app in Android settings."</string>
-    <string name="blocking_limits_hint">"Device and battery settings may delay detection and blocking. Split-screen and picture-in-picture blocking are not supported yet."</string>
+    <string name="blocking_limits_hint">"Device and battery settings may delay detection and blocking. Apps in split screen and picture-in-picture are limited too."</string>
     <string name="local_data">"Local data"</string>
     <string name="local_data_hint">"Usage records are kept for up to 1 year, on this device only. They are never sent to a server."</string>
     <string name="delete_all">"Delete all rules and usage"</string>
@@ -411,6 +411,11 @@
     <string name="tile_focus_failed">"Couldn't change focus. Please try again in the app."</string>
     <string name="week_less">"%1$d%% less than last week"</string>
     <string name="week_more">"%1$d%% more than last week"</string>
+    <string name="week_compare_title">"Last 7 days vs the 7 before"</string>
+    <string name="week_compare_first">"%1$s in the last 7 days."</string>
+    <string name="week_compare_less">"%1$s in the last 7 days · %2$d%% less than the 7 before."</string>
+    <string name="week_compare_more">"%1$s in the last 7 days · %2$d%% more than the 7 before."</string>
+    <string name="week_compare_legend">"Dark bars are the last 7 days; light bars are the same weekdays a week earlier."</string>
     <string name="week_same">"About the same as last week"</string>
     <string name="week_previous">"Last week %1$s"</string>
     <string name="backup_title">"Backup and restore"</string>

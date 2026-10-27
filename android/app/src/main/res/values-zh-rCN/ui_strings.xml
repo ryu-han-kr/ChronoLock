@@ -66,7 +66,7 @@
     <string name="set_limits_hint">"设置自己的使用标准"</string>
     <string name="personal_limits">"为自己设限"</string>
     <string name="normal_mode_hint">"当前为普通模式，可随时修改或删除规则，也可在Android设置中撤销权限或卸载应用。"</string>
-    <string name="blocking_limits_hint">"设备和电池设置可能导致监测与拦截延迟，暂不支持分屏和画中画拦截。"</string>
+    <string name="blocking_limits_hint">"设备和电池设置可能导致监测与拦截延迟，分屏和画中画中的应用也会受到限制。"</string>
     <string name="local_data">"本地记录管理"</string>
     <string name="local_data_hint">"使用记录最多保存1年，仅保存在本机，不会发送至服务器。"</string>
     <string name="delete_all">"删除全部规则和使用记录"</string>
@@ -402,6 +402,11 @@
     <string name="tile_focus_failed">"无法切换专注，请在应用中重试。"</string>
     <string name="week_less">"比上周少用了 %1$d%%"</string>
     <string name="week_more">"比上周多用了 %1$d%%"</string>
+    <string name="week_compare_title">"最近7天与之前7天"</string>
+    <string name="week_compare_first">"最近7天使用了%1$s。"</string>
+    <string name="week_compare_less">"最近7天 %1$s · 比之前7天少%2$d%%。"</string>
+    <string name="week_compare_more">"最近7天 %1$s · 比之前7天多%2$d%%。"</string>
+    <string name="week_compare_legend">"深色柱为最近7天，浅色柱为一周前的同一天。"</string>
     <string name="week_same">"与上周差不多"</string>
     <string name="week_previous">"上周 %1$s"</string>
     <string name="backup_title">"备份与恢复"</string>

@@ -66,7 +66,7 @@
     <string name="set_limits_hint">"내 사용 기준을 설정해 보세요"</string>
     <string name="personal_limits">"나를 위한 제한"</string>
     <string name="normal_mode_hint">"현재는 일반 모드입니다. 언제든 규칙을 수정하거나 삭제할 수 있습니다. Android 설정에서 권한 해제와 앱 삭제도 가능합니다."</string>
-    <string name="blocking_limits_hint">"기기·배터리 설정에 따라 감지와 차단이 늦어질 수 있습니다. 분할 화면과 화면 속 화면은 아직 지원하지 않습니다."</string>
+    <string name="blocking_limits_hint">"기기·배터리 설정에 따라 감지와 차단이 늦어질 수 있습니다. 분할 화면과 화면 속 화면에 띄운 앱도 제한합니다."</string>
     <string name="local_data">"로컬 기록 관리"</string>
     <string name="local_data_hint">"앱 사용 기록을 최대 1년간 보관합니다. 기록은 이 기기에만 저장되며 서버로 전송하지 않습니다."</string>
     <string name="delete_all">"모든 규칙과 사용 기록 삭제"</string>
@@ -402,6 +402,11 @@
     <string name="tile_focus_failed">"집중을 바꾸지 못했습니다. 앱에서 다시 시도해 주세요."</string>
     <string name="week_less">"지난주보다 %1$d%% 덜 썼어요"</string>
     <string name="week_more">"지난주보다 %1$d%% 더 썼어요"</string>
+    <string name="week_compare_title">"최근 7일과 그 전 7일"</string>
+    <string name="week_compare_first">"최근 7일 %1$s 사용했어요."</string>
+    <string name="week_compare_less">"최근 7일 %1$s · 그 전 7일보다 %2$d%% 줄었어요."</string>
+    <string name="week_compare_more">"최근 7일 %1$s · 그 전 7일보다 %2$d%% 늘었어요."</string>
+    <string name="week_compare_legend">"진한 막대는 최근 7일, 옅은 막대는 그 전 7일의 같은 요일입니다."</string>
     <string name="week_same">"지난주와 비슷하게 썼어요"</string>
     <string name="week_previous">"지난주 %1$s"</string>
     <string name="backup_title">"백업과 복원"</string>

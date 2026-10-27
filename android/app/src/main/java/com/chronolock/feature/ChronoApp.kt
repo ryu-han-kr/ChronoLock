@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chronolock.blocking.InstalledApp
+import com.chronolock.data.ClockAnchors
 import com.chronolock.data.RuleEntity
 import com.chronolock.data.toDomain
 import com.chronolock.domain.AppRule
@@ -84,11 +85,15 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     var today by remember { mutableStateOf(LocalDate.now()) }
     var clock by remember { mutableStateOf(model.clock()) }
     val nowEpoch = clock.epochMillis
-    // Strict mode, the lock, focus and pauses as the boot clock has them, so changing the wall clock does not show them ending
+    // Strict mode, the lock, focus, pauses and held changes as the boot clock has them, so changing the wall clock does not show them ending
     // early (or a pause lasting longer) before the repository catches up.
     val state = remember(modelState, clock) {
+        fun held(key: String, stored: Long) = ClockAnchors.heldUntil(key, stored, modelState.anchors, clock)
         modelState.copy(strict = modelState.strict.shownAt(clock), lock = modelState.lock.shownAt(clock),
-            rules = com.chronolock.data.ClockAnchors.shown(modelState.rules, modelState.anchors, clock))
+            rules = com.chronolock.data.ClockAnchors.shown(modelState.rules, modelState.anchors, clock),
+            pending = modelState.pending.map { it.copy(applyAtEpochMillis = held(ClockAnchors.rule(it.packageName), it.applyAtEpochMillis)) },
+            pendingGroups = modelState.pendingGroups.map { it.copy(applyAtEpochMillis = held(ClockAnchors.group(it.groupId), it.applyAtEpochMillis)) },
+            pendingSites = modelState.pendingSites.map { it.copy(applyAtEpochMillis = held(ClockAnchors.site(it.domain), it.applyAtEpochMillis)) })
     }
     val focusActive = state.rules.any { rule -> rule.enabled && (rule.focusUntilEpochMillis ?: 0) > nowEpoch }
     // A one-second tick recomposes the whole screen; only the focus countdown needs it. Otherwise refresh the date each minute.
