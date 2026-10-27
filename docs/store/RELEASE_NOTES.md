@@ -2,6 +2,20 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 0.12.0 (versionCode 22) — 업로드 대기(Play 계정 세부정보 한국 법정 정보 입력 필요, 2026-10-27 403)
+
+AAB: `release/chronolock-0.12.0-vc22.aab`. 0.11.0 이후 PR #85(알림 권한 안내). Room v11 그대로. Pro 구분은 꺼진 빌드.
+
+### ko
+- 접근성 권한을 켤 때 알림 허용도 함께 물어봐요.
+- 알림을 켜면 쓰고 있는 앱의 남은 시간과 한도 5분 전 알림을 받을 수 있어요.
+- 처음 시작할 때 알림이 왜 필요한지 안내해요.
+
+### en
+- Turning on accessibility now asks for notifications too.
+- With notifications on, see the time left in the app you are using and get a reminder 5 minutes before a limit.
+- The first-run guide explains what notifications are for.
+
 ## 0.11.0 (versionCode 21) — 2026-10-27 API 업로드(internal·테스터들)
 
 AAB: `release/chronolock-0.11.0-vc21.aab`. 0.10.0 이후 PR #74·#76·#78·#80(QA 수정, 리뷰 요청·추천, 애니메이션 절전, PiP). Room v11 그대로. Pro 구분은 꺼진 빌드.
