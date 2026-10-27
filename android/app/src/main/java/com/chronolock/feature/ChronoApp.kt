@@ -69,6 +69,9 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     /** A recipe chosen from the Today suggestions; the next app picked in the app list opens with it. */
     var pickRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    // The notification prompt rides along with accessibility: one consent, then the settings screen. Registered here,
+    // not in the dialog, because the dialog has closed by the time the result arrives.
+    val notificationRequest = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { openSettings(true) }
     var themeGallery by rememberSaveable { mutableStateOf(false) }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
     var restoreFrom by rememberSaveable { mutableStateOf<android.net.Uri?>(null) }
@@ -166,13 +169,16 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                     dismissButton = { TextButton(onClick = { confirmFocus = null }) { Text(tr("취소")) } })
             }
             permissionDialog?.let { accessibility ->
+                val askNotifications = accessibility && notificationsMissing()
                 AlertDialog(onDismissRequest = { permissionDialog = null }, title = { Text(if (accessibility) tr("접근성 권한 안내") else tr("사용 정보 접근 안내")) },
                     text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { Text(if (accessibility)
                         tr("ChronoLock은 앱 전환 이벤트로 실행 중인 앱을 확인하고, 직접 설정한 제한에 따라 다른 앱 위에 차단 화면을 표시합니다. 웹사이트 차단을 쓰면 지원 브라우저 주소창의 도메인을 확인하고, 주소가 보이지 않는 앱 내 브라우저(카카오톡·네이버)에서는 페이지 제목과 페이지 속 링크의 도메인으로 사이트를 판단합니다. 그 밖의 화면 텍스트, 비밀번호, 입력 내용은 읽지 않습니다. 선택한 앱의 패키지 이름, 차단할 사이트 목록과 사용·차단 기록은 이 기기에만 저장되며 전송되지 않고, 방문한 주소는 저장하지 않습니다. Android 설정에서 언제든 해제할 수 있습니다. 동의하면 다음 설정 화면에서 ChronoLock을 직접 활성화해 주세요.")
                     else tr("사용 정보 접근 권한으로 앱별 사용 시간과 실행 횟수를 확인합니다. 차단 규칙 없이도 히스토리에 기록을 모으며 최대 1년간 이 기기에만 저장합니다. 서버로 전송하지 않습니다. 기록만 보려면 접근성 권한은 필요하지 않습니다. Android 설정에서 언제든 권한을 해제할 수 있습니다."))
+                        if (askNotifications) Text(tr("먼저 알림 허용을 물어봐요. 허용하면 쓰고 있는 앱의 남은 시간을 알림으로 보여 주고, 하루 한도가 5분 남으면 알려 드려요. 허용하지 않아도 차단은 그대로 동작합니다."))
                         if (accessibility) Text(tr("설정 화면이 열리면 ① '설치된 앱'(또는 '다운로드한 앱')에서 ChronoLock을 누르고 ② 'ChronoLock 사용'을 켠 뒤 ③ '허용'을 누르세요. 기기에 따라 항목 이름과 위치가 다를 수 있습니다."), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
                     } },
-                    confirmButton = { TextButton(onClick = { model.acknowledge { permissionDialog = null; openSettings(accessibility) } }) { Text(tr("동의하고 설정 열기")) } },
+                    confirmButton = { TextButton(onClick = { model.acknowledge { permissionDialog = null
+                        if (askNotifications) notificationRequest.launch(Manifest.permission.POST_NOTIFICATIONS) else openSettings(accessibility) } }) { Text(tr("동의하고 설정 열기")) } },
                     dismissButton = { TextButton(onClick = { permissionDialog = null }) { Text(tr("나중에")) } })
             }
             if (confirmDeleteAccount) AlertDialog(onDismissRequest = { confirmDeleteAccount = false }, title = { Text(tr("계정을 삭제할까요?")) },
@@ -232,16 +238,33 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     }
 }
 
-/** Asks for the reminder permission on Android 13+; hidden once granted or on older versions where it is implicit. */
-@Composable private fun NotificationPermissionButton() {
-    if (Build.VERSION.SDK_INT < 33) return
+/** True on Android 13+ while the notification permission is not granted; older versions grant it implicitly. */
+@Composable private fun notificationsMissing(): Boolean {
     val context = LocalContext.current
-    fun granted() = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-    var allowed by remember { mutableStateOf(granted()) }
-    val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed = it }
+    return Build.VERSION.SDK_INT >= 33 &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+}
+
+/**
+ * Asks for the notification permission; hidden once granted. After a refusal Android may stop showing its prompt,
+ * so the button then opens the app's notification settings instead.
+ */
+@Composable internal fun NotificationPermissionButton(hint: Boolean = true) {
+    if (!notificationsMissing()) return
+    val context = LocalContext.current
+    var allowed by remember { mutableStateOf(false) }
+    var refused by rememberSaveable { mutableStateOf(false) }
+    val request = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed = it; refused = !it }
     if (allowed) return
-    OutlinedButton(onClick = { request.launch(Manifest.permission.POST_NOTIFICATIONS) }, modifier = Modifier.fillMaxWidth()) { Text(tr("알림 권한")) }
-    Text(tr("하루 한도가 5분 남으면 알려 드립니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+    OutlinedButton(onClick = {
+        if (refused) runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        else request.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }, modifier = Modifier.fillMaxWidth()) { Text(tr("알림 권한")) }
+    if (hint) Text(tr("알림을 켜면 쓰고 있는 앱의 남은 시간을 보여 주고, 하루 한도가 5분 남으면 알려 드려요."),
+        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+    if (refused) Text(tr("허용 창이 뜨지 않으면 이 버튼으로 알림 설정을 열어 ChronoLock 알림을 켜 주세요."),
+        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
 }
 
 private val RuleDraftSaver = listSaver<RuleDraft, Any>(

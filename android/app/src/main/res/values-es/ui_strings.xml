@@ -335,7 +335,9 @@
     <string name="limit_warning_title">"%1$s está cerca de su límite diario"</string>
     <string name="limit_warning_text">"Te quedan %1$s hoy. Buen momento para terminar."</string>
     <string name="notify_permission">"Notificaciones"</string>
-    <string name="notify_permission_hint">"Te avisamos cuando queden 5 minutos de un límite diario."</string>
+    <string name="notify_permission_hint">"Con las notificaciones activadas, verás el tiempo que te queda en la app que usas y te avisaremos cuando queden 5 minutos de un límite diario."</string>
+    <string name="notify_ask_next">"Primero te pediremos permiso para enviar notificaciones. Muestran el tiempo que te queda en la app que usas y te avisan cuando quedan 5 minutos de un límite diario. El bloqueo funciona aunque no lo permitas."</string>
+    <string name="notify_permission_settings">"Si no aparece el aviso, usa este botón para abrir los ajustes de notificaciones y activar las de ChronoLock."</string>
     <string name="widget_label">"Hoy · apps limitadas"</string>
     <string name="widget_empty">"Abre la app para configurar límites"</string>
     <string name="widget_tightest">"%1$s: quedan %2$s"</string>
@@ -673,6 +675,8 @@
     <string name="onb_perm_a11y">"Servicio de accesibilidad"</string>
     <string name="onb_perm_a11y_body">"Muestra el bloqueo al abrir una app que llegó a su límite. No lee el contenido ni lo que escribes."</string>
     <string name="onb_perm_next">"Podrás activarlos desde la pestaña Hoy en la siguiente pantalla."</string>
+    <string name="onb_perm_notify">"Notificaciones (opcional)"</string>
+    <string name="onb_perm_notify_body">"Muestra el tiempo que te queda en la app que usas y un aviso 5 minutos antes del límite. El bloqueo funciona sin ellas."</string>
     <string name="goal_start_title">"Tu inicio"</string>
     <string name="goal_start_body">"Sugerencias según tus objetivos. Elige una app y se rellenan los ajustes sugeridos."</string>
     <string name="goal_start_default">"Empieza con una hora al día."</string>
