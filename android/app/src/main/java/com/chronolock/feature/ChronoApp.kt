@@ -84,8 +84,12 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     var today by remember { mutableStateOf(LocalDate.now()) }
     var clock by remember { mutableStateOf(model.clock()) }
     val nowEpoch = clock.epochMillis
-    // Strict mode and the lock as the boot clock has them, so moving the wall clock forward does not show them ending early.
-    val state = remember(modelState, clock) { modelState.copy(strict = modelState.strict.shownAt(clock), lock = modelState.lock.shownAt(clock)) }
+    // Strict mode, the lock, focus and pauses as the boot clock has them, so changing the wall clock does not show them ending
+    // early (or a pause lasting longer) before the repository catches up.
+    val state = remember(modelState, clock) {
+        modelState.copy(strict = modelState.strict.shownAt(clock), lock = modelState.lock.shownAt(clock),
+            rules = com.chronolock.data.ClockAnchors.shown(modelState.rules, modelState.anchors, clock))
+    }
     val focusActive = state.rules.any { rule -> rule.enabled && (rule.focusUntilEpochMillis ?: 0) > nowEpoch }
     // A one-second tick recomposes the whole screen; only the focus countdown needs it. Otherwise refresh the date each minute.
     LaunchedEffect(focusActive) { while (true) { today = LocalDate.now(); clock = model.clock(); delay(if (focusActive) 1_000 else 60_000) } }

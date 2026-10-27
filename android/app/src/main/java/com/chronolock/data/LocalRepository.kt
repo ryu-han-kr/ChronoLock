@@ -54,6 +54,7 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     private var state: MonitorState? = null
     val rules = dao.observeRules()
     val daily = dao.observeDaily()
+    val anchors = dao.observeAnchors()
 
     suspend fun recoveryStartEpochMillis(): Long? = mutex.withLock { dao.checkpoint()?.epochMillis }
 

@@ -26,6 +26,8 @@ data class PermissionState(val usage: Boolean = false, val accessibility: Boolea
 data class MainState(
     val apps: List<InstalledApp> = emptyList(),
     val rules: List<RuleEntity> = emptyList(),
+    /** Boot-clock deadlines for the focus and pauses; the screen shows [rules] through them. */
+    val anchors: List<com.chronolock.data.ClockAnchorEntity> = emptyList(),
     val daily: List<DailyEntity> = emptyList(),
     val permissions: PermissionState = PermissionState(),
     val health: Health = Health(),
@@ -122,6 +124,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.lock) { data, lock -> data.copy(lock = lock) }
         .combine(repository.sites) { data, sites -> data.copy(sites = sites.map { it.toDomain() }) }
         .combine(repository.pendingSites) { data, pending -> data.copy(pendingSites = pending) }
+        .combine(repository.anchors) { data, anchors -> data.copy(anchors = anchors) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -129,7 +132,7 @@ class MainViewModel @Inject constructor(
             emit(lastLoaded)
         }
     val state = combine(local, loaded) { ui, data ->
-        ui.copy(rules = data.rules, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
+        ui.copy(rules = data.rules, anchors = data.anchors, daily = data.daily, health = data.health, theme = data.theme, language = data.language,
             history = data.history, historyUpdatedAt = data.historyUpdatedAt, account = data.account, ads = data.ads,
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,

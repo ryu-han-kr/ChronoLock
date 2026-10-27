@@ -73,7 +73,7 @@ internal class LimitSurfaces(private val context: Context) {
         val summary = state.todaySummary(rules).let {
             it.copy(usedMillis = it.usedMillis / 60_000 * 60_000, tightestRemainingMillis = it.tightestRemainingMillis?.let { ms -> (ms + 59_999) / 60_000 * 60_000 })
         }
-        val status = TodayWidget.status(lock, rules, now, localized)
+        val status = TodayWidget.status(state.clock?.let(lock::shownAt) ?: lock, rules, now, localized)
         if (summary != lastSummary || mascot != lastWidgetMascot || status != lastWidgetStatus) {
             lastSummary = summary
             lastWidgetMascot = mascot
