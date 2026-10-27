@@ -66,7 +66,7 @@
     <string name="set_limits_hint">"自分の利用基準を設定しましょう"</string>
     <string name="personal_limits">"自分のための制限"</string>
     <string name="normal_mode_hint">"現在は通常モードです。ルールはいつでも変更・削除できます。Androidの設定で権限の解除やアプリの削除も可能です。"</string>
-    <string name="blocking_limits_hint">"端末や電池の設定により検出やブロックが遅れる場合があります。分割画面とピクチャーインピクチャーの制限は未対応です。"</string>
+    <string name="blocking_limits_hint">"端末や電池の設定により検出やブロックが遅れる場合があります。分割画面やピクチャーインピクチャーのアプリも制限します。"</string>
     <string name="local_data">"端末内の記録管理"</string>
     <string name="local_data_hint">"利用記録は最大1年間、端末内にのみ保存し、サーバーには送信しません。"</string>
     <string name="delete_all">"すべてのルールと記録を削除"</string>
@@ -402,6 +402,11 @@
     <string name="tile_focus_failed">"集中を切り替えられませんでした。アプリでもう一度お試しください。"</string>
     <string name="week_less">"先週より%1$d%%少なく使いました"</string>
     <string name="week_more">"先週より%1$d%%多く使いました"</string>
+    <string name="week_compare_title">"直近7日とその前の7日"</string>
+    <string name="week_compare_first">"直近7日で%1$s使いました。"</string>
+    <string name="week_compare_less">"直近7日 %1$s · その前の7日より%2$d%%減りました。"</string>
+    <string name="week_compare_more">"直近7日 %1$s · その前の7日より%2$d%%増えました。"</string>
+    <string name="week_compare_legend">"濃い棒は直近7日、薄い棒は1週間前の同じ曜日です。"</string>
     <string name="week_same">"先週とほぼ同じです"</string>
     <string name="week_previous">"先週 %1$s"</string>
     <string name="backup_title">"バックアップと復元"</string>

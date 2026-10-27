@@ -31,4 +31,14 @@ class ClockAnchorsTest {
         // The wall clock moved forward: the stored end comes first and stays.
         assertEquals(10_000L, ClockAnchors.shown(listOf(rule(paused = 10_000)), anchors, ClockReading(9_000, 1_000, 3, zone)).single().pausedUntilEpochMillis)
     }
+
+    @Test fun heldChange_appliesNoSoonerThanTheBootClock() {
+        val anchors = listOf(ClockAnchorEntity(ClockAnchors.site("x.com"), 2_000, 3))
+        // The wall clock jumped ahead: 500 ms are still held.
+        assertEquals(50_500L, ClockAnchors.heldUntil(ClockAnchors.site("x.com"), 10_000, anchors, ClockReading(50_000, 1_500, 3, zone)))
+        // Another boot, another key, or the boot clock already past: as stored.
+        assertEquals(10_000L, ClockAnchors.heldUntil(ClockAnchors.site("x.com"), 10_000, anchors, ClockReading(50_000, 1_500, 4, zone)))
+        assertEquals(10_000L, ClockAnchors.heldUntil(ClockAnchors.site("y.com"), 10_000, anchors, ClockReading(50_000, 1_500, 3, zone)))
+        assertEquals(10_000L, ClockAnchors.heldUntil(ClockAnchors.site("x.com"), 10_000, anchors, ClockReading(50_000, 2_000, 3, zone)))
+    }
 }

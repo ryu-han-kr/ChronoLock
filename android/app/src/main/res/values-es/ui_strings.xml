@@ -70,7 +70,7 @@
     <string name="set_limits_hint">"Define tus límites"</string>
     <string name="personal_limits">"Límites para ti"</string>
     <string name="normal_mode_hint">"El modo normal está activo. Puedes editar o borrar reglas, revocar permisos o desinstalar la app desde Ajustes de Android."</string>
-    <string name="blocking_limits_hint">"Los ajustes de batería o del dispositivo pueden retrasar el bloqueo. Aún no se admite bloquear pantalla dividida ni imagen en imagen."</string>
+    <string name="blocking_limits_hint">"Los ajustes de batería o del dispositivo pueden retrasar el bloqueo. Las apps en pantalla dividida e imagen en imagen también se limitan."</string>
     <string name="local_data">"Datos locales"</string>
     <string name="local_data_hint">"Los registros se guardan hasta 1 año solo en este dispositivo. No se envían a ningún servidor."</string>
     <string name="delete_all">"Borrar reglas y registros"</string>
@@ -420,6 +420,11 @@
     <string name="tile_focus_failed">"No se pudo cambiar la concentración. Inténtalo de nuevo en la app."</string>
     <string name="week_less">"%1$d%% menos que la semana pasada"</string>
     <string name="week_more">"%1$d%% más que la semana pasada"</string>
+    <string name="week_compare_title">"Últimos 7 días frente a los 7 anteriores"</string>
+    <string name="week_compare_first">"%1$s en los últimos 7 días."</string>
+    <string name="week_compare_less">"%1$s en los últimos 7 días · %2$d%% menos que los 7 anteriores."</string>
+    <string name="week_compare_more">"%1$s en los últimos 7 días · %2$d%% más que los 7 anteriores."</string>
+    <string name="week_compare_legend">"Las barras oscuras son los últimos 7 días; las claras, los mismos días una semana antes."</string>
     <string name="week_same">"Más o menos igual que la semana pasada"</string>
     <string name="week_previous">"Semana pasada %1$s"</string>
     <string name="backup_title">"Copia de seguridad y restauración"</string>

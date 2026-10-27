@@ -37,6 +37,10 @@ data class WeekTotals(val thisWeekMillis: Long, val lastWeekMillis: Long) {
     val changePercent: Int? get() = if (lastWeekMillis <= 0) null else Math.round((thisWeekMillis - lastWeekMillis) * 100.0 / lastWeekMillis).toInt()
 }
 
+/** The last seven days, oldest first, each paired with the same weekday a week earlier: (that day, a week before). */
+fun weekDays(dayTotals: Map<java.time.LocalDate, Long>, today: java.time.LocalDate): List<Pair<Long, Long>> =
+    (6L downTo 0L).map { back -> (dayTotals[today.minusDays(back)] ?: 0L) to (dayTotals[today.minusDays(back + 7)] ?: 0L) }
+
 fun weekTotals(dayTotals: Map<java.time.LocalDate, Long>, today: java.time.LocalDate): WeekTotals {
     fun sum(from: Long, to: Long) = (from..to).sumOf { dayTotals[today.minusDays(it)] ?: 0L }
     return WeekTotals(sum(0, 6), sum(7, 13))
