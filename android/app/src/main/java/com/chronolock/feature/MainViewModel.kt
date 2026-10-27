@@ -553,5 +553,6 @@ class MainViewModel @Inject constructor(
     }
     fun showError(message: String) { local.update { it.copy(error = message) } }
     fun dismissError() { local.update { it.copy(error = null) } }
+    fun clock() = environment.clock()
     fun updateDownloaded() { local.update { it.copy(updateReady = true) } }
 }

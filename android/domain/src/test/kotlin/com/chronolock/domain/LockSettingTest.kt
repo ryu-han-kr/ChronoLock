@@ -51,6 +51,15 @@ class LockClockTest {
         assertTrue(lock.lockedAt(ClockReading(9_000, 100, 4, zone)))
     }
 
+    @Test fun shownLock_endsWhenTheBootClockLetsIt() {
+        val lock = LockSetting(untilEpochMillis = 10_000, untilElapsedMillis = 2_000, bootId = 3)
+        val shown = lock.shownAt(ClockReading(50_000, 1_500, 3, zone))
+        assertTrue(shown.lockedAt(50_000))
+        assertEquals(50_500L, shown.untilEpochMillis)
+        assertEquals(lock, lock.shownAt(ClockReading(50_000, 2_000, 3, zone)))
+        assertEquals(lock, lock.shownAt(ClockReading(50_000, 100, 4, zone)))
+    }
+
     @Test fun goalDays_countCompletedDays_andDaysWithoutUse() {
         val start = java.time.LocalDate.of(2026, 10, 1)
         val rule = AppRule("a", "A", dailyLimitSeconds = 60)

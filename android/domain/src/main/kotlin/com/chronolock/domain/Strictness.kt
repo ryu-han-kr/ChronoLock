@@ -66,7 +66,7 @@ data class StrictSetting(
     val pendingAtElapsedMillis: Long? = null,
     val bootId: Int? = null,
 ) {
-    /** By the wall clock alone; for showing the setting. Decisions use the [ClockReading] overloads. */
+    /** By the wall clock alone; the screen reads it on [shownAt]. Decisions use the [ClockReading] overloads. */
     fun delayAt(epochMillis: Long): Int =
         if (pendingMinutes != null && pendingAtEpochMillis != null && epochMillis >= pendingAtEpochMillis) pendingMinutes else delayMinutes
     fun delayMillisAt(epochMillis: Long) = delayAt(epochMillis) * 60_000L
@@ -79,6 +79,15 @@ data class StrictSetting(
     fun delayMillisAt(clock: ClockReading) = delayAt(clock) * 60_000L
     /** Pending change still waiting at [epochMillis], if any. */
     fun waitingAt(epochMillis: Long) = pendingMinutes?.takeIf { pendingAtEpochMillis != null && epochMillis < pendingAtEpochMillis }
+    /**
+     * For showing at [clock]: the wall-clock change time moved out to when the boot clock lets it happen, so the
+     * wall-clock overloads read the same as the [ClockReading] ones at that moment.
+     */
+    fun shownAt(clock: ClockReading): StrictSetting {
+        val remaining = pendingAtElapsedMillis?.takeIf { bootId == clock.bootId }?.minus(clock.elapsedMillis) ?: return this
+        return if (remaining > 0 && pendingAtEpochMillis != null)
+            copy(pendingAtEpochMillis = maxOf(pendingAtEpochMillis, clock.epochMillis + remaining)) else this
+    }
 
     /** The setting after asking for [minutes] at [epochMillis]: raising applies at once, lowering waits for the current delay. */
     fun request(minutes: Int, epochMillis: Long): StrictSetting {
@@ -126,6 +135,12 @@ data class LockSetting(
     fun lockedAt(clock: ClockReading) = timeLockedAt(clock) || goalLocked
     val goalLocked: Boolean get() = goalDays != null
     fun lockedAt(epochMillis: Long) = timeLockedAt(epochMillis) || goalLocked
+    /** For showing at [clock]: the wall-clock end moved out to when the boot clock lets the time lock end. */
+    fun shownAt(clock: ClockReading): LockSetting {
+        val remaining = untilElapsedMillis?.takeIf { bootId == clock.bootId }?.minus(clock.elapsedMillis) ?: return this
+        return if (remaining > 0 && untilEpochMillis != null)
+            copy(untilEpochMillis = maxOf(untilEpochMillis, clock.epochMillis + remaining)) else this
+    }
     /** Kept days that count toward the goal: the streak, but never more than the days since the lock began. */
     fun goalProgress(keptStreak: Int, today: java.time.LocalDate): Int =
         goalStart?.let { minOf(keptStreak.toLong(), java.time.temporal.ChronoUnit.DAYS.between(it, today).coerceAtLeast(0)).toInt() } ?: 0
