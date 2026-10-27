@@ -2,6 +2,27 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 다음 출시 (미업로드) — 0.15.0 예정
+
+이번에 바뀐 것 (내부 기록):
+- PR #98: 히스토리 탭에 **최근 7일 vs 그 전 7일 막대 그래프** 추가. 요일별로 진한 막대(최근)·옅은 막대(일주일 전)를 나란히,
+  위에 합계와 증감(%) 문구. 무료·프로 모두 보이고 기록이 없으면 숨김.
+- PR #98: 엄격 모드로 대기 중인 앱·그룹·사이트 변경의 "적용 예정" 시각도 부팅 시계 기준으로 표시(휴대폰 시계를 앞당겨도 빨라 보이지 않음).
+- PR #98: 설정의 "분할 화면과 화면 속 화면은 아직 지원하지 않습니다" 안내를 "분할 화면·화면 속 화면에 띄운 앱도 제한합니다"로 수정
+  (기능은 이전 수정부터 이미 동작).
+- 확인한 결과 변경 불필요: 홈 위젯은 화면이 켜져 있는 동안 1초마다 다시 그려져 잠금·집중 종료가 곧바로 반영됨.
+- 확인할 것: 히스토리 그래프 모양(다크·라이트), 엄격 모드 대기 문구, 분할 화면에서 제한 앱 차단.
+
+### ko
+- 히스토리에서 최근 7일과 그 전 7일을 요일별 막대 그래프로 비교할 수 있어요.
+- 엄격 모드 대기 중인 변경의 적용 시각이 휴대폰 시계를 바꿔도 정확하게 보여요.
+- 분할 화면·화면 속 화면에 띄운 앱도 제한된다는 안내로 바꿨어요.
+
+### en
+- History compares the last 7 days with the 7 before in a day-by-day bar chart.
+- Changes waiting under strict mode show the right apply time even if the phone clock changes.
+- Settings now says apps in split screen and picture-in-picture are limited too.
+
 ## 0.14.0 (versionCode 24) — 2026-10-27 업로드 (내부·테스터들)
 
 AAB: `release/chronolock-0.14.0-vc24.aab`. Pro 구분은 꺼진 빌드.
