@@ -2,7 +2,7 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 0.14.0 (versionCode 24) — 업로드 대기
+## 0.14.0 (versionCode 24) — 2026-10-27 업로드 (내부·테스터들)
 
 AAB: `release/chronolock-0.14.0-vc24.aab`. Pro 구분은 꺼진 빌드.
 
