@@ -576,6 +576,9 @@
     <string name="pro_history">"3 个月和 1 年记录与年度日历"</string>
     <string name="pro_themes">"全部主题与自定义主题"</string>
     <string name="pro_owned">"你已拥有专业版，谢谢！"</string>
+    <string name="pro_code_owned">"已通过兑换码使用专业版。"</string>
+    <string name="pro_code">"专业版兑换码"</string>
+    <string name="pro_code_wrong">"兑换码无效。"</string>
     <string name="pro_pending">"正在等待付款确认，完成后即可使用专业版。"</string>
     <string name="pro_buy">"专业版月度订阅 · 每月 %1$s"</string>
     <string name="pro_loading">"正在加载专业版"</string>

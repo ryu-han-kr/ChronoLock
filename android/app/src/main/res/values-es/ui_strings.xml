@@ -616,6 +616,9 @@
     <string name="pro_history">"Historial de 3 meses y 1 año con calendario anual"</string>
     <string name="pro_themes">"Todos los temas y temas propios"</string>
     <string name="pro_owned">"Tienes Pro. ¡Gracias!"</string>
+    <string name="pro_code_owned">"Pro está activado con un código."</string>
+    <string name="pro_code">"Código Pro"</string>
+    <string name="pro_code_wrong">"Ese código no es válido."</string>
     <string name="pro_pending">"Esperando la confirmación del pago. Pro se abrirá al completarse."</string>
     <string name="pro_buy">"Pro mensual · %1$s/mes"</string>
     <string name="pro_loading">"Cargando Pro"</string>

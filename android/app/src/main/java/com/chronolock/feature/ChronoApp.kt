@@ -127,7 +127,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 toggleRule = { rule, on -> model.save(rule.toDomain().copy(enabled = on), {}) },
                 selectLanguage = model::selectLanguage, refreshHistory = model::refreshHistory,
                 banner = state.ads.takeIf {
-                    AdPolicy.showBanner(tab, it.configured, state.adFree || (com.chronolock.BuildConfig.PRO_GATING && state.billing.pro), it.canRequestAds,
+                    AdPolicy.showBanner(tab, it.configured, state.adFree || (com.chronolock.BuildConfig.PRO_GATING && state.billing.proAccess), it.canRequestAds,
                         focusActive = focusActive)
                 }?.let { { BannerAd(model.bannerId) } },
                 signIn = signIn, signOut = model::signOut, deleteAccount = { confirmDeleteAccount = true },
@@ -144,6 +144,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 setFollowSystem = model::setFollowSystem, editNightTheme = model::editNightTheme,
                 exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
                 restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+                redeemCode = model::redeemCode,
             )
             if (themeGallery) ThemeGallery(editing, model::selectTheme, state.favoriteThemes, model::toggleFavoriteTheme) { themeGallery = false }
             }

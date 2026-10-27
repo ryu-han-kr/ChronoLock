@@ -576,6 +576,9 @@
     <string name="pro_history">"3개월·1년 기록과 1년 달력"</string>
     <string name="pro_themes">"모든 테마와 나만의 테마"</string>
     <string name="pro_owned">"프로를 사용하고 있어요. 고마워요!"</string>
+    <string name="pro_code_owned">"코드로 프로를 사용하고 있어요."</string>
+    <string name="pro_code">"프로 코드"</string>
+    <string name="pro_code_wrong">"코드가 맞지 않습니다."</string>
     <string name="pro_pending">"결제 확인을 기다리고 있습니다. 완료되면 프로가 열립니다."</string>
     <string name="pro_buy">"프로 월 구독 · 월 %1$s"</string>
     <string name="pro_loading">"프로 상품을 불러오는 중"</string>

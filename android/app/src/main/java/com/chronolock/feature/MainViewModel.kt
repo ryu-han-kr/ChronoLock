@@ -80,7 +80,7 @@ data class MainState(
     val rulesWithGroups: List<com.chronolock.domain.AppRule> get() =
         com.chronolock.domain.withGroups(rules.associate { it.packageName to it.toDomain() }, groups).values.toList()
     /** Every feature is open while the Pro split is switched off ([com.chronolock.BuildConfig.PRO_GATING]). */
-    val pro get() = !com.chronolock.BuildConfig.PRO_GATING || billing.pro
+    val pro get() = !com.chronolock.BuildConfig.PRO_GATING || billing.proAccess
 }
 
 @HiltViewModel
@@ -92,7 +92,7 @@ class MainViewModel @Inject constructor(
     private val backups: BackupRepository,
     private val accounts: AccountRepository,
     private val ads: AdsController,
-    billing: BillingController,
+    private val billing: BillingController,
     health: MonitorHealth,
 ) : ViewModel() {
     private val local = MutableStateFlow(MainState())
@@ -375,6 +375,8 @@ class MainViewModel @Inject constructor(
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
+
+    fun redeemCode(code: String): Boolean = billing.redeem(code)
 
     fun exportBackup(uri: android.net.Uri) = viewModelScope.launch {
         try { backups.export(uri, environment.clock().epochMillis); showError("백업 파일을 저장했습니다.") }

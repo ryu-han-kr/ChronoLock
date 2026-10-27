@@ -596,6 +596,9 @@
     <string name="pro_history">"3-month and 1-year history with a yearly calendar"</string>
     <string name="pro_themes">"Every theme and custom themes"</string>
     <string name="pro_owned">"You have Pro. Thank you!"</string>
+    <string name="pro_code_owned">"Pro is unlocked with a code."</string>
+    <string name="pro_code">"Pro code"</string>
+    <string name="pro_code_wrong">"That code is not valid."</string>
     <string name="pro_pending">"Waiting for payment confirmation. Pro opens once it completes."</string>
     <string name="pro_buy">"Pro monthly · %1$s/month"</string>
     <string name="pro_loading">"Loading Pro"</string>
