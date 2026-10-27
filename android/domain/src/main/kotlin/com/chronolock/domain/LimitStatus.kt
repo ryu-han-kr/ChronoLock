@@ -49,6 +49,8 @@ data class LiveLimit(
     val groups: List<GroupLeft>,
     /** Time spent in the app today, shown while it is in use. */
     val usedTodayMillis: Long = 0,
+    /** What is left of [nearestMillis] as a share of its whole allowance, from 0 to 1; null without a time limit. */
+    val nearestFraction: Float? = null,
 ) {
     /** The running allowance that ends first; the notification counts down to it. */
     val nearestMillis: Long? get() = (listOfNotNull(dailyLeftMillis, sessionLeftMillis) + groups.mapNotNull { it.timeLeftMillis }).minOrNull()
@@ -72,5 +74,13 @@ fun MonitorState.liveLimit(rules: Map<String, AppRule>): LiveLimit? {
     val live = LiveLimit(target, rule.appName, rule.dailyLimitSeconds?.times(1000), remainingDailyMillis(rule),
         rule.sessionLimitSeconds?.let { (it * 1000 - session).coerceAtLeast(0) }, rule.maxOpenCount?.let { (it - today.opens).coerceAtLeast(0) },
         groups.filter { it.timeLeftMillis != null || it.opensLeft != null }, today.usageMillis)
-    return live
+    // Each running allowance as (left, whole); the one that ends first sets the share.
+    val allowances = listOfNotNull(
+        live.dailyLeftMillis?.let { left -> live.dailyLimitMillis?.let { left to it } },
+        live.sessionLeftMillis?.let { left -> rule.sessionLimitSeconds?.let { left to it * 1000 } },
+    ) + rule.groups.filter { it.enabled }.zip(groups).mapNotNull { (group, left) ->
+        left.timeLeftMillis?.let { ms -> group.dailyLimitSeconds?.let { ms to it * 1000 } }
+    }
+    val nearest = allowances.filter { it.second > 0 }.minByOrNull { it.first } ?: return live
+    return live.copy(nearestFraction = (nearest.first.toFloat() / nearest.second).coerceIn(0f, 1f))
 }

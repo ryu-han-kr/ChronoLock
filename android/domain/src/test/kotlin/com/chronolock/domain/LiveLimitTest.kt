@@ -19,6 +19,15 @@ class LiveLimitTest {
         assertEquals(1, live.opensLeft)
         assertEquals(listOf(GroupLeft("SNS", 300_000, 2)), live.groups)
         assertEquals(30_000L, live.nearestMillis)
+        assertEquals(0.5f, live.nearestFraction!!, 0.001f)  // half of the one-minute session is left
+    }
+
+    @Test fun ringShare_followsTheAllowanceThatEndsFirst_andNeedsATimeLimit() {
+        assertEquals(50f / 60, state("a").liveLimit(mapOf("a" to AppRule("a", "A", dailyLimitSeconds = 3600)))!!.nearestFraction!!, 0.001f)
+        val group = AppGroup(1, "SNS", mapOf("a" to "A", "b" to "B"), dailyLimitSeconds = 1200)
+        val grouped = withGroups(mapOf("a" to AppRule("a", "A", dailyLimitSeconds = 3600)), listOf(group))
+        assertEquals(0.25f, state("a").liveLimit(grouped)!!.nearestFraction!!, 0.001f)  // 5 of the group's 20 minutes left
+        assertNull(state("a").liveLimit(mapOf("a" to AppRule("a", "A", maxOpenCount = 5)))!!.nearestFraction)
     }
 
     @Test fun nothingShows_withoutALimitingRule_whilePaused_orOnceBlocked() {
