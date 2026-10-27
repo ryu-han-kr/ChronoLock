@@ -2,7 +2,7 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 0.11.0 (versionCode 21) — 2026-10-26 API 업로드(internal·테스터들)
+## 0.11.0 (versionCode 21) — 2026-10-27 API 업로드(internal·테스터들)
 
 AAB: `release/chronolock-0.11.0-vc21.aab`. 0.10.0 이후 PR #74·#76·#78·#80(QA 수정, 리뷰 요청·추천, 애니메이션 절전, PiP). Room v11 그대로. Pro 구분은 꺼진 빌드.
 
