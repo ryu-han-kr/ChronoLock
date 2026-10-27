@@ -317,7 +317,9 @@
     <string name="limit_warning_title">"%1$s 하루 한도 임박"</string>
     <string name="limit_warning_text">"오늘 %1$s 남았어요. 지금 하던 일을 마무리해 보세요."</string>
     <string name="notify_permission">"알림 권한"</string>
-    <string name="notify_permission_hint">"하루 한도가 5분 남으면 알려 드립니다."</string>
+    <string name="notify_permission_hint">"알림을 켜면 쓰고 있는 앱의 남은 시간을 보여 주고, 하루 한도가 5분 남으면 알려 드려요."</string>
+    <string name="notify_ask_next">"먼저 알림 허용을 물어봐요. 허용하면 쓰고 있는 앱의 남은 시간을 알림으로 보여 주고, 하루 한도가 5분 남으면 알려 드려요. 허용하지 않아도 차단은 그대로 동작합니다."</string>
+    <string name="notify_permission_settings">"허용 창이 뜨지 않으면 이 버튼으로 알림 설정을 열어 ChronoLock 알림을 켜 주세요."</string>
     <string name="widget_label">"오늘 · 제한한 앱"</string>
     <string name="widget_empty">"앱을 열어 제한을 설정하세요"</string>
     <string name="widget_tightest">"%1$s %2$s 남음"</string>
@@ -633,6 +635,8 @@
     <string name="onb_perm_a11y">"접근성 서비스"</string>
     <string name="onb_perm_a11y_body">"한도에 닿은 앱을 열 때 차단 화면을 띄워요. 화면 내용이나 입력은 읽지 않아요."</string>
     <string name="onb_perm_next">"다음 화면의 \'오늘\' 탭에서 안내를 보고 바로 켤 수 있어요."</string>
+    <string name="onb_perm_notify">"알림 (선택)"</string>
+    <string name="onb_perm_notify_body">"쓰고 있는 앱의 남은 시간과 한도 5분 전 알림을 보여 줘요. 허용하지 않아도 차단은 동작해요."</string>
     <string name="goal_start_title">"맞춤 시작"</string>
     <string name="goal_start_body">"처음에 고른 목표에 맞춰 추천해요. 앱을 고르면 추천 설정이 미리 채워져요."</string>
     <string name="goal_start_default">"하루 1시간부터 시작해 보세요."</string>

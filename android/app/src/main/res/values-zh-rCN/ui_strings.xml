@@ -317,7 +317,9 @@
     <string name="limit_warning_title">"%1$s 即将达到每日上限"</string>
     <string name="limit_warning_text">"今天还剩 %1$s，可以准备收尾了。"</string>
     <string name="notify_permission">"通知"</string>
-    <string name="notify_permission_hint">"每日上限剩余 5 分钟时提醒你。"</string>
+    <string name="notify_permission_hint">"开启通知后，会显示正在使用的应用的剩余时间，并在每日上限剩余 5 分钟时提醒你。"</string>
+    <string name="notify_ask_next">"接下来会先请求通知权限。允许后，会在通知中显示正在使用的应用的剩余时间，并在每日上限剩余 5 分钟时提醒你。即使不允许，屏蔽功能也照常工作。"</string>
+    <string name="notify_permission_settings">"如果没有弹出授权窗口，请用此按钮打开通知设置，开启 ChronoLock 的通知。"</string>
     <string name="widget_label">"今天 · 受限应用"</string>
     <string name="widget_empty">"打开应用设置限制"</string>
     <string name="widget_tightest">"%1$s 剩余 %2$s"</string>
@@ -633,6 +635,8 @@
     <string name="onb_perm_a11y">"无障碍服务"</string>
     <string name="onb_perm_a11y_body">"打开达到上限的应用时显示拦截画面，不读取屏幕内容或输入。"</string>
     <string name="onb_perm_next">"可在下一个画面的“今天”标签中按提示立即开启。"</string>
+    <string name="onb_perm_notify">"通知(可选)"</string>
+    <string name="onb_perm_notify_body">"显示正在使用的应用的剩余时间，并在达到上限前 5 分钟提醒。不允许也不影响屏蔽。"</string>
     <string name="goal_start_title">"为你推荐"</string>
     <string name="goal_start_body">"根据你最初选择的目标推荐。选择应用后会预先填好推荐设置。"</string>
     <string name="goal_start_default">"先从每天 1 小时开始吧。"</string>

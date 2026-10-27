@@ -71,6 +71,8 @@ internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguag
                 Text(tr("두 가지 권한이 필요해요"), style = MaterialTheme.typography.headlineMedium)
                 Step(1, tr("사용 정보 접근"), tr("앱별 사용 시간과 실행 횟수를 확인해 기록과 한도에 써요."))
                 Step(2, tr("접근성 서비스"), tr("한도에 닿은 앱을 열 때 차단 화면을 띄워요. 화면 내용이나 입력은 읽지 않아요."))
+                Step(3, tr("알림 (선택)"), tr("쓰고 있는 앱의 남은 시간과 한도 5분 전 알림을 보여 줘요. 허용하지 않아도 차단은 동작해요."))
+                NotificationPermissionButton(hint = false)
                 Text(tr("다음 화면의 '오늘' 탭에서 안내를 보고 바로 켤 수 있어요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
