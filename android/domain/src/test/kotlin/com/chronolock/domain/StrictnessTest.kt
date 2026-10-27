@@ -102,4 +102,17 @@ class StrictnessTest {
         // Moving the wall clock back keeps it waiting, as a lock does.
         assertEquals(60, lowered.delayAt(ClockReading(0, 5_000 + 61 * 60_000L, 3, zone)))
     }
+
+    @Test fun shownSetting_readsLikeTheBootClock() {
+        val zone = java.time.ZoneId.of("Asia/Seoul")
+        val lowered = StrictSetting(60).request(0, ClockReading(1_000, 5_000, 3, zone))
+        val jumped = ClockReading(1_000 + 86_400_000L, 5_000 + 10 * 60_000L, 3, zone)
+        val shown = lowered.shownAt(jumped)
+        assertEquals(60, shown.delayAt(jumped.epochMillis))
+        assertEquals(0, shown.waitingAt(jumped.epochMillis))
+        assertEquals(jumped.epochMillis + 50 * 60_000L, shown.pendingAtEpochMillis)
+        // Once the boot clock has caught up, or after a reboot, nothing moves.
+        assertEquals(lowered, lowered.shownAt(ClockReading(1_000 + 86_400_000L, 5_000 + 60 * 60_000L, 3, zone)))
+        assertEquals(lowered, lowered.shownAt(ClockReading(1_000 + 86_400_000L, 1_000, 4, zone)))
+    }
 }

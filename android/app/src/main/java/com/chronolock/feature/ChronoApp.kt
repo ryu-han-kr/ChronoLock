@@ -60,7 +60,7 @@ import kotlinx.coroutines.delay
 fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () -> Unit = {}, privacyOptions: () -> Unit = {},
     manageSubscription: () -> Unit = {}, installUpdate: () -> Unit = {},
     buyPro: () -> Unit = {}, managePro: () -> Unit = {}) {
-    val state by model.state.collectAsStateWithLifecycle()
+    val modelState by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
     /** 0 creates a new group. */
@@ -82,10 +82,13 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     var confirmDeleteAccount by rememberSaveable { mutableStateOf(false) }
     var confirmFocus by rememberSaveable { mutableStateOf<Int?>(null) }
     var today by remember { mutableStateOf(LocalDate.now()) }
-    var nowEpoch by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var clock by remember { mutableStateOf(model.clock()) }
+    val nowEpoch = clock.epochMillis
+    // Strict mode and the lock as the boot clock has them, so moving the wall clock forward does not show them ending early.
+    val state = remember(modelState, clock) { modelState.copy(strict = modelState.strict.shownAt(clock), lock = modelState.lock.shownAt(clock)) }
     val focusActive = state.rules.any { rule -> rule.enabled && (rule.focusUntilEpochMillis ?: 0) > nowEpoch }
     // A one-second tick recomposes the whole screen; only the focus countdown needs it. Otherwise refresh the date each minute.
-    LaunchedEffect(focusActive) { while (true) { today = LocalDate.now(); nowEpoch = System.currentTimeMillis(); delay(if (focusActive) 1_000 else 60_000) } }
+    LaunchedEffect(focusActive) { while (true) { today = LocalDate.now(); clock = model.clock(); delay(if (focusActive) 1_000 else 60_000) } }
     val snackbar = remember { SnackbarHostState() }
     // The theme on screen: the night one while the device is dark and the person asked to follow it.
     val shown = if (state.followSystem && androidx.compose.foundation.isSystemInDarkTheme()) state.nightTheme else state.theme
