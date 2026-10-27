@@ -104,6 +104,29 @@ object ClockAnchors {
     fun site(domain: String) = "site:$domain"
     fun pause(packageName: String) = "pause:$packageName"
     const val PAUSE_PREFIX = "pause:"
+
+    /**
+     * [rules] as the screen should show them at [clock], matching what the repository decides: a focus ends no sooner
+     * than its boot clock lets it, and a pause ends at whichever clock gets there first.
+     */
+    fun shown(rules: List<RuleEntity>, anchors: List<ClockAnchorEntity>, clock: com.chronolock.domain.ClockReading): List<RuleEntity> {
+        val left = anchors.filter { it.bootId == clock.bootId }.associate { it.key to it.untilElapsedMillis - clock.elapsedMillis }
+        if (left.isEmpty()) return rules
+        val focusEnd = left[FOCUS]?.takeIf { it > 0 }?.let { clock.epochMillis + it }
+        return rules.map { rule ->
+            val focus = rule.focusUntilEpochMillis?.let { end -> if (focusEnd != null && rule.enabled) maxOf(end, focusEnd) else end }
+            val pauseLeft = left[pause(rule.packageName)]
+            val paused = rule.pausedUntilEpochMillis?.let { end ->
+                when {
+                    pauseLeft == null -> end
+                    pauseLeft <= 0 -> null
+                    else -> minOf(end, clock.epochMillis + pauseLeft)
+                }
+            }
+            if (focus == rule.focusUntilEpochMillis && paused == rule.pausedUntilEpochMillis) rule
+            else rule.copy(focusUntilEpochMillis = focus, pausedUntilEpochMillis = paused)
+        }
+    }
 }
 
 @Entity(tableName = "app_usage_events", indices = [Index("epochMillis")])
@@ -122,6 +145,7 @@ interface ChronoDao {
     @Query("UPDATE blocking_rules SET focusUntilEpochMillis = NULL") suspend fun stopFocus()
     @Query("SELECT * FROM clock_anchor WHERE `key` = :key") suspend fun anchor(key: String): ClockAnchorEntity?
     @Query("SELECT * FROM clock_anchor") suspend fun anchors(): List<ClockAnchorEntity>
+    @Query("SELECT * FROM clock_anchor") fun observeAnchors(): Flow<List<ClockAnchorEntity>>
     @Upsert suspend fun saveAnchor(row: ClockAnchorEntity)
     @Query("DELETE FROM clock_anchor WHERE `key` = :key") suspend fun deleteAnchor(key: String)
     @Query("DELETE FROM clock_anchor") suspend fun clearAnchors()

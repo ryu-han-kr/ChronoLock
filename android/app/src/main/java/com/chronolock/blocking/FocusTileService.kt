@@ -8,6 +8,7 @@ import android.service.quicksettings.TileService
 import android.widget.Toast
 import com.chronolock.MainActivity
 import com.chronolock.R
+import com.chronolock.data.ClockAnchors
 import com.chronolock.data.LocalRepository
 import com.chronolock.data.Preferences
 import com.chronolock.data.RuleEntity
@@ -36,10 +37,12 @@ class FocusTileService : TileService() {
         listening?.cancel()
         listening = scope.launch {
             try {
-                combine(repository.rules, preferences.focusMinutes, preferences.language) { rules, minutes, language -> Triple(rules, minutes, language) }
-                    .collectLatest { (rules, minutes, language) ->
+                combine(repository.rules, repository.anchors, preferences.focusMinutes, preferences.language) { rules, anchors, minutes, language ->
+                    Triple(rules to anchors, minutes, language)
+                }
+                    .collectLatest { (stored, minutes, language) ->
                         while (true) {
-                            val end = render(rules, minutes, forLanguage(language)) ?: break
+                            val end = render(ClockAnchors.shown(stored.first, stored.second, environment.clock()), minutes, forLanguage(language)) ?: break
                             delay((end - System.currentTimeMillis()).coerceAtLeast(0) + 500) // Turn the tile off once the focus ends.
                         }
                     }
@@ -58,7 +61,8 @@ class FocusTileService : TileService() {
             try {
                 val clock = environment.clock()
                 val now = clock.epochMillis
-                val rules = repository.rules.first()
+                // As the boot clock has it: a focus the wall clock says is over may still be running, and must not be replaced.
+                val rules = ClockAnchors.shown(repository.rules.first(), repository.anchors.first(), clock)
                 when {
                     focusEnd(rules, now) != null -> if (preferences.strict.first().delayAt(clock) > 0 || preferences.lock.first().lockedAt(clock)) {
                         Toast.makeText(this@FocusTileService, localized.getString(R.string.strict_focus_locked), Toast.LENGTH_SHORT).show()
