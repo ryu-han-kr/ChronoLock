@@ -40,6 +40,18 @@ class LockPreferencesTest {
         assertTrue(preferences.checkHistoryPin("1357", clock(600_000)).ok)
     }
 
+    @Test fun strictDecrease_keepsItsBootClockDeadline() = runBlocking {
+        try {
+            preferences.updateStrict { com.chronolock.domain.StrictSetting(60) }
+            preferences.updateStrict { it.request(0, clock()) }
+            val stored = preferences.strict.first()
+            assertEquals(elapsed + 3_600_000, stored.pendingAtElapsedMillis)
+            assertEquals(60, stored.delayAt(clock(60_000, jump = 86_400_000)))
+            preferences.updateStrict { it.cancel(clock()) }
+            assertNull(preferences.strict.first().pendingAtElapsedMillis)
+        } finally { preferences.updateStrict { com.chronolock.domain.StrictSetting() } }
+    }
+
     @Test fun movingTheClockForward_doesNotLiftAPinBlock() = runBlocking {
         preferences.setHistoryPin("1357")
         repeat(5) { preferences.checkHistoryPin("0000", clock()) }

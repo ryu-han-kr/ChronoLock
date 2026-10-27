@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 12,
-    "identityHash": "56f6c807e048d1e780d70e802c62c78d",
+    "identityHash": "69415d3c84d578440e90902cade5b1e3",
     "entities": [
       {
         "tableName": "blocking_rules",
@@ -748,13 +748,13 @@
         }
       },
       {
-        "tableName": "focus_anchor",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `untilElapsedMillis` INTEGER NOT NULL, `bootId` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "tableName": "clock_anchor",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `untilElapsedMillis` INTEGER NOT NULL, `bootId` INTEGER NOT NULL, PRIMARY KEY(`key`))",
         "fields": [
           {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -773,14 +773,14 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "id"
+            "key"
           ]
         }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '56f6c807e048d1e780d70e802c62c78d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '69415d3c84d578440e90902cade5b1e3')"
     ]
   }
 }

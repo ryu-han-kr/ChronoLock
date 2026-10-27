@@ -86,4 +86,20 @@ class StrictnessTest {
         assertEquals(1440, lowered.delayAt(1_000 + 1439 * 60_000L))
         assertEquals(60, lowered.delayAt(1_000 + 1440 * 60_000L))
     }
+
+    @Test fun loweringTheDelay_waitsOnTheBootClockToo() {
+        val zone = java.time.ZoneId.of("Asia/Seoul")
+        val start = ClockReading(1_000, 5_000, 3, zone)
+        val lowered = StrictSetting(60).request(0, start)
+        // The wall clock moved a day ahead after 10 minutes: the hour still holds within this boot.
+        val jumped = ClockReading(1_000 + 86_400_000L, 5_000 + 10 * 60_000L, 3, zone)
+        assertEquals(0, lowered.delayAt(jumped.epochMillis))
+        assertEquals(60, lowered.delayAt(jumped))
+        assertEquals(StrictSetting(60), lowered.cancel(jumped))
+        assertEquals(0, lowered.delayAt(ClockReading(1_000 + 86_400_000L, 5_000 + 60 * 60_000L, 3, zone)))
+        // After a reboot only the wall clock can tell.
+        assertEquals(0, lowered.delayAt(ClockReading(1_000 + 86_400_000L, 1_000, 4, zone)))
+        // Moving the wall clock back keeps it waiting, as a lock does.
+        assertEquals(60, lowered.delayAt(ClockReading(0, 5_000 + 61 * 60_000L, 3, zone)))
+    }
 }

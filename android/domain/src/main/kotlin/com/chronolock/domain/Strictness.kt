@@ -55,11 +55,28 @@ object Strictness {
     }
 }
 
-/** Strict mode as stored: the delay in force, and a lower delay that takes over at [pendingAtEpochMillis]. */
-data class StrictSetting(val delayMinutes: Int = 0, val pendingMinutes: Int? = null, val pendingAtEpochMillis: Long? = null) {
+/**
+ * Strict mode as stored: the delay in force, and a lower delay that takes over at [pendingAtEpochMillis] and, within the
+ * boot [bootId] that asked for it, not before [pendingAtElapsedMillis], so moving the wall clock forward cannot hurry it.
+ */
+data class StrictSetting(
+    val delayMinutes: Int = 0,
+    val pendingMinutes: Int? = null,
+    val pendingAtEpochMillis: Long? = null,
+    val pendingAtElapsedMillis: Long? = null,
+    val bootId: Int? = null,
+) {
+    /** By the wall clock alone; for showing the setting. Decisions use the [ClockReading] overloads. */
     fun delayAt(epochMillis: Long): Int =
         if (pendingMinutes != null && pendingAtEpochMillis != null && epochMillis >= pendingAtEpochMillis) pendingMinutes else delayMinutes
     fun delayMillisAt(epochMillis: Long) = delayAt(epochMillis) * 60_000L
+    /** The wall clock and, within the same boot, elapsed time must both have reached the change; whichever is later wins. */
+    fun delayAt(clock: ClockReading): Int {
+        val due = pendingMinutes != null && pendingAtEpochMillis != null && clock.epochMillis >= pendingAtEpochMillis &&
+            (bootId != clock.bootId || pendingAtElapsedMillis == null || clock.elapsedMillis >= pendingAtElapsedMillis)
+        return if (due) pendingMinutes!! else delayMinutes
+    }
+    fun delayMillisAt(clock: ClockReading) = delayAt(clock) * 60_000L
     /** Pending change still waiting at [epochMillis], if any. */
     fun waitingAt(epochMillis: Long) = pendingMinutes?.takeIf { pendingAtEpochMillis != null && epochMillis < pendingAtEpochMillis }
 
@@ -71,8 +88,18 @@ data class StrictSetting(val delayMinutes: Int = 0, val pendingMinutes: Int? = n
         else StrictSetting(minutes)
     }
 
+    /** Like the wall-clock [request], but a lowering also waits on the boot clock of [clock]. */
+    fun request(minutes: Int, clock: ClockReading): StrictSetting {
+        require(minutes in Strictness.DELAYS)
+        val current = delayAt(clock)
+        return if (Strictness.loosensDelay(current, minutes)) StrictSetting(current, minutes, clock.epochMillis + current * 60_000L,
+            clock.elapsedMillis + current * 60_000L, clock.bootId)
+        else StrictSetting(minutes)
+    }
+
     /** Keeps the delay in force and drops a waiting decrease; this only tightens, so it never waits. */
     fun cancel(epochMillis: Long) = StrictSetting(delayAt(epochMillis))
+    fun cancel(clock: ClockReading) = StrictSetting(delayAt(clock))
 }
 
 /**
