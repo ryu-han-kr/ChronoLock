@@ -18,8 +18,8 @@ android {
         applicationId = "com.chronolock.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 23
-        versionName = "0.13.0"
+        versionCode = 24
+        versionName = "0.14.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Service keys come from local.properties or -P; blank values keep login hidden and ads on test units.
         fun setting(name: String): String = providers.gradleProperty(name).orNull
