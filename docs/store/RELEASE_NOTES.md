@@ -2,7 +2,26 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 0.12.0 (versionCode 22) — 업로드 대기(Play 계정 세부정보 한국 법정 정보 입력 필요, 2026-10-27 403)
+## 0.13.0 (versionCode 23) — 업로드 대기
+
+AAB: `release/chronolock-0.13.0-vc23.aab`. 0.11.0 이후 첫 출시(0.12.0은 올리지 못함): PR #85(알림 권한 안내), #89(집중 부팅 시계·위젯 상태 줄),
+#90~#92(엄격 대기·잠시 쉬기·표시를 부팅 시계로), #93(상태바 아이콘). **Room v11→v12 마이그레이션** → 업데이트 설치 후 규칙 유지 확인. Pro 구분은 꺼진 빌드.
+
+### ko
+- 상태바에 흰 네모 대신 시계 아이콘이 보여요. 앱을 쓰는 동안엔 남은 시간이 링으로 줄어들어요.
+- 앱을 쓰지 않을 땐 상태바에 아무것도 남지 않아요.
+- 홈 위젯에 잠금·집중 상태가 보여요.
+- 휴대폰 시계를 바꿔도 집중·잠금·엄격 모드 대기·잠시 쉬기가 앞당겨지지 않아요.
+- 접근성 권한을 켤 때 알림 허용도 함께 물어봐요.
+
+### en
+- The status bar shows a clock instead of a white square, with a ring counting down while you use a limited app.
+- Nothing stays in the status bar when you are not using one.
+- The home widget shows lock and focus status.
+- Changing the phone clock no longer cuts short focus, locks, strict-mode waits or pauses.
+- Turning on accessibility now asks for notifications too.
+
+## 0.12.0 (versionCode 22) — 올리지 않음(2026-10-27 403, 0.13.0에 포함)
 
 AAB: `release/chronolock-0.12.0-vc22.aab`. 0.11.0 이후 PR #85(알림 권한 안내). Room v11 그대로. Pro 구분은 꺼진 빌드.
 
