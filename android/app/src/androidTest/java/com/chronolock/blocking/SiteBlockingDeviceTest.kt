@@ -118,7 +118,8 @@ class SiteBlockingDeviceTest {
         shell("settings put secure enabled_accessibility_services $services")
         SystemClock.sleep(3000)
         open("com.android.chrome", "https://example.com")
-        fun liveShown() = shell("dumpsys notification --noredact").lines().any { it.contains("pkg=$app") && it.contains("live_usage") }
+        // Match LimitSurfaces.LIVE_ID: Samsung's auto-group summary inherits the live channel and outlives the notification.
+        fun liveShown() = shell("dumpsys notification --noredact").lines().any { it.contains("pkg=$app") && it.contains("id=${0x4C495645} ") && it.contains("live_usage") }
         val shown = await(15_000, ::liveShown)
         capture("live-notification")
         assertTrue("live notification missing", shown)

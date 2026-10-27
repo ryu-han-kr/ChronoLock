@@ -8,5 +8,9 @@
             </intent-filter>
         </activity>
         <activity android:name="com.chronolock.blocking.VerificationDetailActivity" android:exported="true" />
+        <activity android:name="com.chronolock.blocking.VerificationPipActivity" android:exported="true"
+            android:supportsPictureInPicture="true" android:resizeableActivity="true"
+            android:taskAffinity="com.chronolock.verification.pip" android:launchMode="singleTask"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
     </application>
 </manifest>
