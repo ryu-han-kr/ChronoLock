@@ -66,12 +66,12 @@ enum class Mood { SLEEPY, RELAXED, HAPPY, SURPRISED, DIZZY }
 
 private const val HOUR = 3_600_000L
 
-/** Average daily usage to mood: under 1h relaxed, under 2.5h happy, under 5h surprised, beyond that dizzy. */
+/** Average daily usage to mood: under 2h relaxed, under 4h happy, under 7h surprised, beyond that dizzy. */
 fun moodFor(averageMillisPerDay: Long, hasRecords: Boolean): Mood = when {
     !hasRecords -> Mood.SLEEPY
-    averageMillisPerDay < HOUR -> Mood.RELAXED
-    averageMillisPerDay < HOUR * 5 / 2 -> Mood.HAPPY
-    averageMillisPerDay < HOUR * 5 -> Mood.SURPRISED
+    averageMillisPerDay < HOUR * 2 -> Mood.RELAXED
+    averageMillisPerDay < HOUR * 4 -> Mood.HAPPY
+    averageMillisPerDay < HOUR * 7 -> Mood.SURPRISED
     else -> Mood.DIZZY
 }
 

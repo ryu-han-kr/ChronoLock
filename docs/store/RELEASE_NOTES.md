@@ -7,13 +7,17 @@
 이번에 바뀐 것 (내부 기록):
 - 앱에서 접근성·사용 정보 접근 설정을 열 때 설정을 별도 작업(NEW_TASK)으로 띄움. 이전에는 설정 화면이 ChronoLock 작업 위에 남아
   홈 아이콘으로 앱을 열면 앱 대신 접근성 설정이 다시 보였음(2026-10-28 태블릿에서 발견).
-- 확인할 것: 권한 설정을 연 뒤 홈 → 앱 아이콘으로 다시 열면 ChronoLock 화면이 바로 나오는지.
+- 히스토리 캐릭터 기준 완화(사용자 요청 "너무 빡빡해"): 하루 평균 1시간/2.5시간/5시간 → **2시간/4시간/7시간**.
+  2시간 미만 여유(성공 포즈), 4시간 미만 좋음(기본), 7시간 미만 놀람(경고), 그 이상 어지러움(한도). `moodFor`, `docs/MASCOT.md`.
+- 확인할 것: 권한 설정을 연 뒤 홈 → 앱 아이콘으로 다시 열면 ChronoLock 화면이 바로 나오는지, 히스토리 캐릭터가 새 기준으로 바뀌는지.
 
 ### ko
 - 권한 설정을 열었다가 돌아온 뒤 앱 아이콘을 누르면 설정 화면 대신 ChronoLock이 바로 열려요.
+- 히스토리 캐릭터 기준을 넉넉하게 바꿨어요. 하루 평균 2시간 미만은 여유, 4시간 미만은 좋음, 7시간 미만은 놀람이에요.
 
 ### en
 - After opening permission settings, tapping the app icon now opens ChronoLock instead of the settings screen.
+- The History character is less strict: under 2 hours a day is relaxed, under 4 is fine, under 7 is surprised.
 
 ## 0.15.0 (versionCode 25) — 2026-10-27 업로드 (내부·테스터들)
 
