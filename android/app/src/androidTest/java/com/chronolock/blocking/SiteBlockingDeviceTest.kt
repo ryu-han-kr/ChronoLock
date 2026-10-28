@@ -127,6 +127,36 @@ class SiteBlockingDeviceTest {
         assertTrue("live notification stayed after leaving", await(10_000) { !liveShown() })
     }
 
+    /** Another watched app beside a blocked site (KakaoTalk in split screen before) was checked last and cleared its block. */
+    @Test fun blockedSiteInAPopUpWindow_staysBlocked_whenAnotherBrowserIsOpened() {
+        val installed = shell("pm list packages").lines().map { it.removePrefix("package:").trim() }.toSet()
+        assumeTrue("Chrome and Samsung Internet needed", "com.android.chrome" in installed && "com.sec.android.app.sbrowser" in installed)
+        shell("am start -W --windowingMode 5 -a android.intent.action.VIEW -d https://www.youtube.com -p com.android.chrome")
+        val blocked = await(15_000, ::overlayVisible)
+        shell("am start -W --windowingMode 1 -a android.intent.action.VIEW -d https://example.org -p com.sec.android.app.sbrowser")
+        SystemClock.sleep(5000)
+        val stayed = overlayVisible()
+        capture("site-popup-beside-browser")
+        shell("am force-stop com.android.chrome")
+        shell("input keyevent KEYCODE_HOME")
+        assertTrue("no overlay on youtube.com in a pop-up window", blocked)
+        assertTrue("overlay lifted when another browser opened beside the blocked site", stayed)
+    }
+
+    /** A search for the blocked domain shows the search page, not the site; the address bar may show the query. */
+    @Test fun searchForABlockedDomain_isNotBlocked() {
+        val installed = shell("pm list packages").lines().map { it.removePrefix("package:").trim() }.toSet()
+        val browsers = listOf("com.android.chrome", "com.sec.android.app.sbrowser").filter { it in installed }
+        assumeTrue("No supported browser installed", browsers.isNotEmpty())
+        val failures = browsers.filter { browser ->
+            open(browser, "https://www.google.com/search?q=youtube.com")
+            SystemClock.sleep(6000)
+            capture("site-search-$browser")
+            overlayVisible().also { shell("input keyevent KEYCODE_HOME"); SystemClock.sleep(1000) }
+        }
+        assertTrue("overlay on a Google search for youtube.com in $failures", failures.isEmpty())
+    }
+
     /** The Naver app's in-app browser shows no address; the page is told by where its links point. */
     @Test fun blockedSite_inNaverInAppBrowser_showsOverlay() {
         val naver = "com.nhn.android.search"

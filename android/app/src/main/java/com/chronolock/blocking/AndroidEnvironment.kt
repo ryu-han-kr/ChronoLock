@@ -76,6 +76,11 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext val context: Co
         pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0).forEach { add(it.activityInfo.packageName) }
         pm.queryIntentActivities(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:")), 0).forEach { add(it.activityInfo.packageName) }
         context.getSystemService(TelecomManager::class.java).defaultDialerPackage?.let(::add)
+        // The call screen can be its own package (Samsung's incallui), apart from the dialer; a block must not cover a call.
+        addAll(IN_CALL_UI)
+        pm.queryIntentServices(Intent(android.telecom.InCallService.SERVICE_INTERFACE), PackageManager.GET_META_DATA)
+            .filter { it.serviceInfo.metaData?.getBoolean(TelecomManager.METADATA_IN_CALL_SERVICE_UI) == true }
+            .forEach { add(it.serviceInfo.packageName) }
         pm.resolveActivity(Intent(Settings.ACTION_SETTINGS), 0)?.activityInfo?.packageName?.let(::add)
     }
 
@@ -131,5 +136,10 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext val context: Co
         val foreground = activePackage.takeIf { interactive() }
         close(now.epochMillis)
         UsageRecovery(usage, foreground)
+    }
+
+    private companion object {
+        /** Call screens shipped apart from the dialer; also found through their in-call service when the system allows. */
+        val IN_CALL_UI = listOf("com.samsung.android.incallui", "com.android.incallui", "com.android.server.telecom")
     }
 }
