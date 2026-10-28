@@ -2,6 +2,19 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 다음 출시 (미업로드)
+
+이번에 바뀐 것 (내부 기록):
+- 앱에서 접근성·사용 정보 접근 설정을 열 때 설정을 별도 작업(NEW_TASK)으로 띄움. 이전에는 설정 화면이 ChronoLock 작업 위에 남아
+  홈 아이콘으로 앱을 열면 앱 대신 접근성 설정이 다시 보였음(2026-10-28 태블릿에서 발견).
+- 확인할 것: 권한 설정을 연 뒤 홈 → 앱 아이콘으로 다시 열면 ChronoLock 화면이 바로 나오는지.
+
+### ko
+- 권한 설정을 열었다가 돌아온 뒤 앱 아이콘을 누르면 설정 화면 대신 ChronoLock이 바로 열려요.
+
+### en
+- After opening permission settings, tapping the app icon now opens ChronoLock instead of the settings screen.
+
 ## 0.15.0 (versionCode 25) — 2026-10-27 업로드 (내부·테스터들)
 
 AAB: `release/chronolock-0.15.0-vc25.aab`. Pro 구분은 꺼진 빌드.

@@ -63,8 +63,10 @@ class MainActivity : ComponentActivity() {
             putExtra(":settings:fragment_args_key", service)
             putExtra(":settings:show_fragment_args", Bundle().apply { putString(":settings:fragment_args_key", service) })
         } else Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))
-        runCatching { startActivity(intent) }.onFailure {
-            runCatching { startActivity(Intent(if (accessibility) Settings.ACTION_ACCESSIBILITY_SETTINGS else Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+        // Settings opens in its own task; otherwise it stays on top of ChronoLock's task and the launcher icon reopens it.
+        runCatching { startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.onFailure {
+            runCatching { startActivity(Intent(if (accessibility) Settings.ACTION_ACCESSIBILITY_SETTINGS else Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                 .onFailure { model.showError("설정 화면을 열 수 없습니다. Android 설정에서 권한을 직접 활성화해 주세요.") }
         }
     }
