@@ -2,6 +2,26 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 다음 출시 (미업로드)
+
+이번에 바뀐 것 (내부 기록, QA 2026-10-26 미해결 항목):
+- 사이트 차단을 브라우저마다 따로 기억. 분할 화면·팝업 창에서 옆의 다른 감시 앱(카카오톡, 다른 브라우저)이 확인되면
+  차단 중인 사이트의 차단 화면이 풀리던 문제 수정. 화면에 보이는 브라우저 창에 차단 사이트가 있으면 계속 덮음.
+  기기 테스트 `blockedSiteInAPopUpWindow_staysBlocked_whenAnotherBrowserIsOpened`: 수정 전 실패 → 수정 후 통과(태블릿).
+- 통화 화면(삼성 incallui 등, InCallService UI 앱)을 홈·설정·전화처럼 '떠남'으로 처리해 차단 화면이 통화 위에 남지 않게 함.
+  와이파이 태블릿이라 실통화 미검증.
+- 구글에서 차단 도메인을 검색해도 차단되지 않음을 기기 테스트로 확인(변경 없음). 영어 문구 복수형 lint 경고 4건은 값이 1이
+  될 수 없어 무시 처리.
+- 확인할 것: 휴대폰에서 제한 앱 사용 중 전화가 올 때 통화 화면이 가려지지 않는지.
+
+### ko
+- 분할 화면이나 팝업 창에서 옆에 다른 앱을 열어도 차단한 사이트가 계속 차단돼요.
+- 제한 중인 앱을 쓰다가 전화가 와도 차단 화면이 통화 화면을 가리지 않아요.
+
+### en
+- Blocked sites stay blocked in split screen or a pop-up window when another app opens beside them.
+- An incoming call is no longer covered by the block screen.
+
 ## 0.16.0 (versionCode 26) — 2026-10-28 업로드 (내부·테스터들)
 
 AAB: `release/chronolock-0.16.0-vc26.aab`. Pro 구분은 꺼진 빌드.

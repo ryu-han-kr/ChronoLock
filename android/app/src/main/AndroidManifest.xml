@@ -10,6 +10,7 @@
         <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent>
         <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.HOME" /></intent>
         <intent><action android:name="android.intent.action.DIAL" /><data android:scheme="tel" /></intent>
+        <intent><action android:name="android.telecom.InCallService" /></intent>
     </queries>
     <application android:name=".ChronoLockApplication" android:allowBackup="false"
         android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules"

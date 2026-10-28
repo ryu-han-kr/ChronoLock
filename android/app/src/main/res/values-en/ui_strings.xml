@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="today">"Today"</string>
     <string name="app_limits">"App limits"</string>
     <string name="history">"History"</string>
@@ -646,10 +646,10 @@
     <string name="fr_pause_summary">"%1$d s pause before opening"</string>
     <string name="fr_checkin_summary">"Check-in every %1$d min"</string>
     <string name="fr_pause_heading">"Take a breath"</string>
-    <string name="fr_pause_detail">"%1$s · open #%2$d today. Do you really need it now?"</string>
+    <string name="fr_pause_detail" tools:ignore="PluralsCandidate">"%1$s · open #%2$d today. Do you really need it now?"</string>
     <string name="fr_pause_open_count">"Open anyway (%1$d)"</string>
     <string name="fr_pause_open">"Open anyway"</string>
-    <string name="fr_checkin_heading">"%1$d minutes have passed"</string>
+    <string name="fr_checkin_heading" tools:ignore="PluralsCandidate">"%1$d minutes have passed"</string>
     <string name="fr_checkin_detail">"Keep using %1$s?"</string>
     <string name="fr_checkin_continue">"Keep going"</string>
     <string name="fr_block_resisted">"You held back %1$d× today. Nice work!"</string>
@@ -699,10 +699,10 @@
     <string name="history_one_year">"1 year"</string>
     <string name="reduce_motion">"Reduce motion"</string>
     <string name="reduce_motion_hint">"Stops moving themes and the character\'s animation to save battery."</string>
-    <string name="history_wait_title">"Not enough records for %1$d days yet"</string>
+    <string name="history_wait_title" tools:ignore="PluralsCandidate">"Not enough records for %1$d days yet"</string>
     <string name="history_wait_body">"Days collected: %1$d · days to go: %2$d. Totals appear once the period is covered; missing records are never made up."</string>
     <string name="history_show_collected">"Show collected days (%1$d)"</string>
-    <string name="history_guide">"All %1$d days are in! Daily average %2$s · most used: %3$s."</string>
+    <string name="history_guide" tools:ignore="PluralsCandidate">"All %1$d days are in! Daily average %2$s · most used: %3$s."</string>
     <string name="pro_limit_mascot">"Characters other than the hamster come with Pro."</string>
     <string name="pro_mascots">"All 5 characters"</string>
     <string name="pro_no_ads">"No ads"</string>

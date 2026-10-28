@@ -49,10 +49,12 @@ class ChronoAccessibilityService : AccessibilityService() {
     /** The last check found only home or settings on screen while an app was still observed. */
     private var leaveSuspected = false
     private var sites: List<BlockedSite> = emptyList()
-    /** The blocked site open in [siteBrowser]; only its domain is kept, never the address. */
-    private var blockedSite: String? = null
-    private var siteBrowser: String? = null
-    private var siteCheckScheduled = false
+    /**
+     * The blocked site open in each browser, by package; only its domain is kept, never the address. Kept per browser so a
+     * chat beside a browser in split screen cannot clear the browser's block by being checked after it.
+     */
+    private val blockedSites = mutableMapOf<String, String>()
+    private val siteChecks = mutableSetOf<String>()
     private var lastState: MonitorState? = null
     /** The app of the current visit; a passed pause and the next check-in belong to it and reset when it changes. */
     private var visitApp: String? = null
@@ -84,7 +86,7 @@ class ChronoAccessibilityService : AccessibilityService() {
         started = true
         android.util.Log.i("ChronoLock", "Accessibility service connected; restoring usage")
         overlay = BlockOverlay(this, onHome = {
-            if (performGlobalAction(GLOBAL_ACTION_HOME)) { blockedSite = null; commands.trySend(Command.Foreground(null)) }
+            if (performGlobalAction(GLOBAL_ACTION_HOME)) { blockedSites.clear(); commands.trySend(Command.Foreground(null)) }
         }, onSettings = {
             startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             commands.trySend(Command.Foreground(null))
@@ -127,7 +129,7 @@ class ChronoAccessibilityService : AccessibilityService() {
                 repository.sites.collect { list ->
                     sites = list.map { it.toDomain() }.filter { it.enabled }
                     watchContent(sites.isNotEmpty())
-                    siteBrowser?.let(::requestSiteCheck)
+                    (blockedSites.keys + listOfNotNull(observed)).filter(Browsers::watches).forEach(::requestSiteCheck)
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe blocked sites", error) }
@@ -210,10 +212,9 @@ class ChronoAccessibilityService : AccessibilityService() {
         if (::overlay.isInitialized && overlay.visible && app == packageName) return
         when (environment.windowKind(app)) {
             WindowKind.TRANSIENT, WindowKind.NONE -> Unit // keyboard, permission prompt, status bar: the app underneath stays observed
-            WindowKind.LEAVE -> { blockedSite = null; commands.trySend(Command.Foreground(limitedWindowApp())) }
+            WindowKind.LEAVE -> { blockedSites.clear(); commands.trySend(Command.Foreground(limitedWindowApp())) }
             WindowKind.APP -> {
                 if (app in pipReleased && pipOnly(app)) return // its small window changing must not bring the block back
-                if (app != siteBrowser) blockedSite = null
                 if (Browsers.watches(app)) requestSiteCheck(app)
                 commands.trySend(Command.Foreground(limitedWindowApp() ?: app))
             }
@@ -234,7 +235,7 @@ class ChronoAccessibilityService : AccessibilityService() {
         val left = leftWithoutEvent(observed, apps, environment::windowKind)
         if (left && leaveSuspected) {
             leaveSuspected = false
-            blockedSite = null
+            blockedSites.clear()
             commands.trySend(Command.Foreground(null))
             return
         }
@@ -286,16 +287,20 @@ class ChronoAccessibilityService : AccessibilityService() {
 
     /** Reads the address bar at most once per [SITE_CHECK_MS], always once more after the last change. */
     private fun requestSiteCheck(browser: String) {
-        siteBrowser = browser
-        if (siteCheckScheduled) return
-        siteCheckScheduled = true
+        if (!siteChecks.add(browser)) return
         scope.launch {
             // Reading an in-app page walks its web view, so those apps (chats that change constantly) are checked less often.
             delay(if (browser in Browsers.inApp) IN_APP_CHECK_MS else SITE_CHECK_MS)
-            siteCheckScheduled = false
-            siteBrowser?.let { checkSite(it) }
+            siteChecks.remove(browser)
+            checkSite(browser)
         }
     }
+
+    /** A blocked site in a browser still on screen beside the observed app (split screen or a pop-up window). */
+    private fun visibleBlockedSite(): String? = if (blockedSites.isEmpty()) null else runCatching {
+        windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && !it.isInPictureInPictureMode }
+            .firstNotNullOfOrNull { window -> window.root?.packageName?.toString()?.let(blockedSites::get) }
+    }.getOrNull()
 
     /**
      * The browser's address bar. Samsung tablets often report no active-window root (taskbar, pop-up and split views),
@@ -351,8 +356,8 @@ class ChronoAccessibilityService : AccessibilityService() {
             val open = withContext(Dispatchers.Default) { runCatching { openSite(browser, current) }.getOrNull() } ?: return // keep the last answer
             open.ifEmpty { null }
         }
-        if (match == blockedSite) return
-        blockedSite = match
+        if (match == blockedSites[browser]) return
+        if (match == null) blockedSites.remove(browser) else blockedSites[browser] = match
         lastState?.let(::render)
     }
 
@@ -365,7 +370,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             // A browser already on screen when the service starts, or reached through a missed switch, sends no event to check it by.
             if (target != null && Browsers.watches(target)) requestSiteCheck(target)
         }
-        val site = blockedSite
+        val site = target?.let(blockedSites::get) ?: target?.let { visibleBlockedSite() }
         val covered = when {
             // A blocked app left only in picture-in-picture (video apps go there on Home) would keep a full-screen block
             // over everything with no way to close the small window underneath. Pause its playback and let the person go.
@@ -381,7 +386,7 @@ class ChronoAccessibilityService : AccessibilityService() {
                 overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now))
                 true
             }
-            site != null && target != null && target == siteBrowser -> { overlay.showSite(site); true }
+            site != null -> { overlay.showSite(site); true }
             target != null && intervene(target, state) -> true
             else -> { overlay.hide(); false }
         }
