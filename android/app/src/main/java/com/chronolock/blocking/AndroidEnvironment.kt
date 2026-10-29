@@ -13,6 +13,7 @@ import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
 import android.provider.Settings
+import android.provider.Telephony
 import android.telecom.TelecomManager
 import android.view.inputmethod.InputMethodManager
 import com.chronolock.domain.ClockReading
@@ -62,7 +63,7 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext val context: Co
         cachedAt = SystemClock.elapsedRealtime()
     }
 
-    /** Home, settings, dialer and this app: leaving to one of these ends the session. Never offered as limit targets. */
+    /** Home, settings, dialer, call screen, messages and this app: leaving to one of these ends the session. Never offered as limit targets. */
     fun safetyPackages(): Set<String> { refreshPackageSets(); return cachedSafety }
 
     /** Keyboards, permission prompts and system UI: drawn over the current app without ending its session. */
@@ -81,6 +82,9 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext val context: Co
         pm.queryIntentServices(Intent(android.telecom.InCallService.SERVICE_INTERFACE), PackageManager.GET_META_DATA)
             .filter { it.serviceInfo.metaData?.getBoolean(TelecomManager.METADATA_IN_CALL_SERVICE_UI) == true }
             .forEach { add(it.serviceInfo.packageName) }
+        // Texting is as basic as calling: the default SMS app and the stock messaging apps are never blocked.
+        Telephony.Sms.getDefaultSmsPackage(context)?.let(::add)
+        addAll(MESSAGING)
         pm.resolveActivity(Intent(Settings.ACTION_SETTINGS), 0)?.activityInfo?.packageName?.let(::add)
     }
 
@@ -141,5 +145,6 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext val context: Co
     private companion object {
         /** Call screens shipped apart from the dialer; also found through their in-call service when the system allows. */
         val IN_CALL_UI = listOf("com.samsung.android.incallui", "com.android.incallui", "com.android.server.telecom")
+        val MESSAGING = listOf("com.samsung.android.messaging", "com.google.android.apps.messaging", "com.android.mms")
     }
 }
