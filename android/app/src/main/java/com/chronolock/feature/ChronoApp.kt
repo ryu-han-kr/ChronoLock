@@ -142,7 +142,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
                 editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) }, setReduceMotion = { model.setReduceMotion(it) },
                 addSite = { input, added -> model.addSite(input, added) }, toggleSite = model::toggleSite,
-                removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite, addSitePreset = model::addSites,
+                removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite, addSitePreset = model::addSites, dismissMonitorGap = { model.dismissMonitorGap() },
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,
                 lockFor = model::lockFor, startGoalLock = model::startGoalLock, endGoalLock = model::endGoalLock,
                 collectPiece = model::collectPiece, changeGoalPin = model::changeGoalPin, buyPro = buyPro, managePro = managePro,
@@ -248,6 +248,17 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             }
             NotificationPermissionButton()
         }
+    }
+}
+
+/** Detection the user turned off, shown once on Today so a gap in limits is never silent. */
+@Composable internal fun MonitorGapCard(gap: com.chronolock.data.MonitorGap, dismiss: () -> Unit) {
+    CardBox {
+        Text(tr("앱 감지가 꺼진 적이 있어요"), Modifier.testTag("monitor-gap"), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+        Text(gap.backAt?.let { tr("%1\$s부터 %2\$s까지 앱 제한이 작동하지 않았어요.", timeText(gap.offAt), timeText(it)) }
+            ?: tr("%1\$s부터 앱 제한이 작동하지 않고 있어요.", timeText(gap.offAt)), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (gap.locked) Text(tr("잠금이나 엄격 모드가 켜져 있을 때 꺼졌어요."), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        TextButton(onClick = dismiss) { Text(tr("확인했어요")) }
     }
 }
 

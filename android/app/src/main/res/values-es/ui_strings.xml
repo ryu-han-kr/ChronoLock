@@ -736,4 +736,9 @@
     <string name="site_scope_note">"Las páginas abiertas dentro de otras apps (salvo KakaoTalk y NAVER) y la app propia de cada servicio (como YouTube) no se bloquean. Limita esas apps con límites de app."</string>
     <string name="share_app">"Recomendar a un amigo"</string>
     <string name="share_app_text">"Estoy reduciendo mi tiempo de móvil con ChronoLock. ¿Lo pruebas conmigo?"</string>
+    <string name="monitor_gap_title">"La detección de apps se desactivó"</string>
+    <string name="monitor_gap_range">"Los límites de apps no funcionaron desde %1$s hasta %2$s."</string>
+    <string name="monitor_gap_open">"Los límites de apps no funcionan desde %1$s."</string>
+    <string name="monitor_gap_locked">"Se desactivó mientras un bloqueo o el modo estricto estaba activo."</string>
+    <string name="monitor_gap_dismiss">"Entendido"</string>
 </resources>

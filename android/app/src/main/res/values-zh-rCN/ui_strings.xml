@@ -694,4 +694,9 @@
     <string name="site_scope_note">"除 KakaoTalk 和 NAVER 外，在其他应用内打开的页面以及各服务自己的应用（如 YouTube 应用）不会被拦截。请用应用限制来限制这些应用。"</string>
     <string name="share_app">"推荐给朋友"</string>
     <string name="share_app_text">"我在用 ChronoLock 减少手机使用时间，要不要一起试试？"</string>
+    <string name="monitor_gap_title">"应用检测曾被关闭"</string>
+    <string name="monitor_gap_range">"从 %1$s 到 %2$s，应用限制未生效。"</string>
+    <string name="monitor_gap_open">"从 %1$s 起，应用限制未生效。"</string>
+    <string name="monitor_gap_locked">"是在锁定或严格模式开启时关闭的。"</string>
+    <string name="monitor_gap_dismiss">"知道了"</string>
 </resources>
