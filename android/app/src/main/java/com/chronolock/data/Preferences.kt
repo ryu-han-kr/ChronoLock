@@ -22,6 +22,9 @@ private val Context.preferences by preferencesDataStore("preferences")
 /** App detection was turned off at [offAt] and came back at [backAt] (null while still off); [locked] if a lock or strict mode held then. */
 data class MonitorGap(val offAt: Long, val backAt: Long?, val locked: Boolean)
 
+/** Weekly backups go to [folder] (a document tree URI); [lastAt] is the last one written, null before the first. */
+data class AutoBackup(val folder: String, val lastAt: Long?)
+
 /** Outcome of entering a password: [blockedUntil] is set after too many wrong tries. */
 data class PinResult(val ok: Boolean, val triesLeft: Int = 0, val blockedUntil: Long? = null)
 
@@ -53,6 +56,17 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val goalRevealedKey = intPreferencesKey("lock_goal_revealed")
     private val mascotKey = stringPreferencesKey("mascot")
     private val reduceMotionKey = booleanPreferencesKey("reduce_motion")
+    private val autoBackupFolderKey = stringPreferencesKey("auto_backup_folder")
+    private val autoBackupAtKey = longPreferencesKey("auto_backup_at")
+    /** The folder the user picked for weekly backups, and when one was last written there. */
+    val autoBackup = context.preferences.data.map { prefs ->
+        prefs[autoBackupFolderKey]?.let { AutoBackup(it, prefs[autoBackupAtKey]) }
+    }
+    suspend fun setAutoBackupFolder(folder: String?) { context.preferences.edit {
+        if (folder == null) it.remove(autoBackupFolderKey) else it[autoBackupFolderKey] = folder
+        it.remove(autoBackupAtKey)
+    } }
+    suspend fun autoBackupWritten(atEpochMillis: Long) { context.preferences.edit { it[autoBackupAtKey] = atEpochMillis } }
     private val monitorOffKey = longPreferencesKey("monitor_off_at")
     private val monitorOffLockedKey = booleanPreferencesKey("monitor_off_locked")
     private val monitorBackKey = longPreferencesKey("monitor_back_at")

@@ -2,6 +2,8 @@ package com.chronolock.data
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
+import androidx.core.net.toUri
 import com.chronolock.domain.AppGroup
 import com.chronolock.domain.AppRule
 import com.chronolock.domain.BlockedSite
@@ -148,5 +150,35 @@ class BackupRepository @Inject constructor(
         backup.reduceMotion?.let { preferences.setReduceMotion(it) }
     }
 
-    private companion object { const val MAX_BYTES = 1_000_000 }
+    /**
+     * Writes the weekly backup into the picked folder, replacing the previous one, once a week has passed or when
+     * [force]d (right after the folder is picked). Returns false when nothing was due.
+     */
+    suspend fun autoBackup(nowEpochMillis: Long, force: Boolean = false): Boolean {
+        val auto = preferences.autoBackup.first() ?: return false
+        if (!force && auto.lastAt?.let { nowEpochMillis - it < WEEK_MILLIS && nowEpochMillis >= it } == true) return false
+        val tree = auto.folder.toUri()
+        val file = withContext(Dispatchers.IO) { existingAutoFile(tree) ?: createAutoFile(tree) }
+        export(file, nowEpochMillis)
+        preferences.autoBackupWritten(nowEpochMillis)
+        return true
+    }
+
+    private fun existingAutoFile(tree: Uri): Uri? {
+        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        context.contentResolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { rows ->
+            while (rows.moveToNext()) if (rows.getString(1) == AUTO_FILE) return DocumentsContract.buildDocumentUriUsingTree(tree, rows.getString(0))
+        }
+        return null
+    }
+
+    private fun createAutoFile(tree: Uri): Uri = requireNotNull(DocumentsContract.createDocument(context.contentResolver,
+        DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree)), "application/json", AUTO_FILE))
+
+    private companion object {
+        const val MAX_BYTES = 1_000_000
+        const val WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000L
+        const val AUTO_FILE = "chronolock-backup-auto.json"
+    }
 }

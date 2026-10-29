@@ -699,4 +699,10 @@
     <string name="monitor_gap_open">"%1$s부터 앱 제한이 작동하지 않고 있어요."</string>
     <string name="monitor_gap_locked">"잠금이나 엄격 모드가 켜져 있을 때 꺼졌어요."</string>
     <string name="monitor_gap_dismiss">"확인했어요"</string>
+    <string name="auto_backup_title">"매주 자동 백업"</string>
+    <string name="auto_backup_hint">"고른 폴더에 일주일마다 백업 파일 하나를 새로 덮어써 저장해요."</string>
+    <string name="auto_backup_last">"마지막 자동 백업: %1$s"</string>
+    <string name="auto_backup_none">"아직 자동 백업하지 않았어요."</string>
+    <string name="auto_backup_stop">"자동 백업 끄기"</string>
+    <string name="auto_backup_start">"자동 백업 폴더 고르기"</string>
 </resources>
