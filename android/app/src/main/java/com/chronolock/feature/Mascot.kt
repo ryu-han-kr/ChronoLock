@@ -10,7 +10,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -211,7 +211,7 @@ private const val MESH = 12
 @SuppressLint("DiscouragedApi")
 @Composable
 private fun blinkArt(art: Int): Int? {
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     return remember(art) {
         resources.getIdentifier(resources.getResourceEntryName(art) + "_blink", "drawable", resources.getResourcePackageName(art))
             .takeIf { it != 0 }

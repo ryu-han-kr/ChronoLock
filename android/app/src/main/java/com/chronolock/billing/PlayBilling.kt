@@ -3,8 +3,8 @@ package com.chronolock.billing
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -128,7 +128,7 @@ class BillingController @Inject constructor(@ApplicationContext private val cont
     fun managePro(activity: Activity) = openSubscription(activity, ProProduct.ID)
 
     private fun openSubscription(activity: Activity, id: String) {
-        val uri = Uri.parse("https://play.google.com/store/account/subscriptions?sku=$id&package=${context.packageName}")
+        val uri = "https://play.google.com/store/account/subscriptions?sku=$id&package=${context.packageName}".toUri()
         runCatching { activity.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
     }
 
