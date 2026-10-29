@@ -15,6 +15,8 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
 import com.chronolock.MainActivity
 import com.chronolock.R
@@ -79,7 +81,7 @@ internal class LimitSurfaces(private val context: Context) {
         state.clock?.date?.let { today -> warned.removeAll { it.date != today } }
         state.limitWarning(rules, warned)?.let { key ->
             warned += key
-            prefs.edit().putString(KEY_WARNED_DATE, key.date.toString()).putStringSet(KEY_WARNED_APPS, warned.map { it.packageName }.toSet()).apply()
+            prefs.edit { putString(KEY_WARNED_DATE, key.date.toString()).putStringSet(KEY_WARNED_APPS, warned.map { it.packageName }.toSet()) }
             val rule = rules.getValue(key.packageName)
             notify(localized, rule, state.remainingDailyMillis(rule) ?: 0)
         }
@@ -172,7 +174,7 @@ internal class LimitSurfaces(private val context: Context) {
     private fun ringIcon(step: Int): IconCompat = rings.getOrPut(step) {
         val size = (24 * context.resources.displayMetrics.density).roundToInt()
         val unit = size / 24f
-        val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(size, size)
         val canvas = android.graphics.Canvas(bitmap)
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             style = android.graphics.Paint.Style.STROKE; strokeWidth = 2.6f * unit; strokeCap = android.graphics.Paint.Cap.ROUND
@@ -240,13 +242,12 @@ class TodayWidget : AppWidgetProvider() {
                 else -> localized.getString(R.string.widget_tightest, summary.tightestApp,
                     formatDuration(summary.tightestRemainingMillis!! / 1000, text))
             }
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-                .putString("label", localized.getString(R.string.widget_label))
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putString("label", localized.getString(R.string.widget_label))
                 .putString("used", formatDuration(summary.usedMillis / 1000, text))
                 .putString("detail", detail)
                 .putString("status", status)
                 // Names, not resource ids: ids can change between builds while the stored values outlive an update.
-                .putString("mascot", mascot.name).putString("pose", pose(summary).name).apply()
+                .putString("mascot", mascot.name).putString("pose", pose(summary).name) }
             val manager = AppWidgetManager.getInstance(context)
             render(context, manager, manager.getAppWidgetIds(ComponentName(context, TodayWidget::class.java)))
         }

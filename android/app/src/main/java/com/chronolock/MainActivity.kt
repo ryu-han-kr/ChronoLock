@@ -2,7 +2,6 @@ package com.chronolock
 
 import android.content.Intent
 import android.content.ComponentName
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -10,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.chronolock.account.AuthConfig
 import com.chronolock.account.GoogleSignIn
@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
             val service = ComponentName(this@MainActivity, com.chronolock.blocking.ChronoAccessibilityService::class.java).flattenToString()
             putExtra(":settings:fragment_args_key", service)
             putExtra(":settings:show_fragment_args", Bundle().apply { putString(":settings:fragment_args_key", service) })
-        } else Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))
+        } else Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, "package:$packageName".toUri())
         // Settings opens in its own task; otherwise it stays on top of ChronoLock's task and the launcher icon reopens it.
         runCatching { startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.onFailure {
             runCatching { startActivity(Intent(if (accessibility) Settings.ACTION_ACCESSIBILITY_SETTINGS else Settings.ACTION_USAGE_ACCESS_SETTINGS)

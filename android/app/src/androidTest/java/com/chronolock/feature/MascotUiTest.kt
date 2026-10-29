@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -49,7 +51,8 @@ class MascotUiTest {
                 }
             }
         }
-        Mood.values().forEach { mood -> ui.onNodeWithTag("mascot-${mood.name.lowercase()}", useUnmergedTree = true) }
+        // Once per theme.
+        Mood.values().forEach { mood -> ui.onAllNodesWithTag("mascot-${mood.name.lowercase()}", useUnmergedTree = true).assertCountEquals(2) }
         screenshot("hamster-light", ui.onNodeWithTag("sheet-LIGHT"))
         screenshot("hamster-dark", ui.onNodeWithTag("sheet-DARK"))
     }

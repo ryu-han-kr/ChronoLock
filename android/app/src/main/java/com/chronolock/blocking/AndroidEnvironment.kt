@@ -16,6 +16,7 @@ import android.provider.Settings
 import android.provider.Telephony
 import android.telecom.TelecomManager
 import android.view.inputmethod.InputMethodManager
+import androidx.core.net.toUri
 import com.chronolock.domain.ClockReading
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.ZoneId
@@ -75,7 +76,7 @@ class AndroidEnvironment @Inject constructor(@ApplicationContext val context: Co
         addAll(listOf("com.android.settings", "com.android.systemui", "com.android.permissioncontroller", "com.google.android.permissioncontroller"))
         val pm = context.packageManager
         pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0).forEach { add(it.activityInfo.packageName) }
-        pm.queryIntentActivities(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:")), 0).forEach { add(it.activityInfo.packageName) }
+        pm.queryIntentActivities(Intent(Intent.ACTION_DIAL, "tel:".toUri()), 0).forEach { add(it.activityInfo.packageName) }
         context.getSystemService(TelecomManager::class.java).defaultDialerPackage?.let(::add)
         // The call screen can be its own package (Samsung's incallui), apart from the dialer; a block must not cover a call.
         addAll(IN_CALL_UI)
