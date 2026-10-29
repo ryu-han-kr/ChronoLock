@@ -167,6 +167,7 @@ class ChronoAccessibilityService : AccessibilityService() {
                 val recovery = environment.recoverUsage(repository.recoveryStartEpochMillis())
                 repository.reconnect(environment.clock(), recovery.dailyMillis, recovery.foregroundPackage)
                 health.connected(this@ChronoAccessibilityService)
+                preferences.recordMonitorBack(System.currentTimeMillis())
                 android.util.Log.i("ChronoLock", "Monitoring connected")
                 render(repository.tick(environment.clock()))
                 var failures = 0
@@ -451,6 +452,20 @@ class ChronoAccessibilityService : AccessibilityService() {
         const val WEB_VIEW = "android.webkit.WebView"
         const val TARGET_URL = "AccessibilityNodeInfo.targetUrl"
     }
+    /**
+     * Unbinding while the service is no longer listed as enabled means the user turned detection off (a process kill
+     * or a reboot keeps it listed). Kept so Today can say so, including whether a lock or strict mode was running.
+     */
+    override fun onUnbind(intent: Intent?): Boolean {
+        if (!environment.accessibilityEnabled()) {
+            val now = environment.clock()
+            val locked = lock.lockedAt(now) || strict.delayAt(now) > 0
+            runCatching { runBlocking { withTimeoutOrNull(2_000) { preferences.recordMonitorOff(now.epochMillis, locked) } } }
+                .onFailure { android.util.Log.w("ChronoLock", "Could not record detection turned off", it) }
+        }
+        return super.onUnbind(intent)
+    }
+
     override fun onDestroy() {
         if (::overlay.isInitialized) overlay.hide()
         surfaces.clearLive()

@@ -31,6 +31,8 @@ data class MainState(
     val daily: List<DailyEntity> = emptyList(),
     val permissions: PermissionState = PermissionState(),
     val health: Health = Health(),
+    /** Detection the user turned off and Today has not shown yet. */
+    val monitorGap: com.chronolock.data.MonitorGap? = null,
     val loading: Boolean = true,
     val error: String? = null,
     /** Play finished downloading a newer build; a restart installs it. */
@@ -125,6 +127,7 @@ class MainViewModel @Inject constructor(
         .combine(repository.sites) { data, sites -> data.copy(sites = sites.map { it.toDomain() }) }
         .combine(repository.pendingSites) { data, pending -> data.copy(pendingSites = pending) }
         .combine(repository.anchors) { data, anchors -> data.copy(anchors = anchors) }
+        .combine(preferences.monitorGap) { data, gap -> data.copy(monitorGap = gap) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -137,7 +140,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
+            lock = data.lock, monitorGap = data.monitorGap, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -277,6 +280,7 @@ class MainViewModel @Inject constructor(
         preferences.setMascot(kind)
     }
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
+    fun dismissMonitorGap() = viewModelScope.launch { preferences.dismissMonitorGap() }
 
     fun saveGroup(group: AppGroup, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {
         if (group.id == 0L && !state.value.pro && state.value.groups.size >= com.chronolock.domain.FreeTier.GROUPS) {

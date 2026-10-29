@@ -694,4 +694,9 @@
     <string name="site_scope_note">"KakaoTalk・NAVER以外のアプリ内で開くページや、各サービスのアプリ（YouTubeアプリなど）はブロックされません。アプリはアプリ制限で止めてください。"</string>
     <string name="share_app">"友だちにすすめる"</string>
     <string name="share_app_text">"ChronoLockでスマホの使用時間を減らしています。一緒にやってみませんか？"</string>
+    <string name="monitor_gap_title">"アプリ検知がオフになっていました"</string>
+    <string name="monitor_gap_range">"%1$sから%2$sまでアプリ制限が働いていませんでした。"</string>
+    <string name="monitor_gap_open">"%1$sからアプリ制限が働いていません。"</string>
+    <string name="monitor_gap_locked">"ロックまたは厳格モード中にオフにされました。"</string>
+    <string name="monitor_gap_dismiss">"確認しました"</string>
 </resources>

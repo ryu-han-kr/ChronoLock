@@ -76,6 +76,7 @@ internal fun ChronoScreen(
     removeSite: (String) -> Unit = {},
     cancelPendingSite: (String) -> Unit = {},
     addSitePreset: (List<String>) -> Unit = {},
+    dismissMonitorGap: () -> Unit = {},
     setHistoryPin: (String, String, () -> Unit) -> Unit = { _, _, _ -> },
     changeHistoryPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
     lockFor: (Int) -> Unit = {},
@@ -170,6 +171,7 @@ internal fun ChronoScreen(
                         when (tab) {
                             0 -> {
                                 val stats = state.daily.filter { it.date == today.toString() }
+                                state.monitorGap?.let { gap -> item(span = { GridItemSpan(maxLineSpan) }) { MonitorGapCard(gap, dismissMonitorGap) } }
                                 item { UsageSummaryCard(stats, state, nowEpoch) }
                                 item { QuickFocusCard(state, nowEpoch, startFocus, stopFocus) }
                                 item(span = { GridItemSpan(maxLineSpan) }) {

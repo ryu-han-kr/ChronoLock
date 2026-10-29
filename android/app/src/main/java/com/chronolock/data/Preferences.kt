@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.map
 
 private val Context.preferences by preferencesDataStore("preferences")
 
+/** App detection was turned off at [offAt] and came back at [backAt] (null while still off); [locked] if a lock or strict mode held then. */
+data class MonitorGap(val offAt: Long, val backAt: Long?, val locked: Boolean)
+
 /** Outcome of entering a password: [blockedUntil] is set after too many wrong tries. */
 data class PinResult(val ok: Boolean, val triesLeft: Int = 0, val blockedUntil: Long? = null)
 
@@ -50,6 +53,25 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val goalRevealedKey = intPreferencesKey("lock_goal_revealed")
     private val mascotKey = stringPreferencesKey("mascot")
     private val reduceMotionKey = booleanPreferencesKey("reduce_motion")
+    private val monitorOffKey = longPreferencesKey("monitor_off_at")
+    private val monitorOffLockedKey = booleanPreferencesKey("monitor_off_locked")
+    private val monitorBackKey = longPreferencesKey("monitor_back_at")
+    /** The last time the user turned app detection off, until they have seen it on Today. */
+    val monitorGap = context.preferences.data.map { prefs ->
+        prefs[monitorOffKey]?.let { MonitorGap(it, prefs[monitorBackKey], prefs[monitorOffLockedKey] ?: false) }
+    }
+    /** Keeps the earliest unseen turn-off; a later one before it was seen widens the same gap. */
+    suspend fun recordMonitorOff(atEpochMillis: Long, locked: Boolean) { context.preferences.edit {
+        if (it[monitorOffKey] == null) it[monitorOffKey] = atEpochMillis
+        it[monitorOffLockedKey] = locked || (it[monitorOffLockedKey] ?: false)
+        it.remove(monitorBackKey)
+    } }
+    suspend fun recordMonitorBack(atEpochMillis: Long) { context.preferences.edit {
+        if (it[monitorOffKey] != null && it[monitorBackKey] == null) it[monitorBackKey] = atEpochMillis
+    } }
+    suspend fun dismissMonitorGap() { context.preferences.edit {
+        it.remove(monitorOffKey); it.remove(monitorOffLockedKey); it.remove(monitorBackKey)
+    } }
     val language = context.preferences.data.map { AppLanguage.fromStored(it[languageKey]) }
     val theme = context.preferences.data.map { AppTheme.fromStored(it[themeKey]) }
     val mascot = context.preferences.data.map { MascotKind.fromStored(it[mascotKey]) }
