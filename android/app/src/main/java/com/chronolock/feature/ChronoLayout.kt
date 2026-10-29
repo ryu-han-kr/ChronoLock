@@ -93,6 +93,8 @@ internal fun ChronoScreen(
     deleteHistory: (String, () -> Unit) -> Unit = { _, _ -> },
     exportBackup: () -> Unit = {},
     restoreBackup: () -> Unit = {},
+    startAutoBackup: () -> Unit = {},
+    stopAutoBackup: () -> Unit = {},
     redeemCode: (String) -> Boolean = { false },
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
@@ -337,6 +339,15 @@ internal fun ChronoScreen(
                                         OutlinedButton(onClick = restoreBackup, enabled = !strict, modifier = Modifier.testTag("backup-restore")) { Text(tr("백업에서 복원")) }
                                     }
                                     if (strict) Text(tr("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    HorizontalDivider()
+                                    Text(tr("매주 자동 백업"), style = MaterialTheme.typography.titleMedium)
+                                    Text(tr("고른 폴더에 일주일마다 백업 파일 하나를 새로 덮어써 저장해요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    val auto = state.autoBackup
+                                    if (auto != null) {
+                                        Text(auto.lastAt?.let { tr("마지막 자동 백업: %1\$s", timeText(it)) } ?: tr("아직 자동 백업하지 않았어요."),
+                                            color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+                                        OutlinedButton(onClick = stopAutoBackup, modifier = Modifier.testTag("auto-backup-stop")) { Text(tr("자동 백업 끄기")) }
+                                    } else OutlinedButton(onClick = startAutoBackup, modifier = Modifier.testTag("auto-backup-start")) { Text(tr("자동 백업 폴더 고르기")) }
                                 } }
                                 item { UnlockHelpCard() }
                                 item { CardBox {

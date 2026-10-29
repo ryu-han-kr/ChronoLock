@@ -80,6 +80,9 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         uri?.let(model::exportBackup)
     }
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> restoreFrom = uri }
+    val autoBackupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        uri?.let(model::startAutoBackup)
+    }
     var confirmDeleteAccount by rememberSaveable { mutableStateOf(false) }
     var confirmFocus by rememberSaveable { mutableStateOf<Int?>(null) }
     var today by remember { mutableStateOf(LocalDate.now()) }
@@ -149,6 +152,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 setFollowSystem = model::setFollowSystem, editNightTheme = model::editNightTheme,
                 exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
                 restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+                startAutoBackup = { autoBackupLauncher.launch(null) }, stopAutoBackup = { model.stopAutoBackup() },
                 redeemCode = model::redeemCode,
             )
             if (themeGallery) ThemeGallery(editing, model::selectTheme, state.favoriteThemes, model::toggleFavoriteTheme) { themeGallery = false }

@@ -741,4 +741,10 @@
     <string name="monitor_gap_open">"Los límites de apps no funcionan desde %1$s."</string>
     <string name="monitor_gap_locked">"Se desactivó mientras un bloqueo o el modo estricto estaba activo."</string>
     <string name="monitor_gap_dismiss">"Entendido"</string>
+    <string name="auto_backup_title">"Copia automática semanal"</string>
+    <string name="auto_backup_hint">"Una vez por semana guarda un archivo de copia en la carpeta que elijas y reemplaza el anterior."</string>
+    <string name="auto_backup_last">"Última copia automática: %1$s"</string>
+    <string name="auto_backup_none">"Aún no hay copia automática."</string>
+    <string name="auto_backup_stop">"Desactivar copia automática"</string>
+    <string name="auto_backup_start">"Elegir carpeta para la copia automática"</string>
 </resources>

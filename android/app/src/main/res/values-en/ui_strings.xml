@@ -720,4 +720,10 @@
     <string name="monitor_gap_open">"App limits have not been working since %1$s."</string>
     <string name="monitor_gap_locked">"It was turned off while a lock or strict mode was on."</string>
     <string name="monitor_gap_dismiss">"Got it"</string>
+    <string name="auto_backup_title">"Weekly auto backup"</string>
+    <string name="auto_backup_hint">"Once a week, saves one backup file to the folder you pick, replacing the previous one."</string>
+    <string name="auto_backup_last">"Last auto backup: %1$s"</string>
+    <string name="auto_backup_none">"No auto backup yet."</string>
+    <string name="auto_backup_stop">"Turn off auto backup"</string>
+    <string name="auto_backup_start">"Pick a folder for auto backup"</string>
 </resources>

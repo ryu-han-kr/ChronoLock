@@ -15,6 +15,7 @@ import kotlinx.coroutines.*
 class HistoryJobService : JobService() {
     @Inject lateinit var history: HistoryRepository
     @Inject lateinit var preferences: Preferences
+    @Inject lateinit var backups: BackupRepository
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var work: Job? = null
     override fun onStartJob(params: JobParameters): Boolean {
@@ -23,6 +24,9 @@ class HistoryJobService : JobService() {
                 history.collect()
                 runCatching { WeeklyReport.maybeNotify(applicationContext, history, preferences) }
                     .onFailure { android.util.Log.w("ChronoLock", "Weekly report failed", it) }
+                // A removed folder or revoked access only skips this week's backup; Settings shows the last one written.
+                runCatching { backups.autoBackup(System.currentTimeMillis()) }
+                    .onFailure { android.util.Log.w("ChronoLock", "Weekly backup failed", it) }
                 false
             }
                 catch (cancelled: CancellationException) { throw cancelled }

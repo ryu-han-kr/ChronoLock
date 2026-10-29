@@ -699,4 +699,10 @@
     <string name="monitor_gap_open">"%1$sからアプリ制限が働いていません。"</string>
     <string name="monitor_gap_locked">"ロックまたは厳格モード中にオフにされました。"</string>
     <string name="monitor_gap_dismiss">"確認しました"</string>
+    <string name="auto_backup_title">"毎週の自動バックアップ"</string>
+    <string name="auto_backup_hint">"選んだフォルダに週に一度、バックアップファイルを1つ上書き保存します。"</string>
+    <string name="auto_backup_last">"前回の自動バックアップ: %1$s"</string>
+    <string name="auto_backup_none">"まだ自動バックアップしていません。"</string>
+    <string name="auto_backup_stop">"自動バックアップをオフ"</string>
+    <string name="auto_backup_start">"自動バックアップのフォルダを選ぶ"</string>
 </resources>

@@ -18,6 +18,7 @@ import com.chronolock.domain.AppRule
 import com.chronolock.domain.StrictSetting
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import androidx.core.net.toUri
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
@@ -33,6 +34,7 @@ data class MainState(
     val health: Health = Health(),
     /** Detection the user turned off and Today has not shown yet. */
     val monitorGap: com.chronolock.data.MonitorGap? = null,
+    val autoBackup: com.chronolock.data.AutoBackup? = null,
     val loading: Boolean = true,
     val error: String? = null,
     /** Play finished downloading a newer build; a restart installs it. */
@@ -128,6 +130,7 @@ class MainViewModel @Inject constructor(
         .combine(repository.pendingSites) { data, pending -> data.copy(pendingSites = pending) }
         .combine(repository.anchors) { data, anchors -> data.copy(anchors = anchors) }
         .combine(preferences.monitorGap) { data, gap -> data.copy(monitorGap = gap) }
+        .combine(preferences.autoBackup) { data, auto -> data.copy(autoBackup = auto) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -140,7 +143,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -386,6 +389,27 @@ class MainViewModel @Inject constructor(
         try { backups.export(uri, environment.clock().epochMillis); showError("백업 파일을 저장했습니다.") }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { android.util.Log.w("ChronoLock", "Backup failed", error); showError("백업 파일을 저장하지 못했습니다.") }
+    }
+
+    /** Keeps access to the picked folder across restarts and writes the first weekly backup there at once. */
+    fun startAutoBackup(folder: android.net.Uri) = viewModelScope.launch {
+        try {
+            environment.context.contentResolver.takePersistableUriPermission(folder,
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            preferences.setAutoBackupFolder(folder.toString())
+            backups.autoBackup(environment.clock().epochMillis, force = true)
+            showError("백업 파일을 저장했습니다.")
+        }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { android.util.Log.w("ChronoLock", "Auto backup setup failed", error); showError("백업 파일을 저장하지 못했습니다.") }
+    }
+
+    fun stopAutoBackup() = viewModelScope.launch {
+        preferences.autoBackup.first()?.let { auto ->
+            runCatching { environment.context.contentResolver.releasePersistableUriPermission(auto.folder.toUri(),
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }
+        }
+        preferences.setAutoBackupFolder(null)
     }
 
     /** Replaces rules and groups with a backup's. Strict mode must be off, as restoring can remove limits at once. */

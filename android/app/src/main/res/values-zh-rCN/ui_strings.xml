@@ -699,4 +699,10 @@
     <string name="monitor_gap_open">"从 %1$s 起，应用限制未生效。"</string>
     <string name="monitor_gap_locked">"是在锁定或严格模式开启时关闭的。"</string>
     <string name="monitor_gap_dismiss">"知道了"</string>
+    <string name="auto_backup_title">"每周自动备份"</string>
+    <string name="auto_backup_hint">"每周一次在所选文件夹中保存一个备份文件，并覆盖上一个。"</string>
+    <string name="auto_backup_last">"上次自动备份：%1$s"</string>
+    <string name="auto_backup_none">"尚未自动备份。"</string>
+    <string name="auto_backup_stop">"关闭自动备份"</string>
+    <string name="auto_backup_start">"选择自动备份文件夹"</string>
 </resources>

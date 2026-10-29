@@ -10,16 +10,21 @@
 - 접근성(앱 감지)을 사용자가 끄면 시각과 잠금·엄격 모드 여부를 기록하고, 오늘 탭에 "앱 감지가 꺼진 적이 있어요" 카드로
   꺼진 구간(또는 아직 꺼져 있음)을 보여 줌. "확인했어요"로 닫음. 서비스 해제 시 설정 목록에서 빠져 있을 때만 기록해
   프로세스 종료·재부팅은 기록하지 않음(QA 2026-10-23 개선안 7). 기기 미검증.
+- 주간 자동 백업: 설정 → 백업과 복원에서 폴더를 고르면(SAF 트리, 영구 권한) 바로 한 번 쓰고, 이후 6시간 주기 작업이
+  7일마다 `chronolock-backup-auto.json` 하나를 덮어씀. 마지막 자동 백업 시각 표시, "자동 백업 끄기"로 권한 반납
+  (QA 2026-10-23 개선안 6). 실패(폴더 삭제·권한 회수)는 그 주만 건너뜀. 기기 미검증.
 - Lint 정리(동작 변화 없음): UseKtx 6건(toUri·SharedPreferences.edit·createBitmap), 마스코트 깜박임 프레임을
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
 ### ko
 - 전화와 문자 앱은 어떤 경우에도 차단하지 않아요.
 - 앱 감지를 끈 적이 있으면 언제부터 언제까지 제한이 작동하지 않았는지 오늘 화면에서 알려 드려요.
+- 고른 폴더에 매주 자동으로 백업해요.
 
 ### en
 - Phone and messaging apps are never blocked.
 - If app detection was turned off, Today shows when your limits were not working.
+- Weekly auto backup to a folder you pick.
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 
