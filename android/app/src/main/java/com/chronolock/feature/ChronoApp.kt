@@ -115,7 +115,10 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         }
         if (state.onboarded != true) {
             ChronoTheme(shown) {
-                if (state.onboarded == false) OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding, state.mascot, { model.selectMascot(it) }, state.pro)
+                if (state.onboarded == false) {
+                    LaunchedEffect(Unit) { model.checkInvite() }
+                    OnboardingScreen(state.language, model::selectLanguage, model::finishOnboarding, state.mascot, { model.selectMascot(it) }, state.pro, state.invite)
+                }
                 else Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             }
             return@LocalizedApp
@@ -631,7 +634,11 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
         LaunchedEffect(streak >= REVIEW_STREAK_DAYS) { if (streak >= REVIEW_STREAK_DAYS) askReview() }
         if (streak > 0 || (weeks.changePercent ?: 0) < 0) {
             val context = LocalContext.current
-            val message = tr("ChronoLock으로 스마트폰 사용 시간을 줄이고 있어요. 같이 해 볼래요?") + "\n" + SHARE_LINK
+            // The link carries this person's first-run goals, so a friend installing from it starts with the same ones.
+            val goals = com.chronolock.domain.OnboardingGoal.entries.filter { it.name in state.goals }.toSet()
+            val message = tr("ChronoLock으로 스마트폰 사용 시간을 줄이고 있어요. 같이 해 볼래요?") +
+                (if (goals.isEmpty()) "" else "\n" + tr("이 링크로 설치하면 제 목표(%1\$s)가 미리 골라져 있어요.", goals.map { tr(it.label) }.joinToString(", "))) +
+                "\n" + com.chronolock.domain.Invite.link(goals)
             TextButton(onClick = {
                 val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
                     .putExtra(android.content.Intent.EXTRA_TEXT, message)
@@ -749,5 +756,3 @@ internal fun StrictModeCard(state: MainState, nowEpoch: Long, select: (Int) -> U
 /** Asks for a Play review; provided by the activity, a no-op in previews and tests. */
 internal val LocalAskReview = androidx.compose.runtime.staticCompositionLocalOf<() -> Unit> { {} }
 private const val REVIEW_STREAK_DAYS = 3
-/** Store link with a source tag, so installs from shares show up separately in Play Console acquisition reports. */
-private const val SHARE_LINK = "https://play.google.com/store/apps/details?id=com.chronolock.app&referrer=utm_source%3Dshare%26utm_medium%3Dapp"

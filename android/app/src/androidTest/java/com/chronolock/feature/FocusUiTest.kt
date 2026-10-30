@@ -286,6 +286,24 @@ class FocusUiTest {
         ui.runOnIdle { assertEquals(setOf("VIDEO"), started) }
     }
 
+    @Test fun onboarding_startsWithAFriendsGoals_andASituationReplacesThem() {
+        var started: Set<String>? = null
+        val invite = com.chronolock.domain.Invite.parse("utm_source=invite&utm_content=SOCIAL.SLEEP")
+        ui.setContent { LocalizedApp(com.chronolock.data.AppLanguage.KOREAN) { ChronoTheme(AppTheme.DARK) {
+            OnboardingScreen(com.chronolock.data.AppLanguage.KOREAN, {}, start = { started = it }, invite = invite)
+        } } }
+        ui.onNodeWithTag("onboarding-next").performScrollTo().performClick()
+        ui.onNodeWithTag("invite-note").assertExists()
+        ui.onNodeWithTag("goal-SOCIAL").assertIsSelected()
+        ui.onNodeWithTag("goal-SLEEP").assertIsSelected()
+        screenshot("onboarding-invite", ui.onRoot())
+        ui.onNodeWithTag("situation-STUDY").performScrollTo().performClick()
+        ui.onNodeWithTag("goal-SLEEP").assertIsNotSelected()
+        ui.onNodeWithTag("onboarding-next").performScrollTo().performClick()
+        ui.onNodeWithText("시작하기").performScrollTo().performClick()
+        ui.runOnIdle { assertEquals(setOf("SOCIAL", "VIDEO", "GAMES"), started) }
+    }
+
     @Test fun runningFocusShowsCountdownAndCanBeStopped() {
         var stopped = false
         val state = MainState(rules = listOf(RuleEntity("test.app", "YouTube", 600, null, null, focusUntilEpochMillis = 301000)),

@@ -709,4 +709,10 @@
     <string name="auto_backup_now">"今すぐバックアップ"</string>
     <string name="auto_backup_other">"別のフォルダを選ぶ"</string>
     <string name="auto_backup_default">"Downloadフォルダに戻す"</string>
+    <string name="invite_note">"友だちのリンクの目標を選んでおきました。一緒にやってみましょう！"</string>
+    <string name="situation_title">"どんな状況ですか？"</string>
+    <string name="situation_study">"勉強・試験対策"</string>
+    <string name="situation_work">"仕事に集中"</string>
+    <string name="situation_bedtime">"寝る前のスマホ"</string>
+    <string name="share_goals">"このリンクからインストールすると、私の目標（%1$s）が選ばれた状態で始まります。"</string>
 </resources>

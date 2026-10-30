@@ -751,4 +751,10 @@
     <string name="auto_backup_now">"Hacer copia ahora"</string>
     <string name="auto_backup_other">"Elegir otra carpeta"</string>
     <string name="auto_backup_default">"Volver a la carpeta Descargas"</string>
+    <string name="invite_note">"Elegimos las metas del enlace de tu amigo. ¡Hagámoslo juntos!"</string>
+    <string name="situation_title">"¿Cuál es tu situación?"</string>
+    <string name="situation_study">"Estudio y exámenes"</string>
+    <string name="situation_work">"Concentración en el trabajo"</string>
+    <string name="situation_bedtime">"Móvil antes de dormir"</string>
+    <string name="share_goals">"Si instalas desde este enlace, mis metas (%1$s) ya vienen elegidas."</string>
 </resources>
