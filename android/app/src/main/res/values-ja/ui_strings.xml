@@ -705,4 +705,8 @@
     <string name="auto_backup_none">"まだ自動バックアップしていません。"</string>
     <string name="auto_backup_stop">"自動バックアップをオフ"</string>
     <string name="auto_backup_start">"自動バックアップのフォルダを選ぶ"</string>
+    <string name="auto_backup_hint_phone">"週に一度、この端末のDownload/ChronoLockフォルダにバックアップします。アプリを削除してもファイルは残ります。"</string>
+    <string name="auto_backup_now">"今すぐバックアップ"</string>
+    <string name="auto_backup_other">"別のフォルダを選ぶ"</string>
+    <string name="auto_backup_default">"Downloadフォルダに戻す"</string>
 </resources>

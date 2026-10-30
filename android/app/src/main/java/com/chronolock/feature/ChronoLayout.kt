@@ -95,6 +95,7 @@ internal fun ChronoScreen(
     restoreBackup: () -> Unit = {},
     startAutoBackup: () -> Unit = {},
     stopAutoBackup: () -> Unit = {},
+    backupNow: () -> Unit = {},
     redeemCode: (String) -> Boolean = { false },
 ) {
     val destinations = listOf(tr("오늘"), tr("앱 제한"), tr("히스토리"), tr("설정"))
@@ -341,12 +342,20 @@ internal fun ChronoScreen(
                                     if (strict) Text(tr("엄격 모드를 끈 뒤에 백업을 복원할 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                     HorizontalDivider()
                                     Text(tr("매주 자동 백업"), style = MaterialTheme.typography.titleMedium)
-                                    Text(tr("고른 폴더에 일주일마다 백업 파일 하나를 새로 덮어써 저장해요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     val auto = state.autoBackup
-                                    if (auto != null) {
+                                    // Without a picked folder, Android 10+ backs up to Download/ChronoLock, which stays after the app is removed.
+                                    val onPhone = auto?.folder == null && com.chronolock.data.BackupRepository.PHONE_BACKUP_SUPPORTED
+                                    Text(if (onPhone) tr("휴대폰의 다운로드/ChronoLock 폴더에 일주일마다 백업해요. 앱을 지워도 파일은 남아요.")
+                                        else tr("고른 폴더에 일주일마다 백업 파일 하나를 새로 덮어써 저장해요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    if (auto != null && (onPhone || auto.folder != null)) {
                                         Text(auto.lastAt?.let { tr("마지막 자동 백업: %1\$s", timeText(it)) } ?: tr("아직 자동 백업하지 않았어요."),
                                             color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-                                        OutlinedButton(onClick = stopAutoBackup, modifier = Modifier.testTag("auto-backup-stop")) { Text(tr("자동 백업 끄기")) }
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            OutlinedButton(onClick = backupNow, modifier = Modifier.testTag("auto-backup-now")) { Text(tr("지금 백업")) }
+                                            if (auto.folder != null) OutlinedButton(onClick = stopAutoBackup, modifier = Modifier.testTag("auto-backup-stop")) {
+                                                Text(if (com.chronolock.data.BackupRepository.PHONE_BACKUP_SUPPORTED) tr("다운로드 폴더로 되돌리기") else tr("자동 백업 끄기"))
+                                            } else OutlinedButton(onClick = startAutoBackup, modifier = Modifier.testTag("auto-backup-start")) { Text(tr("다른 폴더 고르기")) }
+                                        }
                                     } else OutlinedButton(onClick = startAutoBackup, modifier = Modifier.testTag("auto-backup-start")) { Text(tr("자동 백업 폴더 고르기")) }
                                 } }
                                 item { UnlockHelpCard() }

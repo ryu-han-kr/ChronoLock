@@ -726,4 +726,8 @@
     <string name="auto_backup_none">"No auto backup yet."</string>
     <string name="auto_backup_stop">"Turn off auto backup"</string>
     <string name="auto_backup_start">"Pick a folder for auto backup"</string>
+    <string name="auto_backup_hint_phone">"Once a week, backs up to Download/ChronoLock on this phone. The file stays even if you remove the app."</string>
+    <string name="auto_backup_now">"Back up now"</string>
+    <string name="auto_backup_other">"Pick another folder"</string>
+    <string name="auto_backup_default">"Back to the Download folder"</string>
 </resources>

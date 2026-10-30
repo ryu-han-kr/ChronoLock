@@ -705,4 +705,8 @@
     <string name="auto_backup_none">"尚未自动备份。"</string>
     <string name="auto_backup_stop">"关闭自动备份"</string>
     <string name="auto_backup_start">"选择自动备份文件夹"</string>
+    <string name="auto_backup_hint_phone">"每周一次备份到本机的 Download/ChronoLock 文件夹。即使删除应用，文件也会保留。"</string>
+    <string name="auto_backup_now">"立即备份"</string>
+    <string name="auto_backup_other">"选择其他文件夹"</string>
+    <string name="auto_backup_default">"改回 Download 文件夹"</string>
 </resources>

@@ -747,4 +747,8 @@
     <string name="auto_backup_none">"Aún no hay copia automática."</string>
     <string name="auto_backup_stop">"Desactivar copia automática"</string>
     <string name="auto_backup_start">"Elegir carpeta para la copia automática"</string>
+    <string name="auto_backup_hint_phone">"Una vez por semana guarda una copia en Descargas/ChronoLock de este teléfono. El archivo se queda aunque borres la app."</string>
+    <string name="auto_backup_now">"Hacer copia ahora"</string>
+    <string name="auto_backup_other">"Elegir otra carpeta"</string>
+    <string name="auto_backup_default">"Volver a la carpeta Descargas"</string>
 </resources>

@@ -152,7 +152,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 setFollowSystem = model::setFollowSystem, editNightTheme = model::editNightTheme,
                 exportBackup = { exportLauncher.launch("chronolock-backup-$today.json") },
                 restoreBackup = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
-                startAutoBackup = { autoBackupLauncher.launch(null) }, stopAutoBackup = { model.stopAutoBackup() },
+                startAutoBackup = { autoBackupLauncher.launch(null) }, stopAutoBackup = { model.stopAutoBackup() }, backupNow = { model.backupNow() },
                 redeemCode = model::redeemCode,
             )
             if (themeGallery) ThemeGallery(editing, model::selectTheme, state.favoriteThemes, model::toggleFavoriteTheme) { themeGallery = false }
