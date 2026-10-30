@@ -653,6 +653,19 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             } + " · " + tr("지난주 %1\$s", duration(weeks.previousMillis / 1000)), style = MaterialTheme.typography.bodyMedium,
                 color = if (change <= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        // Why the block screen was met this week, from the one-tap reasons on it.
+        val shares = remember(state.openReasons, today) { com.chronolock.domain.OpenReasons.weekShares(state.openReasons, today) }
+        if (shares.isNotEmpty()) Column(Modifier.testTag("open-reasons"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(tr("이번 주에 열려고 한 이유"), style = MaterialTheme.typography.titleSmall)
+            Text(shares.map { (reason, percent) -> tr(reason.label) + " " + percent + "%" }.joinToString(" · "),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            if (shares.first().first in setOf(com.chronolock.domain.OpenReason.HABIT, com.chronolock.domain.OpenReason.BORED))
+                Text(tr("대부분 습관이나 심심함이었어요. 홈 화면에서 앱 위치를 옮기면 손이 덜 가요."),
+                    color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            else if (shares.first().first == com.chronolock.domain.OpenReason.NOTIFICATION)
+                Text(tr("알림이 가장 많이 불렀어요. 그 앱의 알림을 줄여 보세요."),
+                    color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+        }
         Text(tr("기록된 사용 %1\$s · %2\$d회 실행", duration(records.sumOf { it.usageMillis } / 1000), records.sumOf { it.opens }), color = MaterialTheme.colorScheme.primary)
         (6L downTo 0L).forEach { offset ->
             val date = today.minusDays(offset)

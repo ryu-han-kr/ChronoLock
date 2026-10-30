@@ -715,4 +715,13 @@
     <string name="situation_work">"专注工作"</string>
     <string name="situation_bedtime">"睡前刷手机"</string>
     <string name="share_goals">"通过此链接安装，会预先选好我的目标（%1$s）。"</string>
+    <string name="reason_bored">"无聊"</string>
+    <string name="reason_habit">"习惯"</string>
+    <string name="reason_notification">"看到通知"</string>
+    <string name="reason_needed">"确实需要"</string>
+    <string name="reason_ask">"为什么想打开它？"</string>
+    <string name="reason_saved">"已记录。可在“历史”标签中查看。"</string>
+    <string name="reason_week_title">"本周想打开应用的原因"</string>
+    <string name="reason_tip_habit">"大多是出于习惯或无聊。把应用移出主屏幕会更容易忍住。"</string>
+    <string name="reason_tip_notification">"通知是最主要的原因。试着减少该应用的通知。"</string>
 </resources>

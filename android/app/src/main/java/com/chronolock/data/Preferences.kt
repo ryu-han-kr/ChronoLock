@@ -80,6 +80,13 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
         it[autoBackupAtKey] = atEpochMillis
         if (phoneFile != null) it[autoBackupFileKey] = phoneFile
     } }
+    private val openReasonsKey = stringPreferencesKey("open_reasons")
+    /** Why the block screen was met, per day; see [com.chronolock.domain.OpenReasons]. */
+    val openReasons = context.preferences.data.map { com.chronolock.domain.OpenReasons.decode(it[openReasonsKey]) }
+    suspend fun recordOpenReason(today: java.time.LocalDate, reason: com.chronolock.domain.OpenReason) { context.preferences.edit {
+        it[openReasonsKey] = com.chronolock.domain.OpenReasons.encode(
+            com.chronolock.domain.OpenReasons.add(com.chronolock.domain.OpenReasons.decode(it[openReasonsKey]), today, reason))
+    } }
     private val monitorOffKey = longPreferencesKey("monitor_off_at")
     private val monitorOffLockedKey = booleanPreferencesKey("monitor_off_locked")
     private val monitorBackKey = longPreferencesKey("monitor_back_at")

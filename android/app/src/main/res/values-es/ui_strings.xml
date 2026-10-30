@@ -757,4 +757,13 @@
     <string name="situation_work">"Concentración en el trabajo"</string>
     <string name="situation_bedtime">"Móvil antes de dormir"</string>
     <string name="share_goals">"Si instalas desde este enlace, mis metas (%1$s) ya vienen elegidas."</string>
+    <string name="reason_bored">"Aburrimiento"</string>
+    <string name="reason_habit">"Costumbre"</string>
+    <string name="reason_notification">"Una notificación"</string>
+    <string name="reason_needed">"Lo necesitaba"</string>
+    <string name="reason_ask">"¿Por qué querías abrirla?"</string>
+    <string name="reason_saved">"Guardado. Puedes verlo en la pestaña Historial."</string>
+    <string name="reason_week_title">"Por qué quisiste abrir apps esta semana"</string>
+    <string name="reason_tip_habit">"Sobre todo costumbre o aburrimiento. Mover la app fuera de la pantalla de inicio ayuda a resistir."</string>
+    <string name="reason_tip_notification">"Las notificaciones te llamaron más. Prueba a reducir las de esa app."</string>
 </resources>

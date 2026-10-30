@@ -384,7 +384,12 @@ class ChronoAccessibilityService : AccessibilityService() {
             target != null && state.decision.denied -> {
                 val now = environment.clock()
                 val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
-                overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now))
+                overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now)) { reason ->
+                    scope.launch {
+                        runCatching { preferences.recordOpenReason(environment.clock().date, reason) }
+                            .onFailure { android.util.Log.w("ChronoLock", "Open reason not saved", it) }
+                    }
+                }
                 true
             }
             site != null -> { overlay.showSite(site); true }
