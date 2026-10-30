@@ -74,6 +74,8 @@ internal fun ChronoScreen(
     setDeskQr: (Boolean) -> Unit = {},
     setExam: (com.chronolock.domain.Exam?) -> Unit = {},
     blockHours: (String, com.chronolock.domain.ScheduleDraft) -> Unit = { _, _ -> },
+    applyStarter: (List<com.chronolock.domain.StarterLimit>) -> Unit = {},
+    dismissStarter: () -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
     addSite: (String, () -> Unit) -> Unit = { _, _ -> },
@@ -190,6 +192,14 @@ internal fun ChronoScreen(
                                 }
                                 if (state.timeBank >= com.chronolock.domain.TimeBank.REWARD_MINUTES && state.rules.any { it.enabled })
                                     item(span = { GridItemSpan(maxLineSpan) }) { TimeBankCard(state, spendTimeBank) }
+                                if (!state.starterDone) {
+                                    val limits = run {
+                                        com.chronolock.domain.starterLimits(
+                                            state.history.associate { com.chronolock.domain.DailyKey(it.packageName, LocalDate.parse(it.date)) to it.usageMillis },
+                                            state.apps.map { it.packageName }.toSet() - state.rules.map { it.packageName }.toSet(), today)
+                                    }
+                                    if (limits.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) { StarterCard(state, limits, applyStarter, dismissStarter) }
+                                }
                                 state.exam?.takeIf { it.showing(today) }?.let { exam ->
                                     item(span = { GridItemSpan(maxLineSpan) }) { ExamCard(exam, today) { selectTab(1) } }
                                 }
@@ -535,6 +545,25 @@ private fun LayoutPreview(initialTab: Int) {
     ChronoTheme {
         ChronoScreen(state, today, 0, tab, { tab = it }, remember { SnackbarHostState() },
             { _, _ -> }, {}, {}, {}, {}, {})
+    }
+}
+
+/** After the first week: the most-used apps without a rule, each with a suggested daily limit, added in one tap. */
+@Composable
+internal fun StarterCard(state: MainState, limits: List<com.chronolock.domain.StarterLimit>,
+    apply: (List<com.chronolock.domain.StarterLimit>) -> Unit, dismiss: () -> Unit) {
+    CardBox {
+        Text(tr("지난 일주일로 맞춘 첫 한도"), style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("starter"))
+        Text(tr("가장 많이 쓴 앱의 하루 평균보다 조금 적게 잡았어요. 적용한 뒤에도 언제든 바꿀 수 있어요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        limits.forEach { limit ->
+            val name = state.apps.firstOrNull { it.packageName == limit.app }?.label ?: limit.app
+            Text(tr("%1\$s · 하루 평균 %2\$s → %3\$s", name, duration(limit.averageMillis / 1000), duration(limit.limitSeconds)),
+                style = MaterialTheme.typography.bodyMedium)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { apply(limits) }, modifier = Modifier.testTag("starter-apply")) { Text(tr("한 번에 적용")) }
+            TextButton(onClick = dismiss, modifier = Modifier.testTag("starter-dismiss")) { Text(tr("괜찮아요")) }
+        }
     }
 }
 

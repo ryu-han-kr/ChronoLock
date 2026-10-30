@@ -135,6 +135,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
                 edit = { app, recipe -> editPackage = app; suggestedSchedule = null; suggestedRecipe = (recipe ?: pickRecipe?.let(RuleRecipe::valueOf))?.name; pickRecipe = null },
+                applyStarter = { model.applyStarter(it) }, dismissStarter = { model.dismissStarter() },
                 blockHours = { app, window -> suggestedRecipe = null; suggestedSchedule = window.start + "-" + window.end; editPackage = app },
                 pickRecipe = pickRecipe?.let(RuleRecipe::valueOf), choosePickRecipe = { pickRecipe = it?.name },
                 startFocus = { confirmFocus = it }, stopFocus = {

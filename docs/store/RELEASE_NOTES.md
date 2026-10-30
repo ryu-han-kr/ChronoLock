@@ -10,14 +10,18 @@
   `DeviceBlockingTest.blockScreen_opensTheAppChosenInstead`(처음엔 차단 화면이 남아 실패 → 열고 나서 Foreground(null) 보내도록 고쳐 통과).
 - 집중 기록: 끝까지 마친 집중(시간 모으기 정산과 같은 순간)과 중간에 끈 집중(실제 시작~종료)을 DataStore `focus_log`에 60일 보관.
   히스토리 '최근 7일 돌아보기'에 "이번 주 집중 X · 끝까지 마친 집중 N번", 결과 카드에 "이번 주 집중 X". `LocalRepository.stopFocus`가 시작 시각을 돌려줌.
+- 첫 주 맞춤 한도: 기록이 최근 7일 중 3일 이상이면 오늘 탭에 규칙 없는 앱 중 하루 평균 20분 이상 쓴 상위 3개와 평균의 약 70%
+  (5분 단위, 최소 15분) 하루 한도를 보여 주고 "한 번에 적용"(새 규칙이라 엄격 모드 대기 없음) 또는 "괜찮아요". 한 번 처리하면 다시 안 나옴(`starter_limits_done`).
 
 ### ko
 - 차단 화면에서 미리 골라 둔 다른 앱을 바로 열 수 있어요.
 - 이번 주 집중한 시간과 끝까지 마친 횟수를 보여 드려요.
+- 일주일 사용 기록으로 가장 많이 쓴 앱 3개의 한도를 한 번에 정할 수 있어요.
 
 ### en
 - Open an app you picked instead, right from the block screen.
 - See how long you focused this week and how many focuses you finished.
+- Set limits for your three most-used apps in one tap, based on your first week.
 
 ## 0.19.0 (versionCode 29) — 2026-10-30 업로드 (내부·테스터들)
 

@@ -91,6 +91,10 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     /** The secret of the printed QR that must be scanned to stop a focus; null when the feature is off. */
     val deskQr = context.preferences.data.map { it[deskQrKey] }
     suspend fun setDeskQr(secret: String?) { context.preferences.edit { if (secret == null) it.remove(deskQrKey) else it[deskQrKey] = secret } }
+    private val starterDoneKey = booleanPreferencesKey("starter_limits_done")
+    /** The first-week limits card was applied or put away; it does not come back. */
+    val starterDone = context.preferences.data.map { it[starterDoneKey] ?: false }
+    suspend fun setStarterDone() { context.preferences.edit { it[starterDoneKey] = true } }
     private val focusLogKey = stringPreferencesKey("focus_log")
     /** Focuses as they went, kept 60 days; see [com.chronolock.domain.FocusLog]. */
     val focusLog = context.preferences.data.map { com.chronolock.domain.FocusLog.decode(it[focusLogKey]) }

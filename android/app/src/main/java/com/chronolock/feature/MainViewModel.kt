@@ -71,6 +71,8 @@ data class MainState(
     val alternatives: Map<String, String> = emptyMap(),
     /** Focuses as they went over the last 60 days. */
     val focusLog: List<com.chronolock.domain.FocusRun> = emptyList(),
+    /** The first-week limits card was applied or put away. */
+    val starterDone: Boolean = true,
     /** Reasons picked on the block screen, per day. */
     val openReasons: Map<java.time.LocalDate, Map<com.chronolock.domain.OpenReason, Int>> = emptyMap(),
     val nightTheme: AppTheme = AppTheme.DARK,
@@ -163,6 +165,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.notes) { data, notes -> data.copy(notes = notes) }
         .combine(preferences.alternatives) { data, alternatives -> data.copy(alternatives = alternatives) }
         .combine(preferences.focusLog) { data, log -> data.copy(focusLog = log) }
+        .combine(preferences.starterDone) { data, done -> data.copy(starterDone = done) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -175,7 +178,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, focusLog = data.focusLog, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, focusLog = data.focusLog, starterDone = data.starterDone, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -271,6 +274,23 @@ class MainViewModel @Inject constructor(
     fun tabShown() = local.update { it.copy(requestedTab = null) }
     /** The friend's code has been offered for sending; it is not kept on screen after that. */
     fun partnerCodeShown() = local.update { it.copy(partnerCode = null) }
+
+    /** Adds the first-week daily limits all at once; new limits only tighten, so strict mode never holds them. */
+    fun applyStarter(limits: List<com.chronolock.domain.StarterLimit>) = viewModelScope.launch {
+        try {
+            val clock = environment.clock()
+            val safety = environment.safetyPackages()
+            limits.filter { it.app !in safety }.forEach { limit ->
+                val label = local.value.apps.firstOrNull { it.packageName == limit.app }?.label ?: limit.app
+                repository.requestRule(com.chronolock.domain.AppRule(limit.app, label, dailyLimitSeconds = limit.limitSeconds), strictDelay(clock), clock.epochMillis, clock)
+            }
+            preferences.setStarterDone()
+            showError("추천 한도를 적용했어요. 앱 제한 탭에서 언제든 바꿀 수 있어요.")
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError(failure(error, "제한을 저장하지 못했습니다. 다시 시도해 주세요.")) }
+    }
+
+    fun dismissStarter() = viewModelScope.launch { runCatching { preferences.setStarterDone() } }
 
     fun saveAlternative(packageName: String, alternative: String?) = viewModelScope.launch {
         try { preferences.setAlternative(packageName, alternative) }

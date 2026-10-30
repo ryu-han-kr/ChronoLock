@@ -783,4 +783,10 @@
     <string name="instead_none">"なし"</string>
     <string name="focus_week">"今週の集中 %1$s · 最後までやった集中 %2$d回"</string>
     <string name="focus_week_card">"今週の集中 %1$s"</string>
+    <string name="starter_title">"この1週間に合わせた最初の制限"</string>
+    <string name="starter_hint">"よく使うアプリの1日平均より少し短くしました。適用後もいつでも変更できます。"</string>
+    <string name="starter_row">"%1$s · 1日平均 %2$s → %3$s"</string>
+    <string name="starter_apply">"まとめて適用"</string>
+    <string name="starter_dismiss">"けっこうです"</string>
+    <string name="starter_done">"おすすめの制限を適用しました。アプリ制限タブでいつでも変更できます。"</string>
 </resources>

@@ -825,4 +825,10 @@
     <string name="instead_none">"Ninguna"</string>
     <string name="focus_week">"Concentración esta semana: %1$s · %2$d terminadas"</string>
     <string name="focus_week_card">"Concentración esta semana: %1$s"</string>
+    <string name="starter_title">"Primeros límites según tu última semana"</string>
+    <string name="starter_hint">"Un poco por debajo de la media diaria de tus apps más usadas. Puedes cambiarlos cuando quieras."</string>
+    <string name="starter_row">"%1$s · %2$s al día → %3$s"</string>
+    <string name="starter_apply">"Aplicar todo"</string>
+    <string name="starter_dismiss">"No, gracias"</string>
+    <string name="starter_done">"Límites sugeridos aplicados. Cámbialos cuando quieras en Límites de apps."</string>
 </resources>
