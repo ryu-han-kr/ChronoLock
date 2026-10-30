@@ -11,6 +11,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.chronolock.data.*
 import java.io.File
 import java.time.LocalDate
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
@@ -174,6 +175,28 @@ class DeviceBlockingTest {
         blocked("오늘 허용한 실행 횟수를 다 썼어요.")
         assertEquals(3, daily()!!.opens)
         capture("fourth-open")
+    }
+
+    @Test fun blockScreen_showsTheNote_andRecordsWhyTheAppWasOpened() {
+        val preferences = com.chronolock.data.Preferences(context)
+        runBlocking { preferences.setNote(target, "시험까지 3주 남았다") }
+        try {
+            rule(opens = 1)
+            launch(); home(); launch()
+            blocked("오늘 허용한 실행 횟수를 다 썼어요.")
+            await("note on the block screen") { textVisible("시험까지 3주 남았다") }
+            await("reason question") { textVisible("왜 열려고 했나요?") }
+            capture("block-reasons")
+            // A real tap where the button is drawn, as a finger would.
+            val habit = nodes().flatMap { it.findAccessibilityNodeInfosByText("습관처럼") }.first { it.isClickable }
+            val bounds = android.graphics.Rect().also(habit::getBoundsInScreen)
+            shell("input tap ${bounds.centerX()} ${bounds.centerY()}")
+            await("thanks after a tap") { textVisible("기록했어요. 히스토리 탭에서 볼 수 있어요.") && !textVisible("습관처럼") }
+            await("reason saved") {
+                runBlocking { preferences.openReasons.first()[LocalDate.now()]?.get(com.chronolock.domain.OpenReason.HABIT) ?: 0 } >= 1
+            }
+            capture("block-reasons-saved")
+        } finally { runBlocking { preferences.setNote(target, "") } }
     }
 
     @Test fun cooldown30Seconds_retriesDoNotExtendDeadline() {
