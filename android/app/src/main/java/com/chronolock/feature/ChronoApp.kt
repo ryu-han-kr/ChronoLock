@@ -63,6 +63,9 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     buyPro: () -> Unit = {}, managePro: () -> Unit = {}) {
     val modelState by model.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(modelState.requestedTab) { modelState.requestedTab?.let { tab = it; model.tabShown() } }
+    val appContext = LocalContext.current
+    LaunchedEffect(modelState.language) { AppShortcuts.publish(appContext.applicationContext, appContext.forLanguage(modelState.language)) }
     var editPackage by rememberSaveable { mutableStateOf<String?>(null) }
     /** 0 creates a new group. */
     var editGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -166,7 +169,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 key(appId) { RuleEditor(app, saved, onDismiss = { editPackage = null },
                     onSave = { rule, finished -> model.save(rule, { editPackage = null }, finished) },
                     onDelete = { model.remove(appId) { editPackage = null } },
-                    initialRecipe = suggestedRecipe?.let(RuleRecipe::valueOf), strictMinutes = state.strict.delayAt(nowEpoch)) }
+                    initialRecipe = suggestedRecipe?.let(RuleRecipe::valueOf), strictMinutes = state.strict.delayAt(nowEpoch),
+                    note = state.notes[appId].orEmpty(), saveNote = { model.saveNote(appId, it) }) }
             }
             editGroupId?.let { id ->
                 val saved = state.groups.firstOrNull { it.id == id }
@@ -314,7 +318,9 @@ internal val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> Unit,
-    onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null, strictMinutes: Int = 0) {
+    onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null, strictMinutes: Int = 0,
+    note: String = "", saveNote: (String) -> Unit = {}) {
+    var noteText by rememberSaveable { mutableStateOf(note) }
     var draft by rememberSaveable(stateSaver = RuleDraftSaver) { mutableStateOf(when {
         saved != null && initialRecipe != null -> suggestedDraft(saved.toDomain(), initialRecipe)
         initialRecipe != null -> initialRecipe.draft // Suggested from history for an app that has no rule yet.
@@ -339,6 +345,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                 cooldown = cooldownTime.toSecondsText("재실행 대기 시간")).build(app.packageName, app.label)
             error = null
             saving = true
+            if (noteText.trim() != note) saveNote(noteText.trim())
             onSave(rule) { saving = false }
         } catch (invalid: IllegalArgumentException) {
             error = invalid.message
@@ -409,6 +416,10 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                         enabled = !saving, label = { Text(if (minutes == 0) tr("끄기") else tr("%1\$d분", minutes)) }, modifier = Modifier.testTag("checkin-$minutes"))
                 }
             }
+            Text(tr("미래의 나에게 한 줄"), style = MaterialTheme.typography.titleSmall)
+            OutlinedTextField(value = noteText, onValueChange = { noteText = it.take(NOTE_MAX) }, enabled = !saving, singleLine = true,
+                placeholder = { Text(tr("예: 시험까지 3주 남았다")) }, modifier = Modifier.fillMaxWidth().testTag("rule-note"),
+                supportingText = { Text(tr("이 앱이 막힐 때 차단 화면에 보여 줘요.")) })
             Text(tr("1회 한도 도달 시 앱을 떠나야 다음 사용을 시작합니다. 대기를 함께 설정하면 바로 재실행하는 것도 줄일 수 있습니다."), style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth().toggleable(value = draft.scheduleEnabled, enabled = !saving, role = Role.Switch,
                 onValueChange = { draft = draft.copy(scheduleEnabled = it) }),
@@ -639,11 +650,32 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             val message = tr("ChronoLock으로 스마트폰 사용 시간을 줄이고 있어요. 같이 해 볼래요?") +
                 (if (goals.isEmpty()) "" else "\n" + tr("이 링크로 설치하면 제 목표(%1\$s)가 미리 골라져 있어요.", goals.map { tr(it.label) }.joinToString(", "))) +
                 "\n" + com.chronolock.domain.Invite.link(goals)
-            TextButton(onClick = {
-                val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
-                    .putExtra(android.content.Intent.EXTRA_TEXT, message)
-                runCatching { context.startActivity(android.content.Intent.createChooser(send, null)) }
-            }, modifier = Modifier.testTag("share-app")) { Text(tr("친구에게 추천하기")) }
+            // The card's words, worked out here where translations are at hand.
+            val cardTitle = tr("이번 주 ChronoLock")
+            val cardHeadline = when {
+                (weeks.changePercent ?: 0) < 0 -> tr("지난주보다 %1\$d%% 덜 썼어요", -(weeks.changePercent ?: 0))
+                else -> tr("%1\$d일 연속 한도를 지켰어요", streak)
+            }
+            val cardLines = listOfNotNull(
+                tr("이번 주 사용 %1\$s", duration(weeks.currentMillis / 1000)),
+                if (streak > 0 && (weeks.changePercent ?: 0) < 0) tr("%1\$d일 연속 한도를 지켰어요", streak) else null,
+            )
+            val cardFooter = tr("ChronoLock · 앱 사용시간 제한")
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                        .putExtra(android.content.Intent.EXTRA_TEXT, message)
+                    runCatching { context.startActivity(android.content.Intent.createChooser(send, null)) }
+                }, modifier = Modifier.testTag("share-app")) { Text(tr("친구에게 추천하기")) }
+                TextButton(onClick = {
+                    runCatching {
+                        val card = ShareCard.render(context, state.theme, state.mascot,
+                            if (streak > 0) com.chronolock.data.Pose.SUCCESS else com.chronolock.data.Pose.DEFAULT,
+                            cardTitle, cardHeadline, cardLines, cardFooter)
+                        ShareCard.share(context, card, message)
+                    }.onFailure { android.util.Log.w("ChronoLock", "Week card failed", it) }
+                }, modifier = Modifier.testTag("share-card")) { Text(tr("결과 카드 공유")) }
+            }
         }
         weeks.changePercent?.let { change ->
             Text(when {
@@ -769,3 +801,4 @@ internal fun StrictModeCard(state: MainState, nowEpoch: Long, select: (Int) -> U
 /** Asks for a Play review; provided by the activity, a no-op in previews and tests. */
 internal val LocalAskReview = androidx.compose.runtime.staticCompositionLocalOf<() -> Unit> { {} }
 private const val REVIEW_STREAK_DAYS = 3
+private const val NOTE_MAX = 60

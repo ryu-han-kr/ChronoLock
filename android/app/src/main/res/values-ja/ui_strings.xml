@@ -724,4 +724,14 @@
     <string name="reason_week_title">"今週アプリを開こうとした理由"</string>
     <string name="reason_tip_habit">"ほとんどが習慣か退屈でした。ホーム画面からアプリを移すと手が伸びにくくなります。"</string>
     <string name="reason_tip_notification">"通知がいちばんのきっかけでした。そのアプリの通知を減らしてみましょう。"</string>
+    <string name="shortcut_focus">"集中を開始"</string>
+    <string name="shortcut_history">"今日の使用状況"</string>
+    <string name="shortcut_no_rules">"先に集中するアプリを追加してください。"</string>
+    <string name="note_title">"未来の自分へひとこと"</string>
+    <string name="note_placeholder">"例：試験まであと3週間"</string>
+    <string name="note_hint">"このアプリがブロックされたとき、ブロック画面に表示します。"</string>
+    <string name="card_title">"今週のChronoLock"</string>
+    <string name="card_usage">"今週の使用 %1$s"</string>
+    <string name="card_footer">"ChronoLock · アプリ使用時間の制限"</string>
+    <string name="card_share">"結果カードを共有"</string>
 </resources>

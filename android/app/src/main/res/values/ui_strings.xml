@@ -724,4 +724,14 @@
     <string name="reason_week_title">"이번 주에 열려고 한 이유"</string>
     <string name="reason_tip_habit">"대부분 습관이나 심심함이었어요. 홈 화면에서 앱 위치를 옮기면 손이 덜 가요."</string>
     <string name="reason_tip_notification">"알림이 가장 많이 불렀어요. 그 앱의 알림을 줄여 보세요."</string>
+    <string name="shortcut_focus">"집중 시작"</string>
+    <string name="shortcut_history">"오늘 사용 보기"</string>
+    <string name="shortcut_no_rules">"집중할 앱을 먼저 추가해 주세요."</string>
+    <string name="note_title">"미래의 나에게 한 줄"</string>
+    <string name="note_placeholder">"예: 시험까지 3주 남았다"</string>
+    <string name="note_hint">"이 앱이 막힐 때 차단 화면에 보여 줘요."</string>
+    <string name="card_title">"이번 주 ChronoLock"</string>
+    <string name="card_usage">"이번 주 사용 %1$s"</string>
+    <string name="card_footer">"ChronoLock · 앱 사용시간 제한"</string>
+    <string name="card_share">"결과 카드 공유"</string>
 </resources>

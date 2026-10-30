@@ -45,6 +45,13 @@ class MainActivity : ComponentActivity() {
                 managePro = { billing.managePro(this) })
         } }
         updates.check()
+        // Only a fresh start: a shortcut intent kept across a configuration change must not start a second focus.
+        if (savedInstanceState == null) model.openShortcut(intent?.action)
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        model.openShortcut(intent.action)
     }
     override fun onDestroy() { updates.stop(); super.onDestroy() }
     private fun signIn() = lifecycleScope.launch {

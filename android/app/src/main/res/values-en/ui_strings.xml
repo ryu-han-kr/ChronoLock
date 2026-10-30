@@ -745,4 +745,14 @@
     <string name="reason_week_title">"Why you reached for apps this week"</string>
     <string name="reason_tip_habit">"Mostly habit or boredom. Moving the app off your home screen makes it easier to resist."</string>
     <string name="reason_tip_notification">"Notifications pulled you in the most. Try turning down that app's notifications."</string>
+    <string name="shortcut_focus">"Start focus"</string>
+    <string name="shortcut_history">"Today\'s usage"</string>
+    <string name="shortcut_no_rules">"Add an app to focus on first."</string>
+    <string name="note_title">"A line to future me"</string>
+    <string name="note_placeholder">"e.g. 3 weeks until the exam"</string>
+    <string name="note_hint">"Shown on the block screen when this app is blocked."</string>
+    <string name="card_title">"My ChronoLock week"</string>
+    <string name="card_usage">"Used this week: %1$s"</string>
+    <string name="card_footer">"ChronoLock · App time limits"</string>
+    <string name="card_share">"Share week card"</string>
 </resources>

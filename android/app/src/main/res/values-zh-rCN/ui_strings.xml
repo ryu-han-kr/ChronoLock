@@ -724,4 +724,14 @@
     <string name="reason_week_title">"本周想打开应用的原因"</string>
     <string name="reason_tip_habit">"大多是出于习惯或无聊。把应用移出主屏幕会更容易忍住。"</string>
     <string name="reason_tip_notification">"通知是最主要的原因。试着减少该应用的通知。"</string>
+    <string name="shortcut_focus">"开始专注"</string>
+    <string name="shortcut_history">"今日使用情况"</string>
+    <string name="shortcut_no_rules">"请先添加要专注的应用。"</string>
+    <string name="note_title">"给未来的自己一句话"</string>
+    <string name="note_placeholder">"例如：离考试还有3周"</string>
+    <string name="note_hint">"此应用被拦截时显示在拦截画面上。"</string>
+    <string name="card_title">"本周 ChronoLock"</string>
+    <string name="card_usage">"本周使用 %1$s"</string>
+    <string name="card_footer">"ChronoLock · 应用使用时间限制"</string>
+    <string name="card_share">"分享结果卡片"</string>
 </resources>

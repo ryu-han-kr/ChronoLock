@@ -25,6 +25,11 @@
   사이트·숨 쉬기·계속 쓸까요 화면에는 없음. 같은 화면이 떠 있는 동안 한 번만 묻고, 누르면 "기록했어요" 문구.
   날짜별 횟수를 DataStore `open_reasons`에 28일 보관(기기에만). 히스토리 '최근 7일 돌아보기'에 이유별 비율과 짧은 팁.
   "꼭 필요해서"를 눌러도 열어 주지는 않음(엄격 모드·잠금과 충돌 방지, 필요하면 다음 단계에서 결정).
+- 결과 카드 공유: 히스토리 '최근 7일 돌아보기'의 "결과 카드 공유"가 1080×1920 이미지(캐릭터·지난주 대비·연속 기록·이번 주 사용)를
+  만들어 추천 링크 문구와 함께 공유. 앱 이름은 그리지 않음. 캐시 `share/` 폴더만 FileProvider로 공유.
+- 미래의 나에게 한 줄: 규칙 편집에 60자 한 줄, 그 앱 차단 화면에 따옴표로 표시. DataStore `rule_notes`(기기에만, 백업 파일에는 미포함).
+- 앱 아이콘 길게 누르기 메뉴: "집중 시작"(마지막으로 고른 시간, 제한 앱이 없으면 앱 제한 탭으로), "오늘 사용 보기"(히스토리 탭).
+  동적 단축키라 앱 언어를 따르고 검증용 빌드에서도 동작.
 - Lint 정리(동작 변화 없음): UseKtx 6건(toUri·SharedPreferences.edit·createBitmap), 마스코트 깜박임 프레임을
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
@@ -35,6 +40,9 @@
 - 친구에게 보낸 링크로 설치하면 내 목표가 미리 골라져 있어 같이 도전할 수 있어요.
 - 처음 시작할 때 공부·업무·잠들기 전 중 내 상황을 고르면 맞춤 목표가 채워져요.
 - 차단 화면에서 왜 열려고 했는지 한 번 누르면, 히스토리에서 이번 주 이유를 모아 보여 드려요.
+- 이번 주 결과를 이미지 카드로 공유할 수 있어요.
+- 앱마다 미래의 나에게 한 줄을 적어 두면 차단 화면에 보여 드려요.
+- 앱 아이콘을 길게 눌러 바로 집중을 시작하거나 오늘 사용량을 볼 수 있어요.
 
 ### en
 - Phone and messaging apps are never blocked.
@@ -43,6 +51,9 @@
 - Install from a friend's link and their goals are already picked, so you can take the challenge together.
 - At first run, pick studying, work or bedtime and matching goals are filled in.
 - Tap why you wanted to open an app on the block screen, and History sums up this week's reasons.
+- Share your week as a picture card.
+- Write a line to future you for each app; it shows on the block screen.
+- Long-press the app icon to start a focus or see today's usage.
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 
