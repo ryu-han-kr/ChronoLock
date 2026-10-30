@@ -374,6 +374,8 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "대신 열 앱" to R.string.instead_title,
     "막혔을 때 차단 화면에서 바로 열 수 있는 다른 앱이에요. 전자책·단어장처럼 손이 가도 괜찮은 앱을 골라 보세요." to R.string.instead_hint,
     "없음" to R.string.instead_none,
+    "이번 주 집중 %1\$s · 끝까지 마친 집중 %2\$d번" to R.string.focus_week,
+    "이번 주 집중 %1\$s" to R.string.focus_week_card,
     "다시 시도" to R.string.billing_retry,
     "결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요." to R.string.error_billing,
     "오늘 %1\$s 남음" to R.string.rule_remaining,

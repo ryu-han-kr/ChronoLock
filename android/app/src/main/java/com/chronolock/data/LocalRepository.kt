@@ -331,11 +331,15 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         if (nowEpochMillis < until) null else until to dao.focusStartedBefore(until)
     }
 
-    suspend fun stopFocus(nowEpochMillis: Long) = mutex.withLock {
+    /** Stops a running focus; returns when it began, or null when none was running or its start is no longer kept. */
+    suspend fun stopFocus(nowEpochMillis: Long): Long? = mutex.withLock {
+        val running = dao.rules().any { (it.focusUntilEpochMillis ?: 0) > nowEpochMillis }
+        val started = if (running) dao.focusStartedBefore(nowEpochMillis) else null
         database.withTransaction {
             dao.stopFocus(); dao.deleteAnchor(ClockAnchors.FOCUS)
             dao.insertEvents(listOf(EventEntity(type = "FOCUS_CANCELLED", packageName = null, epochMillis = nowEpochMillis)))
         }
+        started
     }
 
     override suspend fun deleteRule(packageName: String) { requestDelete(packageName, 0, System.currentTimeMillis()) }

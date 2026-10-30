@@ -8,12 +8,16 @@
 - 대신 열 앱: 규칙 편집에서 앱 하나를 고르면(DataStore `rule_alternatives`) 그 앱의 차단 화면에 "대신 [앱] 열기" 버튼.
   누르면 그 앱을 열고 감시 상태를 비워 차단 화면이 물러남. 앱 이름은 대문자로 바꾸지 않음. 기기 테스트
   `DeviceBlockingTest.blockScreen_opensTheAppChosenInstead`(처음엔 차단 화면이 남아 실패 → 열고 나서 Foreground(null) 보내도록 고쳐 통과).
+- 집중 기록: 끝까지 마친 집중(시간 모으기 정산과 같은 순간)과 중간에 끈 집중(실제 시작~종료)을 DataStore `focus_log`에 60일 보관.
+  히스토리 '최근 7일 돌아보기'에 "이번 주 집중 X · 끝까지 마친 집중 N번", 결과 카드에 "이번 주 집중 X". `LocalRepository.stopFocus`가 시작 시각을 돌려줌.
 
 ### ko
 - 차단 화면에서 미리 골라 둔 다른 앱을 바로 열 수 있어요.
+- 이번 주 집중한 시간과 끝까지 마친 횟수를 보여 드려요.
 
 ### en
 - Open an app you picked instead, right from the block screen.
+- See how long you focused this week and how many focuses you finished.
 
 ## 0.19.0 (versionCode 29) — 2026-10-30 업로드 (내부·테스터들)
 

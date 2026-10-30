@@ -781,4 +781,6 @@
     <string name="instead_title">"代わりに開くアプリ"</string>
     <string name="instead_hint">"ブロック画面からすぐ開ける別のアプリです。電子書籍や単語帳など、手が伸びても大丈夫なアプリを選びましょう。"</string>
     <string name="instead_none">"なし"</string>
+    <string name="focus_week">"今週の集中 %1$s · 最後までやった集中 %2$d回"</string>
+    <string name="focus_week_card">"今週の集中 %1$s"</string>
 </resources>

@@ -9,6 +9,6 @@ import com.chronolock.domain.TimeBank
 internal object TimeBankStore {
     suspend fun settle(repository: LocalRepository, preferences: Preferences, nowEpochMillis: Long) {
         val (until, startedAt) = repository.finishedFocus(nowEpochMillis) ?: return
-        preferences.creditFocus(until) { credited -> TimeBank.earned(until, startedAt, credited, nowEpochMillis) }
+        preferences.creditFocus(until, startedAt) { credited -> TimeBank.earned(until, startedAt, credited, nowEpochMillis) }
     }
 }

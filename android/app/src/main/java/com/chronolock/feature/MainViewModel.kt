@@ -69,6 +69,8 @@ data class MainState(
     val notes: Map<String, String> = emptyMap(),
     /** The app offered instead on each limited app's block screen. */
     val alternatives: Map<String, String> = emptyMap(),
+    /** Focuses as they went over the last 60 days. */
+    val focusLog: List<com.chronolock.domain.FocusRun> = emptyList(),
     /** Reasons picked on the block screen, per day. */
     val openReasons: Map<java.time.LocalDate, Map<com.chronolock.domain.OpenReason, Int>> = emptyMap(),
     val nightTheme: AppTheme = AppTheme.DARK,
@@ -160,6 +162,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.openReasons) { data, reasons -> data.copy(openReasons = reasons) }
         .combine(preferences.notes) { data, notes -> data.copy(notes = notes) }
         .combine(preferences.alternatives) { data, alternatives -> data.copy(alternatives = alternatives) }
+        .combine(preferences.focusLog) { data, log -> data.copy(focusLog = log) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -172,7 +175,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, focusLog = data.focusLog, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -311,7 +314,7 @@ class MainViewModel @Inject constructor(
                     showError(if (scanned == null) "책상에 둔 QR을 찍어야 집중을 끝낼 수 있어요." else "이 기기의 집중 QR이 아니에요.")
                     return@launch
                 }
-                repository.stopFocus(now)
+                repository.stopFocus(now)?.let { runCatching { preferences.logStoppedFocus(it, now) } }
             }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { showError("집중 모드를 종료하지 못했습니다.") }

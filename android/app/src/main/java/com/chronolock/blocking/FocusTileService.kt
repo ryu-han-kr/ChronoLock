@@ -68,7 +68,7 @@ class FocusTileService : TileService() {
                     focusEnd(rules, now) != null && preferences.deskQr.first() != null -> openApp()
                     focusEnd(rules, now) != null -> if (preferences.strict.first().delayAt(clock) > 0 || preferences.lock.first().lockedAt(clock)) {
                         Toast.makeText(this@FocusTileService, localized.getString(R.string.strict_focus_locked), Toast.LENGTH_SHORT).show()
-                    } else repository.stopFocus(now)
+                    } else repository.stopFocus(now)?.let { runCatching { preferences.logStoppedFocus(it, now) } }
                     // Without a rule or the permissions a focus cannot start; the app explains what is missing.
                     rules.none { it.enabled } || !environment.hasUsageAccess() || !environment.accessibilityEnabled() -> openApp()
                     else -> { com.chronolock.data.TimeBankStore.settle(repository, preferences, now); repository.startFocus(preferences.focusMinutes.first(), now, clock) }

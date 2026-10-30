@@ -802,4 +802,6 @@
     <string name="instead_title">"App to open instead"</string>
     <string name="instead_hint">"Another app you can open right from the block screen. Pick one that\'s fine to reach for, like an e-book or a vocabulary app."</string>
     <string name="instead_none">"None"</string>
+    <string name="focus_week">"Focused %1$s this week · %2$d focuses finished"</string>
+    <string name="focus_week_card">"Focused %1$s this week"</string>
 </resources>

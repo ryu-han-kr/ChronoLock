@@ -823,4 +823,6 @@
     <string name="instead_title">"App alternativa"</string>
     <string name="instead_hint">"Otra app que puedes abrir desde la pantalla de bloqueo. Elige una que no te importe usar, como un lector de libros o de vocabulario."</string>
     <string name="instead_none">"Ninguna"</string>
+    <string name="focus_week">"Concentración esta semana: %1$s · %2$d terminadas"</string>
+    <string name="focus_week_card">"Concentración esta semana: %1$s"</string>
 </resources>
