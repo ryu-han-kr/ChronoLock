@@ -33,6 +33,9 @@
 - 충전하면 잘 시간 알림(설정, 기본 꺼짐): 접근성 서비스가 ACTION_POWER_CONNECTED를 받아 21:00~03:00에 하룻밤 한 번
   "잘 시간이에요" 알림. "아침까지 집중"을 누르면 다음 07:00까지 집중(`startFocusUntil`, 최대 12시간, 일반 집중은 계속 180분 제한).
   제한 앱이 없거나 이미 집중 중이면 묻지 않음. 위치 권한 불필요. 알림은 아침이 되면 사라짐.
+- 시간 모으기: 25분 이상 집중을 중간에 끄지 않고 끝내면 10분 적립(최대 30분, DataStore `time_bank_minutes`).
+  적립은 앱 열 때·집중 시작 직전·타일·밤 집중·6시간 주기 작업에서 정산(`TimeBankStore.settle`, FOCUS_STARTED 이벤트로 길이 확인).
+  오늘 탭 "모은 시간" 카드에서 앱 하나를 10분 쉬게 함(기존 '잠시 쉬기'와 같음: 엄격 모드·잠금이면 대기 후 적용). 하루 한도 자체는 안 바뀜.
 - Lint 정리(동작 변화 없음): UseKtx 6건(toUri·SharedPreferences.edit·createBitmap), 마스코트 깜박임 프레임을
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
@@ -47,6 +50,7 @@
 - 앱마다 미래의 나에게 한 줄을 적어 두면 차단 화면에 보여 드려요.
 - 앱 아이콘을 길게 눌러 바로 집중을 시작하거나 오늘 사용량을 볼 수 있어요.
 - 밤에 충전기를 꽂으면 아침까지 집중할지 물어볼 수 있어요(설정에서 켜기).
+- 25분 이상 집중을 끝까지 하면 10분을 모아, 앱 하나를 잠깐 쉬게 할 때 쓸 수 있어요.
 
 ### en
 - Phone and messaging apps are never blocked.
@@ -59,6 +63,7 @@
 - Write a line to future you for each app; it shows on the block screen.
 - Long-press the app icon to start a focus or see today's usage.
 - Plug in at night and ChronoLock can offer a focus until morning (turn it on in Settings).
+- Finish a focus of 25 minutes or more to bank 10 minutes, then use them to pause one app briefly.
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 

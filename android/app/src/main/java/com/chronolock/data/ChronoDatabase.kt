@@ -159,6 +159,9 @@ interface ChronoDao {
     @Upsert suspend fun saveCloses(rows: List<CloseEntity>)
     @Upsert suspend fun saveCheckpoint(row: CheckpointEntity)
     @Insert suspend fun insertEvents(rows: List<EventEntity>)
+    /** When the latest focus that started at or before [until] began; the time bank uses it for the focus's length. */
+    @Query("SELECT MAX(epochMillis) FROM app_usage_events WHERE type = 'FOCUS_STARTED' AND epochMillis <= :until")
+    suspend fun focusStartedBefore(until: Long): Long?
     @Query("DELETE FROM app_usage_events WHERE epochMillis < :before") suspend fun pruneEvents(before: Long)
     @Query("DELETE FROM daily_usage_stats WHERE date < :before") suspend fun pruneDaily(before: String)
     @Query("DELETE FROM blocking_rules") suspend fun clearRules()

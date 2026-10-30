@@ -70,6 +70,7 @@ internal fun ChronoScreen(
     selectMascot: (com.chronolock.data.MascotKind) -> Unit = {},
     setReduceMotion: (Boolean) -> Unit = {},
     setBedtime: (Boolean) -> Unit = {},
+    spendTimeBank: (String) -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
     addSite: (String, () -> Unit) -> Unit = { _, _ -> },
@@ -184,6 +185,8 @@ internal fun ChronoScreen(
                                         TextButton(onClick = { selectTab(1) }) { Text(tr("앱 추가")) }
                                     }
                                 }
+                                if (state.timeBank >= com.chronolock.domain.TimeBank.REWARD_MINUTES && state.rules.any { it.enabled })
+                                    item(span = { GridItemSpan(maxLineSpan) }) { TimeBankCard(state, spendTimeBank) }
                                 if (state.rules.isEmpty() && state.goals.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
                                     GoalStartCard(state.goals, pick = { choosePickRecipe(it); selectTab(1) }, addSites = addSitePreset)
                                 } else if (state.rules.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
@@ -524,6 +527,21 @@ private fun LayoutPreview(initialTab: Int) {
     ChronoTheme {
         ChronoScreen(state, today, 0, tab, { tab = it }, remember { SnackbarHostState() },
             { _, _ -> }, {}, {}, {}, {}, {})
+    }
+}
+
+/** Minutes earned by finishing focuses, spent as a 10-minute pause of one limited app. */
+@Composable
+private fun TimeBankCard(state: MainState, spend: (String) -> Unit) {
+    CardBox {
+        Text(tr("모은 시간 %1\$d분", state.timeBank), style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("time-bank"))
+        Text(tr("집중을 끝까지 해서 모았어요. 앱 하나를 10분 쉬게 할 수 있어요."), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            state.rules.filter { it.enabled }.forEach { rule ->
+                AssistChip(onClick = { spend(rule.packageName) }, label = { Text(rule.appName) },
+                    modifier = Modifier.testTag("bank-${rule.packageName}"))
+            }
+        }
     }
 }
 

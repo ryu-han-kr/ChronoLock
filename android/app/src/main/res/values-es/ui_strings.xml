@@ -783,4 +783,7 @@
     <string name="bedtime_body">"¿Activar la concentración hasta las 7:00 y dejar el móvil?"</string>
     <string name="bedtime_start">"Concentrarme hasta mañana"</string>
     <string name="bedtime_started">"Concentración activada hasta las 7:00. ¡Que descanses!"</string>
+    <string name="bank_title">"Tiempo ahorrado: %1$d min"</string>
+    <string name="bank_hint">"Ganado al completar concentraciones. Úsalo para pausar una app 10 minutos."</string>
+    <string name="bank_spent">"Usaste 10 minutos ahorrados."</string>
 </resources>

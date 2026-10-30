@@ -80,6 +80,26 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
         it[autoBackupAtKey] = atEpochMillis
         if (phoneFile != null) it[autoBackupFileKey] = phoneFile
     } }
+    private val bankKey = intPreferencesKey("time_bank_minutes")
+    private val bankCreditedKey = longPreferencesKey("time_bank_credited")
+    /** Minutes earned by finishing focuses; see [com.chronolock.domain.TimeBank]. */
+    val timeBank = context.preferences.data.map { it[bankKey] ?: 0 }
+    /** Banks what the focus ending at [until] earned, once; [earned] gets the end last counted. */
+    suspend fun creditFocus(until: Long, earned: (Long?) -> Int) { context.preferences.edit {
+        if (it[bankCreditedKey] == until) return@edit
+        val minutes = earned(it[bankCreditedKey])
+        it[bankCreditedKey] = until
+        if (minutes > 0) it[bankKey] = com.chronolock.domain.TimeBank.add(it[bankKey] ?: 0, minutes)
+    } }
+    /** Takes [minutes] out of the bank; false, and nothing taken, when it holds fewer. */
+    suspend fun spendTimeBank(minutes: Int): Boolean {
+        var spent = false
+        context.preferences.edit {
+            val bank = it[bankKey] ?: 0
+            if (bank >= minutes) { it[bankKey] = bank - minutes; spent = true }
+        }
+        return spent
+    }
     private val bedtimeKey = booleanPreferencesKey("bedtime_prompt")
     private val bedtimeNightKey = stringPreferencesKey("bedtime_night")
     /** Whether plugging in at night asks to focus until morning; off until the person turns it on. */

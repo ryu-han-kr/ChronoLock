@@ -741,4 +741,7 @@
     <string name="bedtime_body">"朝7時まで集中モードにして、スマホを置きませんか？"</string>
     <string name="bedtime_start">"朝まで集中"</string>
     <string name="bedtime_started">"朝7時まで集中モードにしました。おやすみなさい！"</string>
+    <string name="bank_title">"ためた時間 %1$d分"</string>
+    <string name="bank_hint">"集中を最後までやってためました。アプリを1つ10分休ませられます。"</string>
+    <string name="bank_spent">"ためた時間を10分使いました。"</string>
 </resources>

@@ -78,6 +78,7 @@ class BedtimeReceiver : BroadcastReceiver() {
             val message = try {
                 val clock = environment.clock()
                 val morning = Bedtime.morning(LocalDateTime.ofInstant(Instant.ofEpochMilli(clock.epochMillis), clock.zone))
+                TimeBankStore.settle(repository, preferences, clock.epochMillis)
                 repository.startFocusUntil(morning.atZone(clock.zone).toInstant().toEpochMilli(), clock.epochMillis, clock)
                 localized.getString(R.string.bedtime_started)
             } catch (error: Exception) {

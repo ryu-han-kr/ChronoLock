@@ -741,4 +741,7 @@
     <string name="bedtime_body">"开启专注到早上7点，放下手机吗？"</string>
     <string name="bedtime_start">"专注到早上"</string>
     <string name="bedtime_started">"已开启专注到早上7点。晚安！"</string>
+    <string name="bank_title">"已攒时间 %1$d 分钟"</string>
+    <string name="bank_hint">"坚持完成专注攒下的时间。可让一个应用暂停限制10分钟。"</string>
+    <string name="bank_spent">"已使用攒下的10分钟。"</string>
 </resources>
