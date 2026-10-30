@@ -199,6 +199,36 @@ class DeviceBlockingTest {
         } finally { runBlocking { preferences.setNote(target, "") } }
     }
 
+    @Test fun phonePlan_blocksAppsWithoutARule_duringAllowedOnlyTimes_andAtTheBudget() {
+        val preferences = com.chronolock.data.Preferences(context)
+        val now = java.time.LocalTime.now()
+        val around = com.chronolock.domain.ScheduleDraft("%02d:00".format(now.minusHours(1).hour), "%02d:00".format(now.plusHours(2).hour),
+            com.chronolock.domain.ScheduleDraft.EVERY_DAY)
+        try {
+            // No rule for the target at all: the plan alone covers it.
+            runBlocking { preferences.setPhonePlan(com.chronolock.data.PhonePlan(windows = listOf(around))) }
+            connect()
+            launch()
+            blocked("지금은 정해 둔 앱만 쓰는 시간이에요.")
+            capture("phone-plan-allowed-only")
+            home()
+
+            // Always allowed: the same app opens during the window.
+            runBlocking { preferences.setPhonePlan(com.chronolock.data.PhonePlan(windows = listOf(around), exempt = setOf(target))) }
+            SystemClock.sleep(500)
+            launch()
+            SystemClock.sleep(1500)
+            assertFalse("always-allowed app is not blocked", checkpoint()!!.wasBlocked)
+            home()
+
+            // A one-second budget for the whole phone runs out at once.
+            runBlocking { preferences.setPhonePlan(com.chronolock.data.PhonePlan(budgetSeconds = 1)) }
+            SystemClock.sleep(500)
+            launch()
+            blocked("오늘 휴대폰 전체 시간을 다 썼어요.")
+        } finally { runBlocking { preferences.setPhonePlan(com.chronolock.data.PhonePlan()) } }
+    }
+
     @Test fun blockScreen_opensTheAppChosenInstead() {
         val preferences = com.chronolock.data.Preferences(context)
         // ChronoLock itself stands in for an e-book app: it has a launcher screen and is never blocked.

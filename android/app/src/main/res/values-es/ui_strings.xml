@@ -835,4 +835,19 @@
     <string name="batch_title">"Agrupar notificaciones"</string>
     <string name="batch_hint">"Recibe juntas a las 12:00, 18:00 y 21:00 las notificaciones de las apps limitadas. Llamadas, alarmas y SMS llegan al momento. No se lee el contenido."</string>
     <string name="batch_access">"Permite el acceso a notificaciones para que funcione. Abrir ajustes"</string>
+    <string name="plan_title">"Límites de todo el móvil"</string>
+    <string name="plan_hint">"Límites que pones a todo el móvil, aparte de los de cada app. Las apps siempre permitidas, llamadas y SMS quedan fuera."</string>
+    <string name="plan_budget">"Total diario"</string>
+    <string name="plan_windows">"Horas solo con apps permitidas"</string>
+    <string name="plan_windows_hint">"En estas horas solo se abren las apps siempre permitidas. Pruébalo para estudiar, trabajar o antes de dormir."</string>
+    <string name="plan_add_window">"Añadir horario"</string>
+    <string name="plan_exempt">"Apps siempre permitidas"</string>
+    <string name="plan_exempt_pick">"Elegir apps siempre permitidas"</string>
+    <string name="plan_today">"Móvil hoy %1$s / %2$s"</string>
+    <string name="plan_start">"Inicio"</string>
+    <string name="plan_end">"Fin"</string>
+    <string name="plan_allowed_only">"Ahora solo están disponibles las apps que elegiste."</string>
+    <string name="plan_budget_used">"Ya usaste el tiempo total del móvil de hoy."</string>
+    <string name="plan_refused">"No puedes relajar los límites de todo el móvil con el modo estricto o un bloqueo activos."</string>
+    <string name="plan_saved">"Límites de todo el móvil guardados."</string>
 </resources>

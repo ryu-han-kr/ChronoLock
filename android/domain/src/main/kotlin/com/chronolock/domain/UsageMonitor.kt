@@ -30,20 +30,27 @@ data class MonitorState(
 data class UsageEvent(val type: String, val packageName: String?, val epochMillis: Long)
 data class MonitorUpdate(val state: MonitorState, val events: List<UsageEvent> = emptyList())
 
-/** Pure state machine. Its owner serializes calls and persists each update atomically. */
+/**
+ * Pure state machine. Its owner serializes calls and persists each update atomically. An app is watched when it has an
+ * enabled rule or the [PhonePolicy] covers it.
+ */
 class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
-    fun foreground(state: MonitorState, target: String?, now: ClockReading, rules: Map<String, AppRule>): MonitorUpdate {
-        if (state.observedPackage == target) return tick(state, now, rules)
+    private fun watched(target: String?, rules: Map<String, AppRule>, policy: PhonePolicy) =
+        target != null && (rules[target]?.enabled == true || policy.covers(target))
+
+    fun foreground(state: MonitorState, target: String?, now: ClockReading, rules: Map<String, AppRule>,
+                   policy: PhonePolicy = PhonePolicy.NONE): MonitorUpdate {
+        if (state.observedPackage == target) return tick(state, now, rules, policy)
         val paused = state.screenOffSession
-        if (paused != null && state.observedPackage == null && target == paused.packageName && rules[target]?.enabled == true) {
-            return tick(state.copy(observedPackage = target, active = paused, clock = now, screenOffSession = null), now, rules)
+        if (paused != null && state.observedPackage == null && target == paused.packageName && watched(target, rules, policy)) {
+            return tick(state.copy(observedPackage = target, active = paused, clock = now, screenOffSession = null), now, rules, policy)
         }
         val measured = measure(state, now)
         val events = mutableListOf<UsageEvent>()
         var next = close(measured, now, events).copy(observedPackage = target, decision = RuleDecision.Allow, blockedSession = null,
             screenOffSession = null)
-        if (target != null && rules[target]?.enabled == true) {
-            val decision = evaluate(next, target, now, rules)
+        if (target != null && watched(target, rules, policy)) {
+            val decision = evaluate(next, target, now, rules, policy)
             if (decision.denied) {
                 next = incrementBlocked(next, target, now).copy(decision = decision)
                 events += UsageEvent("BLOCK_TRIGGERED", target, now.epochMillis)
@@ -54,11 +61,11 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         return MonitorUpdate(next, events)
     }
 
-    fun tick(state: MonitorState, now: ClockReading, rules: Map<String, AppRule>): MonitorUpdate {
+    fun tick(state: MonitorState, now: ClockReading, rules: Map<String, AppRule>, policy: PhonePolicy = PhonePolicy.NONE): MonitorUpdate {
         var next = measure(state, now)
         val events = mutableListOf<UsageEvent>()
         val target = next.observedPackage ?: return MonitorUpdate(next)
-        val decision = evaluate(next, target, now, rules)
+        val decision = evaluate(next, target, now, rules, policy)
         if (decision.denied) {
             if (!next.decision.denied) {
                 next = next.copy(blockedSession = next.active ?: next.blockedSession)
@@ -68,8 +75,8 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
             }
             next = next.copy(decision = decision)
         } else {
-            if (next.active == null && rules[target]?.enabled == true) next = open(next, target, now, events)
-            if (rules[target]?.enabled != true) next = close(next, now, events)
+            if (next.active == null && watched(target, rules, policy)) next = open(next, target, now, events)
+            if (!watched(target, rules, policy)) next = close(next, now, events)
             next = next.copy(decision = RuleDecision.Allow, blockedSession = null)
         }
         return MonitorUpdate(next, events)
@@ -79,9 +86,9 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
      * The screen locked: stop measuring, but remember the session. If the next foreground app after unlocking is the
      * same one, [foreground] continues that session (no extra open, no cooldown, the session limit keeps counting).
      */
-    fun screenOff(state: MonitorState, now: ClockReading, rules: Map<String, AppRule>): MonitorUpdate {
+    fun screenOff(state: MonitorState, now: ClockReading, rules: Map<String, AppRule>, policy: PhonePolicy = PhonePolicy.NONE): MonitorUpdate {
         val paused = measure(state, now).active ?: state.screenOffSession
-        val update = foreground(state, null, now, rules)
+        val update = foreground(state, null, now, rules, policy)
         return update.copy(state = update.state.copy(screenOffSession = paused))
     }
 
@@ -100,12 +107,13 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
         recoveredUsage: Map<String, Long>,
         foregroundPackage: String?,
         rules: Map<String, AppRule>,
+        policy: PhonePolicy = PhonePolicy.NONE,
     ): MonitorUpdate {
         val sameBoot = loaded.clock?.let { it.bootId == now.bootId && it.elapsedMillis <= now.elapsedMillis } == true
         val sameForeground = sameBoot && foregroundPackage != null &&
             (loaded.observedPackage == foregroundPackage || loaded.active?.packageName == foregroundPackage)
         val daily = loaded.daily.toMutableMap()
-        recoveredUsage.filterKeys { rules[it]?.enabled == true }.forEach { (app, usage) ->
+        recoveredUsage.filterKeys { watched(it, rules, policy) }.forEach { (app, usage) ->
             // Recovery runs only in a new service instance, and the blocking overlay dies with the old one. Usage after the
             // checkpoint (written every second while the screen is on) was therefore real use without the overlay, so it counts
             // even for an app that was blocked; at most the last tick's second overlaps the overlay.
@@ -113,28 +121,31 @@ class UsageMonitor(private val engine: RuleEngine = RuleEngine()) {
             val existing = daily[key] ?: DailyUsage()
             daily[key] = existing.copy(usageMillis = existing.usageMillis + usage.coerceAtLeast(0))
         }
-        return if (sameForeground && rules[foregroundPackage]?.enabled == true) {
+        return if (sameForeground && watched(foregroundPackage, rules, policy)) {
             val active = loaded.active?.let {
                 it.copy(usageMillis = it.usageMillis + (recoveredUsage[it.packageName] ?: 0).coerceAtLeast(0))
             }
-            val restored = tick(loaded.copy(active = active, daily = daily, clock = now, observedPackage = foregroundPackage), now, rules)
+            val restored = tick(loaded.copy(active = active, daily = daily, clock = now, observedPackage = foregroundPackage), now, rules, policy)
             restored.copy(events = listOf(UsageEvent("MONITORING_RESUMED", null, now.epochMillis)) + restored.events)
         } else {
             val resumed = reconnect(loaded.copy(daily = daily), now)
-            val opened = foreground(resumed.state, foregroundPackage, now, rules)
+            val opened = foreground(resumed.state, foregroundPackage, now, rules, policy)
             opened.copy(events = resumed.events + opened.events)
         }
     }
 
-    private fun evaluate(state: MonitorState, target: String, now: ClockReading, rules: Map<String, AppRule>): RuleDecision {
+    private fun evaluate(state: MonitorState, target: String, now: ClockReading, rules: Map<String, AppRule>, policy: PhonePolicy): RuleDecision {
         val daily = state.daily[DailyKey(target, now.date)] ?: DailyUsage()
         val rule = rules[target]
         val groups = rule?.groups.orEmpty().associate { it.id to state.copy(clock = now).groupUsage(it) }
-        return engine.evaluate(RuleContext(
+        val own = engine.evaluate(RuleContext(
             now.epochMillis, now.zone, daily.usageMillis, state.active?.usageMillis ?: state.blockedSession?.usageMillis ?: 0,
             daily.opens, state.active == null, state.lastClosed[target]?.age(now),
             groupUsage = groups,
         ), rule)
+        // The phone-wide limits block on their own; a pause of the app's rule does not lift them.
+        val phone = policy.reasons(target, now, state.daily)
+        return if (phone.isEmpty()) own else RuleDecision(DecisionType.BLOCK, (own.reasons + phone).distinct())
     }
 
     private fun open(state: MonitorState, target: String, now: ClockReading, events: MutableList<UsageEvent>): MonitorState {

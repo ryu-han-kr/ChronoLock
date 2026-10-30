@@ -793,4 +793,19 @@
     <string name="batch_title">"알림 모아 보기"</string>
     <string name="batch_hint">"제한한 앱의 알림을 12시·18시·21시에 모아서 받아요. 전화·알람·문자는 바로 와요. 알림 내용은 읽지 않아요."</string>
     <string name="batch_access">"알림 접근을 허용해야 동작해요. 설정 열기"</string>
+    <string name="plan_title">"휴대폰 전체 한도"</string>
+    <string name="plan_hint">"앱마다 정하는 한도와 별개로 휴대폰 전체에 내가 정하는 한도예요. 항상 허용한 앱과 전화·문자는 빠져요."</string>
+    <string name="plan_budget">"하루 전체 시간"</string>
+    <string name="plan_windows">"허용한 앱만 쓰는 시간"</string>
+    <string name="plan_windows_hint">"이 시간에는 항상 허용한 앱만 열려요. 공부·업무 시간이나 잠들기 전에 써 보세요."</string>
+    <string name="plan_add_window">"시간대 추가"</string>
+    <string name="plan_exempt">"항상 허용 앱"</string>
+    <string name="plan_exempt_pick">"항상 허용 앱 고르기"</string>
+    <string name="plan_today">"오늘 휴대폰 %1$s / %2$s"</string>
+    <string name="plan_start">"시작"</string>
+    <string name="plan_end">"끝"</string>
+    <string name="plan_allowed_only">"지금은 정해 둔 앱만 쓰는 시간이에요."</string>
+    <string name="plan_budget_used">"오늘 휴대폰 전체 시간을 다 썼어요."</string>
+    <string name="plan_refused">"엄격 모드나 잠금 중에는 휴대폰 전체 한도를 느슨하게 바꿀 수 없어요."</string>
+    <string name="plan_saved">"휴대폰 전체 한도를 저장했어요."</string>
 </resources>

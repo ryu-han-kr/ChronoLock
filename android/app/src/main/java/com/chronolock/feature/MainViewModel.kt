@@ -75,6 +75,8 @@ data class MainState(
     val starterDone: Boolean = true,
     /** Limited apps' notifications are held until the delivery times. */
     val batchNotifications: Boolean = false,
+    /** Limits over the whole phone the person set for themselves. */
+    val phonePlan: com.chronolock.data.PhonePlan = com.chronolock.data.PhonePlan(),
     /** Reasons picked on the block screen, per day. */
     val openReasons: Map<java.time.LocalDate, Map<com.chronolock.domain.OpenReason, Int>> = emptyMap(),
     val nightTheme: AppTheme = AppTheme.DARK,
@@ -169,6 +171,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.focusLog) { data, log -> data.copy(focusLog = log) }
         .combine(preferences.starterDone) { data, done -> data.copy(starterDone = done) }
         .combine(preferences.batchNotifications) { data, batch -> data.copy(batchNotifications = batch) }
+        .combine(preferences.phonePlan) { data, plan -> data.copy(phonePlan = plan) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -181,7 +184,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, focusLog = data.focusLog, starterDone = data.starterDone, batchNotifications = data.batchNotifications, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, focusLog = data.focusLog, starterDone = data.starterDone, batchNotifications = data.batchNotifications, phonePlan = data.phonePlan, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -383,6 +386,20 @@ class MainViewModel @Inject constructor(
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
     fun setBedtime(on: Boolean) = viewModelScope.launch { preferences.setBedtime(on) }
     fun setBatchNotifications(on: Boolean) = viewModelScope.launch { preferences.setBatchNotifications(on) }
+
+    /** Saves the phone-wide plan; under strict mode or a lock a change that loosens it is refused, tightening always goes. */
+    fun savePhonePlan(next: com.chronolock.data.PhonePlan) = viewModelScope.launch {
+        try {
+            val clock = environment.clock()
+            val holding = locked(clock.epochMillis) || preferences.strict.first().delayAt(clock) > 0
+            if (holding && preferences.phonePlan.first().loosenedBy(next)) {
+                showError("엄격 모드나 잠금 중에는 휴대폰 전체 한도를 느슨하게 바꿀 수 없어요."); return@launch
+            }
+            preferences.setPhonePlan(next)
+            showError("휴대폰 전체 한도를 저장했어요.")
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
     fun setExam(exam: com.chronolock.domain.Exam?) = viewModelScope.launch {
         try { preferences.setExam(exam) }
         catch (cancelled: CancellationException) { throw cancelled }
