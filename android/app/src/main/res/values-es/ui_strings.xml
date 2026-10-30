@@ -819,4 +819,8 @@
     <string name="risky_title">"Tus horas de más uso"</string>
     <string name="risky_body">"Cada día %1$s:00–%2$s:00 · sobre todo %3$s (%4$s en los últimos 7 días)"</string>
     <string name="risky_block">"Bloquear estas horas"</string>
+    <string name="instead_open">"Abrir %1$s en su lugar"</string>
+    <string name="instead_title">"App alternativa"</string>
+    <string name="instead_hint">"Otra app que puedes abrir desde la pantalla de bloqueo. Elige una que no te importe usar, como un lector de libros o de vocabulario."</string>
+    <string name="instead_none">"Ninguna"</string>
 </resources>

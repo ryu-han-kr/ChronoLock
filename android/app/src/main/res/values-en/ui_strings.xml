@@ -798,4 +798,8 @@
     <string name="risky_title">"Your busiest hours"</string>
     <string name="risky_body">"Daily %1$s:00–%2$s:00 · mostly %3$s (%4$s in the last 7 days)"</string>
     <string name="risky_block">"Block these hours"</string>
+    <string name="instead_open">"Open %1$s instead"</string>
+    <string name="instead_title">"App to open instead"</string>
+    <string name="instead_hint">"Another app you can open right from the block screen. Pick one that\'s fine to reach for, like an e-book or a vocabulary app."</string>
+    <string name="instead_none">"None"</string>
 </resources>

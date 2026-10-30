@@ -777,4 +777,8 @@
     <string name="risky_title">"いちばん使う時間帯"</string>
     <string name="risky_body">"毎日%1$s時〜%2$s時 · 主に%3$s（過去7日 %4$s）"</string>
     <string name="risky_block">"この時間をブロック"</string>
+    <string name="instead_open">"代わりに%1$sを開く"</string>
+    <string name="instead_title">"代わりに開くアプリ"</string>
+    <string name="instead_hint">"ブロック画面からすぐ開ける別のアプリです。電子書籍や単語帳など、手が伸びても大丈夫なアプリを選びましょう。"</string>
+    <string name="instead_none">"なし"</string>
 </resources>

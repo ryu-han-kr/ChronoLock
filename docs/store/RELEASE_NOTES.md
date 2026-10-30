@@ -2,6 +2,19 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 다음 출시 (미출시)
+
+이번에 바뀐 것 (내부 기록):
+- 대신 열 앱: 규칙 편집에서 앱 하나를 고르면(DataStore `rule_alternatives`) 그 앱의 차단 화면에 "대신 [앱] 열기" 버튼.
+  누르면 그 앱을 열고 감시 상태를 비워 차단 화면이 물러남. 앱 이름은 대문자로 바꾸지 않음. 기기 테스트
+  `DeviceBlockingTest.blockScreen_opensTheAppChosenInstead`(처음엔 차단 화면이 남아 실패 → 열고 나서 Foreground(null) 보내도록 고쳐 통과).
+
+### ko
+- 차단 화면에서 미리 골라 둔 다른 앱을 바로 열 수 있어요.
+
+### en
+- Open an app you picked instead, right from the block screen.
+
 ## 0.19.0 (versionCode 29) — 2026-10-30 업로드 (내부·테스터들)
 
 AAB: `release/chronolock-0.19.0-vc29.aab`. Pro 구분은 꺼진 빌드. PR #125~#129. Play API로 업로드(commit 10807039866235815958), ko-KR·en-US 노트.

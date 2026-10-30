@@ -119,6 +119,14 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     /** The evening last asked about, so each night asks once. */
     val bedtimeNight = context.preferences.data.map { prefs -> prefs[bedtimeNightKey]?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() } }
     suspend fun bedtimeAsked(night: java.time.LocalDate) { context.preferences.edit { it[bedtimeNightKey] = night.toString() } }
+    private val alternativesKey = stringPreferencesKey("rule_alternatives")
+    /** Per limited app, another app the block screen offers to open instead (package names). */
+    val alternatives = context.preferences.data.map { decodeNotes(it[alternativesKey]) }
+    suspend fun setAlternative(packageName: String, alternative: String?) { context.preferences.edit {
+        val map = decodeNotes(it[alternativesKey]).toMutableMap()
+        if (alternative.isNullOrBlank() || alternative == packageName) map.remove(packageName) else map[packageName] = alternative
+        it[alternativesKey] = org.json.JSONObject(map as Map<*, *>).toString()
+    } }
     private val notesKey = stringPreferencesKey("rule_notes")
     /** A line per app the person wrote to themselves, shown on that app's block screen. */
     val notes = context.preferences.data.map { decodeNotes(it[notesKey]) }
