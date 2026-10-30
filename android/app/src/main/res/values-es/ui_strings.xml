@@ -811,10 +811,12 @@
     <string name="partner_hint">"La app crea un código y se lo envías a un amigo al empezar. Pídeselo cuando de verdad necesites desbloquear; aun sin él, al cumplir la meta lo reúnes por partes."</string>
     <string name="partner_locked_hint">"Con el código que enviaste a tu amigo puedes desbloquear antes de la meta. Reunir todas las partes también lo desbloquea."</string>
     <string name="partner_field">"Código de tu amigo"</string>
-    <string name="partner_message">"Mi código de bloqueo de ChronoLock: %1$s
-Si te lo pido, pregúntame una vez si de verdad lo necesito."</string>
+    <string name="partner_message">"Mi código de bloqueo de ChronoLock: %1$s\nSi te lo pido, pregúntame una vez si de verdad lo necesito."</string>
     <string name="partner_title">"Enviar el código a un amigo"</string>
     <string name="partner_once">"Solo puedes enviar este código ahora. Si no lo haces, solo se abrirá cuando cumplas la meta y reúnas todas las partes."</string>
     <string name="partner_send">"Enviar a un amigo"</string>
     <string name="partner_skip">"No enviar"</string>
+    <string name="risky_title">"Tus horas de más uso"</string>
+    <string name="risky_body">"Cada día %1$02d:00–%2$02d:00 · sobre todo %3$s (%4$s en los últimos 7 días)"</string>
+    <string name="risky_block">"Bloquear estas horas"</string>
 </resources>

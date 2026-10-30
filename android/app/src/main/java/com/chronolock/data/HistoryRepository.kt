@@ -69,6 +69,18 @@ class HistoryRepository @Inject constructor(
         refreshYear(now, zone)
     } }
 
+    /**
+     * The two hours of the day an app took the most time over the last week, from the kept raw events, among apps with
+     * recorded use (launchers and ChronoLock itself left out); null when nothing stands out.
+     */
+    suspend fun riskyWindow(now: Long, zone: ZoneId = ZoneId.systemDefault()): RiskyWindow? = mutex.withLock { withContext(Dispatchers.IO) {
+        val from = now - 7 * DAY
+        val since = java.time.Instant.ofEpochMilli(from).atZone(zone).toLocalDate().toString()
+        val apps = dao.daily().filter { it.date >= since }.map { it.packageName }.toSet() - context.packageName
+        val events = dao.events().filter { it.at >= from - DAY }.map { HistoryEvent(it.at, HistoryEventType.valueOf(it.type), it.app, it.activity) }
+        riskyWindow(hourlyUsage(events, from, now, zone), apps)
+    } }
+
     /** Copies each retained day's total into the year table, then drops what is older than a year. */
     internal suspend fun refreshYear(now: Long, zone: ZoneId) {
         val today = java.time.Instant.ofEpochMilli(now).atZone(zone).toLocalDate()

@@ -769,10 +769,12 @@
     <string name="partner_hint">"アプリが作ったパスワードを開始時に友だちへ送ります。本当に必要なときは友だちにもらって解除でき、友だちがいなくても目標を達成すればかけらで集まります。"</string>
     <string name="partner_locked_hint">"友だちに送ったパスワードがあれば目標前でも解除できます。かけらを全部集めても解除できます。"</string>
     <string name="partner_field">"友だちにもらったパスワード"</string>
-    <string name="partner_message">"ChronoLockの目標ロックのパスワードです：%1$s
-解除してと頼んだら、本当に必要か一度聞いてください。"</string>
+    <string name="partner_message">"ChronoLockの目標ロックのパスワードです：%1$s\n解除してと頼んだら、本当に必要か一度聞いてください。"</string>
     <string name="partner_title">"友だちにパスワードを送る"</string>
     <string name="partner_once">"このパスワードを送れるのは今だけです。送らない場合は、目標を達成してかけらを集めないと解除できません。"</string>
     <string name="partner_send">"友だちに送る"</string>
     <string name="partner_skip">"送らない"</string>
+    <string name="risky_title">"いちばん使う時間帯"</string>
+    <string name="risky_body">"毎日%1$02d時〜%2$02d時 · 主に%3$s（過去7日 %4$s）"</string>
+    <string name="risky_block">"この時間をブロック"</string>
 </resources>

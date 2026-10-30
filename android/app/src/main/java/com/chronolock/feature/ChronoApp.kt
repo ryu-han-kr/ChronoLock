@@ -70,6 +70,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
     /** 0 creates a new group. */
     var editGroupId by rememberSaveable { mutableStateOf<Long?>(null) }
     var suggestedRecipe by rememberSaveable { mutableStateOf<String?>(null) }
+    /** A blocking window from History's busiest hours, as "HH:MM-HH:MM", added to the rule being edited. */
+    var suggestedSchedule by rememberSaveable { mutableStateOf<String?>(null) }
     /** A recipe chosen from the Today suggestions; the next app picked in the app list opens with it. */
     var pickRecipe by rememberSaveable { mutableStateOf<String?>(null) }
     var permissionDialog by rememberSaveable { mutableStateOf<Boolean?>(null) }
@@ -132,7 +134,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
-                edit = { app, recipe -> editPackage = app; suggestedRecipe = (recipe ?: pickRecipe?.let(RuleRecipe::valueOf))?.name; pickRecipe = null },
+                edit = { app, recipe -> editPackage = app; suggestedSchedule = null; suggestedRecipe = (recipe ?: pickRecipe?.let(RuleRecipe::valueOf))?.name; pickRecipe = null },
+                blockHours = { app, window -> suggestedRecipe = null; suggestedSchedule = window.start + "-" + window.end; editPackage = app },
                 pickRecipe = pickRecipe?.let(RuleRecipe::valueOf), choosePickRecipe = { pickRecipe = it?.name },
                 startFocus = { confirmFocus = it }, stopFocus = {
                     // With the desk QR on, the scanned text decides; closing the scanner leaves the focus running.
@@ -175,6 +178,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                     onSave = { rule, finished -> model.save(rule, { editPackage = null }, finished) },
                     onDelete = { model.remove(appId) { editPackage = null } },
                     initialRecipe = suggestedRecipe?.let(RuleRecipe::valueOf), strictMinutes = state.strict.delayAt(nowEpoch),
+                    initialSchedule = suggestedSchedule?.split('-')?.let { com.chronolock.domain.ScheduleDraft(it[0], it[1], com.chronolock.domain.ScheduleDraft.EVERY_DAY) },
                     note = state.notes[appId].orEmpty(), saveNote = { model.saveNote(appId, it) }) }
             }
             editGroupId?.let { id ->
@@ -324,9 +328,14 @@ internal val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
 @Composable
 internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> Unit,
     onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null, strictMinutes: Int = 0,
-    note: String = "", saveNote: (String) -> Unit = {}) {
+    note: String = "", saveNote: (String) -> Unit = {}, initialSchedule: com.chronolock.domain.ScheduleDraft? = null) {
     var noteText by rememberSaveable { mutableStateOf(note) }
     var draft by rememberSaveable(stateSaver = RuleDraftSaver) { mutableStateOf(when {
+        // Busiest hours from History: their window joins the app's schedules; a new rule gets no daily limit of its own.
+        initialSchedule != null -> (saved?.toDomain()?.let(RuleDraft::from) ?: RuleDraft(daily = "")).let { current ->
+            current.copy(scheduleEnabled = true, schedules = ((if (current.scheduleEnabled) current.schedules else emptyList()) + initialSchedule)
+                .distinct().take(com.chronolock.domain.AppRule.MAX_SCHEDULES))
+        }
         saved != null && initialRecipe != null -> suggestedDraft(saved.toDomain(), initialRecipe)
         initialRecipe != null -> initialRecipe.draft // Suggested from history for an app that has no rule yet.
         else -> saved?.toDomain()?.let(RuleDraft::from) ?: RuleDraft()
@@ -626,7 +635,8 @@ private fun WeekDots(days: List<Pair<LocalDate, DayResult>>) {
 }
 
 @Composable
-internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (String, RuleRecipe) -> Unit) {
+internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, blockHours: (String, com.chronolock.domain.ScheduleDraft) -> Unit = { _, _ -> },
+    review: (String, RuleRecipe) -> Unit) {
     val firstDay = today.minusDays(6).toString()
     val records = state.daily.filter { it.date >= firstDay && it.date <= today.toString() }
     val totals = records.groupBy { it.date }.mapValues { (_, rows) -> rows.sumOf { it.usageMillis } }
@@ -702,6 +712,16 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, review: (Str
             else if (shares.first().first == com.chronolock.domain.OpenReason.NOTIFICATION)
                 Text(tr("알림이 가장 많이 불렀어요. 그 앱의 알림을 줄여 보세요."),
                     color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+        }
+        // The two hours one app takes the most, offered as a daily blocking schedule.
+        state.riskyWindow?.let { window ->
+            val name = state.history.firstOrNull { it.packageName == window.app }?.appName ?: window.app
+            Column(Modifier.testTag("risky-hours"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(tr("가장 많이 쓰는 시간대"), style = MaterialTheme.typography.titleSmall)
+                Text(tr("매일 %1\$02d시~%2\$02d시 · 주로 %3\$s (지난 7일 %4\$s)", window.startHour, window.endHour, name, duration(window.millis / 1000)),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                OutlinedButton(onClick = { blockHours(window.app, window.scheduleDraft()) }, modifier = Modifier.testTag("risky-block")) { Text(tr("이 시간 막기")) }
+            }
         }
         Text(tr("기록된 사용 %1\$s · %2\$d회 실행", duration(records.sumOf { it.usageMillis } / 1000), records.sumOf { it.opens }), color = MaterialTheme.colorScheme.primary)
         (6L downTo 0L).forEach { offset ->

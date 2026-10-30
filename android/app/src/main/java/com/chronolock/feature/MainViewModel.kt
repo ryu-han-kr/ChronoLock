@@ -63,6 +63,8 @@ data class MainState(
     val requestedTab: Int? = null,
     /** A partner goal lock's code, held only until the person sends it to their friend. */
     val partnerCode: String? = null,
+    /** The hours of the day one app took the most time last week, offered for a blocking schedule. */
+    val riskyWindow: com.chronolock.domain.RiskyWindow? = null,
     /** Lines to oneself per app, shown on its block screen. */
     val notes: Map<String, String> = emptyMap(),
     /** Reasons picked on the block screen, per day. */
@@ -193,6 +195,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 historyRepository.collect()
+                val window = runCatching { historyRepository.riskyWindow(System.currentTimeMillis()) }.getOrNull()
+                local.update { it.copy(riskyWindow = window) }
                 // The background job may be deferred for days on battery-saving devices; opening the app sends a due report.
                 runCatching { com.chronolock.data.WeeklyReport.maybeNotify(environment.context, historyRepository, preferences) }
             }

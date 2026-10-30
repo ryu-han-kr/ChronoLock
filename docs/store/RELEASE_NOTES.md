@@ -13,16 +13,21 @@
   "수능까지 D-20". 남은 날 14일 이하면 "한도 줄이러 가기"로 앱 제한 탭 이동(자동으로 줄이지 않음). 시험 다음 날부터 표시 안 함.
 - 목표 잠금 '친구 비밀번호': 조각 비밀번호와 같은 코드를 만들어 시작 직후 한 번만 공유 창으로 친구에게 보냄(화면에 번호를 보여 주지 않음).
   친구 코드로는 목표 전에도 풀 수 있고(`LockSetting.canUnlock`), 친구가 없어도 조각을 다 모으면 풀림. 엄격 모드 대기 로직은 건드리지 않음.
+- 가장 많이 쓰는 시간대: 히스토리가 보관 중인 원시 이벤트(10일)로 지난 7일 앱별·시간별 사용을 계산(`hourlyUsage`),
+  한 앱이 가장 많이 쓴 연속 2시간(합계 1시간 이상)을 '최근 7일 돌아보기'에 표시. "이 시간 막기"는 그 앱 편집기를 매일 그 시간 예약이
+  켜진 상태로 엶(새 규칙이면 하루 한도 없이). 런처·ChronoLock 자신 제외.
 
 ### ko
 - 책상에 붙인 QR을 찍어야만 집중을 끝낼 수 있게 할 수 있어요(설정에서 켜기).
 - 시험 날짜를 정하면 오늘 화면과 차단 화면에 D-day를 보여 드려요.
 - 목표 잠금 비밀번호를 친구에게 맡길 수 있어요.
+- 가장 많이 쓰는 시간대를 찾아 한 번에 막을 수 있어요.
 
 ### en
 - Optionally require scanning a QR on your desk to end a focus (Settings).
 - Set an exam date to see a D-day countdown on Today and the block screen.
 - Let a friend hold your goal lock code.
+- See your busiest hours and block them in one tap.
 
 ## 0.18.0 (versionCode 28) — 2026-10-30 업로드 (내부·테스터들)
 
