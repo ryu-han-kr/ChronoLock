@@ -817,6 +817,6 @@
     <string name="partner_send">"Enviar a un amigo"</string>
     <string name="partner_skip">"No enviar"</string>
     <string name="risky_title">"Tus horas de más uso"</string>
-    <string name="risky_body">"Cada día %1$02d:00–%2$02d:00 · sobre todo %3$s (%4$s en los últimos 7 días)"</string>
+    <string name="risky_body">"Cada día %1$s:00–%2$s:00 · sobre todo %3$s (%4$s en los últimos 7 días)"</string>
     <string name="risky_block">"Bloquear estas horas"</string>
 </resources>

@@ -796,6 +796,6 @@
     <string name="partner_send">"Send to a friend"</string>
     <string name="partner_skip">"Don't send"</string>
     <string name="risky_title">"Your busiest hours"</string>
-    <string name="risky_body">"Daily %1$02d:00–%2$02d:00 · mostly %3$s (%4$s in the last 7 days)"</string>
+    <string name="risky_body">"Daily %1$s:00–%2$s:00 · mostly %3$s (%4$s in the last 7 days)"</string>
     <string name="risky_block">"Block these hours"</string>
 </resources>

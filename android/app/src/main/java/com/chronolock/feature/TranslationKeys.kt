@@ -368,7 +368,7 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "친구에게 보내기" to R.string.partner_send,
     "보내지 않기" to R.string.partner_skip,
     "가장 많이 쓰는 시간대" to R.string.risky_title,
-    "매일 %1\$02d시~%2\$02d시 · 주로 %3\$s (지난 7일 %4\$s)" to R.string.risky_body,
+    "매일 %1\$s시~%2\$s시 · 주로 %3\$s (지난 7일 %4\$s)" to R.string.risky_body,
     "이 시간 막기" to R.string.risky_block,
     "다시 시도" to R.string.billing_retry,
     "결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요." to R.string.error_billing,

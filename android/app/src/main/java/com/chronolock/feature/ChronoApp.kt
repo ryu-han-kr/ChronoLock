@@ -718,7 +718,7 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, blockHours: 
             val name = state.history.firstOrNull { it.packageName == window.app }?.appName ?: window.app
             Column(Modifier.testTag("risky-hours"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(tr("가장 많이 쓰는 시간대"), style = MaterialTheme.typography.titleSmall)
-                Text(tr("매일 %1\$02d시~%2\$02d시 · 주로 %3\$s (지난 7일 %4\$s)", window.startHour, window.endHour, name, duration(window.millis / 1000)),
+                Text(tr("매일 %1\$s시~%2\$s시 · 주로 %3\$s (지난 7일 %4\$s)", "%02d".format(window.startHour), "%02d".format(window.endHour), name, duration(window.millis / 1000)),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                 OutlinedButton(onClick = { blockHours(window.app, window.scheduleDraft()) }, modifier = Modifier.testTag("risky-block")) { Text(tr("이 시간 막기")) }
             }

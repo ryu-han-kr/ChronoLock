@@ -775,6 +775,6 @@
     <string name="partner_send">"发给朋友"</string>
     <string name="partner_skip">"不发送"</string>
     <string name="risky_title">"使用最多的时段"</string>
-    <string name="risky_body">"每天 %1$02d点~%2$02d点 · 主要是 %3$s（过去7天 %4$s）"</string>
+    <string name="risky_body">"每天 %1$s点~%2$s点 · 主要是 %3$s（过去7天 %4$s）"</string>
     <string name="risky_block">"屏蔽这个时段"</string>
 </resources>

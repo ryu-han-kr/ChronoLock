@@ -775,6 +775,6 @@
     <string name="partner_send">"友だちに送る"</string>
     <string name="partner_skip">"送らない"</string>
     <string name="risky_title">"いちばん使う時間帯"</string>
-    <string name="risky_body">"毎日%1$02d時〜%2$02d時 · 主に%3$s（過去7日 %4$s）"</string>
+    <string name="risky_body">"毎日%1$s時〜%2$s時 · 主に%3$s（過去7日 %4$s）"</string>
     <string name="risky_block">"この時間をブロック"</string>
 </resources>

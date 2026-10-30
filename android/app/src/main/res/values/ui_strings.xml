@@ -775,6 +775,6 @@
     <string name="partner_send">"친구에게 보내기"</string>
     <string name="partner_skip">"보내지 않기"</string>
     <string name="risky_title">"가장 많이 쓰는 시간대"</string>
-    <string name="risky_body">"매일 %1$02d시~%2$02d시 · 주로 %3$s (지난 7일 %4$s)"</string>
+    <string name="risky_body">"매일 %1$s시~%2$s시 · 주로 %3$s (지난 7일 %4$s)"</string>
     <string name="risky_block">"이 시간 막기"</string>
 </resources>
