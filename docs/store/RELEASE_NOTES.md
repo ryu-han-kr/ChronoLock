@@ -2,7 +2,11 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 다음 출시 (미출시)
+## 0.19.0 (versionCode 29) — 2026-10-30 업로드 (내부·테스터들)
+
+AAB: `release/chronolock-0.19.0-vc29.aab`. Pro 구분은 꺼진 빌드. PR #125~#129. Play API로 업로드(commit 10807039866235815958), ko-KR·en-US 노트.
+업로드 전 태블릿 기기 테스트 148건 중 LocalizationTest 1건 실패(시간대 문구의 %1$02d를 검사가 숫자 자리로 못 알아봄) →
+문구를 %1$s로 바꾸고 시간을 코드에서 두 자리로 맞춤 → LocalizationTest·LocalizedAppTest·RiskyHoursUiTest 재실행 통과 후 AAB 다시 빌드.
 
 이번에 바뀐 것 (내부 기록):
 - 책상 QR로만 집중 끄기(설정, 기본 꺼짐, #125): 켜면 기기에서 무작위 비밀값을 만들고(`desk_qr_secret`) QR 이미지를 보여 주며
