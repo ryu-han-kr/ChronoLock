@@ -2,9 +2,9 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 0.18.0 (versionCode 28) — 2026-10-30 AAB 빌드 (업로드 전)
+## 0.18.0 (versionCode 28) — 2026-10-30 업로드 (내부·테스터들)
 
-AAB: `release/chronolock-0.18.0-vc28.aab`. Pro 구분은 꺼진 빌드. PR #109~#121.
+AAB: `release/chronolock-0.18.0-vc28.aab`. Pro 구분은 꺼진 빌드. PR #109~#121. Play API로 업로드(commit 00260744706696103753), ko-KR·en-US 노트.
 
 이번에 바뀐 것 (내부 기록):
 - 문자 앱(기본 SMS 앱, 삼성 메시지·Google 메시지·AOSP mms)을 전화처럼 안전 앱으로 처리. 제한 대상 목록에 나오지 않고,
