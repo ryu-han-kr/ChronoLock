@@ -808,4 +808,6 @@
     <string name="plan_budget_used">"今天的全机时长已用完。"</string>
     <string name="plan_refused">"严格模式或锁定期间无法放宽全机限制。"</string>
     <string name="plan_saved">"已保存全机限制。"</string>
+    <string name="weekend_limit">"周末每日允许时长"</string>
+    <string name="weekend_hint">"留空则周末也使用上面的限额。"</string>
 </resources>

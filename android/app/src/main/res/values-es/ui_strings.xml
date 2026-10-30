@@ -850,4 +850,6 @@
     <string name="plan_budget_used">"Ya usaste el tiempo total del móvil de hoy."</string>
     <string name="plan_refused">"No puedes relajar los límites de todo el móvil con el modo estricto o un bloqueo activos."</string>
     <string name="plan_saved">"Límites de todo el móvil guardados."</string>
+    <string name="weekend_limit">"Tiempo diario el fin de semana"</string>
+    <string name="weekend_hint">"Déjalo vacío para usar el mismo límite el fin de semana."</string>
 </resources>

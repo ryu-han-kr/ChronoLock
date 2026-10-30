@@ -39,6 +39,8 @@ data class RuleDraft(
     /** 0 means off. */
     val pauseSeconds: Int = 0,
     val checkInMinutes: Int = 0,
+    /** Seconds for Saturday and Sunday; blank uses [daily] every day. */
+    val weekend: String = "",
 ) {
     fun build(packageName: String, appName: String): AppRule {
         fun limit(value: String, maximum: Long, label: String): Long? {
@@ -48,6 +50,7 @@ data class RuleDraft(
             return parsed
         }
         val dailySeconds = limit(daily, 86400, "하루 시간(초)")
+        val weekendSeconds = limit(weekend, 86400, "주말 하루 시간(초)")
         val openCount = limit(opens, 10000, "실행 횟수")?.toInt()
         val cooldownSeconds = limit(cooldown, 86400, "재실행 대기(초)")
         val sessionSeconds = limit(session, 86400, "1회 사용시간(초)")
@@ -56,12 +59,12 @@ data class RuleDraft(
             require(schedules.size <= AppRule.MAX_SCHEDULES) { "예약 구간은 최대 5개까지 설정할 수 있습니다." }
             schedules.map { it.build() }.distinct()
         } else emptyList()
-        require(dailySeconds != null || openCount != null || cooldownSeconds != null || sessionSeconds != null || built.isNotEmpty() ||
+        require(dailySeconds != null || weekendSeconds != null || openCount != null || cooldownSeconds != null || sessionSeconds != null || built.isNotEmpty() ||
             pauseSeconds > 0 || checkInMinutes > 0) {
             "한 가지 이상의 제한을 설정해 주세요."
         }
         return AppRule(packageName, appName, dailySeconds, openCount, cooldownSeconds, sessionSeconds, built, enabled = enabled,
-            pauseSeconds = pauseSeconds.takeIf { it > 0 }, checkInMinutes = checkInMinutes.takeIf { it > 0 })
+            pauseSeconds = pauseSeconds.takeIf { it > 0 }, checkInMinutes = checkInMinutes.takeIf { it > 0 }, weekendLimitSeconds = weekendSeconds)
     }
 
     companion object {
@@ -69,7 +72,7 @@ data class RuleDraft(
             rule.dailyLimitSeconds?.toString().orEmpty(), rule.maxOpenCount?.toString().orEmpty(),
             rule.cooldownSeconds?.toString().orEmpty(), rule.sessionLimitSeconds?.toString().orEmpty(),
             rule.schedules.isNotEmpty(), rule.schedules.map(ScheduleDraft::from).ifEmpty { listOf(ScheduleDraft()) }, rule.enabled,
-            rule.pauseSeconds ?: 0, rule.checkInMinutes ?: 0,
+            rule.pauseSeconds ?: 0, rule.checkInMinutes ?: 0, rule.weekendLimitSeconds?.toString().orEmpty(),
         )
     }
 }

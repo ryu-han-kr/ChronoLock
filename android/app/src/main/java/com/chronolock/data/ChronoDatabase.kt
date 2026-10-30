@@ -23,6 +23,7 @@ data class RuleEntity(
     val pausedUntilEpochMillis: Long? = null,
     val pauseSeconds: Int? = null,
     val checkInMinutes: Int? = null,
+    val weekendLimitSeconds: Long? = null,
 )
 
 /** A relaxing change held back by strict mode until [applyAtEpochMillis]; [remove] deletes the rule instead of saving [rule]. */
@@ -201,12 +202,19 @@ interface ChronoDao {
 @Database(entities = [RuleEntity::class, DailyEntity::class, CloseEntity::class, CheckpointEntity::class, EventEntity::class,
     HistoryEventEntity::class, HistoryDailyEntity::class, HistoryMetaEntity::class, PendingRuleEntity::class,
     GroupEntity::class, PendingGroupEntity::class, SiteEntity::class, PendingSiteEntity::class, HistoryYearEntity::class, ClockAnchorEntity::class],
-    version = 12, exportSchema = true)
+    version = 13, exportSchema = true)
 abstract class ChronoDatabase : RoomDatabase() {
     abstract fun dao(): ChronoDao
     abstract fun historyDao(): HistoryDao
 
     companion object {
+        /** A separate daily limit for Saturday and Sunday. */
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE blocking_rules ADD COLUMN weekendLimitSeconds INTEGER")
+                db.execSQL("ALTER TABLE pending_rules ADD COLUMN rule_weekendLimitSeconds INTEGER")
+            }
+        }
         val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS clock_anchor (`key` TEXT NOT NULL, untilElapsedMillis INTEGER NOT NULL, bootId INTEGER NOT NULL, PRIMARY KEY(`key`))")

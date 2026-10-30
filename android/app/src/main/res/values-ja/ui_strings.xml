@@ -808,4 +808,6 @@
     <string name="plan_budget_used">"今日のスマホ全体の時間を使い切りました。"</string>
     <string name="plan_refused">"厳格モードやロック中は、スマホ全体の制限を緩められません。"</string>
     <string name="plan_saved">"スマホ全体の制限を保存しました。"</string>
+    <string name="weekend_limit">"週末の1日の許可時間"</string>
+    <string name="weekend_hint">"空欄なら週末も上と同じ制限です。"</string>
 </resources>
