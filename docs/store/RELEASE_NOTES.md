@@ -30,6 +30,9 @@
 - 미래의 나에게 한 줄: 규칙 편집에 60자 한 줄, 그 앱 차단 화면에 따옴표로 표시. DataStore `rule_notes`(기기에만, 백업 파일에는 미포함).
 - 앱 아이콘 길게 누르기 메뉴: "집중 시작"(마지막으로 고른 시간, 제한 앱이 없으면 앱 제한 탭으로), "오늘 사용 보기"(히스토리 탭).
   동적 단축키라 앱 언어를 따르고 검증용 빌드에서도 동작.
+- 충전하면 잘 시간 알림(설정, 기본 꺼짐): 접근성 서비스가 ACTION_POWER_CONNECTED를 받아 21:00~03:00에 하룻밤 한 번
+  "잘 시간이에요" 알림. "아침까지 집중"을 누르면 다음 07:00까지 집중(`startFocusUntil`, 최대 12시간, 일반 집중은 계속 180분 제한).
+  제한 앱이 없거나 이미 집중 중이면 묻지 않음. 위치 권한 불필요. 알림은 아침이 되면 사라짐.
 - Lint 정리(동작 변화 없음): UseKtx 6건(toUri·SharedPreferences.edit·createBitmap), 마스코트 깜박임 프레임을
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
@@ -43,6 +46,7 @@
 - 이번 주 결과를 이미지 카드로 공유할 수 있어요.
 - 앱마다 미래의 나에게 한 줄을 적어 두면 차단 화면에 보여 드려요.
 - 앱 아이콘을 길게 눌러 바로 집중을 시작하거나 오늘 사용량을 볼 수 있어요.
+- 밤에 충전기를 꽂으면 아침까지 집중할지 물어볼 수 있어요(설정에서 켜기).
 
 ### en
 - Phone and messaging apps are never blocked.
@@ -54,6 +58,7 @@
 - Share your week as a picture card.
 - Write a line to future you for each app; it shows on the block screen.
 - Long-press the app icon to start a focus or see today's usage.
+- Plug in at night and ChronoLock can offer a focus until morning (turn it on in Settings).
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 

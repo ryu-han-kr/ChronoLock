@@ -80,6 +80,14 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
         it[autoBackupAtKey] = atEpochMillis
         if (phoneFile != null) it[autoBackupFileKey] = phoneFile
     } }
+    private val bedtimeKey = booleanPreferencesKey("bedtime_prompt")
+    private val bedtimeNightKey = stringPreferencesKey("bedtime_night")
+    /** Whether plugging in at night asks to focus until morning; off until the person turns it on. */
+    val bedtime = context.preferences.data.map { it[bedtimeKey] ?: false }
+    suspend fun setBedtime(on: Boolean) { context.preferences.edit { it[bedtimeKey] = on } }
+    /** The evening last asked about, so each night asks once. */
+    val bedtimeNight = context.preferences.data.map { prefs -> prefs[bedtimeNightKey]?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() } }
+    suspend fun bedtimeAsked(night: java.time.LocalDate) { context.preferences.edit { it[bedtimeNightKey] = night.toString() } }
     private val notesKey = stringPreferencesKey("rule_notes")
     /** A line per app the person wrote to themselves, shown on that app's block screen. */
     val notes = context.preferences.data.map { decodeNotes(it[notesKey]) }

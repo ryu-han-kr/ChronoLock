@@ -776,4 +776,11 @@
     <string name="card_usage">"Uso esta semana: %1$s"</string>
     <string name="card_footer">"ChronoLock · Límites de uso de apps"</string>
     <string name="card_share">"Compartir tarjeta"</string>
+    <string name="bedtime_toggle">"Aviso para dormir al cargar"</string>
+    <string name="bedtime_toggle_hint">"Si conectas el cargador entre las 21:00 y las 3:00, recibirás un aviso de '¿A dormir?' por noche. Tócalo para concentrarte hasta las 7:00."</string>
+    <string name="bedtime_channel">"Hora de dormir"</string>
+    <string name="bedtime_title">"¿A dormir?"</string>
+    <string name="bedtime_body">"¿Activar la concentración hasta las 7:00 y dejar el móvil?"</string>
+    <string name="bedtime_start">"Concentrarme hasta mañana"</string>
+    <string name="bedtime_started">"Concentración activada hasta las 7:00. ¡Que descanses!"</string>
 </resources>

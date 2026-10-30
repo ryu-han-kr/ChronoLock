@@ -734,4 +734,11 @@
     <string name="card_usage">"今週の使用 %1$s"</string>
     <string name="card_footer">"ChronoLock · アプリ使用時間の制限"</string>
     <string name="card_share">"結果カードを共有"</string>
+    <string name="bedtime_toggle">"充電したら就寝のお知らせ"</string>
+    <string name="bedtime_toggle_hint">"夜9時から深夜3時の間に充電すると、「寝ますか？」の通知を1晩に1回送ります。タップすると朝7時まで集中モードになります。"</string>
+    <string name="bedtime_channel">"就寝のお知らせ"</string>
+    <string name="bedtime_title">"寝る時間です"</string>
+    <string name="bedtime_body">"朝7時まで集中モードにして、スマホを置きませんか？"</string>
+    <string name="bedtime_start">"朝まで集中"</string>
+    <string name="bedtime_started">"朝7時まで集中モードにしました。おやすみなさい！"</string>
 </resources>

@@ -303,13 +303,24 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
     }
 
     /** Starts a focus; with [clock] its end is also kept on the boot clock, see [holdFocus]. */
-    suspend fun startFocus(minutes: Int, nowEpochMillis: Long, clock: ClockReading? = null) = mutex.withLock {
+    suspend fun startFocus(minutes: Int, nowEpochMillis: Long, clock: ClockReading? = null) {
         require(minutes in 1..180) { "집중 시간은 1~180분으로 설정해 주세요." }
+        focusFor(minutes * 60000L, nowEpochMillis, clock)
+    }
+
+    /** The night focus from a bedtime prompt, which runs until morning: longer than a chosen focus, at most 12 hours. */
+    suspend fun startFocusUntil(untilEpochMillis: Long, nowEpochMillis: Long, clock: ClockReading? = null) {
+        val length = untilEpochMillis - nowEpochMillis
+        require(length in 60000L..12 * 60 * 60000L) { "집중 모드를 시작하지 못했습니다." }
+        focusFor(length, nowEpochMillis, clock)
+    }
+
+    private suspend fun focusFor(lengthMillis: Long, nowEpochMillis: Long, clock: ClockReading?) = mutex.withLock {
         require(dao.rules().any { it.enabled }) { "먼저 집중할 때 제한할 앱을 설정해 주세요." }
-        val until = Math.addExact(nowEpochMillis, minutes * 60000L)
+        val until = Math.addExact(nowEpochMillis, lengthMillis)
         database.withTransaction {
             dao.startFocus(until)
-            anchor(ClockAnchors.FOCUS, clock, minutes * 60000L)
+            anchor(ClockAnchors.FOCUS, clock, lengthMillis)
             dao.insertEvents(listOf(EventEntity(type = "FOCUS_STARTED", packageName = null, epochMillis = nowEpochMillis)))
         }
     }
