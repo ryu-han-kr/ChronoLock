@@ -51,6 +51,8 @@ data class MainState(
     val timeBank: Int = 0,
     /** The printed QR's secret, when stopping a focus needs it scanned. */
     val deskQr: String? = null,
+    /** The exam counted down on Today and the block screen. */
+    val exam: com.chronolock.domain.Exam? = null,
     /** Day/night themes that follow the device's dark mode, and which of the two the picker is editing. */
     val followSystem: Boolean = false,
     /** First-run goals, as [com.chronolock.domain.OnboardingGoal] names. */
@@ -137,6 +139,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.bedtime) { data, on -> data.copy(bedtime = on) }
         .combine(preferences.timeBank) { data, bank -> data.copy(timeBank = bank) }
         .combine(preferences.deskQr) { data, secret -> data.copy(deskQr = secret) }
+        .combine(preferences.exam) { data, exam -> data.copy(exam = exam) }
         .combine(preferences.followSystem) { data, follow -> data.copy(followSystem = follow) }
         .combine(preferences.goals) { data, goals -> data.copy(goals = goals) }
         .combine(preferences.nightTheme) { data, night -> data.copy(nightTheme = night) }
@@ -162,7 +165,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -336,6 +339,11 @@ class MainViewModel @Inject constructor(
     }
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
     fun setBedtime(on: Boolean) = viewModelScope.launch { preferences.setBedtime(on) }
+    fun setExam(exam: com.chronolock.domain.Exam?) = viewModelScope.launch {
+        try { preferences.setExam(exam) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
 
     /**
      * Turns the desk QR on with a new secret, or off. Neither while a focus runs: turning it off, or printing a new

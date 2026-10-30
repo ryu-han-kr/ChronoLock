@@ -153,7 +153,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 openThemeGallery = { themeGallery = true },
                 pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
-                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) }, setReduceMotion = { model.setReduceMotion(it) }, setBedtime = { model.setBedtime(it) }, spendTimeBank = { model.spendTimeBank(it) }, setDeskQr = { model.setDeskQr(it) },
+                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) }, setReduceMotion = { model.setReduceMotion(it) }, setBedtime = { model.setBedtime(it) }, spendTimeBank = { model.spendTimeBank(it) }, setDeskQr = { model.setDeskQr(it) }, setExam = { model.setExam(it) },
                 addSite = { input, added -> model.addSite(input, added) }, toggleSite = model::toggleSite,
                 removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite, addSitePreset = model::addSites, dismissMonitorGap = { model.dismissMonitorGap() },
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,

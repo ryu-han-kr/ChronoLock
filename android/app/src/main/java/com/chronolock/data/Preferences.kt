@@ -80,6 +80,12 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
         it[autoBackupAtKey] = atEpochMillis
         if (phoneFile != null) it[autoBackupFileKey] = phoneFile
     } }
+    private val examKey = stringPreferencesKey("exam")
+    /** The exam counted down on Today and the block screen; see [com.chronolock.domain.Exam]. */
+    val exam = context.preferences.data.map { com.chronolock.domain.Exam.decode(it[examKey]) }
+    suspend fun setExam(exam: com.chronolock.domain.Exam?) { context.preferences.edit {
+        if (exam == null) it.remove(examKey) else it[examKey] = com.chronolock.domain.Exam.encode(exam)
+    } }
     private val deskQrKey = stringPreferencesKey("desk_qr_secret")
     /** The secret of the printed QR that must be scanned to stop a focus; null when the feature is off. */
     val deskQr = context.preferences.data.map { it[deskQrKey] }

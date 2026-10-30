@@ -752,4 +752,17 @@
     <string name="deskqr_save">"QR 이미지 저장·인쇄"</string>
     <string name="deskqr_needed">"책상에 둔 QR을 찍어야 집중을 끝낼 수 있어요."</string>
     <string name="deskqr_wrong">"이 기기의 집중 QR이 아니에요."</string>
+    <string name="exam_title">"시험 D-day"</string>
+    <string name="exam_hint">"시험 날짜를 정하면 오늘 화면과 차단 화면에 남은 날을 보여 줘요. 2주 전부터는 한도를 줄이자고 알려 드려요."</string>
+    <string name="exam_name">"시험 이름 (선택)"</string>
+    <string name="exam_name_hint">"예: 수능"</string>
+    <string name="exam_date_label">"%1$s · %2$s"</string>
+    <string name="exam_pick">"날짜 고르기"</string>
+    <string name="exam_ok">"확인"</string>
+    <string name="exam_until">"시험까지"</string>
+    <string name="exam_until_named">"%1$s까지"</string>
+    <string name="exam_close">"시험이 2주 안으로 다가왔어요. 하루 한도를 조금 줄여 보면 어때요?"</string>
+    <string name="exam_limits">"한도 줄이러 가기"</string>
+    <string name="exam_block">"시험까지 %1$s"</string>
+    <string name="exam_block_named">"%1$s까지 %2$s"</string>
 </resources>

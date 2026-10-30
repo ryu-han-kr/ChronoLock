@@ -167,9 +167,9 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     // Each reason is a complete localized resource; only line separators are concatenated.
     @android.annotation.SuppressLint("SetTextI18n")
     fun show(appName: String, decision: RuleDecision, resistedToday: Int = 0, allowSettings: Boolean = true,
-        note: String? = null, onReason: ((OpenReason) -> Unit)? = null) {
+        note: String? = null, exam: Pair<com.chronolock.domain.Exam, java.time.LocalDate>? = null, onReason: ((OpenReason) -> Unit)? = null) {
         attach()
-        lastShown = { show(appName, decision, resistedToday, allowSettings, note, onReason) }
+        lastShown = { show(appName, decision, resistedToday, allowSettings, note, exam, onReason) }
         mode = "block"; stopCountdown(); continueButton?.visibility = View.GONE
         askReason(appName, onReason)
         showPose(when {
@@ -195,7 +195,10 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         } + (if (decision.reasons.any { it in setOf(Reason.DAILY_USAGE, Reason.OPEN_COUNT, Reason.GROUP_USAGE, Reason.GROUP_OPENS) }) "\n" + text("하루 한도는 자정에 다시 채워져요.") else "") +
             (if (resistedToday > 0) "\n\n" + text("오늘 %1\$d번 참았어요. 잘하고 있어요!", resistedToday) else "") +
             // The person's own words to themselves, quoted as they wrote them.
-            (if (!note.isNullOrBlank()) "\n\n“$note”" else "")
+            (if (!note.isNullOrBlank()) "\n\n“$note”" else "") +
+            // The exam they are studying for, while it is still ahead.
+            exam?.let { (e, today) -> "\n\n" + (if (e.name.isBlank()) text("시험까지 %1\$s", e.label(today))
+                else text("%1\$s까지 %2\$s", e.name, e.label(today))) }.orEmpty()
     }
 
     /**
