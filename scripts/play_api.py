@@ -4,6 +4,8 @@
   python -I scripts/play_api.py listings                 # prints every store listing as JSON
   python -I scripts/play_api.py set-listings FILE.json   # {"ko-KR": {"title","shortDescription","fullDescription"}, ...}
   python -I scripts/play_api.py upload AAB TRACKS NOTES.json   # TRACKS comma-separated; NOTES {"name", "notes": {lang: text}}
+  python -I scripts/play_api.py screenshots              # phone screenshot count per listing language
+  python -I scripts/play_api.py set-screenshots DIR      # DIR/{ko,en,ja,zh,es}/*.png replace each language's phone screenshots
 """
 import base64, glob, json, os, sys, time
 import requests
@@ -12,6 +14,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PKG = "com.chronolock.app"
+LANGS = {"ko": "ko-KR", "en": "en-US", "ja": "ja-JP", "zh": "zh-CN", "es": "es-ES"}
 API = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{PKG}"
 UPLOAD = f"https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/{PKG}"
 
@@ -71,6 +74,23 @@ def main():
                 "name": notes["name"], "versionCodes": [str(vc)], "status": "completed",
                 "releaseNotes": [{"language": l, "text": t} for l, t in notes["notes"].items()]}]}))
             print("track set", track, vc)
+        print("committed", check(s.post(f"{API}/edits/{edit}:commit")).get("id"))
+        return
+    elif cmd == "screenshots":
+        for lang in LANGS.values():
+            images = check(s.get(f"{API}/edits/{edit}/listings/{lang}/phoneScreenshots")).get("images", [])
+            print(lang, len(images))
+    elif cmd == "set-screenshots":
+        for short, lang in LANGS.items():
+            files = sorted(glob.glob(os.path.join(sys.argv[2], short, "*.png")))
+            if not files:
+                continue
+            check(s.delete(f"{API}/edits/{edit}/listings/{lang}/phoneScreenshots"))
+            for path in files:
+                with open(path, "rb") as f:
+                    check(s.post(f"{UPLOAD}/edits/{edit}/listings/{lang}/phoneScreenshots", params={"uploadType": "media"},
+                                 data=f, headers={"Content-Type": "image/png"}, timeout=120))
+            print("screenshots set", lang, len(files))
         print("committed", check(s.post(f"{API}/edits/{edit}:commit")).get("id"))
         return
     s.delete(f"{API}/edits/{edit}")

@@ -18,6 +18,11 @@
 
 ## 스토어 스크린샷
 
+현재 게시본(2026-10-30, 0.20 UI, 5개 언어 각 5장): `docs/store/screenshots-0.20/{ko,en,ja,zh,es}/`
+1 오늘 · 2 첫 주 맞춤 한도·휴대폰 전체 한도 · 3 YouTube 차단 화면 · 4 히스토리 총 사용 시간 · 5 앱별 기록.
+태블릿 SM-X810을 `wm size 1080x1920`로 바꿔 촬영, 상태바·내비바는 잘라냄(1080×1697). 게시: `play_api.py set-screenshots docs/store/screenshots-0.20`.
+아래 8장 한국어 세트는 이전 게시본(0.6.1 UI)으로 기록용.
+
 권장 순서(2026-10-22 0.6.1 UI로 전부 교체, 먹 테마, 에뮬레이터 1080×1920 실제 화면, 24비트 RGB PNG, 8장):
 1. `screenshot-1-today-ko.png` — 오늘 사용량 1시간 7분, 허용 15회·차단 2회, 지금부터 집중
 2. `screenshot-2-limits-ko.png` — 내 앱 제한 카드(Chrome·Photos 진행 바, 남은 시간, 제한 토글)
