@@ -73,6 +73,8 @@ data class MainState(
     val focusLog: List<com.chronolock.domain.FocusRun> = emptyList(),
     /** The first-week limits card was applied or put away. */
     val starterDone: Boolean = true,
+    /** Limited apps' notifications are held until the delivery times. */
+    val batchNotifications: Boolean = false,
     /** Reasons picked on the block screen, per day. */
     val openReasons: Map<java.time.LocalDate, Map<com.chronolock.domain.OpenReason, Int>> = emptyMap(),
     val nightTheme: AppTheme = AppTheme.DARK,
@@ -166,6 +168,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.alternatives) { data, alternatives -> data.copy(alternatives = alternatives) }
         .combine(preferences.focusLog) { data, log -> data.copy(focusLog = log) }
         .combine(preferences.starterDone) { data, done -> data.copy(starterDone = done) }
+        .combine(preferences.batchNotifications) { data, batch -> data.copy(batchNotifications = batch) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -178,7 +181,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, focusLog = data.focusLog, starterDone = data.starterDone, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, focusLog = data.focusLog, starterDone = data.starterDone, batchNotifications = data.batchNotifications, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -379,6 +382,7 @@ class MainViewModel @Inject constructor(
     }
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
     fun setBedtime(on: Boolean) = viewModelScope.launch { preferences.setBedtime(on) }
+    fun setBatchNotifications(on: Boolean) = viewModelScope.launch { preferences.setBatchNotifications(on) }
     fun setExam(exam: com.chronolock.domain.Exam?) = viewModelScope.launch {
         try { preferences.setExam(exam) }
         catch (cancelled: CancellationException) { throw cancelled }

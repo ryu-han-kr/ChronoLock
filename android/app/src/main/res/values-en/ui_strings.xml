@@ -810,4 +810,8 @@
     <string name="starter_apply">"Apply all"</string>
     <string name="starter_dismiss">"No thanks"</string>
     <string name="starter_done">"Suggested limits applied. Change them any time in App limits."</string>
+    <string name="batch_listener_label">"ChronoLock notification batching"</string>
+    <string name="batch_title">"Batch notifications"</string>
+    <string name="batch_hint">"Get notifications from limited apps together at 12:00, 18:00 and 21:00. Calls, alarms and texts still come right away. Notification content is never read."</string>
+    <string name="batch_access">"Allow notification access for this to work. Open settings"</string>
 </resources>
