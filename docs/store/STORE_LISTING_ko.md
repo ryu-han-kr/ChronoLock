@@ -10,6 +10,17 @@ Play Console → 스토어 등록정보 → 기본 스토어 등록정보에 붙
 
 SNS·영상 앱 사용시간과 실행 횟수를 제한하고 방해되는 사이트도 막아 공부·업무에 집중하세요.
 
+## 맞춤 스토어 등록정보 (상황별, 다음 출시 이후)
+
+Play Console → 스토어 등록정보 → 맞춤 스토어 등록정보 추가 → "URL로 타겟팅"(또는 검색어 타겟팅)으로 만든다.
+홍보 글·광고에는 아래 링크를 쓴다. 앱은 `utm_campaign` 값으로 첫 화면의 상황을 미리 고른다.
+
+| 상황 | 간단한 설명 초안 | 링크 |
+|---|---|---|
+| 공부·시험 준비 | 공부 시간엔 SNS·유튜브·게임을 막고 시험까지 집중을 지키세요. | `https://play.google.com/store/apps/details?id=com.chronolock.app&referrer=utm_source%3Dlisting%26utm_campaign%3Dstudy` |
+| 업무 집중 | 업무 시간엔 SNS·쇼핑 확인 횟수를 줄이고 집중 모드로 한 번에 막으세요. | `...&referrer=utm_source%3Dlisting%26utm_campaign%3Dwork` |
+| 잠들기 전 | 23시 이후 숏폼·영상을 막아 잠드는 시간을 지키세요. | `...&referrer=utm_source%3Dlisting%26utm_campaign%3Dbedtime` |
+
 ## 검색어(ASO) 메모
 
 Play는 별도 키워드 칸이 없어 제목·간단한 설명·자세한 설명의 문장으로 검색된다. 아래 단어가 자연스럽게 들어가 있는지 유지한다:

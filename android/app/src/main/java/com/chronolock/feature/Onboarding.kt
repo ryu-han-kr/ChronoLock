@@ -16,7 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chronolock.data.AppLanguage
+import com.chronolock.domain.Invite
 import com.chronolock.domain.OnboardingGoal
+import com.chronolock.domain.Situation
 
 /**
  * First run in three steps: what the app is (with the language), what to cut down on, and the two permissions ahead.
@@ -24,9 +26,18 @@ import com.chronolock.domain.OnboardingGoal
  */
 @Composable
 internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguage) -> Unit, start: (Set<String>) -> Unit,
-    mascot: com.chronolock.data.MascotKind = LocalMascot.current, selectMascot: (com.chronolock.data.MascotKind) -> Unit = {}, pro: Boolean = true) {
+    mascot: com.chronolock.data.MascotKind = LocalMascot.current, selectMascot: (com.chronolock.data.MascotKind) -> Unit = {}, pro: Boolean = true,
+    invite: Invite? = null) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var goals by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    var situation by rememberSaveable { mutableStateOf<String?>(null) }
+    // The install link arrives a moment after the screen; it fills the goals only if none were picked yet.
+    LaunchedEffect(invite) {
+        if (invite != null && goals.isEmpty()) {
+            goals = invite.goals.sortedBy { it.ordinal }.map { it.name }
+            situation = invite.situation?.name
+        }
+    }
     // Surface supplies onBackground as the content color; without it untinted Text falls back to black.
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
     Column(Modifier.fillMaxSize().systemBarsPadding()
@@ -60,9 +71,20 @@ internal fun OnboardingScreen(language: AppLanguage, selectLanguage: (AppLanguag
                 Text(tr("무엇을 줄이고 싶나요?"), style = MaterialTheme.typography.headlineMedium)
                 Text(tr("고른 것에 맞춰 첫 제한을 추천해 드려요. 여러 개 골라도 되고, 나중에 바꿀 수 있어요."),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
+                if (invite?.fromFriend == true) Text(tr("친구가 보낸 링크의 목표를 미리 골라 뒀어요. 같이 해 봐요!"),
+                    color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.testTag("invite-note"))
+                Text(tr("어떤 상황이세요?"), style = MaterialTheme.typography.titleMedium)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Situation.entries.forEach { option ->
+                        FilterChip(selected = situation == option.name, onClick = {
+                            situation = option.name
+                            goals = option.goals.sortedBy { it.ordinal }.map { it.name }
+                        }, label = { Text(option.emoji + " " + tr(option.label)) }, modifier = Modifier.testTag("situation-${option.name}"))
+                    }
+                }
                 OnboardingGoal.entries.forEach { goal ->
                     val chosen = goal.name in goals
-                    FilterChip(selected = chosen, onClick = { goals = if (chosen) goals - goal.name else goals + goal.name },
+                    FilterChip(selected = chosen, onClick = { goals = if (chosen) goals - goal.name else goals + goal.name; situation = null },
                         label = { Text(goal.emoji + "  " + tr(goal.label), style = MaterialTheme.typography.titleMedium) },
                         modifier = Modifier.fillMaxWidth().height(52.dp).testTag("goal-${goal.name}"))
                 }

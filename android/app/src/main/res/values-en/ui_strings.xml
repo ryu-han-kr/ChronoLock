@@ -730,4 +730,10 @@
     <string name="auto_backup_now">"Back up now"</string>
     <string name="auto_backup_other">"Pick another folder"</string>
     <string name="auto_backup_default">"Back to the Download folder"</string>
+    <string name="invite_note">"We picked the goals from your friend's link. Let's do it together!"</string>
+    <string name="situation_title">"What's your situation?"</string>
+    <string name="situation_study">"Studying for exams"</string>
+    <string name="situation_work">"Focus at work"</string>
+    <string name="situation_bedtime">"Phone before bed"</string>
+    <string name="share_goals">"Install from this link and my goals (%1$s) are already picked."</string>
 </resources>

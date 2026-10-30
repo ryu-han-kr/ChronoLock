@@ -17,6 +17,10 @@
   씀(MediaStore, 권한 불필요, 앱을 지워도 남음). 앱을 열 때도 밀린 백업을 씀. "지금 백업" 버튼, 고른 폴더는
   "다운로드 폴더로 되돌리기"로 해제. 재설치 뒤에는 이전 파일을 열 수 없어 새 파일을 추가함(이전 파일은 복원용으로 남음).
   사용자 요청: "백업은 반드시 남아 있어야 해, 핸드폰에". Android 9는 이전처럼 폴더를 골라야 함.
+- 같이 도전 링크: '친구에게 추천하기' 링크에 내 첫 목표를 담음(`referrer=utm_source=invite&utm_content=SOCIAL.VIDEO`).
+  친구가 그 링크로 설치하면 첫 화면에서 Install Referrer로 읽어 같은 목표를 미리 고르고 "친구가 보낸 링크" 안내를 보여 줌.
+  첫 화면에 "어떤 상황이세요?"(공부·시험 준비 / 업무 집중 / 잠들기 전 휴대폰) 선택 추가 → 목표를 한 번에 채움.
+  맞춤 스토어 등록정보 링크에 `utm_campaign=study|work|bedtime`을 붙이면 그 상황이 미리 골라짐. 기존 공유 링크(utm_source=share)는 목표 없음으로 처리.
 - Lint 정리(동작 변화 없음): UseKtx 6건(toUri·SharedPreferences.edit·createBitmap), 마스코트 깜박임 프레임을
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
@@ -24,11 +28,15 @@
 - 전화와 문자 앱은 어떤 경우에도 차단하지 않아요.
 - 앱 감지를 끈 적이 있으면 언제부터 언제까지 제한이 작동하지 않았는지 오늘 화면에서 알려 드려요.
 - 매주 휴대폰 다운로드 폴더에 자동으로 백업해요. 앱을 지워도 백업 파일은 남아요.
+- 친구에게 보낸 링크로 설치하면 내 목표가 미리 골라져 있어 같이 도전할 수 있어요.
+- 처음 시작할 때 공부·업무·잠들기 전 중 내 상황을 고르면 맞춤 목표가 채워져요.
 
 ### en
 - Phone and messaging apps are never blocked.
 - If app detection was turned off, Today shows when your limits were not working.
 - Weekly auto backup to the phone's Download folder. The file stays even if you remove the app.
+- Install from a friend's link and their goals are already picked, so you can take the challenge together.
+- At first run, pick studying, work or bedtime and matching goals are filled in.
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 

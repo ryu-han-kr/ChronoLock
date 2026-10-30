@@ -709,4 +709,10 @@
     <string name="auto_backup_now">"立即备份"</string>
     <string name="auto_backup_other">"选择其他文件夹"</string>
     <string name="auto_backup_default">"改回 Download 文件夹"</string>
+    <string name="invite_note">"已按朋友链接中的目标预先选好。一起来吧！"</string>
+    <string name="situation_title">"你的情况是？"</string>
+    <string name="situation_study">"学习·备考"</string>
+    <string name="situation_work">"专注工作"</string>
+    <string name="situation_bedtime">"睡前刷手机"</string>
+    <string name="share_goals">"通过此链接安装，会预先选好我的目标（%1$s）。"</string>
 </resources>

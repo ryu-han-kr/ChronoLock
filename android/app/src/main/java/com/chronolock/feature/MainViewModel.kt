@@ -49,6 +49,8 @@ data class MainState(
     val followSystem: Boolean = false,
     /** First-run goals, as [com.chronolock.domain.OnboardingGoal] names. */
     val goals: Set<String> = emptySet(),
+    /** Goals brought by the Play link this install came from, shown at first run. */
+    val invite: com.chronolock.domain.Invite? = null,
     val nightTheme: AppTheme = AppTheme.DARK,
     val editingNight: Boolean = false,
     /** Day totals for the year calendar, and whether a password for deleting history exists. */
@@ -562,6 +564,14 @@ class MainViewModel @Inject constructor(
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError("기록을 삭제하지 못했습니다.") }
     }
+    /** Reads, at first run, the goals a friend's link or a store listing brought along. */
+    fun checkInvite() = viewModelScope.launch {
+        if (local.value.invite != null) return@launch
+        val invite = runCatching { com.chronolock.domain.Invite.parse(com.chronolock.data.InstallInvite.referrer(environment.context)) }
+            .onFailure { if (it is CancellationException) throw it }.getOrNull() ?: return@launch
+        local.update { it.copy(invite = invite) }
+    }
+
     fun finishOnboarding(goals: Set<String> = emptySet()) = viewModelScope.launch {
         try { preferences.finishOnboarding(goals) }
         catch (cancelled: CancellationException) { throw cancelled }
