@@ -741,4 +741,7 @@
     <string name="bedtime_body">"아침 7시까지 집중 모드를 켜고 휴대폰을 내려놓을까요?"</string>
     <string name="bedtime_start">"아침까지 집중"</string>
     <string name="bedtime_started">"아침 7시까지 집중 모드를 켰어요. 잘 자요!"</string>
+    <string name="bank_title">"모은 시간 %1$d분"</string>
+    <string name="bank_hint">"집중을 끝까지 해서 모았어요. 앱 하나를 10분 쉬게 할 수 있어요."</string>
+    <string name="bank_spent">"모은 시간 10분을 썼어요."</string>
 </resources>

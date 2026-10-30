@@ -47,6 +47,8 @@ data class MainState(
     val reduceMotion: Boolean = false,
     /** Plugging in at night asks whether to focus until morning. */
     val bedtime: Boolean = false,
+    /** Minutes banked by finishing focuses, spent as a short pause of one app. */
+    val timeBank: Int = 0,
     /** Day/night themes that follow the device's dark mode, and which of the two the picker is editing. */
     val followSystem: Boolean = false,
     /** First-run goals, as [com.chronolock.domain.OnboardingGoal] names. */
@@ -131,6 +133,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.mascot) { data, kind -> data.copy(mascot = kind) }
         .combine(preferences.reduceMotion) { data, still -> data.copy(reduceMotion = still) }
         .combine(preferences.bedtime) { data, on -> data.copy(bedtime = on) }
+        .combine(preferences.timeBank) { data, bank -> data.copy(timeBank = bank) }
         .combine(preferences.followSystem) { data, follow -> data.copy(followSystem = follow) }
         .combine(preferences.goals) { data, goals -> data.copy(goals = goals) }
         .combine(preferences.nightTheme) { data, night -> data.copy(nightTheme = night) }
@@ -156,7 +159,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -168,6 +171,8 @@ class MainViewModel @Inject constructor(
             // Opening the app catches up a weekly backup the background job has not written yet.
             runCatching { backups.autoBackup(environment.clock().epochMillis) }
                 .onFailure { android.util.Log.w("ChronoLock", "Weekly backup failed", it) }
+            runCatching { com.chronolock.data.TimeBankStore.settle(repository, preferences, environment.clock().epochMillis) }
+                .onFailure { android.util.Log.w("ChronoLock", "Time bank not settled", it) }
             runCatching { environment.installedApps() }
                 .onSuccess { apps -> local.update { it.copy(apps = apps, loading = false) } }
                 .onFailure { local.update { it.copy(error = "앱 목록을 읽지 못했습니다.", loading = false) } }
@@ -259,7 +264,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 require(environment.hasUsageAccess() && environment.accessibilityEnabled()) { "사용 정보와 접근성 권한을 먼저 켜 주세요." }
-                environment.clock().let { repository.startFocus(minutes, it.epochMillis, it) }
+                // A finished focus is counted before the new one replaces its end.
+                environment.clock().let { com.chronolock.data.TimeBankStore.settle(repository, preferences, it.epochMillis); repository.startFocus(minutes, it.epochMillis, it) }
                 runCatching { preferences.setFocusMinutes(minutes) }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { showError(if (error is IllegalArgumentException) error.message.orEmpty() else "집중 모드를 시작하지 못했습니다.") }
@@ -321,6 +327,21 @@ class MainViewModel @Inject constructor(
     }
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
     fun setBedtime(on: Boolean) = viewModelScope.launch { preferences.setBedtime(on) }
+
+    /** Spends banked minutes as a pause of [packageName]; strict mode and locks hold it back like any pause. */
+    fun spendTimeBank(packageName: String) = viewModelScope.launch {
+        val minutes = com.chronolock.domain.TimeBank.REWARD_MINUTES
+        if (!preferences.spendTimeBank(minutes)) return@launch
+        try {
+            val clock = environment.clock()
+            val held = repository.requestPause(packageName, minutes, strictDelay(clock), clock.epochMillis, clock.zone, clock)
+            showError(if (held != null) HELD else "모은 시간 10분을 썼어요.")
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) {
+            runCatching { preferences.spendTimeBank(-minutes) }
+            showError(failure(error, "제한을 쉬게 하지 못했습니다. 다시 시도해 주세요."))
+        }
+    }
     fun dismissMonitorGap() = viewModelScope.launch { preferences.dismissMonitorGap() }
 
     fun saveGroup(group: AppGroup, onSaved: () -> Unit, onFinished: () -> Unit = {}) = viewModelScope.launch {

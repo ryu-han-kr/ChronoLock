@@ -762,4 +762,7 @@
     <string name="bedtime_body">"Turn on focus until 7 AM and put the phone down?"</string>
     <string name="bedtime_start">"Focus until morning"</string>
     <string name="bedtime_started">"Focus is on until 7 AM. Sleep well!"</string>
+    <string name="bank_title">"Banked time: %1$d min"</string>
+    <string name="bank_hint">"Earned by finishing focuses. Use it to pause one app for 10 minutes."</string>
+    <string name="bank_spent">"Used 10 banked minutes."</string>
 </resources>

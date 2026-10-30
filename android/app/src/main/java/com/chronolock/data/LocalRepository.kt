@@ -325,6 +325,12 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
         }
     }
 
+    /** The end and start of a focus that ran out by itself (a stopped one leaves no end), or null while one runs or none did. */
+    suspend fun finishedFocus(nowEpochMillis: Long): Pair<Long, Long?>? = mutex.withLock {
+        val until = dao.rules().mapNotNull { it.focusUntilEpochMillis }.maxOrNull() ?: return@withLock null
+        if (nowEpochMillis < until) null else until to dao.focusStartedBefore(until)
+    }
+
     suspend fun stopFocus(nowEpochMillis: Long) = mutex.withLock {
         database.withTransaction {
             dao.stopFocus(); dao.deleteAnchor(ClockAnchors.FOCUS)
