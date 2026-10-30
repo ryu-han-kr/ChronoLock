@@ -68,6 +68,8 @@ class ChronoAccessibilityService : AccessibilityService() {
     @Volatile private var exam: com.chronolock.domain.Exam? = null
     /** The app to offer instead, per limited app. */
     @Volatile private var alternatives = emptyMap<String, String>()
+    /** The stored phone-wide plan; the policy built from it lives on the repository. */
+    @Volatile private var plan = com.chronolock.data.PhonePlan()
     @Volatile private var lock = com.chronolock.domain.LockSetting()
     /** App labels for the block screen; looked up once per app instead of every second while blocked. */
     private val labels = mutableMapOf<String, String>()
@@ -117,6 +119,12 @@ class ChronoAccessibilityService : AccessibilityService() {
             try { preferences.mascot.collect { overlay.setMascot(it); surfaces.mascot = it } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load the character", error) }
+        }
+        scope.launch {
+            // The phone-wide plan covers every launchable app; safety apps and ChronoLock itself are never among them.
+            try { preferences.phonePlan.collect { next -> plan = next; repository.phonePolicy = next.policy(environment.installedApps().map { it.packageName }.toSet()) } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load the phone plan", error) }
         }
         scope.launch {
             try { combine(preferences.notes, preferences.exam, preferences.alternatives) { n, e, a -> Triple(n, e, a) }
@@ -194,7 +202,11 @@ class ChronoAccessibilityService : AccessibilityService() {
                 for (command in commands) {
                     try {
                         val state = when (command) {
-                            is Command.Foreground -> repository.foreground(command.packageName?.takeUnless { it in environment.safetyPackages() }, environment.clock())
+                            is Command.Foreground -> {
+                                val target = command.packageName?.takeUnless { it in environment.safetyPackages() }
+                                coverNewApp(target)
+                                repository.foreground(target, environment.clock())
+                            }
                             Command.Tick -> if (environment.interactive()) repository.tick(environment.clock()) else repository.screenOff(environment.clock())
                             Command.ScreenOff -> repository.screenOff(environment.clock())
                             Command.Recover -> {
@@ -283,8 +295,15 @@ class ChronoAccessibilityService : AccessibilityService() {
         pipReleased.removeAll { app -> apps.any { !it.isInPictureInPictureMode && it.root?.packageName?.toString() == app } }
         apps.filterNot { it.isInPictureInPictureMode && it.root?.packageName?.toString() in pipReleased }
             .mapNotNull { it.root?.packageName?.toString() }
-            .firstOrNull { it != packageName && rules[it]?.enabled == true && it !in environment.safetyPackages() }
+            .firstOrNull { it != packageName && (rules[it]?.enabled == true || repository.phonePolicy.covers(it)) && it !in environment.safetyPackages() }
     }.getOrNull()
+
+    /** An app installed after the plan was read joins it the first time it opens, unless it is always allowed. */
+    private fun coverNewApp(target: String?) {
+        val policy = repository.phonePolicy
+        if (target == null || !policy.active || target in policy.apps || target in plan.exempt || target == packageName) return
+        if (packageManager.getLaunchIntentForPackage(target) != null) repository.phonePolicy = policy.copy(apps = policy.apps + target)
+    }
 
     /** [app] is on screen only as a picture-in-picture window. */
     private fun pipOnly(app: String): Boolean = runCatching {

@@ -91,6 +91,10 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     /** The secret of the printed QR that must be scanned to stop a focus; null when the feature is off. */
     val deskQr = context.preferences.data.map { it[deskQrKey] }
     suspend fun setDeskQr(secret: String?) { context.preferences.edit { if (secret == null) it.remove(deskQrKey) else it[deskQrKey] = secret } }
+    private val phonePlanKey = stringPreferencesKey("phone_plan")
+    /** Limits over the whole phone; see [PhonePlan]. */
+    val phonePlan = context.preferences.data.map { PhonePlan.decode(it[phonePlanKey]) }
+    suspend fun setPhonePlan(plan: PhonePlan) { context.preferences.edit { it[phonePlanKey] = plan.encode() } }
     private val batchKey = booleanPreferencesKey("batch_notifications")
     /** Notifications from limited apps held back until 12:00, 18:00 and 21:00; off until turned on. */
     val batchNotifications = context.preferences.data.map { it[batchKey] ?: false }

@@ -58,7 +58,8 @@ data class Schedule(val start: LocalTime, val end: LocalTime, val days: Set<DayO
     }
 }
 
-enum class Reason { FOCUS, SCHEDULE, DAILY_USAGE, SESSION_USAGE, OPEN_COUNT, COOLDOWN, GROUP_USAGE, GROUP_OPENS }
+/** [ALLOWED_ONLY] and [PHONE_BUDGET] come from the [PhonePolicy], not from the app's own rule. */
+enum class Reason { FOCUS, SCHEDULE, DAILY_USAGE, SESSION_USAGE, OPEN_COUNT, COOLDOWN, GROUP_USAGE, GROUP_OPENS, ALLOWED_ONLY, PHONE_BUDGET }
 enum class DecisionType { ALLOW, WARN, BLOCK, COOLDOWN }
 data class RuleDecision(val type: DecisionType, val reasons: List<Reason> = emptyList(), val retryAfterSeconds: Long? = null) {
     val denied: Boolean get() = type == DecisionType.BLOCK || type == DecisionType.COOLDOWN

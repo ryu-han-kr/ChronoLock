@@ -71,6 +71,7 @@ internal fun ChronoScreen(
     setReduceMotion: (Boolean) -> Unit = {},
     setBedtime: (Boolean) -> Unit = {},
     setBatchNotifications: (Boolean) -> Unit = {},
+    savePhonePlan: (com.chronolock.data.PhonePlan) -> Unit = {},
     spendTimeBank: (String) -> Unit = {},
     setDeskQr: (Boolean) -> Unit = {},
     setExam: (com.chronolock.domain.Exam?) -> Unit = {},
@@ -200,6 +201,11 @@ internal fun ChronoScreen(
                                             state.apps.map { it.packageName }.toSet() - state.rules.map { it.packageName }.toSet(), today)
                                     }
                                     if (limits.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) { StarterCard(state, limits, applyStarter, dismissStarter) }
+                                }
+                                state.phonePlan.budgetSeconds?.let { budget ->
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        PhoneBudgetCard(phoneUsedToday(state.daily, state.phonePlan, state.apps, today), budget)
+                                    }
                                 }
                                 state.exam?.takeIf { it.showing(today) }?.let { exam ->
                                     item(span = { GridItemSpan(maxLineSpan) }) { ExamCard(exam, today) { selectTab(1) } }
@@ -331,6 +337,7 @@ internal fun ChronoScreen(
                                 item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }
                                 item { CardBox { BedtimeToggle(state.bedtime, setBedtime) } }
                                 item { CardBox { NotificationBatchToggle(state.batchNotifications, setBatchNotifications) } }
+                                item { PhonePlanCard(state.phonePlan, state.apps, savePhonePlan) }
                                 item { CardBox { ExamSettings(state.exam, today, setExam) } }
                                 item { CardBox { DeskQrCard(state.deskQr, state.rules.any { (it.focusUntilEpochMillis ?: 0) > nowEpoch }, setDeskQr) } }
                                 item {

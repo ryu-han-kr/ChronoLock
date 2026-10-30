@@ -793,4 +793,19 @@
     <string name="batch_title">"汇总通知"</string>
     <string name="batch_hint">"受限应用的通知会在12点、18点、21点集中送达。来电、闹钟和短信仍会立即送达。不会读取通知内容。"</string>
     <string name="batch_access">"需要允许通知访问权限才能生效。打开设置"</string>
+    <string name="plan_title">"全机限制"</string>
+    <string name="plan_hint">"除了各应用自己的限额，这是你为整部手机设定的限额。始终允许的应用、来电和短信不计入。"</string>
+    <string name="plan_budget">"每日总时长"</string>
+    <string name="plan_windows">"仅允许应用时段"</string>
+    <string name="plan_windows_hint">"这些时段只能打开始终允许的应用。适合学习、工作或睡前使用。"</string>
+    <string name="plan_add_window">"添加时段"</string>
+    <string name="plan_exempt">"始终允许的应用"</string>
+    <string name="plan_exempt_pick">"选择始终允许的应用"</string>
+    <string name="plan_today">"今日手机 %1$s / %2$s"</string>
+    <string name="plan_start">"开始"</string>
+    <string name="plan_end">"结束"</string>
+    <string name="plan_allowed_only">"现在是只能使用指定应用的时间。"</string>
+    <string name="plan_budget_used">"今天的全机时长已用完。"</string>
+    <string name="plan_refused">"严格模式或锁定期间无法放宽全机限制。"</string>
+    <string name="plan_saved">"已保存全机限制。"</string>
 </resources>

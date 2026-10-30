@@ -344,29 +344,32 @@ class LocalRepository @Inject constructor(private val database: ChronoDatabase) 
 
     override suspend fun deleteRule(packageName: String) { requestDelete(packageName, 0, System.currentTimeMillis()) }
 
+    /** The phone-wide limits, kept current by the accessibility service from the stored plan and the launchable apps. */
+    @Volatile var phonePolicy: com.chronolock.domain.PhonePolicy = com.chronolock.domain.PhonePolicy.NONE
+
     suspend fun reconnect(now: ClockReading, recoveredUsage: Map<String, Long>, foregroundPackage: String? = null): MonitorState = mutex.withLock {
         val loaded = load()
-        val update = monitor.restore(loaded, now, recoveredUsage, foregroundPackage, ruleMap(now))
+        val update = monitor.restore(loaded, now, recoveredUsage, foregroundPackage, ruleMap(now), phonePolicy)
         persist(update)
         update.state
     }
 
     suspend fun foreground(packageName: String?, now: ClockReading): MonitorState = mutex.withLock {
         val rules = ruleMap(now)
-        val update = monitor.foreground(state ?: load(), packageName, now, rules)
+        val update = monitor.foreground(state ?: load(), packageName, now, rules, phonePolicy)
         persist(update, tracked = packageName in rules)
         update.state
     }
 
     suspend fun screenOff(now: ClockReading): MonitorState = mutex.withLock {
-        val update = monitor.screenOff(state ?: load(), now, ruleMap(now))
+        val update = monitor.screenOff(state ?: load(), now, ruleMap(now), phonePolicy)
         persist(update, tracked = false)
         update.state
     }
 
     suspend fun tick(now: ClockReading): MonitorState = mutex.withLock {
         val rules = ruleMap(now)
-        val update = monitor.tick(state ?: load(), now, rules)
+        val update = monitor.tick(state ?: load(), now, rules, phonePolicy)
         persist(update, tracked = update.state.observedPackage in rules)
         update.state
     }

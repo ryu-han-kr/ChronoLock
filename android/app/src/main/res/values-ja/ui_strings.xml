@@ -793,4 +793,19 @@
     <string name="batch_title">"通知をまとめる"</string>
     <string name="batch_hint">"制限中のアプリの通知を12時・18時・21時にまとめて受け取ります。電話・アラーム・SMSはすぐ届きます。通知の内容は読みません。"</string>
     <string name="batch_access">"通知へのアクセスを許可すると動作します。設定を開く"</string>
+    <string name="plan_title">"スマホ全体の制限"</string>
+    <string name="plan_hint">"アプリごとの制限とは別に、スマホ全体に自分で決める制限です。常に許可したアプリと電話・SMSは対象外です。"</string>
+    <string name="plan_budget">"1日の合計時間"</string>
+    <string name="plan_windows">"許可したアプリだけの時間"</string>
+    <string name="plan_windows_hint">"この時間は常に許可したアプリだけが開きます。勉強・仕事の時間や寝る前に使ってみてください。"</string>
+    <string name="plan_add_window">"時間帯を追加"</string>
+    <string name="plan_exempt">"常に許可するアプリ"</string>
+    <string name="plan_exempt_pick">"常に許可するアプリを選ぶ"</string>
+    <string name="plan_today">"今日のスマホ %1$s / %2$s"</string>
+    <string name="plan_start">"開始"</string>
+    <string name="plan_end">"終了"</string>
+    <string name="plan_allowed_only">"今は決めておいたアプリだけを使う時間です。"</string>
+    <string name="plan_budget_used">"今日のスマホ全体の時間を使い切りました。"</string>
+    <string name="plan_refused">"厳格モードやロック中は、スマホ全体の制限を緩められません。"</string>
+    <string name="plan_saved">"スマホ全体の制限を保存しました。"</string>
 </resources>

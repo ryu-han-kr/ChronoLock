@@ -15,18 +15,24 @@
 - 알림 모아 보기(설정, 기본 꺼짐): 알림 접근(NotificationListenerService `NotificationBatcher`)을 허용하면 규칙이 있는 앱의 알림을
   다음 12·18·21시까지 snooze(원래 알림을 Android가 다시 보여 줌, 내용은 읽지 않음). 전화·알람·내비·교통 카테고리, 진행 중·지울 수 없는 알림,
   안전 앱(전화·문자·ChronoLock)은 바로 옴. 기기 테스트 `NotificationBatchDeviceTest`(셸이 보낸 알림이 켜면 사라지고 끄면 남음). 방침 HTML 항목 추가.
+- 휴대폰 전체 한도(설정, 패밀리링크의 하루 한도·쉬는 시간을 자율형으로): 하루 전체 시간(1~6시간), 허용한 앱만 쓰는 시간대,
+  항상 허용 앱. 규칙 없는 앱도 대상(`PhonePolicy`, 런처에 있는 앱 − 안전 앱·ChronoLock·항상 허용 앱). 감시 상태 머신이 정책이 덮는 앱도
+  사용량을 재고 차단 사유 ALLOWED_ONLY·PHONE_BUDGET 추가. 앱의 '잠시 쉬기'로는 풀리지 않음. 엄격 모드·잠금 중엔 느슨하게 저장 불가.
+  새로 설치한 앱은 처음 열 때 대상에 들어감. 첫날 전체 시간은 켠 뒤부터만 셈. 기기 테스트 작성(태블릿 연결 끊김으로 미실행).
 
 ### ko
 - 차단 화면에서 미리 골라 둔 다른 앱을 바로 열 수 있어요.
 - 이번 주 집중한 시간과 끝까지 마친 횟수를 보여 드려요.
 - 일주일 사용 기록으로 가장 많이 쓴 앱 3개의 한도를 한 번에 정할 수 있어요.
 - 제한한 앱의 알림을 하루 세 번 모아서 받을 수 있어요(설정에서 켜기).
+- 휴대폰 전체 하루 시간과, 정한 앱만 쓰는 시간대를 직접 정할 수 있어요.
 
 ### en
 - Open an app you picked instead, right from the block screen.
 - See how long you focused this week and how many focuses you finished.
 - Set limits for your three most-used apps in one tap, based on your first week.
 - Get limited apps' notifications together three times a day (Settings).
+- Set a daily total for the whole phone and times when only chosen apps open.
 
 ## 0.19.0 (versionCode 29) — 2026-10-30 업로드 (내부·테스터들)
 

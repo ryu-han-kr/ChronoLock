@@ -184,6 +184,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         showPose(when {
             Reason.FOCUS in decision.reasons -> Pose.FOCUS
             Reason.SCHEDULE in decision.reasons -> Pose.SLEEP
+            Reason.ALLOWED_ONLY in decision.reasons -> Pose.FOCUS
             decision.reasons == listOf(Reason.COOLDOWN) -> Pose.TIMER
             else -> Pose.LIMIT
         })
@@ -200,8 +201,10 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 Reason.FOCUS -> text("집중 시간이에요.")
                 Reason.GROUP_USAGE -> text("그룹의 오늘 사용 시간을 다 썼어요.")
                 Reason.GROUP_OPENS -> text("그룹의 오늘 실행 횟수를 다 썼어요.")
+                Reason.ALLOWED_ONLY -> text("지금은 정해 둔 앱만 쓰는 시간이에요.")
+                Reason.PHONE_BUDGET -> text("오늘 휴대폰 전체 시간을 다 썼어요.")
             }
-        } + (if (decision.reasons.any { it in setOf(Reason.DAILY_USAGE, Reason.OPEN_COUNT, Reason.GROUP_USAGE, Reason.GROUP_OPENS) }) "\n" + text("하루 한도는 자정에 다시 채워져요.") else "") +
+        } + (if (decision.reasons.any { it in setOf(Reason.DAILY_USAGE, Reason.OPEN_COUNT, Reason.GROUP_USAGE, Reason.GROUP_OPENS, Reason.PHONE_BUDGET) }) "\n" + text("하루 한도는 자정에 다시 채워져요.") else "") +
             (if (resistedToday > 0) "\n\n" + text("오늘 %1\$d번 참았어요. 잘하고 있어요!", resistedToday) else "") +
             // The person's own words to themselves, quoted as they wrote them.
             (if (!note.isNullOrBlank()) "\n\n“$note”" else "") +

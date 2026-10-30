@@ -814,4 +814,19 @@
     <string name="batch_title">"Batch notifications"</string>
     <string name="batch_hint">"Get notifications from limited apps together at 12:00, 18:00 and 21:00. Calls, alarms and texts still come right away. Notification content is never read."</string>
     <string name="batch_access">"Allow notification access for this to work. Open settings"</string>
+    <string name="plan_title">"Whole-phone limits"</string>
+    <string name="plan_hint">"Limits you set for the whole phone, apart from each app\'s own. Always-allowed apps, calls and texts are left out."</string>
+    <string name="plan_budget">"Daily total"</string>
+    <string name="plan_windows">"Allowed-apps-only times"</string>
+    <string name="plan_windows_hint">"During these times only always-allowed apps open. Try it for study, work or before bed."</string>
+    <string name="plan_add_window">"Add a time"</string>
+    <string name="plan_exempt">"Always-allowed apps"</string>
+    <string name="plan_exempt_pick">"Choose always-allowed apps"</string>
+    <string name="plan_today">"Phone today %1$s / %2$s"</string>
+    <string name="plan_start">"Start"</string>
+    <string name="plan_end">"End"</string>
+    <string name="plan_allowed_only">"Right now only the apps you set aside are open."</string>
+    <string name="plan_budget_used">"You\'ve used today\'s whole-phone time."</string>
+    <string name="plan_refused">"Whole-phone limits can\'t be loosened during strict mode or a lock."</string>
+    <string name="plan_saved">"Whole-phone limits saved."</string>
 </resources>
