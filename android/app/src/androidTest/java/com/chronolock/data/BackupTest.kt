@@ -10,6 +10,7 @@ import com.chronolock.domain.BlockedSite
 import com.chronolock.domain.Schedule
 import java.time.DayOfWeek
 import java.time.LocalTime
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -81,5 +82,32 @@ class BackupTest {
             assertEquals(listOf("youtube.com"), repository.blockedSites(0).map { it.domain })
             assertEquals(1, database.dao().daily().size)
         } finally { database.close() }
+    }
+
+    @Test fun weeklyBackup_withoutAFolder_goesToTheDownloadFolderAndReplacesItsFile() = runBlocking {
+        org.junit.Assume.assumeTrue(BackupRepository.PHONE_BACKUP_SUPPORTED)
+        val context: Context = ApplicationProvider.getApplicationContext()
+        val database = Room.inMemoryDatabaseBuilder(context, ChronoDatabase::class.java).build()
+        val preferences = Preferences(context)
+        var file: android.net.Uri? = null
+        try {
+            val repository = LocalRepository(database)
+            repository.saveRule(rule)
+            preferences.setAutoBackupFolder(null)
+            val backups = BackupRepository(context, repository, preferences)
+            assertTrue(backups.autoBackup(1_000))
+            file = android.net.Uri.parse(requireNotNull(preferences.autoBackup.first().phoneFile))
+            // Not due again within the week; forced, it rewrites the same file instead of adding another.
+            assertFalse(backups.autoBackup(2_000))
+            assertTrue(backups.autoBackup(3_000, force = true))
+            assertEquals(file.toString(), preferences.autoBackup.first().phoneFile)
+            val text = context.contentResolver.openInputStream(file)!!.use { it.readBytes().toString(Charsets.UTF_8) }
+            assertEquals(3_000L, JSONObject(text).getLong("exportedAt"))
+            assertEquals(listOf("com.video"), BackupCodec.decode(text).rules.map { it.packageName })
+        } finally {
+            file?.let { context.contentResolver.delete(it, null, null) }
+            preferences.setAutoBackupFolder(null)
+            database.close()
+        }
     }
 }

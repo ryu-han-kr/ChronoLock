@@ -152,6 +152,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { environment.clock().let { repository.applyDuePending(it.epochMillis, it) } }
                 .onFailure { android.util.Log.w("ChronoLock", "Held changes could not be applied", it) }
+            // Opening the app catches up a weekly backup the background job has not written yet.
+            runCatching { backups.autoBackup(environment.clock().epochMillis) }
+                .onFailure { android.util.Log.w("ChronoLock", "Weekly backup failed", it) }
             runCatching { environment.installedApps() }
                 .onSuccess { apps -> local.update { it.copy(apps = apps, loading = false) } }
                 .onFailure { local.update { it.copy(error = "앱 목록을 읽지 못했습니다.", loading = false) } }
@@ -404,12 +407,23 @@ class MainViewModel @Inject constructor(
         catch (error: Exception) { android.util.Log.w("ChronoLock", "Auto backup setup failed", error); showError("백업 파일을 저장하지 못했습니다.") }
     }
 
+    /** Gives the picked folder back; weekly backups return to the phone's Download folder. */
     fun stopAutoBackup() = viewModelScope.launch {
-        preferences.autoBackup.first()?.let { auto ->
-            runCatching { environment.context.contentResolver.releasePersistableUriPermission(auto.folder.toUri(),
+        preferences.autoBackup.first().folder?.let { folder ->
+            runCatching { environment.context.contentResolver.releasePersistableUriPermission(folder.toUri(),
                 android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }
         }
         preferences.setAutoBackupFolder(null)
+        if (com.chronolock.data.BackupRepository.PHONE_BACKUP_SUPPORTED) backupNow()
+    }
+
+    /** Writes the weekly backup now, wherever it goes, so the person can see the file is there. */
+    fun backupNow() = viewModelScope.launch {
+        try {
+            if (backups.autoBackup(environment.clock().epochMillis, force = true)) showError("백업 파일을 저장했습니다.")
+        }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { android.util.Log.w("ChronoLock", "Backup failed", error); showError("백업 파일을 저장하지 못했습니다.") }
     }
 
     /** Replaces rules and groups with a backup's. Strict mode must be off, as restoring can remove limits at once. */

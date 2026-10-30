@@ -3,6 +3,7 @@ package com.chronolock.data
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import androidx.core.net.toUri
 import com.chronolock.domain.AppGroup
 import com.chronolock.domain.AppRule
@@ -151,17 +152,45 @@ class BackupRepository @Inject constructor(
     }
 
     /**
-     * Writes the weekly backup into the picked folder, replacing the previous one, once a week has passed or when
-     * [force]d (right after the folder is picked). Returns false when nothing was due.
+     * Writes the weekly backup into the picked folder, or the phone's Download/ChronoLock folder when none is picked,
+     * replacing the previous one, once a week has passed or when [force]d. Returns false when nothing was due or the
+     * phone (Android 9) cannot be written without a picked folder.
      */
     suspend fun autoBackup(nowEpochMillis: Long, force: Boolean = false): Boolean {
-        val auto = preferences.autoBackup.first() ?: return false
+        val auto = preferences.autoBackup.first()
         if (!force && !auto.due(nowEpochMillis)) return false
+        if (auto.folder == null) {
+            if (android.os.Build.VERSION.SDK_INT < 29) return false
+            val file = writePhoneFile(auto.phoneFile?.toUri(), nowEpochMillis)
+            preferences.autoBackupWritten(nowEpochMillis, phoneFile = file.toString())
+            return true
+        }
         val tree = auto.folder.toUri()
         val file = withContext(Dispatchers.IO) { existingAutoFile(tree) ?: createAutoFile(tree) }
         export(file, nowEpochMillis)
         preferences.autoBackupWritten(nowEpochMillis)
         return true
+    }
+
+    /**
+     * Replaces the Download file written last time, or adds one when it is gone, for example after the app was
+     * reinstalled: Android then no longer lets the app open the old file, which stays for the person to restore.
+     */
+    @androidx.annotation.RequiresApi(29)
+    private suspend fun writePhoneFile(previous: Uri?, nowEpochMillis: Long): Uri {
+        if (previous != null) try { export(previous, nowEpochMillis); return previous }
+            catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+            catch (_: Exception) { }
+        val values = android.content.ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, AUTO_FILE)
+            put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "${android.os.Environment.DIRECTORY_DOWNLOADS}/ChronoLock")
+        }
+        val uri = withContext(Dispatchers.IO) {
+            requireNotNull(context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values))
+        }
+        export(uri, nowEpochMillis)
+        return uri
     }
 
     private fun existingAutoFile(tree: Uri): Uri? {
@@ -176,8 +205,10 @@ class BackupRepository @Inject constructor(
     private fun createAutoFile(tree: Uri): Uri = requireNotNull(DocumentsContract.createDocument(context.contentResolver,
         DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree)), "application/json", AUTO_FILE))
 
-    private companion object {
-        const val MAX_BYTES = 1_000_000
-        const val AUTO_FILE = "chronolock-backup-auto.json"
+    companion object {
+        /** Android 10 and later let the app add files to Download without a storage permission. */
+        val PHONE_BACKUP_SUPPORTED = android.os.Build.VERSION.SDK_INT >= 29
+        private const val MAX_BYTES = 1_000_000
+        private const val AUTO_FILE = "chronolock-backup-auto.json"
     }
 }

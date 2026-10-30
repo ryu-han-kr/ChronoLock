@@ -22,8 +22,11 @@ private val Context.preferences by preferencesDataStore("preferences")
 /** App detection was turned off at [offAt] and came back at [backAt] (null while still off); [locked] if a lock or strict mode held then. */
 data class MonitorGap(val offAt: Long, val backAt: Long?, val locked: Boolean)
 
-/** Weekly backups go to [folder] (a document tree URI); [lastAt] is the last one written, null before the first. */
-data class AutoBackup(val folder: String, val lastAt: Long?) {
+/**
+ * Weekly backups go to [folder] (a document tree URI the user picked), or to the phone's Download/ChronoLock folder
+ * when it is null, which outlives the app; [lastAt] is the last one written, null before the first.
+ */
+data class AutoBackup(val folder: String?, val lastAt: Long?, val phoneFile: String? = null) {
     /** A week has passed since the last backup, or none was written, or the clock now reads earlier than it. */
     fun due(nowEpochMillis: Long): Boolean = lastAt == null || nowEpochMillis < lastAt || nowEpochMillis - lastAt >= WEEK_MILLIS
 
@@ -63,15 +66,20 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val reduceMotionKey = booleanPreferencesKey("reduce_motion")
     private val autoBackupFolderKey = stringPreferencesKey("auto_backup_folder")
     private val autoBackupAtKey = longPreferencesKey("auto_backup_at")
-    /** The folder the user picked for weekly backups, and when one was last written there. */
+    private val autoBackupFileKey = stringPreferencesKey("auto_backup_file")
+    /** Where weekly backups go (the picked folder, or the phone's Download folder), and when one was last written. */
     val autoBackup = context.preferences.data.map { prefs ->
-        prefs[autoBackupFolderKey]?.let { AutoBackup(it, prefs[autoBackupAtKey]) }
+        AutoBackup(prefs[autoBackupFolderKey], prefs[autoBackupAtKey], prefs[autoBackupFileKey])
     }
     suspend fun setAutoBackupFolder(folder: String?) { context.preferences.edit {
         if (folder == null) it.remove(autoBackupFolderKey) else it[autoBackupFolderKey] = folder
         it.remove(autoBackupAtKey)
     } }
-    suspend fun autoBackupWritten(atEpochMillis: Long) { context.preferences.edit { it[autoBackupAtKey] = atEpochMillis } }
+    /** [phoneFile] is the Download file written when no folder is picked, kept so later backups replace it. */
+    suspend fun autoBackupWritten(atEpochMillis: Long, phoneFile: String? = null) { context.preferences.edit {
+        it[autoBackupAtKey] = atEpochMillis
+        if (phoneFile != null) it[autoBackupFileKey] = phoneFile
+    } }
     private val monitorOffKey = longPreferencesKey("monitor_off_at")
     private val monitorOffLockedKey = booleanPreferencesKey("monitor_off_locked")
     private val monitorBackKey = longPreferencesKey("monitor_back_at")

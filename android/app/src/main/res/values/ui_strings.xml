@@ -705,4 +705,8 @@
     <string name="auto_backup_none">"아직 자동 백업하지 않았어요."</string>
     <string name="auto_backup_stop">"자동 백업 끄기"</string>
     <string name="auto_backup_start">"자동 백업 폴더 고르기"</string>
+    <string name="auto_backup_hint_phone">"휴대폰의 다운로드/ChronoLock 폴더에 일주일마다 백업해요. 앱을 지워도 파일은 남아요."</string>
+    <string name="auto_backup_now">"지금 백업"</string>
+    <string name="auto_backup_other">"다른 폴더 고르기"</string>
+    <string name="auto_backup_default">"다운로드 폴더로 되돌리기"</string>
 </resources>

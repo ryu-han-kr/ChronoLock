@@ -13,18 +13,22 @@
 - 주간 자동 백업: 설정 → 백업과 복원에서 폴더를 고르면(SAF 트리, 영구 권한) 바로 한 번 쓰고, 이후 6시간 주기 작업이
   7일마다 `chronolock-backup-auto.json` 하나를 덮어씀. 마지막 자동 백업 시각 표시, "자동 백업 끄기"로 권한 반납
   (QA 2026-10-23 개선안 6). 실패(폴더 삭제·권한 회수)는 그 주만 건너뜀. 기기 미검증.
+- 폴더를 고르지 않아도 자동 백업: Android 10 이상은 기본으로 휴대폰 `다운로드/ChronoLock/chronolock-backup-auto.json`에
+  씀(MediaStore, 권한 불필요, 앱을 지워도 남음). 앱을 열 때도 밀린 백업을 씀. "지금 백업" 버튼, 고른 폴더는
+  "다운로드 폴더로 되돌리기"로 해제. 재설치 뒤에는 이전 파일을 열 수 없어 새 파일을 추가함(이전 파일은 복원용으로 남음).
+  사용자 요청: "백업은 반드시 남아 있어야 해, 핸드폰에". Android 9는 이전처럼 폴더를 골라야 함.
 - Lint 정리(동작 변화 없음): UseKtx 6건(toUri·SharedPreferences.edit·createBitmap), 마스코트 깜박임 프레임을
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
 ### ko
 - 전화와 문자 앱은 어떤 경우에도 차단하지 않아요.
 - 앱 감지를 끈 적이 있으면 언제부터 언제까지 제한이 작동하지 않았는지 오늘 화면에서 알려 드려요.
-- 고른 폴더에 매주 자동으로 백업해요.
+- 매주 휴대폰 다운로드 폴더에 자동으로 백업해요. 앱을 지워도 백업 파일은 남아요.
 
 ### en
 - Phone and messaging apps are never blocked.
 - If app detection was turned off, Today shows when your limits were not working.
-- Weekly auto backup to a folder you pick.
+- Weekly auto backup to the phone's Download folder. The file stays even if you remove the app.
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 
