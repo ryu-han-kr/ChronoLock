@@ -80,6 +80,10 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
         it[autoBackupAtKey] = atEpochMillis
         if (phoneFile != null) it[autoBackupFileKey] = phoneFile
     } }
+    private val deskQrKey = stringPreferencesKey("desk_qr_secret")
+    /** The secret of the printed QR that must be scanned to stop a focus; null when the feature is off. */
+    val deskQr = context.preferences.data.map { it[deskQrKey] }
+    suspend fun setDeskQr(secret: String?) { context.preferences.edit { if (secret == null) it.remove(deskQrKey) else it[deskQrKey] = secret } }
     private val bankKey = intPreferencesKey("time_bank_minutes")
     private val bankCreditedKey = longPreferencesKey("time_bank_credited")
     /** Minutes earned by finishing focuses; see [com.chronolock.domain.TimeBank]. */

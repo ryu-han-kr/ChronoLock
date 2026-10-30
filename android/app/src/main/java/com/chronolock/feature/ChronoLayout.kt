@@ -71,6 +71,7 @@ internal fun ChronoScreen(
     setReduceMotion: (Boolean) -> Unit = {},
     setBedtime: (Boolean) -> Unit = {},
     spendTimeBank: (String) -> Unit = {},
+    setDeskQr: (Boolean) -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
     addSite: (String, () -> Unit) -> Unit = { _, _ -> },
@@ -313,6 +314,7 @@ internal fun ChronoScreen(
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }
                                 item { CardBox { BedtimeToggle(state.bedtime, setBedtime) } }
+                                item { CardBox { DeskQrCard(state.deskQr, state.rules.any { (it.focusUntilEpochMillis ?: 0) > nowEpoch }, setDeskQr) } }
                                 item {
                                     ThemePicker(if (state.followSystem && state.editingNight) state.nightTheme else state.theme, selectTheme, openThemeGallery,
                                         state.favoriteThemes, state.followSystem, state.editingNight, setFollowSystem, editNightTheme)

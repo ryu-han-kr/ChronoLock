@@ -49,6 +49,8 @@ data class MainState(
     val bedtime: Boolean = false,
     /** Minutes banked by finishing focuses, spent as a short pause of one app. */
     val timeBank: Int = 0,
+    /** The printed QR's secret, when stopping a focus needs it scanned. */
+    val deskQr: String? = null,
     /** Day/night themes that follow the device's dark mode, and which of the two the picker is editing. */
     val followSystem: Boolean = false,
     /** First-run goals, as [com.chronolock.domain.OnboardingGoal] names. */
@@ -134,6 +136,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.reduceMotion) { data, still -> data.copy(reduceMotion = still) }
         .combine(preferences.bedtime) { data, on -> data.copy(bedtime = on) }
         .combine(preferences.timeBank) { data, bank -> data.copy(timeBank = bank) }
+        .combine(preferences.deskQr) { data, secret -> data.copy(deskQr = secret) }
         .combine(preferences.followSystem) { data, follow -> data.copy(followSystem = follow) }
         .combine(preferences.goals) { data, goals -> data.copy(goals = goals) }
         .combine(preferences.nightTheme) { data, night -> data.copy(nightTheme = night) }
@@ -159,7 +162,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -273,7 +276,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun stopFocus() {
+    /** Stops the focus; with the desk QR on, only after [scanned] matches the printed code. */
+    fun stopFocus(scanned: String? = null) {
         if (local.value.focusBusy) return
         local.update { it.copy(focusBusy = true) }
         viewModelScope.launch {
@@ -282,6 +286,11 @@ class MainViewModel @Inject constructor(
                 // Read from storage: the screen state may not have loaded the lock or strict setting yet.
                 if (locked(now)) { showError(LocalRepository.LOCKED); return@launch }
                 if (preferences.strict.first().delayAt(environment.clock()) > 0) { showError("엄격 모드에서는 집중을 중간에 끝낼 수 없습니다."); return@launch }
+                val desk = preferences.deskQr.first()
+                if (desk != null && !com.chronolock.domain.DeskQr.matches(desk, scanned)) {
+                    showError(if (scanned == null) "책상에 둔 QR을 찍어야 집중을 끝낼 수 있어요." else "이 기기의 집중 QR이 아니에요.")
+                    return@launch
+                }
                 repository.stopFocus(now)
             }
             catch (cancelled: CancellationException) { throw cancelled }
@@ -327,6 +336,22 @@ class MainViewModel @Inject constructor(
     }
     fun setReduceMotion(on: Boolean) = viewModelScope.launch { preferences.setReduceMotion(on) }
     fun setBedtime(on: Boolean) = viewModelScope.launch { preferences.setBedtime(on) }
+
+    /**
+     * Turns the desk QR on with a new secret, or off. Neither while a focus runs: turning it off, or printing a new
+     * code, would be a way around the code already out of reach.
+     */
+    fun setDeskQr(on: Boolean) = viewModelScope.launch {
+        try {
+            val now = environment.clock().epochMillis
+            if (repository.rules.first().any { (it.focusUntilEpochMillis ?: 0) > now }) {
+                showError("집중이 끝난 뒤에 바꿀 수 있어요."); return@launch
+            }
+            preferences.setDeskQr(if (on) com.chronolock.domain.DeskQr.newSecret(
+                ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }) else null)
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
 
     /** Spends banked minutes as a pause of [packageName]; strict mode and locks hold it back like any pause. */
     fun spendTimeBank(packageName: String) = viewModelScope.launch {

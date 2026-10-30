@@ -744,4 +744,12 @@
     <string name="bank_title">"ためた時間 %1$d分"</string>
     <string name="bank_hint">"集中を最後までやってためました。アプリを1つ10分休ませられます。"</string>
     <string name="bank_spent">"ためた時間を10分使いました。"</string>
+    <string name="deskqr_title">"机のQRでだけ集中を終了"</string>
+    <string name="deskqr_hint">"QRを印刷して、机やリビングなどすぐ手が届かない場所に貼ってください。集中を途中で終えるには、そのQRを読み取る必要があります。"</string>
+    <string name="deskqr_locked">"集中が終わってから変更できます。"</string>
+    <string name="deskqr_image">"集中QR"</string>
+    <string name="deskqr_caption">"ChronoLock集中QR · ここで読み取ると集中が終わります"</string>
+    <string name="deskqr_save">"QR画像を保存・印刷"</string>
+    <string name="deskqr_needed">"机に置いたQRを読み取ると集中を終えられます。"</string>
+    <string name="deskqr_wrong">"この端末の集中QRではありません。"</string>
 </resources>

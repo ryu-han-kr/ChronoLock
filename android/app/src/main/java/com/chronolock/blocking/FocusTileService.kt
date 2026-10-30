@@ -64,6 +64,8 @@ class FocusTileService : TileService() {
                 // As the boot clock has it: a focus the wall clock says is over may still be running, and must not be replaced.
                 val rules = ClockAnchors.shown(repository.rules.first(), repository.anchors.first(), clock)
                 when {
+                    // With the desk QR on, the app scans it; the tile cannot.
+                    focusEnd(rules, now) != null && preferences.deskQr.first() != null -> openApp()
                     focusEnd(rules, now) != null -> if (preferences.strict.first().delayAt(clock) > 0 || preferences.lock.first().lockedAt(clock)) {
                         Toast.makeText(this@FocusTileService, localized.getString(R.string.strict_focus_locked), Toast.LENGTH_SHORT).show()
                     } else repository.stopFocus(now)

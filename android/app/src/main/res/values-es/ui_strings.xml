@@ -786,4 +786,12 @@
     <string name="bank_title">"Tiempo ahorrado: %1$d min"</string>
     <string name="bank_hint">"Ganado al completar concentraciones. Úsalo para pausar una app 10 minutos."</string>
     <string name="bank_spent">"Usaste 10 minutos ahorrados."</string>
+    <string name="deskqr_title">"Detener la concentración solo con el QR del escritorio"</string>
+    <string name="deskqr_hint">"Imprime el QR y pégalo lejos de tu alcance, como en el escritorio o la sala. Para detener la concentración antes, tendrás que escanearlo."</string>
+    <string name="deskqr_locked">"Podrás cambiarlo cuando termine la concentración."</string>
+    <string name="deskqr_image">"QR de concentración"</string>
+    <string name="deskqr_caption">"QR de ChronoLock · Escanéalo para terminar"</string>
+    <string name="deskqr_save">"Guardar o imprimir el QR"</string>
+    <string name="deskqr_needed">"Escanea el QR de tu escritorio para terminar la concentración."</string>
+    <string name="deskqr_wrong">"Ese no es el QR de concentración de este dispositivo."</string>
 </resources>

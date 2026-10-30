@@ -133,7 +133,11 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
                 edit = { app, recipe -> editPackage = app; suggestedRecipe = (recipe ?: pickRecipe?.let(RuleRecipe::valueOf))?.name; pickRecipe = null },
                 pickRecipe = pickRecipe?.let(RuleRecipe::valueOf), choosePickRecipe = { pickRecipe = it?.name },
-                startFocus = { confirmFocus = it }, stopFocus = model::stopFocus,
+                startFocus = { confirmFocus = it }, stopFocus = {
+                    // With the desk QR on, the scanned text decides; closing the scanner leaves the focus running.
+                    if (state.deskQr != null) DeskQrCode.scan(appContext) { scanned -> if (scanned != null) model.stopFocus(scanned) }
+                    else model.stopFocus()
+                },
                 usagePermission = { permissionDialog = false },
                 accessibilityPermission = { permissionDialog = true },
                 clear = { confirmClear = true },
@@ -149,7 +153,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                 openThemeGallery = { themeGallery = true },
                 pause = model::pause, resume = model::resume, cancelPending = model::cancelPending,
                 setStrict = model::setStrict, cancelStrict = model::cancelStrictChange,
-                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) }, setReduceMotion = { model.setReduceMotion(it) }, setBedtime = { model.setBedtime(it) }, spendTimeBank = { model.spendTimeBank(it) },
+                editGroup = { editGroupId = it }, cancelPendingGroup = model::cancelPendingGroup, selectMascot = { model.selectMascot(it) }, setReduceMotion = { model.setReduceMotion(it) }, setBedtime = { model.setBedtime(it) }, spendTimeBank = { model.spendTimeBank(it) }, setDeskQr = { model.setDeskQr(it) },
                 addSite = { input, added -> model.addSite(input, added) }, toggleSite = model::toggleSite,
                 removeSite = model::removeSite, cancelPendingSite = model::cancelPendingSite, addSitePreset = model::addSites, dismissMonitorGap = { model.dismissMonitorGap() },
                 setHistoryPin = model::setHistoryPin, deleteHistory = model::deleteHistory, changeHistoryPin = model::changeHistoryPin,
