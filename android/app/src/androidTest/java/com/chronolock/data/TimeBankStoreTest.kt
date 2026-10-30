@@ -32,9 +32,13 @@ class TimeBankStoreTest {
             TimeBankStore.settle(repository, preferences, start + 25 * minute)
             TimeBankStore.settle(repository, preferences, start + 30 * minute)
             assertEquals("counted once", 10, preferences.timeBank.first())
+            // The finished focus is in the week's focus log too, once.
+            assertEquals(listOf(com.chronolock.domain.FocusRun(start, start + 25 * minute, true)),
+                preferences.focusLog.first().filter { it.start == start })
 
             repository.startFocus(30, start + 31 * minute)
-            repository.stopFocus(start + 40 * minute)
+            // Stopping hands back when the focus began, for the log of stopped focuses.
+            assertEquals(start + 31 * minute, repository.stopFocus(start + 40 * minute))
             TimeBankStore.settle(repository, preferences, start + 70 * minute)
             assertEquals("stopped early", 10, preferences.timeBank.first())
 

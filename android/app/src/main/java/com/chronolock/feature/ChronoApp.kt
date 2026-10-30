@@ -688,6 +688,8 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, blockHours: 
             val cardLines = listOfNotNull(
                 tr("이번 주 사용 %1\$s", duration(weeks.currentMillis / 1000)),
                 if (streak > 0 && (weeks.changePercent ?: 0) < 0) tr("%1\$d일 연속 한도를 지켰어요", streak) else null,
+                com.chronolock.domain.FocusLog.week(state.focusLog, today, java.time.ZoneId.systemDefault()).millis.takeIf { it > 0 }
+                    ?.let { tr("이번 주 집중 %1\$s", duration(it / 1000)) },
             )
             val cardFooter = tr("ChronoLock · 앱 사용시간 제한")
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -727,6 +729,10 @@ internal fun WeeklyInsightsCard(state: MainState, today: LocalDate, blockHours: 
                 Text(tr("알림이 가장 많이 불렀어요. 그 앱의 알림을 줄여 보세요."),
                     color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
         }
+        // Time spent focusing this week, next to the time spent in apps.
+        val focusWeek = remember(state.focusLog, today) { com.chronolock.domain.FocusLog.week(state.focusLog, today, java.time.ZoneId.systemDefault()) }
+        if (focusWeek.millis > 0) Text(tr("이번 주 집중 %1\$s · 끝까지 마친 집중 %2\$d번", duration(focusWeek.millis / 1000), focusWeek.finished),
+            color = MaterialTheme.colorScheme.primary, modifier = Modifier.testTag("focus-week"))
         // The two hours one app takes the most, offered as a daily blocking schedule.
         state.riskyWindow?.let { window ->
             val name = state.history.firstOrNull { it.packageName == window.app }?.appName ?: window.app

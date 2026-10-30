@@ -91,15 +91,26 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     /** The secret of the printed QR that must be scanned to stop a focus; null when the feature is off. */
     val deskQr = context.preferences.data.map { it[deskQrKey] }
     suspend fun setDeskQr(secret: String?) { context.preferences.edit { if (secret == null) it.remove(deskQrKey) else it[deskQrKey] = secret } }
+    private val focusLogKey = stringPreferencesKey("focus_log")
+    /** Focuses as they went, kept 60 days; see [com.chronolock.domain.FocusLog]. */
+    val focusLog = context.preferences.data.map { com.chronolock.domain.FocusLog.decode(it[focusLogKey]) }
+    /** Records a focus stopped before its end. */
+    suspend fun logStoppedFocus(start: Long, end: Long) { if (end > start) context.preferences.edit {
+        it[focusLogKey] = com.chronolock.domain.FocusLog.encode(com.chronolock.domain.FocusLog.add(
+            com.chronolock.domain.FocusLog.decode(it[focusLogKey]), com.chronolock.domain.FocusRun(start, end, false), end))
+    } }
     private val bankKey = intPreferencesKey("time_bank_minutes")
     private val bankCreditedKey = longPreferencesKey("time_bank_credited")
     /** Minutes earned by finishing focuses; see [com.chronolock.domain.TimeBank]. */
     val timeBank = context.preferences.data.map { it[bankKey] ?: 0 }
     /** Banks what the focus ending at [until] earned, once; [earned] gets the end last counted. */
-    suspend fun creditFocus(until: Long, earned: (Long?) -> Int) { context.preferences.edit {
+    suspend fun creditFocus(until: Long, startedAt: Long?, earned: (Long?) -> Int) { context.preferences.edit {
         if (it[bankCreditedKey] == until) return@edit
         val minutes = earned(it[bankCreditedKey])
         it[bankCreditedKey] = until
+        // The same moment records the finished focus for the week's focus time.
+        if (startedAt != null && startedAt < until) it[focusLogKey] = com.chronolock.domain.FocusLog.encode(com.chronolock.domain.FocusLog.add(
+            com.chronolock.domain.FocusLog.decode(it[focusLogKey]), com.chronolock.domain.FocusRun(startedAt, until, true), until))
         if (minutes > 0) it[bankKey] = com.chronolock.domain.TimeBank.add(it[bankKey] ?: 0, minutes)
     } }
     /** Takes [minutes] out of the bank; false, and nothing taken, when it holds fewer. */

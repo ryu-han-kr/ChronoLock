@@ -781,4 +781,6 @@
     <string name="instead_title">"대신 열 앱"</string>
     <string name="instead_hint">"막혔을 때 차단 화면에서 바로 열 수 있는 다른 앱이에요. 전자책·단어장처럼 손이 가도 괜찮은 앱을 골라 보세요."</string>
     <string name="instead_none">"없음"</string>
+    <string name="focus_week">"이번 주 집중 %1$s · 끝까지 마친 집중 %2$d번"</string>
+    <string name="focus_week_card">"이번 주 집중 %1$s"</string>
 </resources>
