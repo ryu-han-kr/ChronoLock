@@ -32,6 +32,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     private var detail: TextView? = null
     private var settingsButton: Button? = null
     private var continueButton: Button? = null
+    private var alternativeButton: Button? = null
     private var reasonTitle: TextView? = null
     private var reasonRow: LinearLayout? = null
     /** Records a reason for the app on screen; null where the screen does not ask (sites, pauses, check-ins). */
@@ -136,6 +137,9 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
                 }
             }
             content.addView(reasonRow, LinearLayout.LayoutParams(-1, -2))
+            // Opens the app the person chose to reach for instead; hidden when none is set.
+            alternativeButton = Button(service).apply { visibility = View.GONE; isAllCaps = false }
+            content.addView(alternativeButton, LinearLayout.LayoutParams(-1, dp(56)))
             content.addView(Button(service).apply { text = text("홈 화면으로 돌아가기"); setOnClickListener { onHome() } }, LinearLayout.LayoutParams(-1, dp(56)))
             settingsButton = Button(service).apply { text = text("내 제한 설정 보기"); setOnClickListener { onSettings() } }
             content.addView(settingsButton, LinearLayout.LayoutParams(-1, dp(56)))
@@ -167,9 +171,14 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     // Each reason is a complete localized resource; only line separators are concatenated.
     @android.annotation.SuppressLint("SetTextI18n")
     fun show(appName: String, decision: RuleDecision, resistedToday: Int = 0, allowSettings: Boolean = true,
-        note: String? = null, exam: Pair<com.chronolock.domain.Exam, java.time.LocalDate>? = null, onReason: ((OpenReason) -> Unit)? = null) {
+        note: String? = null, exam: Pair<com.chronolock.domain.Exam, java.time.LocalDate>? = null,
+        alternative: Pair<String, () -> Unit>? = null, onReason: ((OpenReason) -> Unit)? = null) {
         attach()
-        lastShown = { show(appName, decision, resistedToday, allowSettings, note, exam, onReason) }
+        lastShown = { show(appName, decision, resistedToday, allowSettings, note, exam, alternative, onReason) }
+        alternativeButton?.apply {
+            visibility = if (alternative != null) View.VISIBLE else View.GONE
+            alternative?.let { (label, open) -> text = text("대신 %1\$s 열기", label); setOnClickListener { open() } }
+        }
         mode = "block"; stopCountdown(); continueButton?.visibility = View.GONE
         askReason(appName, onReason)
         showPose(when {
@@ -275,7 +284,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     fun hide() {
         stopCountdown()
         root?.let { manager.removeView(it) }
-        root = null; heading = null; picture = null; detail = null; lastShown = null; settingsButton = null; continueButton = null; mode = null
+        root = null; heading = null; picture = null; detail = null; lastShown = null; settingsButton = null; continueButton = null; alternativeButton = null; mode = null
         reasonTitle = null; reasonRow = null; onReason = null; pendingKey = null
     }
     private fun dp(value: Int) = (value * service.resources.displayMetrics.density).toInt()

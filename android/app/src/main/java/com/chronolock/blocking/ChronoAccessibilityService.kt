@@ -66,6 +66,8 @@ class ChronoAccessibilityService : AccessibilityService() {
     @Volatile private var notes = emptyMap<String, String>()
     /** The exam counted down on the block screen. */
     @Volatile private var exam: com.chronolock.domain.Exam? = null
+    /** The app to offer instead, per limited app. */
+    @Volatile private var alternatives = emptyMap<String, String>()
     @Volatile private var lock = com.chronolock.domain.LockSetting()
     /** App labels for the block screen; looked up once per app instead of every second while blocked. */
     private val labels = mutableMapOf<String, String>()
@@ -117,7 +119,8 @@ class ChronoAccessibilityService : AccessibilityService() {
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load the character", error) }
         }
         scope.launch {
-            try { combine(preferences.notes, preferences.exam) { n, e -> n to e }.collect { (n, e) -> notes = n; exam = e } }
+            try { combine(preferences.notes, preferences.exam, preferences.alternatives) { n, e, a -> Triple(n, e, a) }
+                .collect { (n, e, a) -> notes = n; exam = e; alternatives = a } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load notes", error) }
         }
@@ -402,7 +405,10 @@ class ChronoAccessibilityService : AccessibilityService() {
                 val now = environment.clock()
                 val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
                 overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now),
-                    note = notes[target], exam = exam?.takeIf { it.showing(now.date) }?.let { it to now.date }) { reason ->
+                    note = notes[target], exam = exam?.takeIf { it.showing(now.date) }?.let { it to now.date },
+                    alternative = alternatives[target]?.let { alt -> packageManager.getLaunchIntentForPackage(alt)?.let { open ->
+                        label(alt) to { runCatching { startActivity(open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); commands.trySend(Command.Foreground(null)) }
+                            .onFailure { android.util.Log.w("ChronoLock", "Alternative app did not open", it) }; Unit } } }) { reason ->
                     scope.launch {
                         runCatching { preferences.recordOpenReason(environment.clock().date, reason) }
                             .onFailure { android.util.Log.w("ChronoLock", "Open reason not saved", it) }

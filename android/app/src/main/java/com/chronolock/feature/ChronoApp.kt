@@ -179,7 +179,8 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
                     onDelete = { model.remove(appId) { editPackage = null } },
                     initialRecipe = suggestedRecipe?.let(RuleRecipe::valueOf), strictMinutes = state.strict.delayAt(nowEpoch),
                     initialSchedule = suggestedSchedule?.split('-')?.let { com.chronolock.domain.ScheduleDraft(it[0], it[1], com.chronolock.domain.ScheduleDraft.EVERY_DAY) },
-                    note = state.notes[appId].orEmpty(), saveNote = { model.saveNote(appId, it) }) }
+                    note = state.notes[appId].orEmpty(), saveNote = { model.saveNote(appId, it) },
+                    apps = state.apps, alternative = state.alternatives[appId], saveAlternative = { model.saveAlternative(appId, it) }) }
             }
             editGroupId?.let { id ->
                 val saved = state.groups.firstOrNull { it.id == id }
@@ -328,8 +329,11 @@ internal val DailyTimeInputSaver = listSaver<DailyTimeInput, String>(
 @Composable
 internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> Unit,
     onSave: (AppRule, () -> Unit) -> Unit, onDelete: () -> Unit, initialRecipe: RuleRecipe? = null, strictMinutes: Int = 0,
-    note: String = "", saveNote: (String) -> Unit = {}, initialSchedule: com.chronolock.domain.ScheduleDraft? = null) {
+    note: String = "", saveNote: (String) -> Unit = {}, initialSchedule: com.chronolock.domain.ScheduleDraft? = null,
+    apps: List<InstalledApp> = emptyList(), alternative: String? = null, saveAlternative: (String?) -> Unit = {}) {
     var noteText by rememberSaveable { mutableStateOf(note) }
+    var insteadOf by rememberSaveable { mutableStateOf(alternative) }
+    var pickingInstead by rememberSaveable { mutableStateOf(false) }
     var draft by rememberSaveable(stateSaver = RuleDraftSaver) { mutableStateOf(when {
         // Busiest hours from History: their window joins the app's schedules; a new rule gets no daily limit of its own.
         initialSchedule != null -> (saved?.toDomain()?.let(RuleDraft::from) ?: RuleDraft(daily = "")).let { current ->
@@ -360,6 +364,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
             error = null
             saving = true
             if (noteText.trim() != note) saveNote(noteText.trim())
+            if (insteadOf != alternative) saveAlternative(insteadOf)
             onSave(rule) { saving = false }
         } catch (invalid: IllegalArgumentException) {
             error = invalid.message
@@ -434,6 +439,15 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
             OutlinedTextField(value = noteText, onValueChange = { noteText = it.take(NOTE_MAX) }, enabled = !saving, singleLine = true,
                 placeholder = { Text(tr("예: 시험까지 3주 남았다")) }, modifier = Modifier.fillMaxWidth().testTag("rule-note"),
                 supportingText = { Text(tr("이 앱이 막힐 때 차단 화면에 보여 줘요.")) })
+            if (apps.isNotEmpty()) {
+                Text(tr("대신 열 앱"), style = MaterialTheme.typography.titleSmall)
+                Text(tr("막혔을 때 차단 화면에서 바로 열 수 있는 다른 앱이에요. 전자책·단어장처럼 손이 가도 괜찮은 앱을 골라 보세요."),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                OutlinedButton(onClick = { pickingInstead = true }, enabled = !saving, modifier = Modifier.testTag("instead-pick")) {
+                    Text(insteadOf?.let { pick -> apps.firstOrNull { it.packageName == pick }?.label ?: pick } ?: tr("앱 고르기"))
+                }
+                if (pickingInstead) InsteadPicker(apps.filter { it.packageName != app.packageName }, { insteadOf = it; pickingInstead = false }) { pickingInstead = false }
+            }
             Text(tr("1회 한도 도달 시 앱을 떠나야 다음 사용을 시작합니다. 대기를 함께 설정하면 바로 재실행하는 것도 줄일 수 있습니다."), style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth().toggleable(value = draft.scheduleEnabled, enabled = !saving, role = Role.Switch,
                 onValueChange = { draft = draft.copy(scheduleEnabled = it) }),
@@ -827,3 +841,20 @@ internal fun StrictModeCard(state: MainState, nowEpoch: Long, select: (Int) -> U
 internal val LocalAskReview = androidx.compose.runtime.staticCompositionLocalOf<() -> Unit> { {} }
 private const val REVIEW_STREAK_DAYS = 3
 private const val NOTE_MAX = 60
+
+/** Choosing the app to open instead from the block screen; [pick] gets null for none. */
+@Composable
+private fun InsteadPicker(apps: List<InstalledApp>, pick: (String?) -> Unit, close: () -> Unit) {
+    val sorted = remember(apps) { apps.sortedBy { it.label.lowercase() } }
+    AlertDialog(onDismissRequest = close, title = { Text(tr("대신 열 앱")) }, text = {
+        androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 420.dp)) {
+            item { TextButton(onClick = { pick(null) }, modifier = Modifier.fillMaxWidth()) { Text(tr("없음")) } }
+            items(sorted.size) { index ->
+                val option = sorted[index]
+                TextButton(onClick = { pick(option.packageName) }, modifier = Modifier.fillMaxWidth().testTag("instead-" + option.packageName)) {
+                    Text(option.label, Modifier.fillMaxWidth())
+                }
+            }
+        }
+    }, confirmButton = { TextButton(onClick = close) { Text(tr("취소")) } })
+}

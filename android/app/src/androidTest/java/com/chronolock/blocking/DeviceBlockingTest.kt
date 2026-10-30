@@ -199,6 +199,25 @@ class DeviceBlockingTest {
         } finally { runBlocking { preferences.setNote(target, "") } }
     }
 
+    @Test fun blockScreen_opensTheAppChosenInstead() {
+        val preferences = com.chronolock.data.Preferences(context)
+        // ChronoLock itself stands in for an e-book app: it has a launcher screen and is never blocked.
+        runBlocking { preferences.setAlternative(target, app) }
+        try {
+            rule(opens = 1)
+            launch(); home(); launch()
+            blocked("오늘 허용한 실행 횟수를 다 썼어요.")
+            val button = "대신 ChronoLock 열기"
+            await("instead button") { nodes().any { root -> root.findAccessibilityNodeInfosByText("열기").any { it.text?.toString()?.startsWith("대신 ") == true } } }
+            capture("block-instead")
+            val node = nodes().flatMap { it.findAccessibilityNodeInfosByText("열기") }.first { it.text?.toString()?.startsWith("대신 ") == true && it.isClickable }
+            android.util.Log.i("ChronoDeviceTest", "instead button: ${node.text} (expected like $button)")
+            val bounds = android.graphics.Rect().also(node::getBoundsInScreen)
+            shell("input tap ${bounds.centerX()} ${bounds.centerY()}")
+            await("block screen gives way to the chosen app") { !textVisible("지금은 쉬는 시간이에요") }
+        } finally { runBlocking { preferences.setAlternative(target, null) } }
+    }
+
     @Test fun cooldown30Seconds_retriesDoNotExtendDeadline() {
         rule(cooldown = 30)
         launch(); home()

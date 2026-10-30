@@ -777,4 +777,8 @@
     <string name="risky_title">"使用最多的时段"</string>
     <string name="risky_body">"每天 %1$s点~%2$s点 · 主要是 %3$s（过去7天 %4$s）"</string>
     <string name="risky_block">"屏蔽这个时段"</string>
+    <string name="instead_open">"改为打开%1$s"</string>
+    <string name="instead_title">"替代打开的应用"</string>
+    <string name="instead_hint">"被拦截时可以在拦截画面直接打开的另一个应用。选一个用了也无妨的，比如电子书或背单词应用。"</string>
+    <string name="instead_none">"无"</string>
 </resources>

@@ -67,6 +67,8 @@ data class MainState(
     val riskyWindow: com.chronolock.domain.RiskyWindow? = null,
     /** Lines to oneself per app, shown on its block screen. */
     val notes: Map<String, String> = emptyMap(),
+    /** The app offered instead on each limited app's block screen. */
+    val alternatives: Map<String, String> = emptyMap(),
     /** Reasons picked on the block screen, per day. */
     val openReasons: Map<java.time.LocalDate, Map<com.chronolock.domain.OpenReason, Int>> = emptyMap(),
     val nightTheme: AppTheme = AppTheme.DARK,
@@ -157,6 +159,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.autoBackup) { data, auto -> data.copy(autoBackup = auto) }
         .combine(preferences.openReasons) { data, reasons -> data.copy(openReasons = reasons) }
         .combine(preferences.notes) { data, notes -> data.copy(notes = notes) }
+        .combine(preferences.alternatives) { data, alternatives -> data.copy(alternatives = alternatives) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -169,7 +172,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, alternatives = data.alternatives, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion, bedtime = data.bedtime, timeBank = data.timeBank, deskQr = data.deskQr, exam = data.exam)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -265,6 +268,12 @@ class MainViewModel @Inject constructor(
     fun tabShown() = local.update { it.copy(requestedTab = null) }
     /** The friend's code has been offered for sending; it is not kept on screen after that. */
     fun partnerCodeShown() = local.update { it.copy(partnerCode = null) }
+
+    fun saveAlternative(packageName: String, alternative: String?) = viewModelScope.launch {
+        try { preferences.setAlternative(packageName, alternative) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
+    }
 
     fun saveNote(packageName: String, note: String) = viewModelScope.launch {
         try { preferences.setNote(packageName, note) }
