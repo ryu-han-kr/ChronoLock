@@ -783,4 +783,10 @@
     <string name="instead_none">"없음"</string>
     <string name="focus_week">"이번 주 집중 %1$s · 끝까지 마친 집중 %2$d번"</string>
     <string name="focus_week_card">"이번 주 집중 %1$s"</string>
+    <string name="starter_title">"지난 일주일로 맞춘 첫 한도"</string>
+    <string name="starter_hint">"가장 많이 쓴 앱의 하루 평균보다 조금 적게 잡았어요. 적용한 뒤에도 언제든 바꿀 수 있어요."</string>
+    <string name="starter_row">"%1$s · 하루 평균 %2$s → %3$s"</string>
+    <string name="starter_apply">"한 번에 적용"</string>
+    <string name="starter_dismiss">"괜찮아요"</string>
+    <string name="starter_done">"추천 한도를 적용했어요. 앱 제한 탭에서 언제든 바꿀 수 있어요."</string>
 </resources>

@@ -783,4 +783,10 @@
     <string name="instead_none">"无"</string>
     <string name="focus_week">"本周专注 %1$s · 坚持完成 %2$d 次"</string>
     <string name="focus_week_card">"本周专注 %1$s"</string>
+    <string name="starter_title">"根据上周定制的初始限额"</string>
+    <string name="starter_hint">"按最常用应用的日均使用时长略微下调。应用后也可以随时修改。"</string>
+    <string name="starter_row">"%1$s · 日均 %2$s → %3$s"</string>
+    <string name="starter_apply">"一键应用"</string>
+    <string name="starter_dismiss">"不用了"</string>
+    <string name="starter_done">"已应用建议限额，可随时在应用限制中修改。"</string>
 </resources>
