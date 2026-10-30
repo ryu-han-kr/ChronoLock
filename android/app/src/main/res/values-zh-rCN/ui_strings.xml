@@ -734,4 +734,11 @@
     <string name="card_usage">"本周使用 %1$s"</string>
     <string name="card_footer">"ChronoLock · 应用使用时间限制"</string>
     <string name="card_share">"分享结果卡片"</string>
+    <string name="bedtime_toggle">"充电时提醒睡觉"</string>
+    <string name="bedtime_toggle_hint">"晚上9点到凌晨3点之间充电时，每晚发送一次“该睡了吗？”通知。点按即可专注到早上7点。"</string>
+    <string name="bedtime_channel">"睡觉提醒"</string>
+    <string name="bedtime_title">"该睡觉了"</string>
+    <string name="bedtime_body">"开启专注到早上7点，放下手机吗？"</string>
+    <string name="bedtime_start">"专注到早上"</string>
+    <string name="bedtime_started">"已开启专注到早上7点。晚安！"</string>
 </resources>

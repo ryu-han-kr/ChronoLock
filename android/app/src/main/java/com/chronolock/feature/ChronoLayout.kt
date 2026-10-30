@@ -69,6 +69,7 @@ internal fun ChronoScreen(
     cancelStrict: () -> Unit = {},
     selectMascot: (com.chronolock.data.MascotKind) -> Unit = {},
     setReduceMotion: (Boolean) -> Unit = {},
+    setBedtime: (Boolean) -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
     addSite: (String, () -> Unit) -> Unit = { _, _ -> },
@@ -308,6 +309,7 @@ internal fun ChronoScreen(
                                 if (state.ads.configured || state.adFree) item { AdsCard(state, privacyOptions, manageSubscription) }
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }
+                                item { CardBox { BedtimeToggle(state.bedtime, setBedtime) } }
                                 item {
                                     ThemePicker(if (state.followSystem && state.editingNight) state.nightTheme else state.theme, selectTheme, openThemeGallery,
                                         state.favoriteThemes, state.followSystem, state.editingNight, setFollowSystem, editNightTheme)

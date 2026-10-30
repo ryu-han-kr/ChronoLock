@@ -755,4 +755,11 @@
     <string name="card_usage">"Used this week: %1$s"</string>
     <string name="card_footer">"ChronoLock · App time limits"</string>
     <string name="card_share">"Share week card"</string>
+    <string name="bedtime_toggle">"Bedtime reminder when charging"</string>
+    <string name="bedtime_toggle_hint">"Plug in between 9 PM and 3 AM and you get one 'Time to sleep?' notification a night. Tap it to focus until 7 AM."</string>
+    <string name="bedtime_channel">"Bedtime"</string>
+    <string name="bedtime_title">"Time to sleep?"</string>
+    <string name="bedtime_body">"Turn on focus until 7 AM and put the phone down?"</string>
+    <string name="bedtime_start">"Focus until morning"</string>
+    <string name="bedtime_started">"Focus is on until 7 AM. Sleep well!"</string>
 </resources>

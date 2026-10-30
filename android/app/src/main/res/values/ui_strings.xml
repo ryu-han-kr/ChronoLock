@@ -734,4 +734,11 @@
     <string name="card_usage">"이번 주 사용 %1$s"</string>
     <string name="card_footer">"ChronoLock · 앱 사용시간 제한"</string>
     <string name="card_share">"결과 카드 공유"</string>
+    <string name="bedtime_toggle">"충전하면 잘 시간 알림"</string>
+    <string name="bedtime_toggle_hint">"밤 9시부터 새벽 3시 사이에 충전기를 꽂으면 '잘까요?' 알림을 하루 한 번 보내요. 누르면 아침 7시까지 집중 모드가 켜져요."</string>
+    <string name="bedtime_channel">"잘 시간 알림"</string>
+    <string name="bedtime_title">"잘 시간이에요"</string>
+    <string name="bedtime_body">"아침 7시까지 집중 모드를 켜고 휴대폰을 내려놓을까요?"</string>
+    <string name="bedtime_start">"아침까지 집중"</string>
+    <string name="bedtime_started">"아침 7시까지 집중 모드를 켰어요. 잘 자요!"</string>
 </resources>

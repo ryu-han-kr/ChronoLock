@@ -75,10 +75,18 @@ class ChronoAccessibilityService : AccessibilityService() {
     }
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                beforeScreenOff = observed
-                commands.trySend(Command.ScreenOff)
-            } else commands.trySend(Command.Recover)
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    beforeScreenOff = observed
+                    commands.trySend(Command.ScreenOff)
+                }
+                // Plugging in at night may ask whether to focus until morning; nothing to do with monitoring.
+                Intent.ACTION_POWER_CONNECTED -> scope.launch {
+                    runCatching { com.chronolock.data.BedtimePrompt.onCharging(this@ChronoAccessibilityService, preferences, repository) }
+                        .onFailure { android.util.Log.w("ChronoLock", "Bedtime prompt failed", it) }
+                }
+                else -> commands.trySend(Command.Recover)
+            }
         }
     }
 
@@ -142,7 +150,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not observe blocked sites", error) }
         }
         ContextCompat.registerReceiver(this, screenReceiver, IntentFilter().apply {
-            addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT)
+            addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT); addAction(Intent.ACTION_POWER_CONNECTED)
         }, ContextCompat.RECEIVER_NOT_EXPORTED)
         screenReceiverRegistered = true
         scope.launch {

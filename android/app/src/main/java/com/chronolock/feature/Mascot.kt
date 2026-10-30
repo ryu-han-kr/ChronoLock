@@ -316,3 +316,17 @@ internal fun MotionToggle(on: Boolean, set: (Boolean) -> Unit) {
         Switch(checked = on, onCheckedChange = null)
     }
 }
+
+/** Asking at night, when the phone is plugged in, whether to focus until morning. */
+@Composable
+internal fun BedtimeToggle(on: Boolean, set: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().toggleable(value = on, role = Role.Switch, onValueChange = set).testTag("bedtime"),
+        verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(tr("충전하면 잘 시간 알림"), style = MaterialTheme.typography.titleSmall)
+            Text(tr("밤 9시부터 새벽 3시 사이에 충전기를 꽂으면 '잘까요?' 알림을 하루 한 번 보내요. 누르면 아침 7시까지 집중 모드가 켜져요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+        Switch(checked = on, onCheckedChange = null)
+    }
+}
