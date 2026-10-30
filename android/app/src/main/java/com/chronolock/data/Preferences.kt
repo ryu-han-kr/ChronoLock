@@ -23,7 +23,12 @@ private val Context.preferences by preferencesDataStore("preferences")
 data class MonitorGap(val offAt: Long, val backAt: Long?, val locked: Boolean)
 
 /** Weekly backups go to [folder] (a document tree URI); [lastAt] is the last one written, null before the first. */
-data class AutoBackup(val folder: String, val lastAt: Long?)
+data class AutoBackup(val folder: String, val lastAt: Long?) {
+    /** A week has passed since the last backup, or none was written, or the clock now reads earlier than it. */
+    fun due(nowEpochMillis: Long): Boolean = lastAt == null || nowEpochMillis < lastAt || nowEpochMillis - lastAt >= WEEK_MILLIS
+
+    companion object { const val WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000L }
+}
 
 /** Outcome of entering a password: [blockedUntil] is set after too many wrong tries. */
 data class PinResult(val ok: Boolean, val triesLeft: Int = 0, val blockedUntil: Long? = null)

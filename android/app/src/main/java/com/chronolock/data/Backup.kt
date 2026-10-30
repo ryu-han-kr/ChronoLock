@@ -156,7 +156,7 @@ class BackupRepository @Inject constructor(
      */
     suspend fun autoBackup(nowEpochMillis: Long, force: Boolean = false): Boolean {
         val auto = preferences.autoBackup.first() ?: return false
-        if (!force && auto.lastAt?.let { nowEpochMillis - it < WEEK_MILLIS && nowEpochMillis >= it } == true) return false
+        if (!force && !auto.due(nowEpochMillis)) return false
         val tree = auto.folder.toUri()
         val file = withContext(Dispatchers.IO) { existingAutoFile(tree) ?: createAutoFile(tree) }
         export(file, nowEpochMillis)
@@ -178,7 +178,6 @@ class BackupRepository @Inject constructor(
 
     private companion object {
         const val MAX_BYTES = 1_000_000
-        const val WEEK_MILLIS = 7 * 24 * 60 * 60 * 1000L
         const val AUTO_FILE = "chronolock-backup-auto.json"
     }
 }
