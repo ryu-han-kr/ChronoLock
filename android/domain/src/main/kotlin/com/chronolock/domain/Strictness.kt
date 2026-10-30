@@ -124,6 +124,8 @@ data class LockSetting(
     val pieceCode: Boolean = false,
     /** Digits handed out so far; the code is [goalDays] digits long. */
     val revealed: String = "",
+    /** The piece code was also sent to a friend, whose copy unlocks it before the goal is reached. */
+    val partner: Boolean = false,
     /** The same deadline on the boot clock of [bootId], so moving the wall clock forward cannot end a time lock early. */
     val untilElapsedMillis: Long? = null,
     val bootId: Int? = null,
@@ -147,6 +149,8 @@ data class LockSetting(
     fun goalReached(keptStreak: Int, today: java.time.LocalDate) = goalDays?.let { goalProgress(keptStreak, today) >= it } == true
     /** Whether another digit of a piece code can be handed out: one per kept day. */
     fun canReveal(keptStreak: Int, today: java.time.LocalDate) = pieceCode && revealed.length < goalProgress(keptStreak, today)
+    /** Whether the code may be entered now: once the goal is reached, or at any time with a friend's copy. */
+    fun canUnlock(keptStreak: Int, today: java.time.LocalDate) = goalReached(keptStreak, today) || (goalLocked && partner)
 
     companion object {
         /** Time lock lengths in hours, and goal lengths in days. */

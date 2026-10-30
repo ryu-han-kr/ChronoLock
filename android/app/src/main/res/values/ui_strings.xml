@@ -765,4 +765,14 @@
     <string name="exam_limits">"한도 줄이러 가기"</string>
     <string name="exam_block">"시험까지 %1$s"</string>
     <string name="exam_block_named">"%1$s까지 %2$s"</string>
+    <string name="partner_chip">"친구 비밀번호"</string>
+    <string name="partner_hint">"앱이 만든 비밀번호를 시작할 때 친구에게 보내요. 정말 필요할 때 친구에게 받아 풀고, 친구가 없어도 목표를 채우면 조각으로 모여요."</string>
+    <string name="partner_locked_hint">"친구에게 보낸 비밀번호를 받으면 목표 전에도 풀 수 있어요. 조각을 다 모아도 풀려요."</string>
+    <string name="partner_field">"친구에게 받은 비밀번호"</string>
+    <string name="partner_message">"ChronoLock 목표 잠금 비밀번호예요: %1$s
+제가 풀어 달라고 하면 정말 필요한지 한 번 물어봐 주세요."</string>
+    <string name="partner_title">"친구에게 비밀번호 보내기"</string>
+    <string name="partner_once">"이 비밀번호는 지금 한 번만 보낼 수 있어요. 보내지 않으면 목표를 채워 조각을 모아야 풀려요."</string>
+    <string name="partner_send">"친구에게 보내기"</string>
+    <string name="partner_skip">"보내지 않기"</string>
 </resources>

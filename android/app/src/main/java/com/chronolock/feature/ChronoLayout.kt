@@ -84,7 +84,7 @@ internal fun ChronoScreen(
     setHistoryPin: (String, String, () -> Unit) -> Unit = { _, _, _ -> },
     changeHistoryPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },
     lockFor: (Int) -> Unit = {},
-    startGoalLock: (Int, Boolean, String, String, () -> Unit) -> Unit = { _, _, _, _, _ -> },
+    startGoalLock: (Int, Boolean, String, String, () -> Unit, Boolean) -> Unit = { _, _, _, _, _, _ -> },
     endGoalLock: (String, Int) -> Unit = { _, _ -> },
     collectPiece: (Int) -> Unit = {},
     changeGoalPin: (String, String, String, () -> Unit) -> Unit = { _, _, _, _ -> },

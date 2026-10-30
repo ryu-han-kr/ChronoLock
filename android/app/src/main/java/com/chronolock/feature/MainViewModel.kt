@@ -61,6 +61,8 @@ data class MainState(
     val invite: com.chronolock.domain.Invite? = null,
     /** A tab a launcher shortcut asked for; the screen switches to it once and clears it. */
     val requestedTab: Int? = null,
+    /** A partner goal lock's code, held only until the person sends it to their friend. */
+    val partnerCode: String? = null,
     /** Lines to oneself per app, shown on its block screen. */
     val notes: Map<String, String> = emptyMap(),
     /** Reasons picked on the block screen, per day. */
@@ -257,6 +259,8 @@ class MainViewModel @Inject constructor(
     }
 
     fun tabShown() = local.update { it.copy(requestedTab = null) }
+    /** The friend's code has been offered for sending; it is not kept on screen after that. */
+    fun partnerCodeShown() = local.update { it.copy(partnerCode = null) }
 
     fun saveNote(packageName: String, note: String) = viewModelScope.launch {
         try { preferences.setNote(packageName, note) }
@@ -551,13 +555,20 @@ class MainViewModel @Inject constructor(
         catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
 
-    /** Starts a goal lock of [days] kept days, with the person's password or, when [pieces], an app-made code; [done] closes the form. */
-    fun startGoalLock(days: Int, pieces: Boolean, pin: String, confirm: String, done: () -> Unit) = viewModelScope.launch {
+    /**
+     * Starts a goal lock of [days] kept days, with the person's password or, when [pieces], an app-made code; with [partner]
+     * that code also goes to a friend, offered through [MainState.partnerCode]. [done] closes the form.
+     */
+    fun startGoalLock(days: Int, pieces: Boolean, pin: String, confirm: String, done: () -> Unit, partner: Boolean = false) = viewModelScope.launch {
         when {
             !state.value.pro -> showError(PRO_GOAL)
-            !pieces && !pin.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
-            !pieces && pin != confirm -> showError("두 비밀번호가 다릅니다.")
-            else -> try { preferences.startGoalLock(days, environment.clock().date, pin.takeUnless { pieces }); repository.cancelAllPending(); done() }
+            !pieces && !partner && !pin.matches(Regex("[0-9]{4,12}")) -> showError("비밀번호는 숫자 4~12자리로 정해 주세요.")
+            !pieces && !partner && pin != confirm -> showError("두 비밀번호가 다릅니다.")
+            else -> try {
+                val code = preferences.startGoalLock(days, environment.clock().date, pin.takeUnless { pieces || partner }, partner)
+                repository.cancelAllPending(); done()
+                if (partner && code != null) local.update { it.copy(partnerCode = code) }
+            }
                 catch (cancelled: CancellationException) { throw cancelled }
                 catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
         }
@@ -567,7 +578,7 @@ class MainViewModel @Inject constructor(
     fun endGoalLock(pin: String, keptStreak: Int) = viewModelScope.launch {
         try {
             val lock = preferences.lock.first()
-            if (!lock.goalReached(keptStreak, environment.clock().date)) { showError("아직 목표를 이루지 않았어요."); return@launch }
+            if (!lock.canUnlock(keptStreak, environment.clock().date)) { showError("아직 목표를 이루지 않았어요."); return@launch }
             val result = preferences.endGoalLock(pin, environment.clock())
             if (!result.ok) { refused(result); return@launch }
             showError("목표 잠금을 풀었어요. 수고했어요!")

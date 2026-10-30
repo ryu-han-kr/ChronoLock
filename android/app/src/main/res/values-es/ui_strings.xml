@@ -807,4 +807,14 @@
     <string name="exam_limits">"Bajar mis límites"</string>
     <string name="exam_block">"%1$s para el examen"</string>
     <string name="exam_block_named">"%2$s para %1$s"</string>
+    <string name="partner_chip">"Código de un amigo"</string>
+    <string name="partner_hint">"La app crea un código y se lo envías a un amigo al empezar. Pídeselo cuando de verdad necesites desbloquear; aun sin él, al cumplir la meta lo reúnes por partes."</string>
+    <string name="partner_locked_hint">"Con el código que enviaste a tu amigo puedes desbloquear antes de la meta. Reunir todas las partes también lo desbloquea."</string>
+    <string name="partner_field">"Código de tu amigo"</string>
+    <string name="partner_message">"Mi código de bloqueo de ChronoLock: %1$s
+Si te lo pido, pregúntame una vez si de verdad lo necesito."</string>
+    <string name="partner_title">"Enviar el código a un amigo"</string>
+    <string name="partner_once">"Solo puedes enviar este código ahora. Si no lo haces, solo se abrirá cuando cumplas la meta y reúnas todas las partes."</string>
+    <string name="partner_send">"Enviar a un amigo"</string>
+    <string name="partner_skip">"No enviar"</string>
 </resources>

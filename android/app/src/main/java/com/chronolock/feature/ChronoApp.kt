@@ -128,6 +128,7 @@ fun ChronoApp(model: MainViewModel, openSettings: (Boolean) -> Unit, signIn: () 
         }
         ChronoTheme(shown) {
             Box {
+            state.partnerCode?.let { code -> PartnerCodeDialog(code) { model.partnerCodeShown() } }
             ChronoScreen(
                 state = state, today = today, nowEpoch = nowEpoch, tab = tab,
                 selectTab = { tab = it; if (it == 2) model.refreshHistory() }, snackbar = snackbar,
