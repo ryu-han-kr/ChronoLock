@@ -73,6 +73,7 @@ internal fun ChronoScreen(
     spendTimeBank: (String) -> Unit = {},
     setDeskQr: (Boolean) -> Unit = {},
     setExam: (com.chronolock.domain.Exam?) -> Unit = {},
+    blockHours: (String, com.chronolock.domain.ScheduleDraft) -> Unit = { _, _ -> },
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
     addSite: (String, () -> Unit) -> Unit = { _, _ -> },
@@ -252,7 +253,7 @@ internal fun ChronoScreen(
                                         limited = state.rules.filter { it.enabled }.mapTo(mutableSetOf()) { it.packageName },
                                         limitApp = { app -> choosePickRecipe(null); edit(app, null) })
                                 }
-                                item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today) { app, recipe -> edit(app, recipe) } }
+                                item(span = { GridItemSpan(maxLineSpan) }) { WeeklyInsightsCard(state, today, blockHours) { app, recipe -> edit(app, recipe) } }
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Text(tr("선택한 앱의 기록만 표시합니다. 감지 중단 중 실행 횟수는 누락될 수 있습니다."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 }
