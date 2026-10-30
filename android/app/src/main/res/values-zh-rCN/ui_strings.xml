@@ -744,4 +744,12 @@
     <string name="bank_title">"已攒时间 %1$d 分钟"</string>
     <string name="bank_hint">"坚持完成专注攒下的时间。可让一个应用暂停限制10分钟。"</string>
     <string name="bank_spent">"已使用攒下的10分钟。"</string>
+    <string name="deskqr_title">"只能用桌面二维码结束专注"</string>
+    <string name="deskqr_hint">"打印二维码并贴在书桌或客厅等不能随手够到的地方。要提前结束专注，必须扫描该二维码。"</string>
+    <string name="deskqr_locked">"专注结束后才能更改。"</string>
+    <string name="deskqr_image">"专注二维码"</string>
+    <string name="deskqr_caption">"ChronoLock 专注二维码 · 扫描此处结束专注"</string>
+    <string name="deskqr_save">"保存或打印二维码"</string>
+    <string name="deskqr_needed">"扫描桌上的二维码才能结束专注。"</string>
+    <string name="deskqr_wrong">"这不是本设备的专注二维码。"</string>
 </resources>

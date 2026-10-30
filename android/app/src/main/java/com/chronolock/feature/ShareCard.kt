@@ -54,9 +54,9 @@ object ShareCard {
     }
 
     /** Saves [bitmap] in the app cache and opens the share sheet with it and [message]. */
-    fun share(context: Context, bitmap: Bitmap, message: String) {
+    fun share(context: Context, bitmap: Bitmap, message: String, fileName: String = "chronolock-week.png") {
         val folder = java.io.File(context.cacheDir, "share").apply { mkdirs() }
-        val file = java.io.File(folder, "chronolock-week.png")
+        val file = java.io.File(folder, fileName)
         file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         val uri = FileProvider.getUriForFile(context, context.packageName + ".share", file)
         val send = Intent(Intent.ACTION_SEND).setType("image/png")

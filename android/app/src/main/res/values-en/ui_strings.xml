@@ -765,4 +765,12 @@
     <string name="bank_title">"Banked time: %1$d min"</string>
     <string name="bank_hint">"Earned by finishing focuses. Use it to pause one app for 10 minutes."</string>
     <string name="bank_spent">"Used 10 banked minutes."</string>
+    <string name="deskqr_title">"Stop focus only with the desk QR"</string>
+    <string name="deskqr_hint">"Print the QR and stick it somewhere out of reach, like your desk or living room. To stop a focus early, you have to scan it."</string>
+    <string name="deskqr_locked">"You can change this after the focus ends."</string>
+    <string name="deskqr_image">"Focus QR"</string>
+    <string name="deskqr_caption">"ChronoLock focus QR · Scan here to end a focus"</string>
+    <string name="deskqr_save">"Save or print the QR"</string>
+    <string name="deskqr_needed">"Scan the QR on your desk to end the focus."</string>
+    <string name="deskqr_wrong">"That isn't this device's focus QR."</string>
 </resources>

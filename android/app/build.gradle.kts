@@ -117,6 +117,8 @@ dependencies {
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.google.android.play:review:2.0.2")
     implementation("com.android.installreferrer:installreferrer:2.2")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    implementation("com.google.zxing:core:3.5.3")
     // Installs the bundled baseline profiles (Compose, app) at install time for faster start and scrolling.
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
     implementation("com.google.android.gms:play-services-ads:25.5.0")

@@ -744,4 +744,12 @@
     <string name="bank_title">"모은 시간 %1$d분"</string>
     <string name="bank_hint">"집중을 끝까지 해서 모았어요. 앱 하나를 10분 쉬게 할 수 있어요."</string>
     <string name="bank_spent">"모은 시간 10분을 썼어요."</string>
+    <string name="deskqr_title">"책상 QR로만 집중 끄기"</string>
+    <string name="deskqr_hint">"QR을 인쇄해 책상이나 거실처럼 바로 손이 닿지 않는 곳에 붙여 두세요. 집중을 중간에 끄려면 그 QR을 찍어야 해요."</string>
+    <string name="deskqr_locked">"집중이 끝난 뒤에 바꿀 수 있어요."</string>
+    <string name="deskqr_image">"집중 QR"</string>
+    <string name="deskqr_caption">"ChronoLock 집중 QR · 여기서 찍어야 집중이 끝나요"</string>
+    <string name="deskqr_save">"QR 이미지 저장·인쇄"</string>
+    <string name="deskqr_needed">"책상에 둔 QR을 찍어야 집중을 끝낼 수 있어요."</string>
+    <string name="deskqr_wrong">"이 기기의 집중 QR이 아니에요."</string>
 </resources>
