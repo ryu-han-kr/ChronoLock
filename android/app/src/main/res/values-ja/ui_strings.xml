@@ -715,4 +715,13 @@
     <string name="situation_work">"仕事に集中"</string>
     <string name="situation_bedtime">"寝る前のスマホ"</string>
     <string name="share_goals">"このリンクからインストールすると、私の目標（%1$s）が選ばれた状態で始まります。"</string>
+    <string name="reason_bored">"退屈だから"</string>
+    <string name="reason_habit">"習慣で"</string>
+    <string name="reason_notification">"通知を見て"</string>
+    <string name="reason_needed">"本当に必要"</string>
+    <string name="reason_ask">"なぜ開こうとしましたか？"</string>
+    <string name="reason_saved">"記録しました。履歴タブで見られます。"</string>
+    <string name="reason_week_title">"今週アプリを開こうとした理由"</string>
+    <string name="reason_tip_habit">"ほとんどが習慣か退屈でした。ホーム画面からアプリを移すと手が伸びにくくなります。"</string>
+    <string name="reason_tip_notification">"通知がいちばんのきっかけでした。そのアプリの通知を減らしてみましょう。"</string>
 </resources>

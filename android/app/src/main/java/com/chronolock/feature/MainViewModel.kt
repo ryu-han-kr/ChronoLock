@@ -51,6 +51,8 @@ data class MainState(
     val goals: Set<String> = emptySet(),
     /** Goals brought by the Play link this install came from, shown at first run. */
     val invite: com.chronolock.domain.Invite? = null,
+    /** Reasons picked on the block screen, per day. */
+    val openReasons: Map<java.time.LocalDate, Map<com.chronolock.domain.OpenReason, Int>> = emptyMap(),
     val nightTheme: AppTheme = AppTheme.DARK,
     val editingNight: Boolean = false,
     /** Day totals for the year calendar, and whether a password for deleting history exists. */
@@ -133,6 +135,7 @@ class MainViewModel @Inject constructor(
         .combine(repository.anchors) { data, anchors -> data.copy(anchors = anchors) }
         .combine(preferences.monitorGap) { data, gap -> data.copy(monitorGap = gap) }
         .combine(preferences.autoBackup) { data, auto -> data.copy(autoBackup = auto) }
+        .combine(preferences.openReasons) { data, reasons -> data.copy(openReasons = reasons) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -145,7 +148,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {

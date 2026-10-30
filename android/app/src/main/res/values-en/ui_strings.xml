@@ -736,4 +736,13 @@
     <string name="situation_work">"Focus at work"</string>
     <string name="situation_bedtime">"Phone before bed"</string>
     <string name="share_goals">"Install from this link and my goals (%1$s) are already picked."</string>
+    <string name="reason_bored">"Bored"</string>
+    <string name="reason_habit">"Habit"</string>
+    <string name="reason_notification">"A notification"</string>
+    <string name="reason_needed">"Really needed"</string>
+    <string name="reason_ask">"Why did you want to open it?"</string>
+    <string name="reason_saved">"Saved. You can see it in the History tab."</string>
+    <string name="reason_week_title">"Why you reached for apps this week"</string>
+    <string name="reason_tip_habit">"Mostly habit or boredom. Moving the app off your home screen makes it easier to resist."</string>
+    <string name="reason_tip_notification">"Notifications pulled you in the most. Try turning down that app's notifications."</string>
 </resources>

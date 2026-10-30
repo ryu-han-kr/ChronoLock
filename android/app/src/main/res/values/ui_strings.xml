@@ -715,4 +715,13 @@
     <string name="situation_work">"업무 집중"</string>
     <string name="situation_bedtime">"잠들기 전 휴대폰"</string>
     <string name="share_goals">"이 링크로 설치하면 제 목표(%1$s)가 미리 골라져 있어요."</string>
+    <string name="reason_bored">"심심해서"</string>
+    <string name="reason_habit">"습관처럼"</string>
+    <string name="reason_notification">"알림 보고"</string>
+    <string name="reason_needed">"꼭 필요해서"</string>
+    <string name="reason_ask">"왜 열려고 했나요?"</string>
+    <string name="reason_saved">"기록했어요. 히스토리 탭에서 볼 수 있어요."</string>
+    <string name="reason_week_title">"이번 주에 열려고 한 이유"</string>
+    <string name="reason_tip_habit">"대부분 습관이나 심심함이었어요. 홈 화면에서 앱 위치를 옮기면 손이 덜 가요."</string>
+    <string name="reason_tip_notification">"알림이 가장 많이 불렀어요. 그 앱의 알림을 줄여 보세요."</string>
 </resources>

@@ -21,6 +21,10 @@
   친구가 그 링크로 설치하면 첫 화면에서 Install Referrer로 읽어 같은 목표를 미리 고르고 "친구가 보낸 링크" 안내를 보여 줌.
   첫 화면에 "어떤 상황이세요?"(공부·시험 준비 / 업무 집중 / 잠들기 전 휴대폰) 선택 추가 → 목표를 한 번에 채움.
   맞춤 스토어 등록정보 링크에 `utm_campaign=study|work|bedtime`을 붙이면 그 상황이 미리 골라짐. 기존 공유 링크(utm_source=share)는 목표 없음으로 처리.
+- 차단 화면에 "왜 열려고 했나요?" 한 번 누르기(심심해서·습관처럼·알림 보고·꼭 필요해서). 앱 차단 화면에만 나오고
+  사이트·숨 쉬기·계속 쓸까요 화면에는 없음. 같은 화면이 떠 있는 동안 한 번만 묻고, 누르면 "기록했어요" 문구.
+  날짜별 횟수를 DataStore `open_reasons`에 28일 보관(기기에만). 히스토리 '최근 7일 돌아보기'에 이유별 비율과 짧은 팁.
+  "꼭 필요해서"를 눌러도 열어 주지는 않음(엄격 모드·잠금과 충돌 방지, 필요하면 다음 단계에서 결정).
 - Lint 정리(동작 변화 없음): UseKtx 6건(toUri·SharedPreferences.edit·createBitmap), 마스코트 깜박임 프레임을
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
@@ -30,6 +34,7 @@
 - 매주 휴대폰 다운로드 폴더에 자동으로 백업해요. 앱을 지워도 백업 파일은 남아요.
 - 친구에게 보낸 링크로 설치하면 내 목표가 미리 골라져 있어 같이 도전할 수 있어요.
 - 처음 시작할 때 공부·업무·잠들기 전 중 내 상황을 고르면 맞춤 목표가 채워져요.
+- 차단 화면에서 왜 열려고 했는지 한 번 누르면, 히스토리에서 이번 주 이유를 모아 보여 드려요.
 
 ### en
 - Phone and messaging apps are never blocked.
@@ -37,6 +42,7 @@
 - Weekly auto backup to the phone's Download folder. The file stays even if you remove the app.
 - Install from a friend's link and their goals are already picked, so you can take the challenge together.
 - At first run, pick studying, work or bedtime and matching goals are filled in.
+- Tap why you wanted to open an app on the block screen, and History sums up this week's reasons.
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 
