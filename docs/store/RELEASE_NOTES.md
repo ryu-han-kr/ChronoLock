@@ -2,14 +2,16 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
-## 다음 출시 (미출시)
+## 0.18.0 (versionCode 28) — 2026-10-30 AAB 빌드 (업로드 전)
+
+AAB: `release/chronolock-0.18.0-vc28.aab`. Pro 구분은 꺼진 빌드. PR #109~#121.
 
 이번에 바뀐 것 (내부 기록):
 - 문자 앱(기본 SMS 앱, 삼성 메시지·Google 메시지·AOSP mms)을 전화처럼 안전 앱으로 처리. 제한 대상 목록에 나오지 않고,
   이미 걸린 규칙이 있어도 차단하지 않음. 사용자 요청: "전화와 메시지는 기본 기능이라 절대 차단하지 마".
 - 접근성(앱 감지)을 사용자가 끄면 시각과 잠금·엄격 모드 여부를 기록하고, 오늘 탭에 "앱 감지가 꺼진 적이 있어요" 카드로
   꺼진 구간(또는 아직 꺼져 있음)을 보여 줌. "확인했어요"로 닫음. 서비스 해제 시 설정 목록에서 빠져 있을 때만 기록해
-  프로세스 종료·재부팅은 기록하지 않음(QA 2026-10-23 개선안 7). 기기 미검증.
+  프로세스 종료·재부팅은 기록하지 않음(QA 2026-10-23 개선안 7). 휴대폰에서 사용자가 카드 확인.
 - 주간 자동 백업: 설정 → 백업과 복원에서 폴더를 고르면(SAF 트리, 영구 권한) 바로 한 번 쓰고, 이후 6시간 주기 작업이
   7일마다 `chronolock-backup-auto.json` 하나를 덮어씀. 마지막 자동 백업 시각 표시, "자동 백업 끄기"로 권한 반납
   (QA 2026-10-23 개선안 6). 실패(폴더 삭제·권한 회수)는 그 주만 건너뜀. 기기 미검증.
@@ -25,6 +27,7 @@
   사이트·숨 쉬기·계속 쓸까요 화면에는 없음. 같은 화면이 떠 있는 동안 한 번만 묻고, 누르면 "기록했어요" 문구.
   날짜별 횟수를 DataStore `open_reasons`에 28일 보관(기기에만). 히스토리 '최근 7일 돌아보기'에 이유별 비율과 짧은 팁.
   "꼭 필요해서"를 눌러도 열어 주지는 않음(엄격 모드·잠금과 충돌 방지, 필요하면 다음 단계에서 결정).
+  태블릿 검증 중 탭 직후 화면이 다시 그려져 질문이 또 나오던 문제를 고침(같은 앱 답을 1분 유지, #119).
 - 결과 카드 공유: 히스토리 '최근 7일 돌아보기'의 "결과 카드 공유"가 1080×1920 이미지(캐릭터·지난주 대비·연속 기록·이번 주 사용)를
   만들어 추천 링크 문구와 함께 공유. 앱 이름은 그리지 않음. 캐시 `share/` 폴더만 FileProvider로 공유.
 - 미래의 나에게 한 줄: 규칙 편집에 60자 한 줄, 그 앱 차단 화면에 따옴표로 표시. DataStore `rule_notes`(기기에만, 백업 파일에는 미포함).
@@ -40,30 +43,30 @@
   `LocalResources`로 읽음. MascotUiTest가 기분별 마스코트를 찾기만 하고 확인하지 않던 것을 테마당 1개씩 있는지 확인하도록 고침.
 
 ### ko
-- 전화와 문자 앱은 어떤 경우에도 차단하지 않아요.
-- 앱 감지를 끈 적이 있으면 언제부터 언제까지 제한이 작동하지 않았는지 오늘 화면에서 알려 드려요.
-- 매주 휴대폰 다운로드 폴더에 자동으로 백업해요. 앱을 지워도 백업 파일은 남아요.
-- 친구에게 보낸 링크로 설치하면 내 목표가 미리 골라져 있어 같이 도전할 수 있어요.
-- 처음 시작할 때 공부·업무·잠들기 전 중 내 상황을 고르면 맞춤 목표가 채워져요.
-- 차단 화면에서 왜 열려고 했는지 한 번 누르면, 히스토리에서 이번 주 이유를 모아 보여 드려요.
-- 이번 주 결과를 이미지 카드로 공유할 수 있어요.
-- 앱마다 미래의 나에게 한 줄을 적어 두면 차단 화면에 보여 드려요.
-- 앱 아이콘을 길게 눌러 바로 집중을 시작하거나 오늘 사용량을 볼 수 있어요.
-- 밤에 충전기를 꽂으면 아침까지 집중할지 물어볼 수 있어요(설정에서 켜기).
-- 25분 이상 집중을 끝까지 하면 10분을 모아, 앱 하나를 잠깐 쉬게 할 때 쓸 수 있어요.
+- 전화·문자 앱은 어떤 경우에도 차단하지 않아요.
+- 앱 감지가 꺼졌던 시간을 오늘 화면에서 알려 드려요.
+- 매주 다운로드 폴더에 자동 백업해요. 앱을 지워도 남아요.
+- 친구 링크로 설치하면 친구의 목표가 미리 골라져요.
+- 처음 시작할 때 공부·업무·잠들기 전 중 내 상황을 고를 수 있어요.
+- 차단 화면에서 왜 열려 했는지 누르면 히스토리에 모아 보여 드려요.
+- 이번 주 결과를 이미지 카드로 공유해요.
+- 앱마다 나에게 한 줄을 적으면 차단 화면에 보여 드려요.
+- 앱 아이콘을 길게 눌러 집중을 시작하거나 오늘 사용량을 봐요.
+- 밤에 충전하면 아침까지 집중할지 물어봐요(설정에서 켜기).
+- 25분 집중을 끝내면 10분을 모아 앱 하나를 잠깐 쉬게 할 수 있어요.
 
 ### en
-- Phone and messaging apps are never blocked.
-- If app detection was turned off, Today shows when your limits were not working.
-- Weekly auto backup to the phone's Download folder. The file stays even if you remove the app.
-- Install from a friend's link and their goals are already picked, so you can take the challenge together.
-- At first run, pick studying, work or bedtime and matching goals are filled in.
-- Tap why you wanted to open an app on the block screen, and History sums up this week's reasons.
-- Share your week as a picture card.
-- Write a line to future you for each app; it shows on the block screen.
-- Long-press the app icon to start a focus or see today's usage.
-- Plug in at night and ChronoLock can offer a focus until morning (turn it on in Settings).
-- Finish a focus of 25 minutes or more to bank 10 minutes, then use them to pause one app briefly.
+- Calls and texts are never blocked.
+- Today shows when app detection was off.
+- Weekly backup to Download, kept after uninstall.
+- Friend links start with their goals.
+- Pick study, work or bedtime at first run.
+- Tap why you opened a blocked app; History sums it up.
+- Share your week as a picture.
+- Notes to yourself on the block screen.
+- Long-press the icon to focus or see usage.
+- Charge at night to focus until morning (Settings).
+- Finish 25-min focuses to bank pause time.
 
 ## 0.17.0 (versionCode 27) — 2026-10-28 업로드 (내부·테스터들)
 
