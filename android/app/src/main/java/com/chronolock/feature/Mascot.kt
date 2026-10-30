@@ -317,6 +317,42 @@ internal fun MotionToggle(on: Boolean, set: (Boolean) -> Unit) {
     }
 }
 
+/**
+ * Holding limited apps' notifications until set times. Needs notification access, granted in Android settings;
+ * while it is missing the switch stays on and says so, with a way there.
+ */
+@Composable
+internal fun NotificationBatchToggle(on: Boolean, set: (Boolean) -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    // Checked again when the person comes back from Android settings.
+    var granted by remember { mutableStateOf(false) }
+    androidx.compose.runtime.DisposableEffect(lifecycle) {
+        val check = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME)
+                granted = androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+        }
+        lifecycle.lifecycle.addObserver(check)
+        onDispose { lifecycle.lifecycle.removeObserver(check) }
+    }
+    fun openAccess() = runCatching {
+        context.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+    Row(Modifier.fillMaxWidth().toggleable(value = on, role = Role.Switch, onValueChange = { set(it); if (it && !granted) openAccess() })
+        .testTag("batch"), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(tr("알림 모아 보기"), style = MaterialTheme.typography.titleSmall)
+            Text(tr("제한한 앱의 알림을 12시·18시·21시에 모아서 받아요. 전화·알람·문자는 바로 와요. 알림 내용은 읽지 않아요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+        Switch(checked = on, onCheckedChange = null)
+    }
+    if (on && !granted) androidx.compose.material3.TextButton(onClick = { openAccess() }, modifier = Modifier.testTag("batch-access")) {
+        Text(tr("알림 접근을 허용해야 동작해요. 설정 열기"))
+    }
+}
+
 /** Asking at night, when the phone is plugged in, whether to focus until morning. */
 @Composable
 internal fun BedtimeToggle(on: Boolean, set: (Boolean) -> Unit) {

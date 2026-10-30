@@ -789,4 +789,8 @@
     <string name="starter_apply">"まとめて適用"</string>
     <string name="starter_dismiss">"けっこうです"</string>
     <string name="starter_done">"おすすめの制限を適用しました。アプリ制限タブでいつでも変更できます。"</string>
+    <string name="batch_listener_label">"ChronoLock 通知まとめ"</string>
+    <string name="batch_title">"通知をまとめる"</string>
+    <string name="batch_hint">"制限中のアプリの通知を12時・18時・21時にまとめて受け取ります。電話・アラーム・SMSはすぐ届きます。通知の内容は読みません。"</string>
+    <string name="batch_access">"通知へのアクセスを許可すると動作します。設定を開く"</string>
 </resources>

@@ -789,4 +789,8 @@
     <string name="starter_apply">"一键应用"</string>
     <string name="starter_dismiss">"不用了"</string>
     <string name="starter_done">"已应用建议限额，可随时在应用限制中修改。"</string>
+    <string name="batch_listener_label">"ChronoLock 通知汇总"</string>
+    <string name="batch_title">"汇总通知"</string>
+    <string name="batch_hint">"受限应用的通知会在12点、18点、21点集中送达。来电、闹钟和短信仍会立即送达。不会读取通知内容。"</string>
+    <string name="batch_access">"需要允许通知访问权限才能生效。打开设置"</string>
 </resources>

@@ -831,4 +831,8 @@
     <string name="starter_apply">"Aplicar todo"</string>
     <string name="starter_dismiss">"No, gracias"</string>
     <string name="starter_done">"Límites sugeridos aplicados. Cámbialos cuando quieras en Límites de apps."</string>
+    <string name="batch_listener_label">"Agrupar notificaciones de ChronoLock"</string>
+    <string name="batch_title">"Agrupar notificaciones"</string>
+    <string name="batch_hint">"Recibe juntas a las 12:00, 18:00 y 21:00 las notificaciones de las apps limitadas. Llamadas, alarmas y SMS llegan al momento. No se lee el contenido."</string>
+    <string name="batch_access">"Permite el acceso a notificaciones para que funcione. Abrir ajustes"</string>
 </resources>

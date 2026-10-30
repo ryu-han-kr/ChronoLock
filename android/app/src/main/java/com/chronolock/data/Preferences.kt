@@ -91,6 +91,10 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     /** The secret of the printed QR that must be scanned to stop a focus; null when the feature is off. */
     val deskQr = context.preferences.data.map { it[deskQrKey] }
     suspend fun setDeskQr(secret: String?) { context.preferences.edit { if (secret == null) it.remove(deskQrKey) else it[deskQrKey] = secret } }
+    private val batchKey = booleanPreferencesKey("batch_notifications")
+    /** Notifications from limited apps held back until 12:00, 18:00 and 21:00; off until turned on. */
+    val batchNotifications = context.preferences.data.map { it[batchKey] ?: false }
+    suspend fun setBatchNotifications(on: Boolean) { context.preferences.edit { it[batchKey] = on } }
     private val starterDoneKey = booleanPreferencesKey("starter_limits_done")
     /** The first-week limits card was applied or put away; it does not come back. */
     val starterDone = context.preferences.data.map { it[starterDoneKey] ?: false }

@@ -70,6 +70,7 @@ internal fun ChronoScreen(
     selectMascot: (com.chronolock.data.MascotKind) -> Unit = {},
     setReduceMotion: (Boolean) -> Unit = {},
     setBedtime: (Boolean) -> Unit = {},
+    setBatchNotifications: (Boolean) -> Unit = {},
     spendTimeBank: (String) -> Unit = {},
     setDeskQr: (Boolean) -> Unit = {},
     setExam: (com.chronolock.domain.Exam?) -> Unit = {},
@@ -329,6 +330,7 @@ internal fun ChronoScreen(
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }
                                 item { CardBox { BedtimeToggle(state.bedtime, setBedtime) } }
+                                item { CardBox { NotificationBatchToggle(state.batchNotifications, setBatchNotifications) } }
                                 item { CardBox { ExamSettings(state.exam, today, setExam) } }
                                 item { CardBox { DeskQrCard(state.deskQr, state.rules.any { (it.focusUntilEpochMillis ?: 0) > nowEpoch }, setDeskQr) } }
                                 item {
