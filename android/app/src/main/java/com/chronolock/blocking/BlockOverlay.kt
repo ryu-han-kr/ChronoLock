@@ -38,6 +38,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
     private var onReason: ((OpenReason) -> Unit)? = null
     /** The app whose reason was already picked while this screen stayed up, so repeated redraws do not ask again. */
     private var answeredFor: String? = null
+    private var answeredAt = 0L
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private var countdown: Runnable? = null
     /** What is on screen: "block", "site", "pause:<package>" or "checkin:<package>"; lets the service avoid restarting a countdown. */
@@ -240,11 +241,14 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
 
     private fun stopCountdown() { countdown?.let(handler::removeCallbacks); countdown = null }
 
-    /** One tap on why the app was opened; after it, a thank-you line stays until the screen goes away. */
+    /**
+     * One tap on why the app was opened. The answer holds for that app for a minute: the service may close and redraw
+     * the screen right after the tap, and that must show the thank-you line, not the question again.
+     */
     private fun askReason(key: String?, record: ((OpenReason) -> Unit)?) {
         onReason = record
-        val asking = record != null && key != null && answeredFor != key
-        if (record == null || key == null) answeredFor = null
+        val answered = answeredFor == key && android.os.SystemClock.elapsedRealtime() - answeredAt < ANSWER_HOLD_MILLIS
+        val asking = record != null && key != null && !answered
         reasonRow?.visibility = if (asking) View.VISIBLE else View.GONE
         reasonTitle?.visibility = if (record != null && key != null) View.VISIBLE else View.GONE
         reasonTitle?.text = if (asking) text("왜 열려고 했나요?") else text("기록했어요. 히스토리 탭에서 볼 수 있어요.")
@@ -255,12 +259,13 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
 
     private fun pickReason(reason: OpenReason) {
         val record = onReason ?: return
-        answeredFor = pendingKey
+        answeredFor = pendingKey; answeredAt = android.os.SystemClock.elapsedRealtime()
         record(reason)
         askReason(pendingKey, record)
     }
 
     private companion object {
+        const val ANSWER_HOLD_MILLIS = 60_000L
         val SUGGESTIONS = listOf("물 한 잔 마시기", "1분 스트레칭", "창밖을 20초 바라보기", "할 일 하나 적기", "심호흡 다섯 번", "자리에서 일어나 걷기")
     }
 
@@ -268,7 +273,7 @@ class BlockOverlay(private val service: AccessibilityService, private val onHome
         stopCountdown()
         root?.let { manager.removeView(it) }
         root = null; heading = null; picture = null; detail = null; lastShown = null; settingsButton = null; continueButton = null; mode = null
-        reasonTitle = null; reasonRow = null; onReason = null; answeredFor = null; pendingKey = null
+        reasonTitle = null; reasonRow = null; onReason = null; pendingKey = null
     }
     private fun dp(value: Int) = (value * service.resources.displayMetrics.density).toInt()
 }

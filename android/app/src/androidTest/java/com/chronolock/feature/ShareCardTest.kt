@@ -22,6 +22,9 @@ class ShareCardTest {
             assertEquals(1080 to 1920, card.width to card.height)
             // The character sits in the upper middle; the page background alone would match the corner.
             assertNotEquals(theme.name, card.getPixel(0, 0), card.getPixel(540, 520))
+            // Kept for a look by eye, like the other UI tests' screenshots.
+            if (theme == AppTheme.DARK) java.io.File(context.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
+                .resolve("share-card.png").outputStream().use { card.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         }
     }
 }
