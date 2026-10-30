@@ -766,4 +766,14 @@
     <string name="reason_week_title">"Por qué quisiste abrir apps esta semana"</string>
     <string name="reason_tip_habit">"Sobre todo costumbre o aburrimiento. Mover la app fuera de la pantalla de inicio ayuda a resistir."</string>
     <string name="reason_tip_notification">"Las notificaciones te llamaron más. Prueba a reducir las de esa app."</string>
+    <string name="shortcut_focus">"Empezar a concentrarse"</string>
+    <string name="shortcut_history">"Uso de hoy"</string>
+    <string name="shortcut_no_rules">"Primero añade una app para concentrarte."</string>
+    <string name="note_title">"Una línea para mi yo futuro"</string>
+    <string name="note_placeholder">"p. ej.: faltan 3 semanas para el examen"</string>
+    <string name="note_hint">"Se muestra en la pantalla de bloqueo cuando esta app está bloqueada."</string>
+    <string name="card_title">"Mi semana con ChronoLock"</string>
+    <string name="card_usage">"Uso esta semana: %1$s"</string>
+    <string name="card_footer">"ChronoLock · Límites de uso de apps"</string>
+    <string name="card_share">"Compartir tarjeta"</string>
 </resources>

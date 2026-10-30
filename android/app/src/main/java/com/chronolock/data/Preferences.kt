@@ -80,6 +80,18 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
         it[autoBackupAtKey] = atEpochMillis
         if (phoneFile != null) it[autoBackupFileKey] = phoneFile
     } }
+    private val notesKey = stringPreferencesKey("rule_notes")
+    /** A line per app the person wrote to themselves, shown on that app's block screen. */
+    val notes = context.preferences.data.map { decodeNotes(it[notesKey]) }
+    suspend fun setNote(packageName: String, note: String) { context.preferences.edit {
+        val notes = decodeNotes(it[notesKey]).toMutableMap()
+        if (note.isBlank()) notes.remove(packageName) else notes[packageName] = note
+        it[notesKey] = org.json.JSONObject(notes as Map<*, *>).toString()
+    } }
+    private fun decodeNotes(text: String?): Map<String, String> = runCatching {
+        val json = org.json.JSONObject(text ?: return emptyMap())
+        json.keys().asSequence().associateWith { json.getString(it) }
+    }.getOrDefault(emptyMap())
     private val openReasonsKey = stringPreferencesKey("open_reasons")
     /** Why the block screen was met, per day; see [com.chronolock.domain.OpenReasons]. */
     val openReasons = context.preferences.data.map { com.chronolock.domain.OpenReasons.decode(it[openReasonsKey]) }

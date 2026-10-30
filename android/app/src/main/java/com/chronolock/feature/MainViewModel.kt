@@ -51,6 +51,10 @@ data class MainState(
     val goals: Set<String> = emptySet(),
     /** Goals brought by the Play link this install came from, shown at first run. */
     val invite: com.chronolock.domain.Invite? = null,
+    /** A tab a launcher shortcut asked for; the screen switches to it once and clears it. */
+    val requestedTab: Int? = null,
+    /** Lines to oneself per app, shown on its block screen. */
+    val notes: Map<String, String> = emptyMap(),
     /** Reasons picked on the block screen, per day. */
     val openReasons: Map<java.time.LocalDate, Map<com.chronolock.domain.OpenReason, Int>> = emptyMap(),
     val nightTheme: AppTheme = AppTheme.DARK,
@@ -136,6 +140,7 @@ class MainViewModel @Inject constructor(
         .combine(preferences.monitorGap) { data, gap -> data.copy(monitorGap = gap) }
         .combine(preferences.autoBackup) { data, auto -> data.copy(autoBackup = auto) }
         .combine(preferences.openReasons) { data, reasons -> data.copy(openReasons = reasons) }
+        .combine(preferences.notes) { data, notes -> data.copy(notes = notes) }
         .onEach { lastLoaded = it }
         .catch { failure ->
             android.util.Log.w("ChronoLock", "Stored data could not be read", failure)
@@ -148,7 +153,7 @@ class MainViewModel @Inject constructor(
             billing = data.billing, onboarded = data.onboarded, strict = data.strict, pending = data.pending,
             groups = data.groups, pendingGroups = data.pendingGroups, sites = data.sites, pendingSites = data.pendingSites,
             favoriteThemes = data.favoriteThemes, historyYear = data.historyYear, historyPinSet = data.historyPinSet,
-            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
+            lock = data.lock, monitorGap = data.monitorGap, autoBackup = data.autoBackup, openReasons = data.openReasons, notes = data.notes, followSystem = data.followSystem, nightTheme = data.nightTheme, goals = data.goals, mascot = data.mascot, reduceMotion = data.reduceMotion)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainState())
 
     fun refresh() {
@@ -222,6 +227,27 @@ class MainViewModel @Inject constructor(
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) { showError(failure(error, "제한을 저장하지 못했습니다. 다시 시도해 주세요.")) }
         finally { onFinished() }
+    }
+
+    /** A launcher shortcut opened the app: start a focus of the last chosen length, or show History. */
+    fun openShortcut(action: String?) {
+        when (action) {
+            AppShortcuts.ACTION_FOCUS -> viewModelScope.launch {
+                if (repository.rules.first().none { it.enabled }) {
+                    local.update { it.copy(requestedTab = 1) }
+                    showError("집중할 앱을 먼저 추가해 주세요.")
+                } else startFocus(preferences.focusMinutes.first())
+            }
+            AppShortcuts.ACTION_HISTORY -> local.update { it.copy(requestedTab = 2) }
+        }
+    }
+
+    fun tabShown() = local.update { it.copy(requestedTab = null) }
+
+    fun saveNote(packageName: String, note: String) = viewModelScope.launch {
+        try { preferences.setNote(packageName, note) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (error: Exception) { showError("설정을 저장하지 못했습니다. 다시 시도해 주세요.") }
     }
 
     fun startFocus(minutes: Int) {

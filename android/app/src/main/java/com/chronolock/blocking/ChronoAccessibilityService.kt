@@ -62,6 +62,8 @@ class ChronoAccessibilityService : AccessibilityService() {
     private var nextCheckInMillis = 0L
     /** Strict delay and lock as last read; the block screen hides its settings shortcut while either holds. */
     @Volatile private var strict = com.chronolock.domain.StrictSetting()
+    /** Lines the person wrote to themselves per app, for its block screen. */
+    @Volatile private var notes = emptyMap<String, String>()
     @Volatile private var lock = com.chronolock.domain.LockSetting()
     /** App labels for the block screen; looked up once per app instead of every second while blocked. */
     private val labels = mutableMapOf<String, String>()
@@ -103,6 +105,11 @@ class ChronoAccessibilityService : AccessibilityService() {
             try { preferences.mascot.collect { overlay.setMascot(it); surfaces.mascot = it } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load the character", error) }
+        }
+        scope.launch {
+            try { preferences.notes.collect { notes = it } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load notes", error) }
         }
         scope.launch {
             try { preferences.language.collect { overlay.setLanguage(it); localized = forLanguage(it) } }
@@ -384,7 +391,8 @@ class ChronoAccessibilityService : AccessibilityService() {
             target != null && state.decision.denied -> {
                 val now = environment.clock()
                 val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
-                overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now)) { reason ->
+                overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now),
+                    note = notes[target]) { reason ->
                     scope.launch {
                         runCatching { preferences.recordOpenReason(environment.clock().date, reason) }
                             .onFailure { android.util.Log.w("ChronoLock", "Open reason not saved", it) }
