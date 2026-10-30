@@ -808,4 +808,6 @@
     <string name="plan_budget_used">"오늘 휴대폰 전체 시간을 다 썼어요."</string>
     <string name="plan_refused">"엄격 모드나 잠금 중에는 휴대폰 전체 한도를 느슨하게 바꿀 수 없어요."</string>
     <string name="plan_saved">"휴대폰 전체 한도를 저장했어요."</string>
+    <string name="weekend_limit">"주말 하루 허용 시간"</string>
+    <string name="weekend_hint">"비우면 주말에도 위와 같은 한도예요."</string>
 </resources>

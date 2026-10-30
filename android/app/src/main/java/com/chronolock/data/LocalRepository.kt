@@ -28,13 +28,14 @@ fun RuleEntity.toDomain() = AppRule(
             listOf(Schedule(LocalTime.ofSecondOfDay(scheduleStartMinute * 60L), LocalTime.ofSecondOfDay(scheduleEndMinute * 60L), daysOf(scheduleDaysMask)))
         } else emptyList(),
     focusUntilEpochMillis = focusUntilEpochMillis, enabled = enabled, pausedUntilEpochMillis = pausedUntilEpochMillis,
-    pauseSeconds = pauseSeconds, checkInMinutes = checkInMinutes,
+    pauseSeconds = pauseSeconds, checkInMinutes = checkInMinutes, weekendLimitSeconds = weekendLimitSeconds,
 )
 
 fun AppRule.toEntity() = RuleEntity(packageName, appName, dailyLimitSeconds, maxOpenCount, cooldownSeconds, enabled,
     sessionLimitSeconds, focusUntilEpochMillis = focusUntilEpochMillis,
     schedules = schedules.encode(),
-    pausedUntilEpochMillis = pausedUntilEpochMillis, pauseSeconds = pauseSeconds, checkInMinutes = checkInMinutes)
+    pausedUntilEpochMillis = pausedUntilEpochMillis, pauseSeconds = pauseSeconds, checkInMinutes = checkInMinutes,
+    weekendLimitSeconds = weekendLimitSeconds)
 
 fun GroupEntity.toDomain() = AppGroup(id, name, members.split('\n').mapNotNull { line ->
     line.split('\t', limit = 2).takeIf { it.size == 2 }?.let { it[0] to it[1] }

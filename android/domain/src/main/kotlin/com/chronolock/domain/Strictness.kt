@@ -19,6 +19,7 @@ object Strictness {
         fun lowered(old: Long?, new: Long?) = old != null && (new == null || new < old)
         val oldPause = current.pausedUntilEpochMillis?.coerceAtLeast(nowEpochMillis) ?: nowEpochMillis
         return raised(current.dailyLimitSeconds, next.dailyLimitSeconds) ||
+            raised(current.weekendLimitSeconds ?: current.dailyLimitSeconds, next.weekendLimitSeconds ?: next.dailyLimitSeconds) ||
             raised(current.sessionLimitSeconds, next.sessionLimitSeconds) ||
             raised(current.maxOpenCount?.toLong(), next.maxOpenCount?.toLong()) ||
             lowered(current.cooldownSeconds, next.cooldownSeconds) ||

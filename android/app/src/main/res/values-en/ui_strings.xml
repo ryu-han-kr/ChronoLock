@@ -829,4 +829,6 @@
     <string name="plan_budget_used">"You\'ve used today\'s whole-phone time."</string>
     <string name="plan_refused">"Whole-phone limits can\'t be loosened during strict mode or a lock."</string>
     <string name="plan_saved">"Whole-phone limits saved."</string>
+    <string name="weekend_limit">"Weekend daily time"</string>
+    <string name="weekend_hint">"Leave blank to use the same limit on weekends."</string>
 </resources>

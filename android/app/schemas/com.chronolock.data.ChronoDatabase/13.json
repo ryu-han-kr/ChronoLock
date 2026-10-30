@@ -1,0 +1,796 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 13,
+    "identityHash": "bcbbdb465625e9b6c0e4145e788441f3",
+    "entities": [
+      {
+        "tableName": "blocking_rules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `appName` TEXT NOT NULL, `dailyLimitSeconds` INTEGER, `maxOpenCount` INTEGER, `cooldownSeconds` INTEGER, `enabled` INTEGER NOT NULL, `sessionLimitSeconds` INTEGER, `scheduleStartMinute` INTEGER, `scheduleEndMinute` INTEGER, `scheduleDaysMask` INTEGER, `focusUntilEpochMillis` INTEGER, `schedules` TEXT, `pausedUntilEpochMillis` INTEGER, `pauseSeconds` INTEGER, `checkInMinutes` INTEGER, `weekendLimitSeconds` INTEGER, PRIMARY KEY(`packageName`))",
+        "fields": [
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appName",
+            "columnName": "appName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dailyLimitSeconds",
+            "columnName": "dailyLimitSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "maxOpenCount",
+            "columnName": "maxOpenCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cooldownSeconds",
+            "columnName": "cooldownSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionLimitSeconds",
+            "columnName": "sessionLimitSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "scheduleStartMinute",
+            "columnName": "scheduleStartMinute",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "scheduleEndMinute",
+            "columnName": "scheduleEndMinute",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "scheduleDaysMask",
+            "columnName": "scheduleDaysMask",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "focusUntilEpochMillis",
+            "columnName": "focusUntilEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "schedules",
+            "columnName": "schedules",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pausedUntilEpochMillis",
+            "columnName": "pausedUntilEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pauseSeconds",
+            "columnName": "pauseSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "checkInMinutes",
+            "columnName": "checkInMinutes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "weekendLimitSeconds",
+            "columnName": "weekendLimitSeconds",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "packageName"
+          ]
+        }
+      },
+      {
+        "tableName": "daily_usage_stats",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `date` TEXT NOT NULL, `usageMillis` INTEGER NOT NULL, `opens` INTEGER NOT NULL, `blockedAttempts` INTEGER NOT NULL, PRIMARY KEY(`packageName`, `date`))",
+        "fields": [
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usageMillis",
+            "columnName": "usageMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "opens",
+            "columnName": "opens",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blockedAttempts",
+            "columnName": "blockedAttempts",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "packageName",
+            "date"
+          ]
+        }
+      },
+      {
+        "tableName": "last_closed",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `epochMillis` INTEGER NOT NULL, `elapsedMillis` INTEGER NOT NULL, `bootId` INTEGER NOT NULL, PRIMARY KEY(`packageName`))",
+        "fields": [
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochMillis",
+            "columnName": "epochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "elapsedMillis",
+            "columnName": "elapsedMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bootId",
+            "columnName": "bootId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "packageName"
+          ]
+        }
+      },
+      {
+        "tableName": "monitor_checkpoint",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `activePackage` TEXT, `sessionMillis` INTEGER NOT NULL, `epochMillis` INTEGER NOT NULL, `elapsedMillis` INTEGER NOT NULL, `bootId` INTEGER NOT NULL, `zone` TEXT NOT NULL, `observedPackage` TEXT, `blockedPackage` TEXT, `blockedSessionMillis` INTEGER, `wasBlocked` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activePackage",
+            "columnName": "activePackage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sessionMillis",
+            "columnName": "sessionMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochMillis",
+            "columnName": "epochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "elapsedMillis",
+            "columnName": "elapsedMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bootId",
+            "columnName": "bootId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zone",
+            "columnName": "zone",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observedPackage",
+            "columnName": "observedPackage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "blockedPackage",
+            "columnName": "blockedPackage",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "blockedSessionMillis",
+            "columnName": "blockedSessionMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "wasBlocked",
+            "columnName": "wasBlocked",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "app_usage_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `packageName` TEXT, `epochMillis` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "epochMillis",
+            "columnName": "epochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_app_usage_events_epochMillis",
+            "unique": false,
+            "columnNames": [
+              "epochMillis"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_app_usage_events_epochMillis` ON `${TABLE_NAME}` (`epochMillis`)"
+          }
+        ]
+      },
+      {
+        "tableName": "history_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `at` INTEGER NOT NULL, `type` TEXT NOT NULL, `app` TEXT NOT NULL, `activity` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "at",
+            "columnName": "at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "app",
+            "columnName": "app",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activity",
+            "columnName": "activity",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_history_events_at_type_app_activity",
+            "unique": true,
+            "columnNames": [
+              "at",
+              "type",
+              "app",
+              "activity"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_history_events_at_type_app_activity` ON `${TABLE_NAME}` (`at`, `type`, `app`, `activity`)"
+          }
+        ]
+      },
+      {
+        "tableName": "history_daily",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `date` TEXT NOT NULL, `appName` TEXT NOT NULL, `usageMillis` INTEGER NOT NULL, `opens` INTEGER NOT NULL, PRIMARY KEY(`packageName`, `date`))",
+        "fields": [
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appName",
+            "columnName": "appName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usageMillis",
+            "columnName": "usageMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "opens",
+            "columnName": "opens",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "packageName",
+            "date"
+          ]
+        }
+      },
+      {
+        "tableName": "history_meta",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `clearedAt` INTEGER NOT NULL, `collectedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clearedAt",
+            "columnName": "clearedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "collectedAt",
+            "columnName": "collectedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pending_rules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `applyAtEpochMillis` INTEGER NOT NULL, `remove` INTEGER NOT NULL, `rule_packageName` TEXT NOT NULL, `rule_appName` TEXT NOT NULL, `rule_dailyLimitSeconds` INTEGER, `rule_maxOpenCount` INTEGER, `rule_cooldownSeconds` INTEGER, `rule_enabled` INTEGER NOT NULL, `rule_sessionLimitSeconds` INTEGER, `rule_scheduleStartMinute` INTEGER, `rule_scheduleEndMinute` INTEGER, `rule_scheduleDaysMask` INTEGER, `rule_focusUntilEpochMillis` INTEGER, `rule_schedules` TEXT, `rule_pausedUntilEpochMillis` INTEGER, `rule_pauseSeconds` INTEGER, `rule_checkInMinutes` INTEGER, `rule_weekendLimitSeconds` INTEGER, PRIMARY KEY(`packageName`))",
+        "fields": [
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "applyAtEpochMillis",
+            "columnName": "applyAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remove",
+            "columnName": "remove",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rule.packageName",
+            "columnName": "rule_packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rule.appName",
+            "columnName": "rule_appName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rule.dailyLimitSeconds",
+            "columnName": "rule_dailyLimitSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.maxOpenCount",
+            "columnName": "rule_maxOpenCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.cooldownSeconds",
+            "columnName": "rule_cooldownSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.enabled",
+            "columnName": "rule_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rule.sessionLimitSeconds",
+            "columnName": "rule_sessionLimitSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.scheduleStartMinute",
+            "columnName": "rule_scheduleStartMinute",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.scheduleEndMinute",
+            "columnName": "rule_scheduleEndMinute",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.scheduleDaysMask",
+            "columnName": "rule_scheduleDaysMask",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.focusUntilEpochMillis",
+            "columnName": "rule_focusUntilEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.schedules",
+            "columnName": "rule_schedules",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "rule.pausedUntilEpochMillis",
+            "columnName": "rule_pausedUntilEpochMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.pauseSeconds",
+            "columnName": "rule_pauseSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.checkInMinutes",
+            "columnName": "rule_checkInMinutes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "rule.weekendLimitSeconds",
+            "columnName": "rule_weekendLimitSeconds",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "packageName"
+          ]
+        }
+      },
+      {
+        "tableName": "app_groups",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `members` TEXT NOT NULL, `dailyLimitSeconds` INTEGER, `maxOpenCount` INTEGER, `enabled` INTEGER NOT NULL, `schedules` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "members",
+            "columnName": "members",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dailyLimitSeconds",
+            "columnName": "dailyLimitSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "maxOpenCount",
+            "columnName": "maxOpenCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schedules",
+            "columnName": "schedules",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pending_groups",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`groupId` INTEGER NOT NULL, `applyAtEpochMillis` INTEGER NOT NULL, `remove` INTEGER NOT NULL, `group_id` INTEGER NOT NULL, `group_name` TEXT NOT NULL, `group_members` TEXT NOT NULL, `group_dailyLimitSeconds` INTEGER, `group_maxOpenCount` INTEGER, `group_enabled` INTEGER NOT NULL, `group_schedules` TEXT, PRIMARY KEY(`groupId`))",
+        "fields": [
+          {
+            "fieldPath": "groupId",
+            "columnName": "groupId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "applyAtEpochMillis",
+            "columnName": "applyAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remove",
+            "columnName": "remove",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "group.id",
+            "columnName": "group_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "group.name",
+            "columnName": "group_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "group.members",
+            "columnName": "group_members",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "group.dailyLimitSeconds",
+            "columnName": "group_dailyLimitSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "group.maxOpenCount",
+            "columnName": "group_maxOpenCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "group.enabled",
+            "columnName": "group_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "group.schedules",
+            "columnName": "group_schedules",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "groupId"
+          ]
+        }
+      },
+      {
+        "tableName": "blocked_sites",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`domain` TEXT NOT NULL, `enabled` INTEGER NOT NULL, PRIMARY KEY(`domain`))",
+        "fields": [
+          {
+            "fieldPath": "domain",
+            "columnName": "domain",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "domain"
+          ]
+        }
+      },
+      {
+        "tableName": "pending_sites",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`domain` TEXT NOT NULL, `applyAtEpochMillis` INTEGER NOT NULL, `remove` INTEGER NOT NULL, `site_domain` TEXT NOT NULL, `site_enabled` INTEGER NOT NULL, PRIMARY KEY(`domain`))",
+        "fields": [
+          {
+            "fieldPath": "domain",
+            "columnName": "domain",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "applyAtEpochMillis",
+            "columnName": "applyAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remove",
+            "columnName": "remove",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "site.domain",
+            "columnName": "site_domain",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "site.enabled",
+            "columnName": "site_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "domain"
+          ]
+        }
+      },
+      {
+        "tableName": "history_year",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`date` TEXT NOT NULL, `usageMillis` INTEGER NOT NULL, `estimated` INTEGER NOT NULL, PRIMARY KEY(`date`))",
+        "fields": [
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usageMillis",
+            "columnName": "usageMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estimated",
+            "columnName": "estimated",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "date"
+          ]
+        }
+      },
+      {
+        "tableName": "clock_anchor",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `untilElapsedMillis` INTEGER NOT NULL, `bootId` INTEGER NOT NULL, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "untilElapsedMillis",
+            "columnName": "untilElapsedMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bootId",
+            "columnName": "bootId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bcbbdb465625e9b6c0e4145e788441f3')"
+    ]
+  }
+}

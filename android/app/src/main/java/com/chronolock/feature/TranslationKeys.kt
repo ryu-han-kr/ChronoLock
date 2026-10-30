@@ -401,6 +401,8 @@ internal val translationKeys: Map<String, Int> = mapOf(
     "오늘 휴대폰 전체 시간을 다 썼어요." to R.string.plan_budget_used,
     "엄격 모드나 잠금 중에는 휴대폰 전체 한도를 느슨하게 바꿀 수 없어요." to R.string.plan_refused,
     "휴대폰 전체 한도를 저장했어요." to R.string.plan_saved,
+    "주말 하루 허용 시간" to R.string.weekend_limit,
+    "비우면 주말에도 위와 같은 한도예요." to R.string.weekend_hint,
     "다시 시도" to R.string.billing_retry,
     "결제 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요." to R.string.error_billing,
     "오늘 %1\$s 남음" to R.string.rule_remaining,

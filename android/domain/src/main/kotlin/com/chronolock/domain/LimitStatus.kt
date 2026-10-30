@@ -2,8 +2,8 @@ package com.chronolock.domain
 
 /** Milliseconds of [rule]'s daily allowance left on the state's current date, or null without a daily limit. */
 fun MonitorState.remainingDailyMillis(rule: AppRule): Long? {
-    val limit = rule.dailyLimitSeconds ?: return null
     val date = clock?.date ?: return null
+    val limit = rule.dailyLimitOn(date) ?: return null
     val used = daily[DailyKey(rule.packageName, date)]?.usageMillis ?: 0
     return (limit * 1000 - used).coerceAtLeast(0)
 }
@@ -16,7 +16,7 @@ fun MonitorState.limitWarning(rules: Map<String, AppRule>, warned: Set<DailyKey>
     val target = observedPackage ?: return null
     val now = clock?.epochMillis ?: return null
     val rule = rules[target]?.takeIf { it.enabled && !it.pausedAt(now) && !decision.denied } ?: return null
-    val limitMillis = (rule.dailyLimitSeconds ?: return null) * 1000
+    val limitMillis = (rule.dailyLimitOn(clock!!.date) ?: return null) * 1000
     if (limitMillis <= thresholdMillis) return null
     val remaining = remainingDailyMillis(rule) ?: return null
     val key = DailyKey(target, clock!!.date)
@@ -71,7 +71,7 @@ fun MonitorState.liveLimit(rules: Map<String, AppRule>): LiveLimit? {
         GroupLeft(group.name, group.dailyLimitSeconds?.let { (it * 1000 - used.usageMillis).coerceAtLeast(0) },
             group.maxOpenCount?.let { (it - used.opens).coerceAtLeast(0) })
     }
-    val live = LiveLimit(target, rule.appName, rule.dailyLimitSeconds?.times(1000), remainingDailyMillis(rule),
+    val live = LiveLimit(target, rule.appName, clock?.date?.let(rule::dailyLimitOn)?.times(1000), remainingDailyMillis(rule),
         rule.sessionLimitSeconds?.let { (it * 1000 - session).coerceAtLeast(0) }, rule.maxOpenCount?.let { (it - today.opens).coerceAtLeast(0) },
         groups.filter { it.timeLeftMillis != null || it.opensLeft != null }, today.usageMillis)
     // Each running allowance as (left, whole); the one that ends first sets the share.

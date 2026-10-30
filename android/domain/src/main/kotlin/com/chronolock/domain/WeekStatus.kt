@@ -18,7 +18,7 @@ fun dayResults(daily: Map<DailyKey, DailyUsage>, rules: List<AppRule>, today: Lo
         val result = when {
             rows.isEmpty() -> DayResult.NO_RECORD
             rows.any { (rule, usage) -> usage.blockedAttempts > 0 ||
-                rule.dailyLimitSeconds?.let { usage.usageMillis >= it * 1000 } == true } ||
+                rule.dailyLimitOn(date)?.let { usage.usageMillis >= it * 1000 } == true } ||
                 groups.any { group -> group.dailyLimitSeconds?.let { limit ->
                     group.members.keys.sumOf { daily[DailyKey(it, date)]?.usageMillis ?: 0 } >= limit * 1000 } == true } -> DayResult.REACHED
             else -> DayResult.KEPT

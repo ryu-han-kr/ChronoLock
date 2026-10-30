@@ -23,10 +23,17 @@ data class AppRule(
     val pauseSeconds: Int? = null,
     /** While the app stays open, ask every this many minutes whether to keep going. */
     val checkInMinutes: Int? = null,
+    /** A different daily limit for Saturday and Sunday; null keeps [dailyLimitSeconds] every day. */
+    val weekendLimitSeconds: Long? = null,
 ) {
+    /** The daily limit on [date]: the weekend one on Saturday and Sunday when set, otherwise the everyday one. */
+    fun dailyLimitOn(date: java.time.LocalDate): Long? =
+        if (weekendLimitSeconds != null && date.dayOfWeek in WEEKEND_DAYS) weekendLimitSeconds else dailyLimitSeconds
+
     init {
         require(packageName.isNotBlank() && appName.isNotBlank())
         require(dailyLimitSeconds == null || dailyLimitSeconds in 1..86400)
+        require(weekendLimitSeconds == null || weekendLimitSeconds in 1..86400)
         require(sessionLimitSeconds == null || sessionLimitSeconds in 1..86400)
         require(maxOpenCount == null || maxOpenCount in 1..10000)
         require(cooldownSeconds == null || cooldownSeconds in 1..86400)
@@ -37,7 +44,10 @@ data class AppRule(
 
     fun pausedAt(epochMillis: Long) = pausedUntilEpochMillis?.let { epochMillis < it } == true
 
-    companion object { const val MAX_SCHEDULES = 5 }
+    companion object {
+        const val MAX_SCHEDULES = 5
+        val WEEKEND_DAYS = setOf(java.time.DayOfWeek.SATURDAY, java.time.DayOfWeek.SUNDAY)
+    }
 }
 
 /** The pause before opening: [base] seconds, two more for every earlier open today, at most 30. */
@@ -87,7 +97,8 @@ class RuleEngine {
         val reasons = buildList {
             if (rule.focusUntilEpochMillis?.let { context.nowEpochMillis < it } == true) add(Reason.FOCUS)
             if (rule.schedules.any { it.contains(context.nowEpochMillis, context.zone) }) add(Reason.SCHEDULE)
-            if (rule.dailyLimitSeconds?.let { context.dailyUsageMillis >= it * 1000 } == true) add(Reason.DAILY_USAGE)
+            val today = java.time.Instant.ofEpochMilli(context.nowEpochMillis).atZone(context.zone).toLocalDate()
+            if (rule.dailyLimitOn(today)?.let { context.dailyUsageMillis >= it * 1000 } == true) add(Reason.DAILY_USAGE)
             if (rule.sessionLimitSeconds?.let { context.sessionUsageMillis >= it * 1000 } == true) add(Reason.SESSION_USAGE)
             if (context.entering && rule.maxOpenCount?.let { context.allowedOpens >= it } == true) add(Reason.OPEN_COUNT)
             if (context.entering && rule.cooldownSeconds != null && context.sinceLastCloseMillis != null &&

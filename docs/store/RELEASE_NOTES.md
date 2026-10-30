@@ -19,6 +19,9 @@
   항상 허용 앱. 규칙 없는 앱도 대상(`PhonePolicy`, 런처에 있는 앱 − 안전 앱·ChronoLock·항상 허용 앱). 감시 상태 머신이 정책이 덮는 앱도
   사용량을 재고 차단 사유 ALLOWED_ONLY·PHONE_BUDGET 추가. 앱의 '잠시 쉬기'로는 풀리지 않음. 엄격 모드·잠금 중엔 느슨하게 저장 불가.
   새로 설치한 앱은 처음 열 때 대상에 들어감. 첫날 전체 시간은 켠 뒤부터만 셈. 기기 테스트 작성(태블릿 연결 끊김으로 미실행).
+- 주말 하루 한도: 규칙 편집에 '주말 하루 허용 시간'(비우면 평일과 같음). `AppRule.weekendLimitSeconds`, `dailyLimitOn(date)`로
+  차단·남은 시간·연속 기록 계산에 반영, 주말 한도 올리기는 엄격 모드 대기 대상. DB 12→13(`MIGRATION_12_13`, 규칙·보류 테이블 열 추가),
+  백업 파일에도 포함. MigrationTest 12→13 추가(태블릿 연결 끊김으로 미실행).
 
 ### ko
 - 차단 화면에서 미리 골라 둔 다른 앱을 바로 열 수 있어요.
@@ -26,6 +29,7 @@
 - 일주일 사용 기록으로 가장 많이 쓴 앱 3개의 한도를 한 번에 정할 수 있어요.
 - 제한한 앱의 알림을 하루 세 번 모아서 받을 수 있어요(설정에서 켜기).
 - 휴대폰 전체 하루 시간과, 정한 앱만 쓰는 시간대를 직접 정할 수 있어요.
+- 주말에는 다른 하루 한도를 쓸 수 있어요.
 
 ### en
 - Open an app you picked instead, right from the block screen.
@@ -33,6 +37,7 @@
 - Set limits for your three most-used apps in one tap, based on your first week.
 - Get limited apps' notifications together three times a day (Settings).
 - Set a daily total for the whole phone and times when only chosen apps open.
+- Give weekends their own daily limit.
 
 ## 0.19.0 (versionCode 29) — 2026-10-30 업로드 (내부·테스터들)
 

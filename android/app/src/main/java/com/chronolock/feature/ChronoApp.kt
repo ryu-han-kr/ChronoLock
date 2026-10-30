@@ -348,6 +348,9 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
     var dailyTime by rememberSaveable(stateSaver = DailyTimeInputSaver) {
         mutableStateOf(DailyTimeInput.fromSeconds(draft.daily))
     }
+    var weekendTime by rememberSaveable(stateSaver = DailyTimeInputSaver) {
+        mutableStateOf(DailyTimeInput.fromSeconds(draft.weekend))
+    }
     var sessionTime by rememberSaveable(stateSaver = DailyTimeInputSaver) {
         mutableStateOf(DailyTimeInput.fromSeconds(draft.session))
     }
@@ -361,7 +364,8 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
     fun submit() {
         try {
             val rule = draft.copy(daily = dailyTime.toSecondsText(), session = sessionTime.toSecondsText("1회 허용 시간"),
-                cooldown = cooldownTime.toSecondsText("재실행 대기 시간")).build(app.packageName, app.label)
+                cooldown = cooldownTime.toSecondsText("재실행 대기 시간"), weekend = weekendTime.toSecondsText("주말 하루 허용 시간"))
+                .build(app.packageName, app.label)
             error = null
             saving = true
             if (noteText.trim() != note) saveNote(noteText.trim())
@@ -400,6 +404,7 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
                     onClick = {
                         draft = recipe.draft.copy(enabled = draft.enabled)
                         dailyTime = DailyTimeInput.fromSeconds(draft.daily)
+                        weekendTime = DailyTimeInput.fromSeconds(draft.weekend)
                         sessionTime = DailyTimeInput.fromSeconds(draft.session)
                         cooldownTime = DailyTimeInput.fromSeconds(draft.cooldown)
                         error = null
@@ -414,6 +419,8 @@ internal fun RuleEditor(app: InstalledApp, saved: RuleEntity?, onDismiss: () -> 
             Text(tr("빈 항목은 제한하지 않습니다. 여러 항목을 설정하면 함께 적용됩니다."))
             TimeFields("하루 허용 시간", "daily", dailyTime, !saving,
                 hint = "최대 24시간 · 분/초는 0~59\n세 칸을 모두 비우면 하루 시간 제한이 해제됩니다.") { dailyTime = it; error = null }
+            // Saturday and Sunday may get their own allowance; left blank they follow the everyday one.
+            TimeFields("주말 하루 허용 시간", "weekend", weekendTime, !saving, hint = "비우면 주말에도 위와 같은 한도예요.") { weekendTime = it; error = null }
             TimeFields("1회 허용 시간", "session", sessionTime, !saving, presetMinutes = listOf(5, 10, 30)) { sessionTime = it; error = null }
             NumberField(tr("하루 허용 실행 횟수"), draft.opens, !saving) { draft = draft.copy(opens = it) }
             TimeFields("재실행 대기 시간", "cooldown", cooldownTime, !saving, presetMinutes = listOf(5, 10, 30)) { cooldownTime = it; error = null }
