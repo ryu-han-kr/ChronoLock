@@ -61,6 +61,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     private val goalStartKey = stringPreferencesKey("lock_goal_start")
     private val goalPinKey = stringPreferencesKey("lock_goal_pin")
     private val goalCodeKey = stringPreferencesKey("lock_goal_code")
+    private val goalPartnerKey = booleanPreferencesKey("lock_goal_partner")
     private val goalRevealedKey = intPreferencesKey("lock_goal_revealed")
     private val mascotKey = stringPreferencesKey("mascot")
     private val reduceMotionKey = booleanPreferencesKey("reduce_motion")
@@ -194,7 +195,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     val lock = context.preferences.data.map { prefs ->
         val code = prefs[goalCodeKey]
         LockSetting(prefs[lockUntilKey], prefs[goalDaysKey], prefs[goalStartKey]?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() },
-            pieceCode = code != null, revealed = code?.take(prefs[goalRevealedKey] ?: 0).orEmpty(),
+            pieceCode = code != null, revealed = code?.take(prefs[goalRevealedKey] ?: 0).orEmpty(), partner = prefs[goalPartnerKey] == true,
             untilElapsedMillis = prefs[lockUntilElapsedKey], bootId = prefs[lockBootKey])
     }
     /** Locks for [millis] from [clock]; a running time lock can only be extended, never shortened. */
@@ -211,15 +212,22 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     }
     /**
      * Starts a goal lock unless one is running. With [pin] the person's password is stored as a salted hash; without one
-     * the app makes up a [days]-digit code and hands it out a digit per kept day ([revealNextPiece]).
+     * the app makes up a [days]-digit code and hands it out a digit per kept day ([revealNextPiece]). With [partner] the same
+     * code is also sent to a friend; the code is returned so it can be shared, and is null with [pin] or a lock already running.
      */
-    suspend fun startGoalLock(days: Int, today: java.time.LocalDate, pin: String?) {
+    suspend fun startGoalLock(days: Int, today: java.time.LocalDate, pin: String?, partner: Boolean = false): String? {
+        var made: String? = null
         context.preferences.edit {
             if (it[goalDaysKey] != null) return@edit
             it[goalDaysKey] = days; it[goalStartKey] = today.toString()
             if (pin != null) it[goalPinKey] = saltedHash(pin)
-            else { it[goalCodeKey] = (1..days).map { java.security.SecureRandom().nextInt(10) }.joinToString(""); it[goalRevealedKey] = 0 }
+            else {
+                made = (1..days).map { java.security.SecureRandom().nextInt(10) }.joinToString("")
+                it[goalCodeKey] = made!!; it[goalRevealedKey] = 0
+                if (partner) it[goalPartnerKey] = true
+            }
         }
+        return made
     }
     suspend fun revealNextPiece() { context.preferences.edit { it[goalRevealedKey] = (it[goalRevealedKey] ?: 0) + 1 } }
     /** Ends the goal lock when [code] matches its password or piece code; the caller checks that the goal was reached. */
@@ -228,7 +236,7 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
             ?: prefs[goalPinKey]?.let { matches(it, code) } ?: false
     }.also { result ->
         if (result.ok) context.preferences.edit {
-            it.remove(goalDaysKey); it.remove(goalStartKey); it.remove(goalPinKey); it.remove(goalCodeKey); it.remove(goalRevealedKey)
+            it.remove(goalDaysKey); it.remove(goalStartKey); it.remove(goalPinKey); it.remove(goalCodeKey); it.remove(goalRevealedKey); it.remove(goalPartnerKey)
         }
     }
 

@@ -765,4 +765,14 @@
     <string name="exam_limits">"去调低限额"</string>
     <string name="exam_block">"距离考试 %1$s"</string>
     <string name="exam_block_named">"距离%1$s %2$s"</string>
+    <string name="partner_chip">"朋友的密码"</string>
+    <string name="partner_hint">"应用生成的密码会在开始时发给朋友。真正需要时向朋友要来解锁；即使联系不上朋友，完成目标后也能按片段集齐。"</string>
+    <string name="partner_locked_hint">"拿到发给朋友的密码，目标完成前也能解锁。集齐所有片段同样可以解锁。"</string>
+    <string name="partner_field">"从朋友那里拿到的密码"</string>
+    <string name="partner_message">"我的 ChronoLock 目标锁密码：%1$s
+如果我向你要，请先问我一次是否真的需要。"</string>
+    <string name="partner_title">"把密码发给朋友"</string>
+    <string name="partner_once">"这个密码只能现在发送一次。如果不发，就只能完成目标、集齐片段后才能解锁。"</string>
+    <string name="partner_send">"发给朋友"</string>
+    <string name="partner_skip">"不发送"</string>
 </resources>

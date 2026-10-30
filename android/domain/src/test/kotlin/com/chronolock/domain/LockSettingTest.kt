@@ -70,4 +70,13 @@ class LockClockTest {
         assertEquals(3, goalKeptDays(daily, listOf(rule), start, start.plusDays(3)))
         assertEquals(0, goalKeptDays(daily, listOf(rule), start, start))
     }
+
+    @Test fun partnerLock_opensAnyTime_othersOnlyAtTheGoal() {
+        val start = java.time.LocalDate.of(2026, 10, 1)
+        val own = LockSetting(goalDays = 3, goalStart = start)
+        assertEquals(false, own.canUnlock(keptStreak = 1, today = start.plusDays(1)))
+        assertEquals(true, own.canUnlock(keptStreak = 3, today = start.plusDays(3)))
+        assertEquals(true, own.copy(pieceCode = true, partner = true).canUnlock(keptStreak = 0, today = start))
+        assertEquals(false, LockSetting(partner = true).canUnlock(keptStreak = 0, today = start))
+    }
 }

@@ -71,7 +71,7 @@ class GroupEditorUiTest {
         var hours: Int? = null
         val state = androidx.compose.runtime.mutableStateOf(MainState())
         ui.setContent { ChronoTheme { androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
-            LockCard(state.value, java.time.LocalDate.of(2026, 10, 5), 0, keptStreak = 3, lockFor = { hours = it }, startGoal = { _, _, _, _, _ -> },
+            LockCard(state.value, java.time.LocalDate.of(2026, 10, 5), 0, keptStreak = 3, lockFor = { hours = it }, startGoal = { _, _, _, _, _, _ -> },
                 endGoal = {}, collectPiece = {}, changeGoalPin = { _, _, _, _ -> })
         } } }
         ui.onNodeWithTag("lock-24").performScrollTo().performClick()

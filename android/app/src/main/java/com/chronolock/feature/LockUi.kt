@@ -25,6 +25,25 @@ internal fun PinField(value: String, label: String, tag: String, onChange: (Stri
         modifier = Modifier.fillMaxWidth().testTag(tag))
 }
 
+/**
+ * Right after a partner goal lock starts: send its code to a friend once. The code is not shown here, so the person
+ * does not simply note it down; without sending it, the lock still opens once the pieces are all collected.
+ */
+@Composable
+internal fun PartnerCodeDialog(code: String, close: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val message = tr("ChronoLock 목표 잠금 비밀번호예요: %1\$s\n제가 풀어 달라고 하면 정말 필요한지 한 번 물어봐 주세요.", code)
+    AlertDialog(onDismissRequest = {}, title = { Text(tr("친구에게 비밀번호 보내기")) },
+        text = { Text(tr("이 비밀번호는 지금 한 번만 보낼 수 있어요. 보내지 않으면 목표를 채워 조각을 모아야 풀려요.")) },
+        confirmButton = { TextButton(onClick = {
+            val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                .putExtra(android.content.Intent.EXTRA_TEXT, message)
+            runCatching { context.startActivity(android.content.Intent.createChooser(send, null)) }
+            close()
+        }, modifier = Modifier.testTag("partner-send")) { Text(tr("친구에게 보내기")) } },
+        dismissButton = { TextButton(onClick = close, modifier = Modifier.testTag("partner-skip")) { Text(tr("보내지 않기")) } })
+}
+
 /** Tries left after a wrong password, or until when it is paused. */
 @Composable
 internal fun PinStatus(state: MainState, nowEpoch: Long) {
@@ -60,12 +79,13 @@ internal fun ChangePinDialog(state: MainState, nowEpoch: Long, close: () -> Unit
  */
 @Composable
 internal fun LockCard(state: MainState, today: LocalDate, nowEpoch: Long, keptStreak: Int,
-    lockFor: (Int) -> Unit, startGoal: (Int, Boolean, String, String, () -> Unit) -> Unit, endGoal: (String) -> Unit,
+    lockFor: (Int) -> Unit, startGoal: (Int, Boolean, String, String, () -> Unit, Boolean) -> Unit, endGoal: (String) -> Unit,
     collectPiece: () -> Unit, changeGoalPin: (String, String, String, () -> Unit) -> Unit) {
     val lock = state.lock
     var confirmHours by rememberSaveable { mutableStateOf<Int?>(null) }
     var goalDays by rememberSaveable { mutableIntStateOf(LockSetting.GOAL_DAYS[1]) }
     var pieces by rememberSaveable { mutableStateOf(false) }
+    var partner by rememberSaveable { mutableStateOf(false) }
     var pin by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf("") }
     var confirmGoal by rememberSaveable { mutableStateOf(false) }
@@ -102,8 +122,10 @@ internal fun LockCard(state: MainState, today: LocalDate, nowEpoch: Long, keptSt
                 Text(tr("한도를 지킨 날마다 비밀번호 한 자리를 받아요. 모두 모으면 그 번호로 풀 수 있어요."),
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
-            if (lock.goalReached(keptStreak, today)) {
-                PinField(code, tr(if (lock.pieceCode) "모은 비밀번호" else "비밀번호"), "lock-code") { code = it }
+            if (lock.partner) Text(tr("친구에게 보낸 비밀번호를 받으면 목표 전에도 풀 수 있어요. 조각을 다 모아도 풀려요."),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            if (lock.canUnlock(keptStreak, today)) {
+                PinField(code, tr(if (lock.partner && !lock.goalReached(keptStreak, today)) "친구에게 받은 비밀번호" else if (lock.pieceCode) "모은 비밀번호" else "비밀번호"), "lock-code") { code = it }
                 Button(onClick = { endGoal(code) }, modifier = Modifier.testTag("lock-unlock")) { Text(tr("잠금 풀기")) }
                 PinStatus(state, nowEpoch)
             } else Text(tr("목표를 이루면 비밀번호로 풀 수 있어요."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -116,12 +138,14 @@ internal fun LockCard(state: MainState, today: LocalDate, nowEpoch: Long, keptSt
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                FilterChip(selected = !pieces, onClick = { pieces = false }, label = { Text(tr("내 비밀번호")) }, modifier = Modifier.testTag("goal-own"))
-                FilterChip(selected = pieces, onClick = { pieces = true }, label = { Text(tr("조각 비밀번호")) }, modifier = Modifier.testTag("goal-pieces"))
+                FilterChip(selected = !pieces && !partner, onClick = { pieces = false; partner = false }, label = { Text(tr("내 비밀번호")) }, modifier = Modifier.testTag("goal-own"))
+                FilterChip(selected = pieces, onClick = { pieces = true; partner = false }, label = { Text(tr("조각 비밀번호")) }, modifier = Modifier.testTag("goal-pieces"))
+                FilterChip(selected = partner, onClick = { partner = true; pieces = false }, label = { Text(tr("친구 비밀번호")) }, modifier = Modifier.testTag("goal-partner"))
             }
-            Text(if (pieces) tr("앱이 만든 비밀번호를 한도를 지킨 날마다 한 자리씩 받아요. 목표 날짜를 다 채워야 전체 번호를 알 수 있어요.")
+            Text(if (partner) tr("앱이 만든 비밀번호를 시작할 때 친구에게 보내요. 정말 필요할 때 친구에게 받아 풀고, 친구가 없어도 목표를 채우면 조각으로 모여요.")
+                else if (pieces) tr("앱이 만든 비밀번호를 한도를 지킨 날마다 한 자리씩 받아요. 목표 날짜를 다 채워야 전체 번호를 알 수 있어요.")
                 else tr("직접 정한 비밀번호는 목표를 이룬 뒤에만 통해요."), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            if (!pieces) {
+            if (!pieces && !partner) {
                 PinField(pin, tr("비밀번호 (숫자 4~12자리)"), "goal-pin") { pin = it }
                 PinField(confirm, tr("비밀번호 확인"), "goal-pin-confirm") { confirm = it }
             }
@@ -137,7 +161,7 @@ internal fun LockCard(state: MainState, today: LocalDate, nowEpoch: Long, keptSt
             dismissButton = { TextButton(onClick = { confirmHours = null }) { Text(tr("취소")) } })
     }
     if (confirmGoal) AlertDialog(onDismissRequest = { confirmGoal = false }, title = { Text(tr("잠금을 시작할까요?")) }, text = { Text(warning) },
-        confirmButton = { TextButton(onClick = { startGoal(goalDays, pieces, pin, confirm) { pin = ""; confirm = "" }; confirmGoal = false },
+        confirmButton = { TextButton(onClick = { startGoal(goalDays, pieces, pin, confirm, { pin = ""; confirm = "" }, partner); confirmGoal = false },
             modifier = Modifier.testTag("goal-confirm")) { Text(tr("잠금 시작")) } },
         dismissButton = { TextButton(onClick = { confirmGoal = false }) { Text(tr("취소")) } })
     if (changing) ChangePinDialog(state, nowEpoch, { changing = false }, changeGoalPin)

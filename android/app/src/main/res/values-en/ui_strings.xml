@@ -786,4 +786,14 @@
     <string name="exam_limits">"Lower my limits"</string>
     <string name="exam_block">"%1$s until the exam"</string>
     <string name="exam_block_named">"%2$s until %1$s"</string>
+    <string name="partner_chip">"Friend's code"</string>
+    <string name="partner_hint">"The app makes a code and you send it to a friend when the lock starts. Ask them for it when you really need to unlock; even without them, reaching the goal collects it piece by piece."</string>
+    <string name="partner_locked_hint">"With the code you sent your friend, you can unlock before the goal. Collecting every piece also unlocks it."</string>
+    <string name="partner_field">"Code from your friend"</string>
+    <string name="partner_message">"My ChronoLock goal lock code: %1$s
+If I ask you for it, please ask me once whether I really need it."</string>
+    <string name="partner_title">"Send the code to a friend"</string>
+    <string name="partner_once">"You can send this code only now. If you don't, the lock opens only after you reach the goal and collect every piece."</string>
+    <string name="partner_send">"Send to a friend"</string>
+    <string name="partner_skip">"Don't send"</string>
 </resources>

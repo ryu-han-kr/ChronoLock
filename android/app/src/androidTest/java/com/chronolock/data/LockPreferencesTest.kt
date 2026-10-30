@@ -79,6 +79,20 @@ class LockPreferencesTest {
         assertFalse(preferences.lock.first().goalLocked)
     }
 
+    @Test fun partnerCode_isReturnedOnce_andUnlocksBeforeTheGoal() = runBlocking {
+        val code = preferences.startGoalLock(7, LocalDate.of(2026, 10, 1), pin = null, partner = true)
+        val lock = preferences.lock.first()
+        assertTrue(lock.partner && lock.pieceCode && lock.goalLocked)
+        assertEquals(7, code!!.length)
+        // No streak yet: only the friend's copy can open it.
+        assertTrue(lock.canUnlock(keptStreak = 0, today = LocalDate.of(2026, 10, 2)))
+        // A second start while locked changes nothing and hands out no code.
+        assertEquals(null, preferences.startGoalLock(3, LocalDate.of(2026, 10, 2), pin = null, partner = true))
+        assertTrue(preferences.endGoalLock(code, clock()).ok)
+        assertFalse(preferences.lock.first().goalLocked)
+        assertFalse(preferences.lock.first().partner)
+    }
+
     @Test fun ownGoalPassword_canBeChanged_andThenUnlocks() = runBlocking {
         preferences.startGoalLock(3, LocalDate.of(2026, 10, 1), pin = "1111")
         assertTrue(preferences.changeGoalPin("1111", "2468", clock()).ok)
