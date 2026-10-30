@@ -752,4 +752,17 @@
     <string name="deskqr_save">"QR画像を保存・印刷"</string>
     <string name="deskqr_needed">"机に置いたQRを読み取ると集中を終えられます。"</string>
     <string name="deskqr_wrong">"この端末の集中QRではありません。"</string>
+    <string name="exam_title">"試験Dデー"</string>
+    <string name="exam_hint">"試験日を設定すると、今日の画面とブロック画面に残り日数を表示します。2週間前からは制限を減らすよう提案します。"</string>
+    <string name="exam_name">"試験名（任意）"</string>
+    <string name="exam_name_hint">"例：共通テスト"</string>
+    <string name="exam_date_label">"%1$s · %2$s"</string>
+    <string name="exam_pick">"日付を選ぶ"</string>
+    <string name="exam_ok">"OK"</string>
+    <string name="exam_until">"試験まで"</string>
+    <string name="exam_until_named">"%1$sまで"</string>
+    <string name="exam_close">"試験まで2週間を切りました。1日の制限を少し減らしてみませんか？"</string>
+    <string name="exam_limits">"制限を減らす"</string>
+    <string name="exam_block">"試験まで %1$s"</string>
+    <string name="exam_block_named">"%1$sまで %2$s"</string>
 </resources>

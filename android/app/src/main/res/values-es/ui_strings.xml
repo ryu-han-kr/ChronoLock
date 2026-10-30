@@ -794,4 +794,17 @@
     <string name="deskqr_save">"Guardar o imprimir el QR"</string>
     <string name="deskqr_needed">"Escanea el QR de tu escritorio para terminar la concentración."</string>
     <string name="deskqr_wrong">"Ese no es el QR de concentración de este dispositivo."</string>
+    <string name="exam_title">"Cuenta atrás del examen"</string>
+    <string name="exam_hint">"Fija la fecha del examen para ver los días que faltan en Hoy y en la pantalla de bloqueo. Dos semanas antes te sugeriremos límites más estrictos."</string>
+    <string name="exam_name">"Nombre del examen (opcional)"</string>
+    <string name="exam_name_hint">"p. ej.: Selectividad"</string>
+    <string name="exam_date_label">"%1$s · %2$s"</string>
+    <string name="exam_pick">"Elegir fecha"</string>
+    <string name="exam_ok">"Aceptar"</string>
+    <string name="exam_until">"para el examen"</string>
+    <string name="exam_until_named">"para %1$s"</string>
+    <string name="exam_close">"Faltan menos de dos semanas para el examen. ¿Y si bajas un poco tus límites diarios?"</string>
+    <string name="exam_limits">"Bajar mis límites"</string>
+    <string name="exam_block">"%1$s para el examen"</string>
+    <string name="exam_block_named">"%2$s para %1$s"</string>
 </resources>

@@ -64,6 +64,8 @@ class ChronoAccessibilityService : AccessibilityService() {
     @Volatile private var strict = com.chronolock.domain.StrictSetting()
     /** Lines the person wrote to themselves per app, for its block screen. */
     @Volatile private var notes = emptyMap<String, String>()
+    /** The exam counted down on the block screen. */
+    @Volatile private var exam: com.chronolock.domain.Exam? = null
     @Volatile private var lock = com.chronolock.domain.LockSetting()
     /** App labels for the block screen; looked up once per app instead of every second while blocked. */
     private val labels = mutableMapOf<String, String>()
@@ -115,7 +117,7 @@ class ChronoAccessibilityService : AccessibilityService() {
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load the character", error) }
         }
         scope.launch {
-            try { preferences.notes.collect { notes = it } }
+            try { combine(preferences.notes, preferences.exam) { n, e -> n to e }.collect { (n, e) -> notes = n; exam = e } }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) { android.util.Log.w("ChronoLock", "Could not load notes", error) }
         }
@@ -400,7 +402,7 @@ class ChronoAccessibilityService : AccessibilityService() {
                 val now = environment.clock()
                 val resisted = state.clock?.date?.let { state.daily[com.chronolock.domain.DailyKey(target, it)]?.blockedAttempts } ?: 0
                 overlay.show(label(target), state.decision, resisted, allowSettings = strict.delayAt(now) == 0 && !lock.lockedAt(now),
-                    note = notes[target]) { reason ->
+                    note = notes[target], exam = exam?.takeIf { it.showing(now.date) }?.let { it to now.date }) { reason ->
                     scope.launch {
                         runCatching { preferences.recordOpenReason(environment.clock().date, reason) }
                             .onFailure { android.util.Log.w("ChronoLock", "Open reason not saved", it) }

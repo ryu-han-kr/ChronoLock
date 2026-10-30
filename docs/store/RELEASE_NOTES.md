@@ -2,6 +2,24 @@
 
 각 항목은 Play Console "새로운 기능"(언어별 500자 이내)에 그대로 붙여 넣는다.
 
+## 다음 출시 (미출시)
+
+이번에 바뀐 것 (내부 기록):
+- 책상 QR로만 집중 끄기(설정, 기본 꺼짐, #125): 켜면 기기에서 무작위 비밀값을 만들고(`desk_qr_secret`) QR 이미지를 보여 주며
+  "QR 이미지 저장·인쇄"로 공유. 켜져 있으면 오늘 탭의 집중 종료는 Google Play 서비스 코드 스캐너(카메라 권한 불필요)로 QR을 찍어
+  이 기기 코드와 같을 때만 끝냄. 빠른 설정 타일은 집중 중이면 앱을 엶. 집중 중에는 끄기·새 QR 만들기 불가.
+  엄격 모드·잠금 규칙은 그대로 먼저 적용. 기기 테스트 `DeskQrUiTest`(그린 QR이 같은 값으로 읽힘, 집중 중 스위치 잠김). 실제 스캐너 화면은 미확인.
+- 시험 D-day(설정): 날짜(달력, 오늘 이전 불가)와 이름(20자) 저장(DataStore `exam`). 오늘 탭 카드 "D-20 수능까지", 차단 화면 마지막 줄
+  "수능까지 D-20". 남은 날 14일 이하면 "한도 줄이러 가기"로 앱 제한 탭 이동(자동으로 줄이지 않음). 시험 다음 날부터 표시 안 함.
+
+### ko
+- 책상에 붙인 QR을 찍어야만 집중을 끝낼 수 있게 할 수 있어요(설정에서 켜기).
+- 시험 날짜를 정하면 오늘 화면과 차단 화면에 D-day를 보여 드려요.
+
+### en
+- Optionally require scanning a QR on your desk to end a focus (Settings).
+- Set an exam date to see a D-day countdown on Today and the block screen.
+
 ## 0.18.0 (versionCode 28) — 2026-10-30 업로드 (내부·테스터들)
 
 AAB: `release/chronolock-0.18.0-vc28.aab`. Pro 구분은 꺼진 빌드. PR #109~#121. Play API로 업로드(commit 00260744706696103753), ko-KR·en-US 노트.

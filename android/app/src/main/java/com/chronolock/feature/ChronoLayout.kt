@@ -72,6 +72,7 @@ internal fun ChronoScreen(
     setBedtime: (Boolean) -> Unit = {},
     spendTimeBank: (String) -> Unit = {},
     setDeskQr: (Boolean) -> Unit = {},
+    setExam: (com.chronolock.domain.Exam?) -> Unit = {},
     editGroup: (Long) -> Unit = {},
     cancelPendingGroup: (Long) -> Unit = {},
     addSite: (String, () -> Unit) -> Unit = { _, _ -> },
@@ -188,6 +189,9 @@ internal fun ChronoScreen(
                                 }
                                 if (state.timeBank >= com.chronolock.domain.TimeBank.REWARD_MINUTES && state.rules.any { it.enabled })
                                     item(span = { GridItemSpan(maxLineSpan) }) { TimeBankCard(state, spendTimeBank) }
+                                state.exam?.takeIf { it.showing(today) }?.let { exam ->
+                                    item(span = { GridItemSpan(maxLineSpan) }) { ExamCard(exam, today) { selectTab(1) } }
+                                }
                                 if (state.rules.isEmpty() && state.goals.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
                                     GoalStartCard(state.goals, pick = { choosePickRecipe(it); selectTab(1) }, addSites = addSitePreset)
                                 } else if (state.rules.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
@@ -314,6 +318,7 @@ internal fun ChronoScreen(
                                 item { LanguagePicker(state.language, selectLanguage) }
                                 item { CardBox { MascotPicker(state.mascot, selectMascot, state.pro); MotionToggle(state.reduceMotion, setReduceMotion) } }
                                 item { CardBox { BedtimeToggle(state.bedtime, setBedtime) } }
+                                item { CardBox { ExamSettings(state.exam, today, setExam) } }
                                 item { CardBox { DeskQrCard(state.deskQr, state.rules.any { (it.focusUntilEpochMillis ?: 0) > nowEpoch }, setDeskQr) } }
                                 item {
                                     ThemePicker(if (state.followSystem && state.editingNight) state.nightTheme else state.theme, selectTheme, openThemeGallery,
